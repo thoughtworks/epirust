@@ -31,7 +31,7 @@ impl AgentLocationMap {
     pub fn move_agents(&mut self){
         let keys:Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
-            let mut agent: agent::Citizen = agent::Citizen::new();
+            let agent;
             let agent_option = self.agent_cell.get(&cell);
             match agent_option {
                 Some(x) => agent = *x,
@@ -44,16 +44,24 @@ impl AgentLocationMap {
         }
     }
 
-    pub fn update_infections(&mut self, disease_infection_probability:f64) {
+    pub fn update_infections(&mut self) {
         let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
             let neighbors = self.get_agents_from(self.get_neighbor_cells(cell));
             let infected_neighbors:Vec<agent::Citizen> = neighbors.into_iter().filter(|agent| agent.infected).collect();
-            for _ in infected_neighbors {
+            for neighbor in infected_neighbors {
                 let mut rng = thread_rng();
-                if rng.gen_bool(disease_infection_probability) {
+                if rng.gen_bool(neighbor.get_infection_transmission_rate()) {
                     self.agent_cell.get_mut(&cell).unwrap().infected = true;
                 }
+            }
+        }
+    }
+
+    pub fn update_infection_day(&mut self) {
+        for (_, citizen) in self.agent_cell.iter_mut(){
+            if citizen.infected{
+                citizen.increment_infection_day()
             }
         }
     }
@@ -119,7 +127,7 @@ impl AgentLocationMap {
 #[test]
 fn new_allocation_map(){
     let points = vec![Point{x:0, y:1}, Point{x:1, y:0}];
-    let agents = vec![agent::Citizen{id:1, infected: true}, agent::Citizen{id:2, infected: false}];
+    let agents = vec![agent::Citizen::new_citizen(1, true), agent::Citizen::new_citizen(2, false)];
     let map = AgentLocationMap::new(2, &agents, &points);
     let citizen_option = map.agent_cell.get(&Point{x:0, y:1});
     let mut actual_citizen = agent::Citizen::new();
@@ -136,26 +144,28 @@ fn new_allocation_map(){
 #[test]
 fn move_agent(){
     let points = vec![Point{x:0, y:1}, Point{x:1, y:0}];
-    let agents = vec![agent::Citizen{id:1, infected: true}, agent::Citizen{id:2, infected: false}];
-    let mut map = AgentLocationMap::new(5,&agents, &points);
+    let agents = vec![agent::Citizen::new_citizen(1, true), agent::Citizen::new_citizen(2, false)];
+    let mut map = AgentLocationMap::new(3,&agents, &points);
 
     map.move_agents();
 
     let citizen_option = map.agent_cell.get(&Point{x:0, y:1});
 
-    let mut citizen_moved = false;
-    match citizen_option{
-        Some(_) => {}
-        _ => { citizen_moved = true}
-    }
+    let mut actual_citizen = agent::Citizen::new();
 
-    assert_eq!(citizen_moved, true);
+    match citizen_option {
+        Some(x) => { actual_citizen = *x},
+        None => {}
+    }
+    
+    assert_ne!(actual_citizen.id, 1)
+
 }
 
 #[test]
 fn get_empty_cells(){
     let points = vec![Point{x:0, y:1}, Point{x:1, y:0}];
-    let agents = vec![agent::Citizen{id:1, infected: true}, agent::Citizen{id:2, infected: false}];
+    let agents = vec![agent::Citizen::new_citizen(1, true), agent::Citizen::new_citizen(2, false)];
     let map = AgentLocationMap::new(5,&agents, &points);
 
     let empty_cells = map.get_empty_cells_from(map.get_neighbor_cells(points[0]));
@@ -165,20 +175,34 @@ fn get_empty_cells(){
 #[test]
 fn get_neighbor_agents(){
     let points = vec![Point{x:0, y:1}, Point{x:1, y:0}];
-    let agents = vec![agent::Citizen{id:1, infected: true}, agent::Citizen{id:2, infected: false}];
+    let agents = vec![agent::Citizen::new_citizen(1, true), agent::Citizen::new_citizen(2, false)];
     let map = AgentLocationMap::new(5,&agents, &points);
 
     let neighbor_agents= map.get_agents_from(map.get_neighbor_cells(points[0]));
     assert_eq!(neighbor_agents.len(), 1);
 }
 
+//TODO: Fix the test by introducing mocking framework
+//#[test]
+//fn update_infections(){
+//    let points = vec![Point{x:0, y:1}, Point{x:1, y:0}];
+//    let agents = vec![agent::Citizen::new_citizen(1, true), agent::Citizen::new_citizen(2, false)];
+//
+//    let mut map = AgentLocationMap::new(3,&agents, &points);
+//
+//    map.update_infections();
+//
+//    assert_eq!(map.agent_cell.get(&Point{x:1, y:0}).unwrap().infected, true);
+//}
+
 #[test]
-fn update_infections(){
+fn update_infection_day(){
     let points = vec![Point{x:0, y:1}, Point{x:1, y:0}];
-    let agents = vec![agent::Citizen{id:1, infected: true}, agent::Citizen{id:2, infected: false}];
+    let agents = vec![agent::Citizen::new_citizen(1, true), agent::Citizen::new_citizen(2, false)];
     let mut map = AgentLocationMap::new(5,&agents, &points);
+    assert_eq!(map.agent_cell.get(&Point{x:0, y:1}).unwrap().infection_day, 0);
 
-    map.update_infections(1.0);
-
-    assert_eq!(map.agent_cell.get(&Point{x:1, y:0}).unwrap().infected, true);
+    map.update_infection_day();
+    assert_eq!(map.agent_cell.get(&Point{x:0, y:1}).unwrap().infection_day, 1);
+    assert_eq!(map.agent_cell.get(&Point{x:1, y:0}).unwrap().infection_day, 0);
 }

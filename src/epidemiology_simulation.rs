@@ -8,7 +8,10 @@ pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap
 }
 
+const NUMBER_OF_HOURS:i32 = 24;
+
 impl Epidemiology {
+
     pub fn new(grid_size: i32, number_of_agents: i32) -> Epidemiology {
         let agent_list = Epidemiology::create_citizen(number_of_agents);
         let points = epidemiology_geography::point_factory(grid_size, number_of_agents);
@@ -20,8 +23,11 @@ impl Epidemiology {
     pub fn run(&mut self, simulation_life_time:i32) {
         for i in 1..simulation_life_time {
             let start_time = SystemTime::now();
+            if i % NUMBER_OF_HOURS == 0{
+                self.agent_location_map.update_infection_day();
+            }
             self.agent_location_map.move_agents();
-            self.agent_location_map.update_infections(0.1);
+            self.agent_location_map.update_infections();
             let end_time = SystemTime::now();
 //            self.agent_location_map.print();
             println!("Tick {}, Time taken {:?}", i, end_time.duration_since(start_time));

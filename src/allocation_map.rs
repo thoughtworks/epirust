@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 use rand::thread_rng;
 use rand::seq::SliceRandom;

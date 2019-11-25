@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 rand = "0.7.2"
+hashbrown = "0.3"
 
 [profile.release]
 opt-level = 3

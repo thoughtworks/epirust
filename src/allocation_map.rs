@@ -31,12 +31,7 @@ impl AgentLocationMap {
     pub fn move_agents(&mut self){
         let keys:Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
-            let agent;
-            let agent_option = self.agent_cell.get(&cell);
-            match agent_option {
-                Some(x) => agent = *x,
-                _ => { return }
-            }
+            let agent = self.get_agent(&cell);
             let neighbor_cells = self.get_neighbor_cells(cell);
             let new_cell: Point = AgentLocationMap::get_random_point_from(self.get_empty_cells_from(neighbor_cells), cell);
             self.agent_cell.remove(&cell);
@@ -44,9 +39,16 @@ impl AgentLocationMap {
         }
     }
 
+    fn get_agent(&mut self, cell: &Point) -> agent::Citizen {
+        *self.agent_cell.get(&cell).unwrap()
+    }
+
     pub fn update_infections(&mut self) {
         let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
+            if self.get_agent(&cell).infected{
+                continue;
+            }
             let neighbors = self.get_agents_from(self.get_neighbor_cells(cell));
             let infected_neighbors:Vec<agent::Citizen> = neighbors.into_iter().filter(|agent| agent.infected).collect();
             for neighbor in infected_neighbors {

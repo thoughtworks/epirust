@@ -31,11 +31,14 @@ impl AgentLocationMap {
     pub fn move_agents(&mut self){
         let keys:Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
-            let agent = self.get_agent(&cell);
-            let neighbor_cells = self.get_neighbor_cells(cell);
-            let new_cell: Point = AgentLocationMap::get_random_point_from(self.get_empty_cells_from(neighbor_cells), cell);
-            self.agent_cell.remove(&cell);
-            self.agent_cell.insert(new_cell, agent);
+            self.move_agent_from(&cell);
+        }
+    }
+
+    pub fn update_infections(&mut self) {
+        let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
+        for cell in keys {
+            self.update_infection(&cell)
         }
     }
 
@@ -43,19 +46,25 @@ impl AgentLocationMap {
         *self.agent_cell.get(&cell).unwrap()
     }
 
-    pub fn update_infections(&mut self) {
-        let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
-        for cell in keys {
-            if self.get_agent(&cell).infected{
-                continue;
-            }
-            let neighbors = self.get_agents_from(self.get_neighbor_cells(cell));
-            let infected_neighbors:Vec<agent::Citizen> = neighbors.into_iter().filter(|agent| agent.infected).collect();
-            for neighbor in infected_neighbors {
-                let mut rng = thread_rng();
-                if rng.gen_bool(neighbor.get_infection_transmission_rate()) {
-                    self.agent_cell.get_mut(&cell).unwrap().infected = true;
-                }
+    fn move_agent_from(&mut self, cell: &Point) {
+        let agent = self.get_agent(&cell);
+        let neighbor_cells = self.get_neighbor_cells(*cell);
+        let new_cell: Point = AgentLocationMap::get_random_point_from(self.get_empty_cells_from(neighbor_cells), *cell);
+        self.agent_cell.remove(cell);
+        self.agent_cell.insert(new_cell, agent);
+    }
+
+    fn update_infection(&mut self, cell: &Point) -> () {
+        if self.get_agent(&cell).infected {
+            return;
+        }
+        let neighbors = self.get_agents_from(self.get_neighbor_cells(*cell));
+        let infected_neighbors: Vec<agent::Citizen> = neighbors.into_iter().filter(|agent| agent.infected).collect();
+        for neighbor in infected_neighbors {
+            let mut rng = thread_rng();
+            if rng.gen_bool(neighbor.get_infection_transmission_rate()) {
+                println!("Infection rate {}", neighbor.get_infection_transmission_rate());
+                self.agent_cell.get_mut(&cell).unwrap().infected = true;
             }
         }
     }
@@ -183,19 +192,6 @@ fn get_neighbor_agents(){
     let neighbor_agents= map.get_agents_from(map.get_neighbor_cells(points[0]));
     assert_eq!(neighbor_agents.len(), 1);
 }
-
-//TODO: Fix the test by introducing mocking framework
-//#[test]
-//fn update_infections(){
-//    let points = vec![Point{x:0, y:1}, Point{x:1, y:0}];
-//    let agents = vec![agent::Citizen::new_citizen(1, true), agent::Citizen::new_citizen(2, false)];
-//
-//    let mut map = AgentLocationMap::new(3,&agents, &points);
-//
-//    map.update_infections();
-//
-//    assert_eq!(map.agent_cell.get(&Point{x:1, y:0}).unwrap().infected, true);
-//}
 
 #[test]
 fn update_infection_day(){

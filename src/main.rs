@@ -1,3 +1,5 @@
+mod constants;
+
 mod agent;
 mod epidemiology_simulation;
 mod allocation_map;

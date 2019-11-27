@@ -1,22 +1,24 @@
 use crate::disease::small_pox;
 use rand::seq::SliceRandom;
+use crate::epidemiology_geography::Point;
 
 #[derive(Copy, Clone)]
 pub struct Citizen {
     pub id: i32,
     pub infected: bool,
     pub disease_randomness_factor: i32,
-    pub infection_day: i32
+    pub infection_day: i32,
+    pub home_location: Point
 }
 
 impl Citizen {
     pub fn new() -> Citizen {
-        Citizen{ id:-1, infected: false, disease_randomness_factor: 0, infection_day: 0}
+        Citizen{ id:-1, infected: false, disease_randomness_factor: 0, infection_day: 0, home_location:Point::new(-1, -1)}
     }
 
-    pub fn new_citizen(id: i32, infected: bool) -> Citizen {
+    pub fn new_citizen(id: i32, infected: bool, home_location: Point) -> Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor();
-        Citizen{id, infected, disease_randomness_factor, infection_day: 0 }
+        Citizen{id, infected, disease_randomness_factor, infection_day: 0, home_location}
     }
 
     pub fn increment_infection_day(&mut self){
@@ -31,4 +33,18 @@ impl Citizen {
         let option = [-2, -1, 0, 1, 2].choose(&mut rand::thread_rng());
         *option.unwrap()
     }
+}
+
+pub fn citizen_factory(points: &Vec<Point>) -> Vec<Citizen>{
+    let mut agent_list = Vec::with_capacity(points.len());
+    let mut agent_id = 0;
+    for point in points{
+        let agent = Citizen::new_citizen(agent_id, false, *point);
+        agent_list.push(agent);
+        agent_id += 1;
+    }
+
+    agent_list.last_mut().as_mut().unwrap().infected = true;
+//    TODO: Mark one as infected
+    agent_list
 }

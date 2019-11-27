@@ -2,54 +2,50 @@ use crate::agent;
 use crate::allocation_map;
 use crate::epidemiology_geography;
 use std::time::SystemTime;
+use epidemiology_geography::Point;
+use epidemiology_geography::HousingArea;
+use crate::constants;
 
 pub struct Epidemiology {
     pub agent_list: Vec<agent::Citizen>,
-    pub agent_location_map: allocation_map::AgentLocationMap
+    pub agent_location_map: allocation_map::AgentLocationMap,
+    pub housing_area: HousingArea
 }
-
-const NUMBER_OF_HOURS:i32 = 24;
 
 impl Epidemiology {
 
     pub fn new(grid_size: i32, number_of_agents: i32) -> Epidemiology {
-        let agent_list = Epidemiology::create_citizen(number_of_agents);
         let points = epidemiology_geography::point_factory(grid_size, number_of_agents);
+        let housing_area:HousingArea = epidemiology_geography::HousingArea::new(grid_size);
+        let agent_list = agent::citizen_factory(&points);
         let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &points);
 
-        Epidemiology{agent_list, agent_location_map}
+        Epidemiology{agent_list, agent_location_map, housing_area}
     }
 
     pub fn run(&mut self, simulation_life_time:i32) {
+        println!("Tick 0");
+//        self.agent_location_map.print();
         for i in 1..simulation_life_time {
             let start_time = SystemTime::now();
-            if i % NUMBER_OF_HOURS == 0{
+            if i % constants::NUMBER_OF_HOURS == 0{
                 self.agent_location_map.update_infection_day();
+                self.agent_location_map.goto_home(self.housing_area);
             }
-            self.agent_location_map.move_agents();
+            else{
+                self.agent_location_map.move_agents();
+            }
             self.agent_location_map.update_infections();
             let end_time = SystemTime::now();
-//            self.agent_location_map.print();
             println!("Tick {}, Time taken {:?}", i, end_time.duration_since(start_time));
+//            self.agent_location_map.print();
         }
-    }
-
-//    TODO: Pull it into factory
-    fn create_citizen(number_of_agents: i32) -> Vec<agent::Citizen>{
-        let mut agent_list = Vec::with_capacity(number_of_agents as usize);
-
-        for agent_id in 0..number_of_agents-1 {
-            let agent = agent::Citizen::new_citizen(agent_id, false);
-            agent_list.push(agent);
-        }
-        agent_list.push(agent::Citizen::new_citizen(number_of_agents-1, true));
-        agent_list
     }
 }
 
 #[test]
 fn init() {
-    let epidemiology:Epidemiology = Epidemiology::new(3, 5);
+    let epidemiology:Epidemiology = Epidemiology::new(3, 3);
 
-    assert_eq!(epidemiology.agent_list.len(), 5);
+    assert_eq!(epidemiology.agent_list.len(), 3);
 }

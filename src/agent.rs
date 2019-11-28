@@ -1,6 +1,6 @@
 use crate::disease::small_pox;
 use rand::seq::SliceRandom;
-use crate::epidemiology_geography::Point;
+use crate::geography::point::Point;
 
 #[derive(Copy, Clone)]
 pub struct Citizen {
@@ -45,6 +45,20 @@ pub fn citizen_factory(points: &Vec<Point>) -> Vec<Citizen>{
     }
 
     agent_list.last_mut().as_mut().unwrap().infected = true;
-//    TODO: Mark one as infected
     agent_list
+}
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+
+    #[test]
+    fn generate_citizen(){
+        let points = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
+
+        let citizen_list = citizen_factory(&points);
+        assert_eq!(citizen_list.len(), 3);
+        assert_eq!(citizen_list[1].home_location, Point::new(0, 1));
+        assert_eq!(citizen_list.last().unwrap().infected, true);
+    }
 }

@@ -1,13 +1,14 @@
 use hashbrown::HashMap;
 
 use rand::thread_rng;
-use rand::seq::SliceRandom;
 use rand::Rng;
 
-use crate::epidemiology_geography::*;
 use crate::agent;
 
 use std::prelude::v1::Vec;
+use crate::geography::point::Point;
+use crate::geography::housing_area::HousingArea;
+use crate::utils;
 
 pub struct AgentLocationMap {
     pub size: i32,
@@ -53,8 +54,8 @@ impl AgentLocationMap {
         for cell in keys {
             let agent = self.get_agent(&cell);
 //            println!("agent home location {}: {}-{}", agent.id, agent.home_location.x, agent.home_location.y);
-            let empty_cells = self.get_empty_cells_from(housing_area.get_house_dimensions(cell, self.size));
-            self.move_agent(agent, cell, AgentLocationMap::get_random_point_from(empty_cells, agent.home_location));
+            let empty_cells = self.get_empty_cells_from(housing_area.get_house_dimensions(cell));
+            self.move_agent(agent, cell, utils::get_random_element_from(&empty_cells, agent.home_location));
         }
     }
 
@@ -65,7 +66,7 @@ impl AgentLocationMap {
     fn move_agent_from(&mut self, cell: &Point) {
         let agent = self.get_agent(&cell);
         let neighbor_cells:Vec<Point> = cell.get_neighbor_cells(self.size);
-        let new_cell: Point = AgentLocationMap::get_random_point_from(self.get_empty_cells_from(neighbor_cells), *cell);
+        let new_cell: Point = utils::get_random_element_from(&self.get_empty_cells_from(neighbor_cells), *cell);
         self.agent_cell.remove(cell);
         self.agent_cell.insert(new_cell, agent);
     }
@@ -114,79 +115,75 @@ impl AgentLocationMap {
         }
         agent_list
     }
+}
 
-    fn get_random_point_from(vector: Vec<Point>, location: Point) -> Point {
-        let choice = vector.choose(&mut rand::thread_rng());
-        match choice {
-            Some(x) => return *x,
-            None => return location
+#[cfg(test)]
+mod tests{
+    use super::*;
+
+    fn before_each() -> AgentLocationMap {
+        let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
+        let agents = vec![agent::Citizen::new_citizen(1, true, points[0]), agent::Citizen::new_citizen(2, false, points[1])];
+        let map = AgentLocationMap::new(5, &agents, &points);
+        map
+    }
+
+    #[test]
+    fn new(){
+        let map = before_each();
+        let citizen_option = map.agent_cell.get(&Point{x:0, y:1});
+        let mut actual_citizen = agent::Citizen::new();
+        match citizen_option{
+            Some(x) => {
+                actual_citizen = *x;
+            }
+            _ => {}
         }
+        assert_eq!(map.size, 5);
+        assert_eq!(actual_citizen.id, 1);
     }
-}
 
-fn before_each() -> AgentLocationMap {
-    let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
-    let agents = vec![agent::Citizen::new_citizen(1, true, points[0]), agent::Citizen::new_citizen(2, false, points[1])];
-    let map = AgentLocationMap::new(5, &agents, &points);
-    map
-}
+    #[test]
+    fn move_agent(){
+        let mut map = before_each();
 
-#[test]
-fn new_allocation_map(){
-    let map = before_each();
-    let citizen_option = map.agent_cell.get(&Point{x:0, y:1});
-    let mut actual_citizen = agent::Citizen::new();
-    match citizen_option{
-        Some(x) => {
-            actual_citizen = *x;
+        map.move_agents();
+
+        let citizen_option = map.agent_cell.get(&Point{x:0, y:1});
+
+        let mut actual_citizen = agent::Citizen::new();
+
+        match citizen_option {
+            Some(x) => { actual_citizen = *x},
+            None => {}
         }
-        _ => {}
+
+        assert_ne!(actual_citizen.id, 1);
     }
-    assert_eq!(map.size, 5);
-    assert_eq!(actual_citizen.id, 1);
-}
 
-#[test]
-fn move_agent(){
-    let mut map = before_each();
+    #[test]
+    fn get_empty_cells(){
+        let map = before_each();
 
-    map.move_agents();
-
-    let citizen_option = map.agent_cell.get(&Point{x:0, y:1});
-
-    let mut actual_citizen = agent::Citizen::new();
-
-    match citizen_option {
-        Some(x) => { actual_citizen = *x},
-        None => {}
+        let empty_cells = map.get_empty_cells_from(Point{x: 0, y: 1}.get_neighbor_cells(5));
+        assert_eq!(empty_cells.len(), 4);
     }
-    
-    assert_ne!(actual_citizen.id, 1)
 
-}
+    #[test]
+    fn get_neighbor_agents(){
+        let map = before_each();
 
-#[test]
-fn get_empty_cells(){
-    let mut map = before_each();
+        let neighbor_agents= map.get_agents_from(Point{x: 0, y: 1}.get_neighbor_cells(5));
+        assert_eq!(neighbor_agents.len(), 1);
+    }
 
-    let empty_cells = map.get_empty_cells_from(Point{x: 0, y: 1}.get_neighbor_cells(5));
-    assert_eq!(empty_cells.len(), 4);
-}
+    #[test]
+    fn update_infection_day(){
+        let mut map = before_each();
+        assert_eq!(map.agent_cell.get(&Point{x:0, y:1}).unwrap().infection_day, 0);
 
-#[test]
-fn get_neighbor_agents(){
-    let mut map = before_each();
-
-    let neighbor_agents= map.get_agents_from(Point{x: 0, y: 1}.get_neighbor_cells(5));
-    assert_eq!(neighbor_agents.len(), 1);
-}
-
-#[test]
-fn update_infection_day(){
-    let mut map = before_each();
-    assert_eq!(map.agent_cell.get(&Point{x:0, y:1}).unwrap().infection_day, 0);
-
-    map.update_infection_day();
-    assert_eq!(map.agent_cell.get(&Point{x:0, y:1}).unwrap().infection_day, 1);
-    assert_eq!(map.agent_cell.get(&Point{x:1, y:0}).unwrap().infection_day, 0);
+        map.update_infection_day();
+        assert_eq!(map.agent_cell.get(&Point{x:0, y:1}).unwrap().infection_day, 1);
+        assert_eq!(map.agent_cell.get(&Point{x:1, y:0}).unwrap().infection_day, 0);
+    }
 }

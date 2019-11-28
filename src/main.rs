@@ -3,8 +3,9 @@ mod constants;
 mod agent;
 mod epidemiology_simulation;
 mod allocation_map;
-mod epidemiology_geography;
+mod geography;
 mod disease;
+mod utils;
 
 fn main() {
     const GRID_SIZE:i32 = 3;

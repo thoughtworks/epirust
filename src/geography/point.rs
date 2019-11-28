@@ -2,7 +2,6 @@ extern crate rand;
 use rand::Rng;
 use std::cmp::max;
 use std::cmp::min;
-use crate::constants;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
 pub struct Point {
@@ -44,7 +43,7 @@ impl Point {
         neighbors_list
     }
 
-    pub fn get_neighbor_within(&self, start: Point, end: Point) -> Vec<Point>{
+    pub fn get_neighbor_within_bounds(&self, start: Point, end: Point) -> Vec<Point>{
         const NUMBER_OF_NEIGHBORS:i32 = 8;
         let mut neighbors_list = Vec::with_capacity(NUMBER_OF_NEIGHBORS as usize);
         let mut row_index = max(start.x, self.x - 1);
@@ -92,43 +91,36 @@ pub fn point_factory(size:i32, number_of_points:i32) -> Vec<Point>{
     points
 }
 
-#[derive(Copy, Clone, Hash, Eq, PartialEq)]
-pub struct HousingArea{
-    pub start_offset: Point,
-    pub end_offset: Point
-}
+#[cfg(test)]
+mod tests{
+    use super::*;
 
-impl HousingArea{
-    pub fn new(grid_size: i32) -> HousingArea{
-        HousingArea{start_offset: Point::new(0, 0), end_offset:Point::new(grid_size/ constants::HOUSE_RELATED_SIZE, grid_size)}
+    #[test]
+    fn get_neighbor_cells(){
+        let point = Point::new(1,1);
+        let point_vector = point.get_neighbor_cells(5);
+
+        assert_eq!(point_vector.len(), 8);
+        assert_eq!(point_vector.contains(&Point::new(0, 0)), true);
+        assert_eq!(point_vector.contains(&Point::new(2, 2)), true);
+        assert_eq!(point_vector.contains(&Point::new(3, 3)), false);
     }
 
-    pub fn get_house_dimensions(&self, home_location: Point, size: i32) -> Vec<Point>{
-        home_location.get_neighbor_within(self.start_offset, self.end_offset)
+    #[test]
+    fn get_neighbor_within(){
+        let point1 = Point::new(1,1);
+        let point2 = Point::new(1,2);
+        let point_vector1 = point1.get_neighbor_within_bounds(Point::new(0, 0), Point::new(2, 2));
+        let point_vector2 = point2.get_neighbor_within_bounds(Point::new(0, 0), Point::new(2, 2));
+
+        assert_eq!(point_vector1.len(), 8);
+        assert_eq!(point_vector2.len(), 5);
     }
-}
 
-#[test]
-fn generate_points(){
-    let points:Vec<Point> = point_factory(5, 10);
+    #[test]
+    fn generate_points(){
+        let points:Vec<Point> = point_factory(5, 10);
 
-    assert_eq!(points.len(), 10);
-}
-
-#[test]
-fn generate_housing_area(){
-    let housing_area = HousingArea::new(5);
-
-    assert_eq!(housing_area.end_offset, Point{x:2, y:5});
-}
-
-#[test]
-fn get_neighbor_within(){
-    let point1 = Point::new(1,1);
-    let point2 = Point::new(1,2);
-    let point_vector1 = point1.get_neighbor_within(Point::new(0,0), Point::new(2,2));
-    let point_vector2 = point2.get_neighbor_within(Point::new(0,0), Point::new(2,2));
-
-    assert_eq!(point_vector1.len(), 8);
-    assert_eq!(point_vector2.len(), 5);
+        assert_eq!(points.len(), 10);
+    }
 }

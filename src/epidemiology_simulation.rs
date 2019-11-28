@@ -1,10 +1,9 @@
 use crate::agent;
 use crate::allocation_map;
-use crate::epidemiology_geography;
 use std::time::SystemTime;
-use epidemiology_geography::Point;
-use epidemiology_geography::HousingArea;
 use crate::constants;
+use crate::geography::point;
+use crate::geography::housing_area::HousingArea;
 
 pub struct Epidemiology {
     pub agent_list: Vec<agent::Citizen>,
@@ -15,8 +14,8 @@ pub struct Epidemiology {
 impl Epidemiology {
 
     pub fn new(grid_size: i32, number_of_agents: i32) -> Epidemiology {
-        let points = epidemiology_geography::point_factory(grid_size, number_of_agents);
-        let housing_area:HousingArea = epidemiology_geography::HousingArea::new(grid_size);
+        let points = point::point_factory(grid_size, number_of_agents);
+        let housing_area:HousingArea = HousingArea::new(grid_size);
         let agent_list = agent::citizen_factory(&points);
         let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &points);
 
@@ -43,9 +42,14 @@ impl Epidemiology {
     }
 }
 
-#[test]
-fn init() {
-    let epidemiology:Epidemiology = Epidemiology::new(3, 3);
+#[cfg(test)]
+mod tests{
+    use super::*;
 
-    assert_eq!(epidemiology.agent_list.len(), 3);
+    #[test]
+    fn init() {
+        let epidemiology:Epidemiology = Epidemiology::new(3, 3);
+
+        assert_eq!(epidemiology.agent_list.len(), 3);
+    }
 }

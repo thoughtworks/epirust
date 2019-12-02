@@ -7,11 +7,11 @@ use crate::agent;
 
 use std::prelude::v1::Vec;
 use crate::geography::point::Point;
-use crate::geography::housing_area::HousingArea;
 use crate::utils;
+use crate::geography::Area;
 
 pub struct AgentLocationMap {
-    pub size: i32,
+    pub grid_size: i32,
     pub agent_cell: HashMap<Point, agent::Citizen>
 }
 
@@ -23,7 +23,7 @@ impl AgentLocationMap {
             map.insert(points[i], agent_list[i]);
         }
 
-        AgentLocationMap {size, agent_cell:map}
+        AgentLocationMap {grid_size: size, agent_cell:map}
     }
 
     pub fn move_agents(&mut self){
@@ -49,13 +49,15 @@ impl AgentLocationMap {
         }
     }
 
-    pub fn goto_home(&mut self, housing_area:HousingArea){
+//TODO: Validate for fallback value and movement
+    pub fn goto<T: Area>(&mut self, area: T){
         let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
             let agent = self.get_agent(&cell);
-//            println!("agent home location {}: {}-{}", agent.id, agent.home_location.x, agent.home_location.y);
-            let empty_cells = self.get_empty_cells_from(housing_area.get_house_dimensions(cell));
-            self.move_agent(agent, cell, utils::get_random_element_from(&empty_cells, agent.home_location));
+            let area_dimensions = area.get_dimensions(agent);
+            let vacant_cells = self.get_empty_cells_from(area_dimensions);
+
+            self.move_agent(agent, cell, utils::get_random_element_from(&vacant_cells, agent.home_location));
         }
     }
 
@@ -65,17 +67,16 @@ impl AgentLocationMap {
 
     fn move_agent_from(&mut self, cell: &Point) {
         let agent = self.get_agent(&cell);
-        let neighbor_cells:Vec<Point> = cell.get_neighbor_cells(self.size);
+        let neighbor_cells:Vec<Point> = cell.get_neighbor_cells(self.grid_size);
         let new_cell: Point = utils::get_random_element_from(&self.get_empty_cells_from(neighbor_cells), *cell);
-        self.agent_cell.remove(cell);
-        self.agent_cell.insert(new_cell, agent);
+        self.move_agent(agent, *cell, new_cell);
     }
 
     fn update_infection(&mut self, cell: &Point) -> () {
         if self.get_agent(&cell).infected {
             return;
         }
-        let neighbors = self.get_agents_from(cell.get_neighbor_cells(self.size));
+        let neighbors = self.get_agents_from(cell.get_neighbor_cells(self.grid_size));
         let infected_neighbors: Vec<agent::Citizen> = neighbors.into_iter().filter(|agent| agent.infected).collect();
         for neighbor in infected_neighbors {
             let mut rng = thread_rng();
@@ -123,7 +124,7 @@ mod tests{
 
     fn before_each() -> AgentLocationMap {
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
-        let agents = vec![agent::Citizen::new_citizen(1, true, points[0]), agent::Citizen::new_citizen(2, false, points[1])];
+        let agents = vec![agent::Citizen::new_citizen(1, true, points[0], points[1]), agent::Citizen::new_citizen(2, false, points[1], points[0])];
         let map = AgentLocationMap::new(5, &agents, &points);
         map
     }
@@ -139,7 +140,7 @@ mod tests{
             }
             _ => {}
         }
-        assert_eq!(map.size, 5);
+        assert_eq!(map.grid_size, 5);
         assert_eq!(actual_citizen.id, 1);
     }
 

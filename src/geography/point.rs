@@ -2,6 +2,7 @@ extern crate rand;
 use rand::Rng;
 use std::cmp::max;
 use std::cmp::min;
+use std::ops::Add;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
 pub struct Point {
@@ -70,13 +71,22 @@ impl Point {
         neighbors_list
     }
 }
+
+impl Add for Point{
+    type Output = Self;
+
+    fn add(self, second_point: Self) -> Self {
+        Self{x: self.x + second_point.x, y: self.y+second_point.y}
+    }
+}
+
 //TODO: Improve randomness generation
-pub fn point_factory(size:i32, number_of_points:i32) -> Vec<Point>{
+pub fn point_factory(start:Point, end:Point, number_of_points:i32) -> Vec<Point>{
     let mut points:Vec<Point> = Vec::with_capacity(number_of_points as usize);
     let mut rng = rand::thread_rng();
     while points.len() != (number_of_points as usize) {
-        let rand_x = rng.gen_range(0, size);
-        let rand_y = rng.gen_range(0, size);
+        let rand_x = rng.gen_range(start.x, end.x);
+        let rand_y = rng.gen_range(start.y, end.y);
         let mut is_duplicate = false;
         for point in points.iter_mut(){
             if *point == (Point{x: rand_x, y:rand_y}) {
@@ -90,6 +100,7 @@ pub fn point_factory(size:i32, number_of_points:i32) -> Vec<Point>{
     }
     points
 }
+
 
 #[cfg(test)]
 mod tests{
@@ -119,8 +130,18 @@ mod tests{
 
     #[test]
     fn generate_points(){
-        let points:Vec<Point> = point_factory(5, 10);
+        let points:Vec<Point> = point_factory(Point{x:0, y:0}, Point{x:5, y:5}, 10);
 
         assert_eq!(points.len(), 10);
+    }
+
+    #[test]
+    fn add(){
+        let point = Point::new(1,1);
+        let second_point= Point::new(1,1);
+
+        let output = point + second_point;
+        assert_eq!(output, Point::new(2, 2));
+
     }
 }

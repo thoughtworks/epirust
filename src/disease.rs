@@ -13,13 +13,34 @@ pub mod small_pox {
         }
         return 0.0;
     }
+
+    pub fn to_be_quarantined(transmission_rate: f64) -> bool {
+        if transmission_rate >= HIGH_TRANSMISSION_RATE{
+            return true;
+        }
+        false
+    }
 }
 
-#[test]
-fn get_current_transmission_rate(){
-    let infection_rate = small_pox::get_current_transmission_rate(12);
-    assert_eq!(infection_rate, 0.05);
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    let infection_rate = small_pox::get_current_transmission_rate(22);
-    assert_eq!(infection_rate, 0.5);
+    #[test]
+    fn get_current_transmission_rate() {
+        let infection_rate = small_pox::get_current_transmission_rate(12);
+        assert_eq!(infection_rate, 0.05);
+
+        let infection_rate = small_pox::get_current_transmission_rate(22);
+        assert_eq!(infection_rate, 0.5);
+    }
+
+    #[test]
+    fn to_be_quarantined() {
+        let actual = small_pox::to_be_quarantined(0.2);
+        assert_eq!(actual, false);
+
+        let actual = small_pox::to_be_quarantined(0.8);
+        assert_eq!(actual, true);
+    }
 }

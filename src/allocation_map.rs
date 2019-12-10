@@ -67,6 +67,9 @@ impl AgentLocationMap {
 
     fn move_agent_from(&mut self, cell: &Point) {
         let agent = self.get_agent(&cell);
+        if agent.quarantined{
+            return;
+        }
         let neighbor_cells:Vec<Point> = cell.get_neighbor_cells(self.grid_size);
         let new_cell: Point = utils::get_random_element_from(&self.get_empty_cells_from(neighbor_cells), *cell);
         self.move_agent(agent, *cell, new_cell);
@@ -90,7 +93,8 @@ impl AgentLocationMap {
     pub fn update_infection_day(&mut self) {
         for (_, citizen) in self.agent_cell.iter_mut(){
             if citizen.infected{
-                citizen.increment_infection_day()
+                citizen.increment_infection_day();
+                citizen.set_quarantined();
             }
         }
     }

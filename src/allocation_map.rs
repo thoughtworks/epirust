@@ -61,6 +61,17 @@ impl AgentLocationMap {
         }
     }
 
+    pub fn vaccinate(&mut self, percentage: f64){
+        let mut rng = thread_rng();
+        println!("vaccination");
+        for(_, agent) in self.agent_cell.iter_mut(){
+            if !agent.infected && rng.gen_bool(percentage){
+                agent.set_vaccination(true);
+                println!("Agent {} is vaccinated", agent.id);
+            }
+        };
+    }
+
     fn get_agent(&mut self, cell: &Point) -> agent::Citizen {
         *self.agent_cell.get(&cell).unwrap()
     }
@@ -76,7 +87,7 @@ impl AgentLocationMap {
     }
 
     fn update_infection(&mut self, cell: &Point) -> () {
-        if self.get_agent(&cell).infected {
+        if self.get_agent(&cell).infected || self.get_agent(&cell).vaccinated {
             return;
         }
         let neighbors = self.get_agents_from(cell.get_neighbor_cells(self.grid_size));
@@ -190,5 +201,15 @@ mod tests{
         map.update_infection_day();
         assert_eq!(map.agent_cell.get(&Point{x:0, y:1}).unwrap().infection_day, 1);
         assert_eq!(map.agent_cell.get(&Point{x:1, y:0}).unwrap().infection_day, 0);
+    }
+
+    #[test]
+    fn vaccinate(){
+        let mut map = before_each();
+
+        map.vaccinate(1.0);
+
+        assert_eq!(map.agent_cell.get(&Point { x: 0, y: 1 }).unwrap().vaccinated, false);
+        assert_eq!(map.agent_cell.get(&Point { x: 1, y: 0 }).unwrap().vaccinated, true);
     }
 }

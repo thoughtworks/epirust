@@ -31,7 +31,7 @@ impl Epidemiology {
         Epidemiology{agent_list, agent_location_map, housing_area, work_area}
     }
 
-    pub fn run(&mut self, simulation_life_time:i32) {
+    pub fn run(&mut self, simulation_life_time:i32, vaccination_time:i32, vaccination_percentage:f64) {
         println!("Tick 0");
         self.agent_location_map.goto(self.housing_area);
         for i in 1..simulation_life_time {
@@ -44,6 +44,10 @@ impl Epidemiology {
                 constants::ROUTINE_WORK_TIME => self.agent_location_map.goto(self.work_area),
                 constants::ROUTINE_WORK_END_TIME => self.agent_location_map.goto(self.housing_area),
                 _ => self.agent_location_map.move_agents()
+            }
+
+            if i == vaccination_time{
+                self.agent_location_map.vaccinate(vaccination_percentage);
             }
 
             let end_time = SystemTime::now();

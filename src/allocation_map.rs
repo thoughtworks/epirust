@@ -12,7 +12,8 @@ use crate::geography::Area;
 
 pub struct AgentLocationMap {
     pub grid_size: i32,
-    pub agent_cell: HashMap<Point, agent::Citizen>
+    pub agent_cell: HashMap<Point, agent::Citizen>,
+    pub infected: i32
 }
 
 impl AgentLocationMap {
@@ -23,7 +24,7 @@ impl AgentLocationMap {
             map.insert(points[i], agent_list[i]);
         }
 
-        AgentLocationMap {grid_size: size, agent_cell:map}
+        AgentLocationMap {grid_size: size, agent_cell:map, infected: 0}
     }
 
     pub fn move_agents(&mut self){
@@ -97,6 +98,7 @@ impl AgentLocationMap {
             if rng.gen_bool(neighbor.get_infection_transmission_rate()) {
                 println!("Infection rate {}", neighbor.get_infection_transmission_rate());
                 self.agent_cell.get_mut(&cell).unwrap().infected = true;
+                self.infected = self.infected + 1;
             }
         }
     }
@@ -114,6 +116,14 @@ impl AgentLocationMap {
         for (k,v) in self.agent_cell.iter(){
             println!("x:{}, y:{} - id:{} infected:{}", k.x, k.y, v.id, v.infected);
         }
+    }
+
+    pub fn get_population(&self) -> i32{
+        self.agent_cell.len() as i32
+    }
+
+    pub fn get_infected_count(&self) -> i32{
+        self.infected
     }
 
     fn get_empty_cells_from(&self, neighbors:Vec<Point>) -> Vec<Point>{

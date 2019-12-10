@@ -6,6 +6,7 @@ use crate::geography::point;
 use crate::geography::housing_area::HousingArea;
 use crate::geography::work_area::WorkArea;
 use crate::geography::point::Point;
+use crate::csv_service;
 
 pub struct Epidemiology {
     pub agent_list: Vec<agent::Citizen>,
@@ -31,7 +32,10 @@ impl Epidemiology {
         Epidemiology{agent_list, agent_location_map, housing_area, work_area}
     }
 
-    pub fn run(&mut self, simulation_life_time:i32, vaccination_time:i32, vaccination_percentage:f64) {
+    pub fn run(&mut self, simulation_life_time:i32, vaccination_time:i32, vaccination_percentage:f64, output_file_name: &str) {
+        let mut records: Vec<csv_service::Row> = Vec::new();
+        let population = self.agent_location_map.get_population();
+
         println!("Tick 0");
         self.agent_location_map.goto(self.housing_area);
         for i in 1..simulation_life_time {
@@ -51,9 +55,15 @@ impl Epidemiology {
             }
 
             let end_time = SystemTime::now();
+            let infected_citizen = self.agent_location_map.get_infected_count();
+            let susceptible = population - infected_citizen;
+
+            records.push(csv_service::Row::new(i, susceptible, infected_citizen));
             println!("Tick {}, Time taken {:?}", i, end_time.duration_since(start_time));
 //            self.agent_location_map.print();
         }
+
+        csv_service::write(output_file_name, &records);
     }
 }
 

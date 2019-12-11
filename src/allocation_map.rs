@@ -9,11 +9,12 @@ use std::prelude::v1::Vec;
 use crate::geography::point::Point;
 use crate::utils;
 use crate::geography::Area;
+use crate::csv_service::Row;
 
 pub struct AgentLocationMap {
     pub grid_size: i32,
     pub agent_cell: HashMap<Point, agent::Citizen>,
-    pub infected: i32
+    pub counts: Row
 }
 
 impl AgentLocationMap {
@@ -24,7 +25,7 @@ impl AgentLocationMap {
             map.insert(points[i], agent_list[i]);
         }
 
-        AgentLocationMap {grid_size: size, agent_cell:map, infected: 0}
+        AgentLocationMap {grid_size: size, agent_cell:map, counts: Row::create(0, agent_list.len() as i32, 0, 0, 0, 0)}
     }
 
     pub fn move_agents(&mut self){
@@ -43,10 +44,10 @@ impl AgentLocationMap {
         self.agent_cell.insert(new_cell, agent);
     }
 
-    pub fn update_infections(&mut self) {
+    pub fn update_infections(&mut self){
         let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
-            self.update_infection(&cell)
+            self.update_infection(&cell);
         }
     }
 
@@ -66,11 +67,15 @@ impl AgentLocationMap {
         let mut rng = thread_rng();
         println!("vaccination");
         for(_, agent) in self.agent_cell.iter_mut(){
-            if !agent.infected && rng.gen_bool(percentage){
+            if !agent.is_infected() && rng.gen_bool(percentage){
                 agent.set_vaccination(true);
                 println!("Agent {} is vaccinated", agent.id);
             }
         };
+    }
+
+    pub fn get_record(&self) -> Row{
+        return self.counts;
     }
 
     fn get_agent(&mut self, cell: &Point) -> agent::Citizen {
@@ -79,7 +84,7 @@ impl AgentLocationMap {
 
     fn move_agent_from(&mut self, cell: &Point) {
         let agent = self.get_agent(&cell);
-        if agent.quarantined{
+        if agent.is_quarantined(){
             return;
         }
         let neighbor_cells:Vec<Point> = cell.get_neighbor_cells(self.grid_size);
@@ -87,43 +92,56 @@ impl AgentLocationMap {
         self.move_agent(agent, *cell, new_cell);
     }
 
-    fn update_infection(&mut self, cell: &Point) -> () {
-        if self.get_agent(&cell).infected || self.get_agent(&cell).vaccinated {
-            return;
-        }
-        let neighbors = self.get_agents_from(cell.get_neighbor_cells(self.grid_size));
-        let infected_neighbors: Vec<agent::Citizen> = neighbors.into_iter().filter(|agent| agent.infected).collect();
-        for neighbor in infected_neighbors {
-            let mut rng = thread_rng();
-            if rng.gen_bool(neighbor.get_infection_transmission_rate()) {
-                println!("Infection rate {}", neighbor.get_infection_transmission_rate());
-                self.agent_cell.get_mut(&cell).unwrap().infected = true;
-                self.infected = self.infected + 1;
+    fn update_infection(&mut self, cell: &Point) {
+        if self.get_agent(&cell).is_susceptible() && !self.get_agent(&cell).vaccinated {
+            let neighbors = self.get_agents_from(cell.get_neighbor_cells(self.grid_size));
+            let infected_neighbors: Vec<agent::Citizen> = neighbors.into_iter().filter(|agent| agent.is_infected() || agent.is_quarantined()).collect();
+            for neighbor in infected_neighbors {
+                let mut rng = thread_rng();
+                if rng.gen_bool(neighbor.get_infection_transmission_rate()) {
+                    println!("Infection rate {}", neighbor.get_infection_transmission_rate());
+                    let infected = self.agent_cell.get_mut(&cell).unwrap().infect();
+                    self.counts.update_infected(infected);
+                    self.counts.update_susceptible(-infected);
+                    return;
+                }
             }
         }
     }
 
     pub fn update_infection_day(&mut self) {
         for (_, citizen) in self.agent_cell.iter_mut(){
-            if citizen.infected{
+            if citizen.is_infected() || citizen.is_quarantined(){
                 citizen.increment_infection_day();
-                citizen.set_quarantined();
+            }
+        }
+    }
+
+    pub fn quarantine(&mut self) {
+        for (_, citizen) in self.agent_cell.iter_mut(){
+            if citizen.is_infected() && !citizen.is_quarantined(){
+                let quarantined = citizen.quarantine();
+                self.counts.update_quarantined(quarantined);
+                self.counts.update_infected(-quarantined);
+            }
+        }
+    }
+
+    pub fn deceased(&mut self) {
+        for (_, citizen) in self.agent_cell.iter_mut(){
+            if citizen.is_quarantined(){
+                let result = citizen.decease();
+                self.counts.update_deceased(result.0);
+                self.counts.update_recovered(result.1);
+                self.counts.update_quarantined((result.0 + result.1)* -1);
             }
         }
     }
 
     pub fn print(&self){
         for (k,v) in self.agent_cell.iter(){
-            println!("x:{}, y:{} - id:{} infected:{}", k.x, k.y, v.id, v.infected);
+            println!("x:{}, y:{} - id:{} infected:{}", k.x, k.y, v.id, v.is_infected());
         }
-    }
-
-    pub fn get_population(&self) -> i32{
-        self.agent_cell.len() as i32
-    }
-
-    pub fn get_infected_count(&self) -> i32{
-        self.infected
     }
 
     fn get_empty_cells_from(&self, neighbors:Vec<Point>) -> Vec<Point>{
@@ -149,7 +167,7 @@ mod tests{
 
     fn before_each() -> AgentLocationMap {
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
-        let agents = vec![agent::Citizen::new_citizen(1, true, points[0], points[1]), agent::Citizen::new_citizen(2, false, points[1], points[0])];
+        let agents = vec![agent::Citizen::new_citizen(1, points[0], points[1]), agent::Citizen::new_citizen(2, points[1], points[0])];
         let map = AgentLocationMap::new(5, &agents, &points);
         map
     }

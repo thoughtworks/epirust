@@ -3,48 +3,159 @@ use rand::seq::SliceRandom;
 use crate::geography::point::Point;
 use crate::constants;
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum State{
+    Susceptible{},
+    Infected{},
+    Quarantined{},
+    Recovered{},
+    Deceased{}
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub struct StateMachine{
+    state: State,
+    infection_day: i32
+}
+
+impl StateMachine{
+    fn new() -> Self{
+        StateMachine{
+            state: State::Susceptible{},
+            infection_day: 0
+        }
+    }
+
+//    pub fn next(&mut self){
+//        match self.state {
+//            State::Susceptible{} => self.state = State::Infected{},
+//            State::Infected {} => {
+//                if small_pox::to_be_quarantined(self.infection_day){
+//                    self.state = State::Quarantined {}
+//                }
+//            }
+//        }
+//    }
+
+    pub fn get_infection_day(&self) -> i32{
+        match self.state {
+            State::Infected{} => {
+                self.infection_day
+            },
+            _ => 0
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Citizen {
     pub id: i32,
-    pub infected: bool,
     pub immunity: i32,
-    pub infection_day: i32,
     pub home_location: Point,
     pub work_location: Point,
-    pub quarantined: bool,
-    pub vaccinated: bool
+    pub vaccinated: bool,
+    state_machine: StateMachine
 }
 
 impl Citizen {
     pub fn new() -> Citizen {
-        Citizen{id:-1, infected: false, immunity: 0, infection_day: 0, home_location:Point::new(-1, -1), work_location:Point::new(-1, -1), quarantined: false, vaccinated: false}
+        Citizen{id:-1, immunity: 0, home_location:Point::new(-1, -1), work_location:Point::new(-1, -1), vaccinated: false, state_machine:StateMachine::new()}
     }
 
-    pub fn new_citizen(id: i32, infected: bool, home_location: Point, work_location: Point) -> Citizen {
+    pub fn new_citizen(id: i32, home_location: Point, work_location: Point) -> Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor();
-        Citizen{id, infected, immunity: disease_randomness_factor, infection_day: 0, home_location, work_location, quarantined: false, vaccinated: false}
-    }
 
-    pub fn increment_infection_day(&mut self){
-        self.infection_day += 1;
+        Citizen{id, immunity: disease_randomness_factor, home_location, work_location,
+            vaccinated: false, state_machine:StateMachine::new()}
     }
 
     pub fn get_infection_transmission_rate(&self) -> f64{
-        small_pox::get_current_transmission_rate(self.infection_day + self.immunity)
-    }
-
-    pub fn set_quarantined(&mut self){
-        let quarantine = small_pox::to_be_quarantined(small_pox::get_current_transmission_rate(self.infection_day + self.immunity));
-        if quarantine {
-            println!("ID {} quarantined", self.id);
-            self.quarantined = true;
-            return;
-        }
-        self.quarantined = false;
+        small_pox::get_current_transmission_rate(self.state_machine.get_infection_day() + self.immunity)
     }
 
     pub fn set_vaccination(&mut self, vaccinated: bool){
         self.vaccinated = vaccinated;
+    }
+
+    pub fn infect(&mut self) -> i32{
+        match self.state_machine.state {
+            State::Susceptible{} => {
+                    self.state_machine.state = State::Infected {};
+                    return 1;
+                },
+            _ => {
+                panic!("Invalid state transition!")
+            }
+        }
+        return 0;
+    }
+
+    pub fn quarantine(&mut self) -> i32{
+        match self.state_machine.state{
+            State::Infected {} => {
+                if small_pox::to_be_quarantined(self.state_machine.infection_day + self.immunity) {
+                    println!("Quarantine");
+                    self.state_machine.state = State::Quarantined {};
+                    return 1;
+                }
+            },
+            _ => {
+                panic!("Invalid state transition!")
+            }
+        }
+        return 0;
+    }
+
+    pub fn decease(&mut self) -> (i32, i32){
+        match self.state_machine.state{
+            State::Quarantined {} => {
+                if self.state_machine.infection_day == small_pox::get_disease_last_day(){
+                    if small_pox::to_be_deceased(){
+                        println!("Deceased");
+                        self.state_machine.state = State::Deceased {};
+                        return (1,0);
+                    }
+                    println!("Recovered");
+                    self.state_machine.state = State::Recovered {};
+                    return (0, 1)
+                }
+            },
+            _ => {
+                panic!("Invalid state transition!")
+            }
+        }
+        return (0, 0)
+    }
+
+    pub fn is_quarantined(&self) -> bool {
+        match self.state_machine.state {
+            State::Quarantined {} => {
+                return true;
+            },
+            _ => return false
+        }
+    }
+
+    pub fn is_susceptible(&self) -> bool {
+        match self.state_machine.state {
+            State::Susceptible {} => {
+                return true;
+            },
+            _ => return false
+        }
+    }
+
+    pub fn is_infected(&self) -> bool {
+        match self.state_machine.state {
+            State::Infected{} => {
+                return true;
+            },
+            _ => return false
+        }
+    }
+
+    pub fn increment_infection_day(&mut self){
+        self.state_machine.infection_day = self.state_machine.infection_day + 1;
     }
 
     fn generate_disease_randomness_factor() -> i32{
@@ -57,11 +168,11 @@ pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>)
     let mut agent_list = Vec::with_capacity(home_locations.len());
 
     for i in 0..home_locations.len(){
-        let agent = Citizen::new_citizen(i as i32, false, home_locations[i], work_locations[i]);
+        let agent = Citizen::new_citizen(i as i32,home_locations[i], work_locations[i]);
         agent_list.push(agent);
     }
 
-    agent_list.last_mut().as_mut().unwrap().infected = true;
+    agent_list.last_mut().as_mut().unwrap().infect();
     agent_list
 }
 

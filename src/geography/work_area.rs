@@ -1,6 +1,5 @@
 use crate::geography::point::Point;
 use crate::geography::Area;
-use crate::constants;
 use crate::agent;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq)]
@@ -37,7 +36,7 @@ mod tests{
     fn get_work_dimensions(){
         let work_area = WorkArea::new(Point::new(3, 0), Point::new(5, 5));
         let point = Point::new(2,2);
-        let point_vector = work_area.get_dimensions(agent::Citizen::new_citizen(1, false, point, point));
+        let point_vector = work_area.get_dimensions(agent::Citizen::new_citizen(1, point, point));
 
         assert_eq!(point_vector.len(), 3);
     }

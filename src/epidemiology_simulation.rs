@@ -34,36 +34,46 @@ impl Epidemiology {
 
     pub fn run(&mut self, simulation_life_time:i32, vaccination_time:i32, vaccination_percentage:f64, output_file_name: &str) {
         let mut records: Vec<csv_service::Row> = Vec::new();
-        let population = self.agent_location_map.get_population();
 
         println!("Tick 0");
+
         self.agent_location_map.goto(self.housing_area);
         for i in 1..simulation_life_time {
+            self.agent_location_map.counts.increment_hour();
             let start_time = SystemTime::now();
-            match i% constants::NUMBER_OF_HOURS {
-                constants::ROUTINE_START_TIME => {
-                    self.agent_location_map.update_infections();
-                    self.agent_location_map.update_infection_day();
-                },
-                constants::ROUTINE_WORK_TIME => self.agent_location_map.goto(self.work_area),
-                constants::ROUTINE_WORK_END_TIME => self.agent_location_map.goto(self.housing_area),
-                _ => self.agent_location_map.move_agents()
-            }
+
+            self.routine(i);
 
             if i == vaccination_time{
                 self.agent_location_map.vaccinate(vaccination_percentage);
             }
 
             let end_time = SystemTime::now();
-            let infected_citizen = self.agent_location_map.get_infected_count();
-            let susceptible = population - infected_citizen;
 
-            records.push(csv_service::Row::new(i, susceptible, infected_citizen));
+            records.push(self.agent_location_map.get_record());
             println!("Tick {}, Time taken {:?}", i, end_time.duration_since(start_time));
-//            self.agent_location_map.print();
+            self.agent_location_map.print();
         }
 
-        csv_service::write(output_file_name, &records);
+        let result = csv_service::write(output_file_name, &records);
+        match result{
+            Ok(_) => {},
+            Err(e) => {println!("Error occurred while writing data to csv {:?}", e)}
+        }
+    }
+
+    fn routine(&mut self, i: i32) {
+        match i % constants::NUMBER_OF_HOURS {
+            constants::ROUTINE_START_TIME => {
+                self.agent_location_map.update_infections();
+                self.agent_location_map.update_infection_day();
+                self.agent_location_map.quarantine();
+            },
+            constants::ROUTINE_WORK_TIME => self.agent_location_map.goto(self.work_area),
+            constants::ROUTINE_WORK_END_TIME => self.agent_location_map.goto(self.housing_area),
+            constants::ROUTINE_END_TIME => { self.agent_location_map.deceased(); },
+            _ => self.agent_location_map.move_agents()
+        }
     }
 }
 

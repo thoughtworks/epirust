@@ -1,9 +1,14 @@
 pub mod small_pox {
+
+    use rand::thread_rng;
+    use rand::Rng;
+
     static REGULAR_TRANSMISSION_START_DAY: i32 = 10;
     static HIGH_TRANSMISSION_START_DAY: i32 = 16;
     static DISEASE_LAST_DAY: i32 = 22;
     static REGULAR_TRANSMISSION_RATE: f64 = 0.05;
     static HIGH_TRANSMISSION_RATE: f64 = 0.5;
+    static DEATH_RATE: f64 = 0.2;
 
     pub fn get_current_transmission_rate(infection_day: i32) -> f64 {
         if REGULAR_TRANSMISSION_START_DAY < infection_day && infection_day <= HIGH_TRANSMISSION_START_DAY {
@@ -14,8 +19,21 @@ pub mod small_pox {
         return 0.0;
     }
 
-    pub fn to_be_quarantined(transmission_rate: f64) -> bool {
+    pub fn to_be_quarantined(infection_day: i32) -> bool {
+        let transmission_rate = get_current_transmission_rate(infection_day);
         if transmission_rate >= HIGH_TRANSMISSION_RATE{
+            return true;
+        }
+        false
+    }
+
+    pub fn get_disease_last_day() -> i32{
+        return DISEASE_LAST_DAY
+    }
+
+    pub fn to_be_deceased() -> bool{
+        let mut rng = thread_rng();
+        if rng.gen_bool(DEATH_RATE){
             return true;
         }
         false
@@ -37,10 +55,10 @@ mod tests {
 
     #[test]
     fn to_be_quarantined() {
-        let actual = small_pox::to_be_quarantined(0.2);
+        let actual = small_pox::to_be_quarantined(12);
         assert_eq!(actual, false);
 
-        let actual = small_pox::to_be_quarantined(0.8);
+        let actual = small_pox::to_be_quarantined(22);
         assert_eq!(actual, true);
     }
 }

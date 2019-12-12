@@ -1,7 +1,7 @@
 use rand::seq::SliceRandom;
 
-pub fn get_random_element_from<T: Copy>(vector: &Vec<T>, fallback_element: T) -> T {
-    let choice = vector.choose(&mut rand::thread_rng());
+pub fn get_random_element_from<T: Copy>(collection: &Vec<T>, fallback_element: T) -> T {
+    let choice = collection.choose(&mut rand::thread_rng());
     match choice {
         Some(x) => return *x,
         None => return fallback_element

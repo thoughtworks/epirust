@@ -19,12 +19,12 @@ pub struct Epidemiology {
 impl Epidemiology {
 
     pub fn new(grid_size: i32, number_of_agents: i32) -> Epidemiology {
-//        TODO: Change allocation strategy
-        let x_offset_for_home = grid_size / constants::HOUSE_AREA_RELATED_SIZE;
-        let x_offset_for_work = x_offset_for_home + constants::TRANSPORT_AREA_SIZE+1;
+        let x_offset_for_home = (grid_size as f32 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32;
+        let x_offset_for_transport = x_offset_for_home + (grid_size as f32 * constants::TRANSPORT_AREA_RELATIVE_SIZE).ceil() as i32;
+        let bound = grid_size - 1;
 
-        let (housing_area, transport_area, work_area) = Epidemiology::define_geography(grid_size, x_offset_for_home, x_offset_for_work);
-        let (home_locations, agent_list) = Epidemiology::generate_population(grid_size, number_of_agents, x_offset_for_home);
+        let (housing_area, transport_area, work_area) = Epidemiology::define_geography(bound, x_offset_for_home, x_offset_for_transport);
+        let (home_locations, agent_list) = Epidemiology::generate_population(number_of_agents,housing_area, transport_area);
 
         let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &home_locations);
         Epidemiology{agent_location_map, housing_area, work_area, transport_area}
@@ -58,19 +58,20 @@ impl Epidemiology {
         }
     }
 
-    fn define_geography(grid_size: i32, x_offset_for_home: i32, x_offset_for_work: i32) -> (HousingArea, TransportArea, WorkArea) {
-        let housing_area = HousingArea::new(Point::new(0, 0), Point::new(x_offset_for_home, grid_size));
-        let transport_area = TransportArea::new(Point::new(x_offset_for_home + 1, 0), Point::new(x_offset_for_work - 1, grid_size));
-        let work_area = WorkArea::new(Point::new(x_offset_for_work, 0), Point::new(grid_size, grid_size));
+    fn define_geography(bound: i32, x_offset_for_home: i32, x_offset_for_transport:i32) -> (HousingArea, TransportArea, WorkArea) {
+        let housing_area = HousingArea::new(Point::new(0, 0), Point::new(x_offset_for_home, bound));
+        let transport_area = TransportArea::new(Point::new(x_offset_for_home + 1, 0), Point::new(x_offset_for_transport, bound));
+        let work_area = WorkArea::new(Point::new(x_offset_for_transport + 1, 0), Point::new(bound, bound));
         (housing_area, transport_area, work_area)
     }
 
-    fn generate_population(grid_size: i32, number_of_agents: i32, x_offset_for_home: i32) -> (Vec<Point>, Vec<agent::Citizen>) {
-        let home_location_boundary = Point::new(x_offset_for_home, grid_size);
-        let home_locations = point::point_factory(Point::new(0, 0),
-                                                  home_location_boundary, number_of_agents);
+    fn generate_population(number_of_agents: i32, home_area: HousingArea, transport_area: TransportArea) -> (Vec<Point>, Vec<agent::Citizen>) {
+
+        let home_locations = point::point_factory(home_area.start_offset,
+                                                  home_area.end_offset, number_of_agents);
+        let scaling_factor = home_area.end_offset.x + transport_area.end_offset.x;
         let work_locations = home_locations.iter()
-            .map(|x| *x + point::Point::new(x_offset_for_home, 0)).collect();
+            .map(|x| *x + point::Point::new(scaling_factor, 0)).collect();
         let agent_list = agent::citizen_factory(&home_locations, &work_locations);
         (home_locations, agent_list)
     }

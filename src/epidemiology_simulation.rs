@@ -59,7 +59,7 @@ impl Epidemiology {
     }
 
     fn define_geography(grid_size: i32, x_offset_for_home: i32, x_offset_for_work: i32) -> (HousingArea, TransportArea, WorkArea) {
-        let housing_area: HousingArea = HousingArea::new(Point::new(0, 0), Point::new(x_offset_for_home, grid_size));
+        let housing_area = HousingArea::new(Point::new(0, 0), Point::new(x_offset_for_home, grid_size));
         let transport_area = TransportArea::new(Point::new(x_offset_for_home + 1, 0), Point::new(x_offset_for_work - 1, grid_size));
         let work_area = WorkArea::new(Point::new(x_offset_for_work, 0), Point::new(grid_size, grid_size));
         (housing_area, transport_area, work_area)

@@ -89,7 +89,7 @@ pub fn point_factory(start:Point, end:Point, number_of_points:i32) -> Vec<Point>
         let rand_y = rng.gen_range(start.y, end.y);
         let mut is_duplicate = false;
         for point in points.iter_mut(){
-            if *point == (Point{x: rand_x, y:rand_y}) {
+            if *point == (Point::new(rand_x, rand_y)) {
                 println!("Duplicate");
                 is_duplicate = true;
             }
@@ -101,6 +101,17 @@ pub fn point_factory(start:Point, end:Point, number_of_points:i32) -> Vec<Point>
     points
 }
 
+//TODO: Add tests
+pub fn get_points_within(start: Point, end: Point) -> Vec<Point>{
+    let mut point_vec:Vec<Point> = Vec::new();
+
+    for x in start.x..end.x+1{
+        for y in start.y..end.y+1{
+            point_vec.push(Point::new(x, y));
+        }
+    }
+    point_vec
+}
 
 #[cfg(test)]
 mod tests{

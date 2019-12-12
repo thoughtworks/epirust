@@ -8,12 +8,14 @@ use crate::geography::work_area::WorkArea;
 use crate::geography::point::Point;
 use crate::csv_service;
 use crate::geography::transport_area::TransportArea;
+use crate::geography::hospital::Hospital;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
     pub housing_area: HousingArea,
     pub work_area: WorkArea,
-    pub transport_area: TransportArea
+    pub transport_area: TransportArea,
+    pub hospital: Hospital
 }
 
 impl Epidemiology {
@@ -21,13 +23,14 @@ impl Epidemiology {
     pub fn new(grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage:f64) -> Epidemiology {
         let x_offset_for_home = (grid_size as f32 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32;
         let x_offset_for_transport = x_offset_for_home + (grid_size as f32 * constants::TRANSPORT_AREA_RELATIVE_SIZE).ceil() as i32;
+        let x_offset_for_hospital = x_offset_for_transport + (grid_size as f32 * constants::HOSPITAL_RELATIVE_SIZE).ceil() as i32;
         let bound = grid_size - 1;
 
-        let (housing_area, transport_area, work_area) = Epidemiology::define_geography(bound, x_offset_for_home, x_offset_for_transport);
+        let (housing_area, transport_area, hospital, work_area) = Epidemiology::define_geography(bound, x_offset_for_home, x_offset_for_transport, x_offset_for_hospital);
         let (home_locations, agent_list) = Epidemiology::generate_population(number_of_agents,housing_area, transport_area, public_transport_percentage, working_percentage);
 
         let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &home_locations);
-        Epidemiology{agent_location_map, housing_area, work_area, transport_area}
+        Epidemiology{agent_location_map, housing_area, work_area, transport_area, hospital}
     }
 
 //    TODO: Stop the simulation if the infection dies out
@@ -58,11 +61,12 @@ impl Epidemiology {
         }
     }
 
-    fn define_geography(bound: i32, x_offset_for_home: i32, x_offset_for_transport:i32) -> (HousingArea, TransportArea, WorkArea) {
+    fn define_geography(bound: i32, x_offset_for_home: i32, x_offset_for_transport:i32, x_offset_for_hospital: i32) -> (HousingArea, TransportArea, Hospital, WorkArea) {
         let housing_area = HousingArea::new(Point::new(0, 0), Point::new(x_offset_for_home, bound));
         let transport_area = TransportArea::new(Point::new(x_offset_for_home + 1, 0), Point::new(x_offset_for_transport, bound));
-        let work_area = WorkArea::new(Point::new(x_offset_for_transport + 1, 0), Point::new(bound, bound));
-        (housing_area, transport_area, work_area)
+        let hospital = Hospital::new(Point::new(x_offset_for_transport+1, 0), Point::new(x_offset_for_hospital, bound));
+        let work_area = WorkArea::new(Point::new(x_offset_for_hospital + 1, 0), Point::new(bound, bound));
+        (housing_area, transport_area, hospital, work_area)
     }
 
     fn generate_population(number_of_agents: i32, home_area: HousingArea, transport_area: TransportArea,
@@ -82,7 +86,7 @@ impl Epidemiology {
             constants::ROUTINE_START_TIME => {
                 self.agent_location_map.update_infections();
                 self.agent_location_map.update_infection_day();
-                self.agent_location_map.quarantine();
+                self.agent_location_map.quarantine(self.hospital);
             },
             constants::ROUTINE_TRAVEL_START_TIME => self.agent_location_map.commute(self.transport_area),
             constants::ROUTINE_WORK_TIME => self.agent_location_map.goto(self.work_area),

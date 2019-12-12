@@ -58,19 +58,20 @@ pub struct Citizen {
     pub vaccinated: bool,
     pub uses_public_transport: bool,
     pub working: bool,
+    pub hospitalized: bool,
     state_machine: StateMachine
 }
 
 impl Citizen {
     pub fn new() -> Citizen {
-        Citizen{id:-1, immunity: 0, home_location:Point::new(-1, -1), work_location:Point::new(-1, -1), vaccinated: false, uses_public_transport: false, working: false, state_machine:StateMachine::new()}
+        Citizen{id:-1, immunity: 0, home_location:Point::new(-1, -1), work_location:Point::new(-1, -1), vaccinated: false, uses_public_transport: false, working: false, hospitalized: false, state_machine:StateMachine::new()}
     }
 
     pub fn new_citizen(id: i32, home_location: Point, work_location: Point, uses_public_transport: bool, working: bool) -> Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor();
 
         Citizen{id, immunity: disease_randomness_factor, home_location, work_location, vaccinated: false,
-            uses_public_transport, working, state_machine:StateMachine::new()}
+            uses_public_transport, working, hospitalized: false, state_machine:StateMachine::new()}
     }
 
     pub fn get_infection_transmission_rate(&self) -> f64{
@@ -113,6 +114,7 @@ impl Citizen {
         match self.state_machine.state{
             State::Quarantined {} => {
                 if self.state_machine.infection_day == small_pox::get_disease_last_day(){
+                    self.hospitalized = false;
                     if small_pox::to_be_deceased(){
                         println!("Deceased");
                         self.state_machine.state = State::Deceased {};
@@ -171,7 +173,7 @@ impl Citizen {
     }
 
     pub fn can_move(&self) -> bool{
-        if self.is_quarantined() || self.is_deceased(){
+        if self.is_quarantined() || self.hospitalized || self.is_deceased(){
             return false;
         }
         true

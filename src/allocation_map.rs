@@ -11,6 +11,7 @@ use crate::utils;
 use crate::geography::Area;
 use crate::csv_service::Row;
 use crate::geography::transport_area::TransportArea;
+use crate::geography::hospital::Hospital;
 
 pub struct AgentLocationMap {
     pub grid_size: i32,
@@ -81,7 +82,6 @@ impl AgentLocationMap {
             if agent.working{
                 let area_dimensions = area.get_dimensions(agent);
                 let vacant_cells = self.get_empty_cells_from(area_dimensions);
-
                 self.move_agent(agent, cell, utils::get_random_element_from(&vacant_cells, agent.home_location));
                 continue;
             }
@@ -122,7 +122,7 @@ impl AgentLocationMap {
         if self.get_agent(&cell).is_susceptible() && !self.get_agent(&cell).vaccinated {
             let neighbors = self.get_agents_from(cell.get_neighbor_cells(self.grid_size));
             let infected_neighbors: Vec<agent::Citizen> = neighbors.into_iter().
-                filter(|agent| agent.is_infected() || agent.is_quarantined()).collect();
+                filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized).collect();
             for neighbor in infected_neighbors {
                 let mut rng = thread_rng();
                 if rng.gen_bool(neighbor.get_infection_transmission_rate()) {
@@ -144,20 +144,35 @@ impl AgentLocationMap {
         }
     }
 
-    pub fn quarantine(&mut self) {
-        for (_, citizen) in self.agent_cell.iter_mut(){
+    pub fn quarantine(&mut self, area: Hospital) {
+        let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
+        for cell in keys {
+            let mut citizen = self.get_agent(&cell);
             if citizen.is_infected() && !citizen.is_quarantined(){
                 let quarantined = citizen.quarantine();
+                self.goto_hospital(area, &cell, &mut citizen);
+                citizen.hospitalized = true;
                 self.counts.update_quarantined(quarantined);
                 self.counts.update_infected(-quarantined);
             }
         }
     }
 
+    fn goto_hospital(&mut self, area: Hospital, cell: &Point, citizen: &mut agent::Citizen) {
+        let area_dimensions = area.get_dimensions(*citizen);
+        let vacant_cells = self.get_empty_cells_from(area_dimensions);
+        self.move_agent(*citizen, *cell, utils::get_random_element_from(&vacant_cells, citizen.home_location));
+    }
+
     pub fn deceased(&mut self) {
-        for (_, citizen) in self.agent_cell.iter_mut(){
+        let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
+        for cell in keys {
+            let mut citizen = self.get_agent(&cell);
             if citizen.is_quarantined(){
                 let result = citizen.decease();
+                if result.0 == 1 || result.1 == 1{
+                    self.move_agent(citizen, cell, citizen.home_location);
+                }
                 self.counts.update_deceased(result.0);
                 self.counts.update_recovered(result.1);
                 self.counts.update_quarantined((result.0 + result.1)* -1);

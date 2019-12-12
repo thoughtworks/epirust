@@ -18,13 +18,13 @@ pub struct Epidemiology {
 
 impl Epidemiology {
 
-    pub fn new(grid_size: i32, number_of_agents: i32) -> Epidemiology {
+    pub fn new(grid_size: i32, number_of_agents: i32, public_transport_percentage: f64) -> Epidemiology {
         let x_offset_for_home = (grid_size as f32 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32;
         let x_offset_for_transport = x_offset_for_home + (grid_size as f32 * constants::TRANSPORT_AREA_RELATIVE_SIZE).ceil() as i32;
         let bound = grid_size - 1;
 
         let (housing_area, transport_area, work_area) = Epidemiology::define_geography(bound, x_offset_for_home, x_offset_for_transport);
-        let (home_locations, agent_list) = Epidemiology::generate_population(number_of_agents,housing_area, transport_area);
+        let (home_locations, agent_list) = Epidemiology::generate_population(number_of_agents,housing_area, transport_area, public_transport_percentage);
 
         let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &home_locations);
         Epidemiology{agent_location_map, housing_area, work_area, transport_area}
@@ -65,14 +65,14 @@ impl Epidemiology {
         (housing_area, transport_area, work_area)
     }
 
-    fn generate_population(number_of_agents: i32, home_area: HousingArea, transport_area: TransportArea) -> (Vec<Point>, Vec<agent::Citizen>) {
+    fn generate_population(number_of_agents: i32, home_area: HousingArea, transport_area: TransportArea, public_transport_percentage: f64) -> (Vec<Point>, Vec<agent::Citizen>) {
 
         let home_locations = point::point_factory(home_area.start_offset,
                                                   home_area.end_offset, number_of_agents);
         let scaling_factor = home_area.end_offset.x + transport_area.end_offset.x;
         let work_locations = home_locations.iter()
             .map(|x| *x + point::Point::new(scaling_factor, 0)).collect();
-        let agent_list = agent::citizen_factory(&home_locations, &work_locations);
+        let agent_list = agent::citizen_factory(&home_locations, &work_locations, public_transport_percentage);
         (home_locations, agent_list)
     }
 
@@ -83,11 +83,11 @@ impl Epidemiology {
                 self.agent_location_map.update_infection_day();
                 self.agent_location_map.quarantine();
             },
-            constants::ROUTINE_TRAVEL_START_TIME => self.agent_location_map.goto(self.transport_area),
+            constants::ROUTINE_TRAVEL_START_TIME => self.agent_location_map.commute(self.transport_area),
             constants::ROUTINE_WORK_TIME => self.agent_location_map.goto(self.work_area),
-            constants::ROUTINE_TRAVEL_END_TIME => self.agent_location_map.goto(self.transport_area),
+            constants::ROUTINE_TRAVEL_END_TIME => self.agent_location_map.commute(self.transport_area),
             constants::ROUTINE_WORK_END_TIME => self.agent_location_map.goto(self.housing_area),
-            constants::ROUTINE_END_TIME => { self.agent_location_map.deceased(); },
+            constants::ROUTINE_END_TIME => self.agent_location_map.deceased(),
             _ => self.agent_location_map.move_agents()
         }
     }

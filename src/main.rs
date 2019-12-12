@@ -17,8 +17,9 @@ fn main() {
     const SIMULATION_LIFE_TIME:i32 = 100;
     const VACCINATION_TIME:i32 = 500;
     const VACCINATION_PERCENTAGE:f64 = 0.2;
+    const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.3;
     const OUTPUT_FILE_NAME:&str = "simulation.csv";
 
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS);
+    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE);
     epidemiology.run(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
 }

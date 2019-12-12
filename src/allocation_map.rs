@@ -10,6 +10,7 @@ use crate::geography::point::Point;
 use crate::utils;
 use crate::geography::Area;
 use crate::csv_service::Row;
+use crate::geography::transport_area::TransportArea;
 
 pub struct AgentLocationMap {
     pub grid_size: i32,
@@ -27,6 +28,23 @@ impl AgentLocationMap {
         let row = Row::new(agent_list.len() as i32);
 
         AgentLocationMap {grid_size: size, agent_cell:map, counts: row }
+    }
+
+    pub fn commute(&mut self, transport_area:TransportArea){
+        let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
+        for cell in keys {
+            let agent = self.get_agent(&cell);
+            if !agent.can_move(){
+                continue;
+            }
+            if agent.uses_public_transport {
+                let area_dimensions = transport_area.get_dimensions(agent);
+                let vacant_cells = self.get_empty_cells_from(area_dimensions);
+                self.move_agent(agent, cell, utils::get_random_element_from(&vacant_cells, agent.home_location));
+                continue;
+            }
+            self.move_agent_from(&cell);
+        }
     }
 
     pub fn move_agents(&mut self){
@@ -57,6 +75,9 @@ impl AgentLocationMap {
         let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
             let agent = self.get_agent(&cell);
+            if !agent.can_move(){
+                continue;
+            }
             let area_dimensions = area.get_dimensions(agent);
             let vacant_cells = self.get_empty_cells_from(area_dimensions);
 
@@ -85,7 +106,7 @@ impl AgentLocationMap {
 
     fn move_agent_from(&mut self, cell: &Point) {
         let agent = self.get_agent(&cell);
-        if agent.is_quarantined(){
+        if !agent.can_move(){
             return;
         }
         let neighbor_cells:Vec<Point> = cell.get_neighbor_cells(self.grid_size);
@@ -169,7 +190,7 @@ mod tests{
 
     fn before_each() -> AgentLocationMap {
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
-        let agents = vec![agent::Citizen::new_citizen(1, points[0], points[1]), agent::Citizen::new_citizen(2, points[1], points[0])];
+        let agents = vec![agent::Citizen::new_citizen(1, points[0], points[1], false), agent::Citizen::new_citizen(2, points[1], points[0], true)];
         let map = AgentLocationMap::new(5, &agents, &points);
         map
     }

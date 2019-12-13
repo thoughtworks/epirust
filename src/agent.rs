@@ -198,7 +198,6 @@ pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>,
         agent_list.push(agent);
     }
 //TODO: pass number of infected as parameter
-//TODO: correct the accounting errors
     agent_list.last_mut().as_mut().unwrap().infect();
     agent_list
 }
@@ -207,12 +206,16 @@ pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>,
 mod tests{
     use super::*;
 
-    #[test]
-    fn generate_citizen(){
+    fn before_each() -> Vec<Citizen>{
         let home_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
         let work_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
 
-        let citizen_list = citizen_factory(&home_locations, &work_locations, 1.0, 1.0);
+        citizen_factory(&home_locations, &work_locations, 1.0, 1.0)
+    }
+
+    #[test]
+    fn generate_citizen(){
+        let citizen_list = before_each();
         assert_eq!(citizen_list.len(), 3);
         assert_eq!(citizen_list[1].home_location, Point::new(0, 1));
         assert_eq!(citizen_list[1].uses_public_transport, true);
@@ -220,18 +223,18 @@ mod tests{
         assert_eq!(citizen_list.last().unwrap().is_infected(), true);
     }
 
-//    #[test]
-//    fn check_quarantine(){
-//        let home_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
-//        let work_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
-//
-//        let mut citizen_list = citizen_factory(&home_locations, &work_locations);
-//        assert_eq!(citizen_list[0].quarantined, false);
-//
-//        citizen_list[0].infection_day = 17;
-//        citizen_list[0].immunity = 0;
-//
-//        citizen_list[0].set_quarantined();
-//        assert_eq!(citizen_list[0].quarantined, true);
-//    }
+    #[test]
+    fn should_infect(){
+        let mut citizen_list = before_each();
+
+        assert_eq!(citizen_list[0].infect(), 1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn should_panic(){
+        let mut citizen_list = before_each();
+
+        citizen_list[0].quarantine();
+    }
 }

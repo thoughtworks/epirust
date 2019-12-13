@@ -26,7 +26,7 @@ impl AgentLocationMap {
         for i in 0..agent_list.len(){
             map.insert(points[i], agent_list[i]);
         }
-        let row = Row::new(agent_list.len() as i32);
+        let row = Row::new((agent_list.len() - 1) as i32, 1);
 
         AgentLocationMap {grid_size: size, agent_cell:map, counts: row }
     }

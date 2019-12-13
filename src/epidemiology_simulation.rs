@@ -49,8 +49,12 @@ impl Epidemiology {
             }
 
             let end_time = SystemTime::now();
-            records.push(self.agent_location_map.get_record());
+            let row = self.agent_location_map.get_record();
+            records.push(row);
             println!("Tick {}, Time taken {:?}", i, end_time.duration_since(start_time));
+            if Epidemiology::stop_simulation(row){
+                break;
+            }
 //            self.agent_location_map.print();
         }
 
@@ -95,6 +99,13 @@ impl Epidemiology {
             constants::ROUTINE_END_TIME => self.agent_location_map.deceased(),
             _ => self.agent_location_map.move_agents()
         }
+    }
+
+    fn stop_simulation(row: csv_service::Row) -> bool{
+        if row.get_infected() == 0 && row.get_quarantined() == 0{
+            return true;
+        }
+        return false;
     }
 }
 

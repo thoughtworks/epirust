@@ -5,6 +5,8 @@ pub const WORK_AREA_RELATIVE_SIZE:f32 = 0.4;
 
 pub const NUMBER_OF_HOURS:i32 = 24;
 pub const ROUTINE_START_TIME: i32 = 0;
+pub const SLEEP_START_TIME: i32 = 1;
+pub const SLEEP_END_TIME: i32 = 6;
 pub const ROUTINE_TRAVEL_START_TIME: i32 = 7;
 pub const ROUTINE_WORK_TIME:i32 = 8;
 pub const ROUTINE_TRAVEL_END_TIME: i32 = 17;

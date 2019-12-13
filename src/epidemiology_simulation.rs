@@ -33,7 +33,6 @@ impl Epidemiology {
         Epidemiology{agent_location_map, housing_area, work_area, transport_area, hospital}
     }
 
-//    TODO: Stop the simulation if the infection dies out
     pub fn run(&mut self, simulation_life_time:i32, vaccination_time:i32, vaccination_percentage:f64, output_file_name: &str) {
         let mut records: Vec<csv_service::Row> = Vec::new();
         println!("Tick 0");
@@ -92,6 +91,7 @@ impl Epidemiology {
                 self.agent_location_map.update_infection_day();
                 self.agent_location_map.quarantine(self.hospital);
             },
+            constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => (),
             constants::ROUTINE_TRAVEL_START_TIME => self.agent_location_map.commute(self.transport_area),
             constants::ROUTINE_WORK_TIME => self.agent_location_map.goto(self.work_area),
             constants::ROUTINE_TRAVEL_END_TIME => self.agent_location_map.commute(self.transport_area),

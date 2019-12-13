@@ -1,8 +1,6 @@
 use crate::geography::point::*;
 use crate::geography::Area;
 use crate::agent::Citizen;
-use rand::seq::SliceRandom;
-use crate::utils;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Hospital{

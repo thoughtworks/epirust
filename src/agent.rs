@@ -115,6 +115,7 @@ impl Citizen {
             State::Quarantined {} => {
                 if self.state_machine.infection_day == small_pox::get_disease_last_day(){
                     self.hospitalized = false;
+
                     if small_pox::to_be_deceased(){
                         println!("Deceased");
                         self.state_machine.state = State::Deceased {};
@@ -177,6 +178,10 @@ impl Citizen {
             return false;
         }
         true
+    }
+
+    pub fn get_infection_day(&self) -> i32{
+        return self.state_machine.get_infection_day();
     }
 
     fn generate_disease_randomness_factor() -> i32{

@@ -4,8 +4,8 @@ use crate::agent;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq)]
 pub struct WorkArea{
-    start_offset: Point,
-    end_offset: Point
+    pub start_offset: Point,
+    pub end_offset: Point
 }
 
 impl Area for WorkArea{

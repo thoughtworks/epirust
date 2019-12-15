@@ -21,10 +21,10 @@ pub struct Epidemiology {
 impl Epidemiology {
 
     pub fn new(grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage:f64) -> Epidemiology {
-        let x_offset_for_home = (grid_size as f32 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32;
-        let x_offset_for_transport = x_offset_for_home + (grid_size as f32 * constants::TRANSPORT_AREA_RELATIVE_SIZE).ceil() as i32;
-        let x_offset_for_hospital = x_offset_for_transport + (grid_size as f32 * constants::HOSPITAL_RELATIVE_SIZE).ceil() as i32;
         let bound = grid_size - 1;
+        let x_offset_for_home = (bound as f32 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32 - 1;
+        let x_offset_for_transport = x_offset_for_home + (bound as f32 * constants::TRANSPORT_AREA_RELATIVE_SIZE).ceil() as i32;
+        let x_offset_for_hospital = x_offset_for_transport + (bound as f32 * constants::HOSPITAL_RELATIVE_SIZE).ceil() as i32 ;
 
         let (housing_area, transport_area, hospital, work_area) = Epidemiology::define_geography(bound, x_offset_for_home, x_offset_for_transport, x_offset_for_hospital);
         let (home_locations, agent_list) = Epidemiology::generate_population(number_of_agents,housing_area, transport_area, public_transport_percentage, working_percentage);
@@ -87,17 +87,31 @@ impl Epidemiology {
     fn routine(&mut self, i: i32) {
         match i % constants::NUMBER_OF_HOURS {
             constants::ROUTINE_START_TIME => {
-                self.agent_location_map.update_infections();
                 self.agent_location_map.update_infection_day();
                 self.agent_location_map.quarantine(self.hospital);
             },
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => (),
-            constants::ROUTINE_TRAVEL_START_TIME => self.agent_location_map.commute(self.transport_area),
-            constants::ROUTINE_WORK_TIME => self.agent_location_map.goto(self.work_area),
-            constants::ROUTINE_TRAVEL_END_TIME => self.agent_location_map.commute(self.transport_area),
-            constants::ROUTINE_WORK_END_TIME => self.agent_location_map.goto(self.housing_area),
+            constants::ROUTINE_TRAVEL_START_TIME => {
+                self.agent_location_map.commute(self.transport_area);
+                self.agent_location_map.update_infections();
+            },
+            constants::ROUTINE_WORK_TIME => {
+                self.agent_location_map.goto(self.work_area);
+                self.agent_location_map.update_infections();
+            },
+            constants::ROUTINE_TRAVEL_END_TIME => {
+                self.agent_location_map.commute(self.transport_area);
+                self.agent_location_map.update_infections();
+            },
+            constants::ROUTINE_WORK_END_TIME => {
+                self.agent_location_map.goto(self.housing_area);
+                self.agent_location_map.update_infections();
+            },
             constants::ROUTINE_END_TIME => self.agent_location_map.deceased(),
-            _ => self.agent_location_map.move_agents()
+            _ => {
+                self.agent_location_map.move_agents();
+                self.agent_location_map.update_infections();
+            }
         }
     }
 
@@ -113,10 +127,21 @@ impl Epidemiology {
 mod tests{
     use super::*;
 
-//    #[test]
-//    fn init() {
-//        let epidemiology:Epidemiology = Epidemiology::new(3, 3);
-//
-//        assert_eq!(epidemiology.agent_list.len(), 3);
-//    }
+    #[test]
+    fn should_init() {
+        let epidemiology:Epidemiology = Epidemiology::new(10, 10, 1.0, 1.0);
+        assert_eq!(epidemiology.housing_area.start_offset, Point::new(0, 0));
+        assert_eq!(epidemiology.housing_area.end_offset, Point::new(3, 9));
+
+        assert_eq!(epidemiology.transport_area.start_offset, Point::new(4, 0));
+        assert_eq!(epidemiology.transport_area.end_offset, Point::new(4, 9));
+
+        assert_eq!(epidemiology.hospital.start_offset, Point::new(5, 0));
+        assert_eq!(epidemiology.hospital.end_offset, Point::new(5, 9));
+
+        assert_eq!(epidemiology.work_area.start_offset, Point::new(6, 0));
+        assert_eq!(epidemiology.work_area.end_offset, Point::new(9, 9));
+
+        assert_eq!(epidemiology.agent_location_map.agent_cell.len(), 10);
+    }
 }

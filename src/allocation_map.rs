@@ -55,13 +55,14 @@ impl AgentLocationMap {
         }
     }
 
-    fn move_agent(&mut self, agent: agent::Citizen, old_cell: Point, new_cell: Point){
+    fn move_agent(&mut self, agent: agent::Citizen, old_cell: Point, new_cell: Point) -> bool{
         if self.agent_cell.contains_key(&new_cell){
             println!("Clash: Returning");
-            return;
+            return false;
         }
         self.agent_cell.remove(&old_cell);
         self.agent_cell.insert(new_cell, agent);
+        return true;
     }
 
     pub fn update_infections(&mut self){
@@ -149,19 +150,23 @@ impl AgentLocationMap {
         for cell in keys {
             let mut citizen = self.get_agent(&cell);
             if citizen.is_infected() && !citizen.is_quarantined(){
-                let quarantined = citizen.quarantine();
-                self.goto_hospital(area, &cell, &mut citizen);
-                citizen.hospitalized = true;
-                self.counts.update_quarantined(quarantined);
-                self.counts.update_infected(-quarantined);
+                let number_of_quarantined = citizen.quarantine();
+                if number_of_quarantined > 0{
+                    if self.goto_hospital(area, &cell, &mut citizen){
+                        citizen.hospitalized = true;
+                    }
+                    self.counts.update_quarantined(number_of_quarantined);
+                    self.counts.update_infected(-number_of_quarantined);
+                }
+
             }
         }
     }
 
-    fn goto_hospital(&mut self, area: Hospital, cell: &Point, citizen: &mut agent::Citizen) {
+    fn goto_hospital(&mut self, area: Hospital, cell: &Point, citizen: &mut agent::Citizen) -> bool{
         let area_dimensions = area.get_dimensions(*citizen);
         let vacant_cells = self.get_empty_cells_from(area_dimensions);
-        self.move_agent(*citizen, *cell, utils::get_random_element_from(&vacant_cells, citizen.home_location));
+        self.move_agent(*citizen, *cell, utils::get_random_element_from(&vacant_cells, citizen.home_location))
     }
 
     pub fn deceased(&mut self) {
@@ -248,7 +253,7 @@ mod tests{
     }
 
     #[test]
-    fn get_empty_cells(){
+    fn should_get_empty_cells(){
         let map = before_each();
 
         let empty_cells = map.get_empty_cells_from(Point{x: 0, y: 1}.get_neighbor_cells(5));
@@ -256,7 +261,7 @@ mod tests{
     }
 
     #[test]
-    fn get_neighbor_agents(){
+    fn should_get_neighbor_agents(){
         let map = before_each();
 
         let neighbor_agents= map.get_agents_from(Point{x: 0, y: 1}.get_neighbor_cells(5));

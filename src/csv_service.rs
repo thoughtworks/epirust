@@ -19,10 +19,6 @@ impl Row{
         Row{hour: 0, susceptible: population, infected, quarantined: 0, recovered: 0, deceased: 0}
     }
 
-    pub fn create(hour: i32, susceptible: i32, infected: i32, quarantined:i32, recovered: i32, deceased: i32) -> Row{
-        Row{hour, susceptible, infected, quarantined, recovered, deceased}
-    }
-
     pub fn get_infected(&self) -> i32{
         return self.infected;
     }
@@ -71,15 +67,4 @@ pub fn write(file_path: &str, data: &Vec<Row>) -> Result<(), Box<dyn Error>> {
 
     wtr.flush()?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-//    #[test]
-//    fn write() {
-//        let a = vec![Row::new(10), Row::new(20)];
-//        super::write("test.csv", &a);
-//    }
 }

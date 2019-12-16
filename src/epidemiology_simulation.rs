@@ -35,28 +35,31 @@ impl Epidemiology {
 
     pub fn run(&mut self, simulation_life_time:i32, vaccination_time:i32, vaccination_percentage:f64, output_file_name: &str) {
         let mut records: Vec<csv_service::Row> = Vec::new();
-        println!("Tick 0");
+//        println!("Tick 0");
+        let mut count = 0;
 
+        let start_time = SystemTime::now();
         self.agent_location_map.goto(self.housing_area);
         for i in 1..simulation_life_time {
             self.agent_location_map.counts.increment_hour();
-            let start_time = SystemTime::now();
+
             self.routine(i);
 
             if i == vaccination_time{
                 self.agent_location_map.vaccinate(vaccination_percentage);
             }
 
-            let end_time = SystemTime::now();
             let row = self.agent_location_map.get_record();
             records.push(row);
-            println!("Tick {}, Time taken {:?}", i, end_time.duration_since(start_time));
+
             if Epidemiology::stop_simulation(row){
                 break;
             }
+            count = i;
 //            self.agent_location_map.print();
         }
-
+        let end_time = SystemTime::now();
+        println!("Number of iterations: {}, Total Time taken {:?}", count, end_time.duration_since(start_time));
         let result = csv_service::write(output_file_name, &records);
         match result{
             Ok(_) => {},
@@ -80,7 +83,10 @@ impl Epidemiology {
         let scaling_factor = home_area.end_offset.x + transport_area.end_offset.x;
         let work_locations = home_locations.iter()
             .map(|x| *x + point::Point::new(scaling_factor, 0)).collect();
-        let agent_list = agent::citizen_factory(&home_locations, &work_locations, public_transport_percentage, working_percentage);
+//        TODO: fix the hack
+        let number_of_agents_using_public_transport = (number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1));
+        let transport_locations = point::point_factory(transport_area.start_offset, transport_area.end_offset, number_of_agents_using_public_transport as i32);
+        let agent_list = agent::citizen_factory(&home_locations, &work_locations, &transport_locations, public_transport_percentage, working_percentage);
         (home_locations, agent_list)
     }
 
@@ -92,7 +98,7 @@ impl Epidemiology {
             },
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => (),
             constants::ROUTINE_TRAVEL_START_TIME => {
-                self.agent_location_map.commute(self.transport_area);
+                self.agent_location_map.goto(self.transport_area);
                 self.agent_location_map.update_infections();
             },
             constants::ROUTINE_WORK_TIME => {
@@ -100,7 +106,7 @@ impl Epidemiology {
                 self.agent_location_map.update_infections();
             },
             constants::ROUTINE_TRAVEL_END_TIME => {
-                self.agent_location_map.commute(self.transport_area);
+                self.agent_location_map.goto(self.transport_area);
                 self.agent_location_map.update_infections();
             },
             constants::ROUTINE_WORK_END_TIME => {

@@ -10,7 +10,7 @@ pub struct Hospital{
 
 impl Area for Hospital{
     //TODO: Pass point instead of an agent
-    fn get_dimensions(&self, agent: Citizen) -> Vec<Point>{
+    fn get_dimensions(&self, _: Citizen) -> Vec<Point>{
         get_points_within(self.start_offset, self.end_offset)
     }
 }

@@ -10,7 +10,6 @@ use crate::geography::point::Point;
 use crate::utils;
 use crate::geography::Area;
 use crate::csv_service::Row;
-use crate::geography::transport_area::TransportArea;
 use crate::geography::hospital::Hospital;
 
 pub struct AgentLocationMap {
@@ -30,23 +29,6 @@ impl AgentLocationMap {
 
         AgentLocationMap {grid_size: size, agent_cell:map, counts: row }
     }
-//TODO: Pull out the common code for movement
-    pub fn commute(&mut self, transport_area:TransportArea){
-        let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
-        for cell in keys {
-            let agent = self.get_agent(&cell);
-            if !agent.can_move(){
-                continue;
-            }
-            if agent.uses_public_transport && agent.working{
-                let area_dimensions = transport_area.get_dimensions(agent);
-                let vacant_cells = self.get_empty_cells_from(area_dimensions);
-                self.move_agent(agent, cell, utils::get_random_element_from(&vacant_cells, agent.home_location));
-                continue;
-            }
-            self.move_agent_from(&cell);
-        }
-    }
 
     pub fn move_agents(&mut self){
         let keys:Vec<Point> = self.agent_cell.keys().cloned().collect();
@@ -57,7 +39,7 @@ impl AgentLocationMap {
 
     fn move_agent(&mut self, agent: agent::Citizen, old_cell: Point, new_cell: Point) -> bool{
         if self.agent_cell.contains_key(&new_cell){
-            println!("Clash: Returning");
+//            println!("Clash: Returning");
             return false;
         }
         self.agent_cell.remove(&old_cell);
@@ -96,7 +78,7 @@ impl AgentLocationMap {
         for(_, agent) in self.agent_cell.iter_mut(){
             if !agent.is_infected() && rng.gen_bool(percentage){
                 agent.set_vaccination(true);
-                println!("Agent {} is vaccinated", agent.id);
+//                println!("Agent {} is vaccinated", agent.id);
             }
         };
     }
@@ -127,7 +109,7 @@ impl AgentLocationMap {
             for neighbor in infected_neighbors {
                 let mut rng = thread_rng();
                 if rng.gen_bool(neighbor.get_infection_transmission_rate()) {
-                    println!("Infection rate {}", neighbor.get_infection_transmission_rate());
+//                    println!("Infection rate {}", neighbor.get_infection_transmission_rate());
                     let infected = self.agent_cell.get_mut(&cell).unwrap().infect();
                     self.counts.update_infected(infected);
                     self.counts.update_susceptible(-infected);
@@ -185,11 +167,11 @@ impl AgentLocationMap {
         }
     }
 
-    pub fn print(&self){
-        for (k,v) in self.agent_cell.iter(){
-            println!("x:{}, y:{} - id:{} infected:{}", k.x, k.y, v.id, v.is_infected());
-        }
-    }
+//    pub fn print(&self){
+//        for (k,v) in self.agent_cell.iter(){
+//            println!("x:{}, y:{} - id:{} infected:{} working:{} Transport:{}", k.x, k.y, v.id, v.is_infected(), v.working, v.uses_public_transport);
+//        }
+//    }
 
     fn get_empty_cells_from(&self, neighbors:Vec<Point>) -> Vec<Point>{
         neighbors.into_iter().filter(|key| !self.agent_cell.contains_key(key)).collect()
@@ -214,7 +196,7 @@ mod tests{
 
     fn before_each() -> AgentLocationMap {
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
-        let agents = vec![agent::Citizen::new_citizen(1, points[0], points[1], false, false), agent::Citizen::new_citizen(2, points[1], points[0], true, true)];
+        let agents = vec![agent::Citizen::new_citizen(1, points[0], points[1], points[0], false, false), agent::Citizen::new_citizen(2, points[1], points[0], points[0], true, true)];
         let map = AgentLocationMap::new(5, &agents, &points);
         map
     }
@@ -222,32 +204,19 @@ mod tests{
     #[test]
     fn new(){
         let map = before_each();
-        let citizen_option = map.agent_cell.get(&Point{x:0, y:1});
-        let mut actual_citizen = agent::Citizen::new();
-        match citizen_option{
-            Some(x) => {
-                actual_citizen = *x;
-            }
-            _ => {}
-        }
+        let actual_citizen = map.agent_cell.get(&Point{x:0, y:1}).unwrap();
+
         assert_eq!(map.grid_size, 5);
         assert_eq!(actual_citizen.id, 1);
     }
 
     #[test]
-    fn move_agent(){
+    fn should_move_agent(){
         let mut map = before_each();
 
         map.move_agents();
 
-        let citizen_option = map.agent_cell.get(&Point{x:0, y:1});
-
-        let mut actual_citizen = agent::Citizen::new();
-
-        match citizen_option {
-            Some(x) => { actual_citizen = *x},
-            None => {}
-        }
+        let actual_citizen = map.agent_cell.get(&Point{x:0, y:1}).unwrap();
 
         assert_ne!(actual_citizen.id, 1);
     }

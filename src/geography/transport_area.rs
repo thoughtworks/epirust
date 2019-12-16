@@ -10,7 +10,7 @@ pub struct TransportArea{
 
 impl Area for TransportArea{
     fn get_dimensions(&self, agent: Citizen) -> Vec<Point>{
-        get_points_within(self.start_offset, self.end_offset)
+        agent.transport_location.get_neighbor_within_bounds(self.start_offset, self.end_offset)
     }
 }
 

@@ -59,18 +59,15 @@ pub struct Citizen {
     pub uses_public_transport: bool,
     pub working: bool,
     pub hospitalized: bool,
+    pub transport_location: Point,
     state_machine: StateMachine
 }
 
 impl Citizen {
-    pub fn new() -> Citizen {
-        Citizen{id:-1, immunity: 0, home_location:Point::new(-1, -1), work_location:Point::new(-1, -1), vaccinated: false, uses_public_transport: false, working: false, hospitalized: false, state_machine:StateMachine::new()}
-    }
-
-    pub fn new_citizen(id: i32, home_location: Point, work_location: Point, uses_public_transport: bool, working: bool) -> Citizen {
+    pub fn new_citizen(id: i32, home_location: Point, work_location: Point, transport_location: Point, uses_public_transport: bool, working: bool) -> Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor();
 
-        Citizen{id, immunity: disease_randomness_factor, home_location, work_location, vaccinated: false,
+        Citizen{id, immunity: disease_randomness_factor, home_location, work_location, transport_location, vaccinated: false,
             uses_public_transport, working, hospitalized: false, state_machine:StateMachine::new()}
     }
 
@@ -98,7 +95,7 @@ impl Citizen {
         match self.state_machine.state{
             State::Infected {} => {
                 if small_pox::to_be_quarantined(self.state_machine.infection_day + self.immunity) {
-                    println!("Quarantine");
+//                    println!("Quarantine");
                     self.state_machine.state = State::Quarantined {};
                     return 1;
                 }
@@ -117,11 +114,11 @@ impl Citizen {
                     self.hospitalized = false;
 
                     if small_pox::to_be_deceased(){
-                        println!("Deceased");
+//                        println!("Deceased");
                         self.state_machine.state = State::Deceased {};
                         return (1,0);
                     }
-                    println!("Recovered");
+//                    println!("Recovered");
                     self.state_machine.state = State::Recovered {};
                     return (0, 1)
                 }
@@ -190,16 +187,27 @@ impl Citizen {
     }
 }
 
-pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>, percentage_public_transport: f64,
+pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>, public_transport_locations: &Vec<Point>, percentage_public_transport: f64,
                        working_percentage:f64) -> Vec<Citizen>{
     let mut public_transport_range = thread_rng();
     let mut working_range = thread_rng();
     let mut agent_list = Vec::with_capacity(home_locations.len());
+    let mut public_transport_location = Point::new(0,0);
+    let mut public_transport_counter = 0;
 
     for i in 0..home_locations.len(){
-        let uses_public_transport = public_transport_range.gen_bool(percentage_public_transport);
-        let working_agents = working_range.gen_bool(working_percentage);
-        let agent = Citizen::new_citizen(i as i32, home_locations[i], work_locations[i], uses_public_transport && working_agents, working_agents);
+        let uses_public_transport_probability = public_transport_range.gen_bool(percentage_public_transport);
+        let working_agent = working_range.gen_bool(working_percentage);
+        let uses_public_transport = uses_public_transport_probability && working_agent;
+
+        if uses_public_transport{
+            public_transport_location = public_transport_locations[0];
+            public_transport_counter = public_transport_counter + 1;
+        } else{
+            public_transport_location = home_locations[i];
+        }
+
+        let agent = Citizen::new_citizen(i as i32, home_locations[i], work_locations[i], public_transport_location, uses_public_transport_probability && working_agent, working_agent);
         agent_list.push(agent);
     }
 //TODO: pass number of infected as parameter
@@ -214,8 +222,9 @@ mod tests{
     fn before_each() -> Vec<Citizen>{
         let home_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
         let work_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
+        let public_transport_location = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
 
-        citizen_factory(&home_locations, &work_locations, 1.0, 1.0)
+        citizen_factory(&home_locations, &work_locations, &public_transport_location, 1.0, 1.0)
     }
 
     #[test]

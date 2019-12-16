@@ -90,7 +90,7 @@ pub fn point_factory(start:Point, end:Point, number_of_points:i32) -> Vec<Point>
         let mut is_duplicate = false;
         for point in points.iter_mut(){
             if *point == (Point::new(rand_x, rand_y)) {
-                println!("Duplicate");
+//                println!("Duplicate");
                 is_duplicate = true;
             }
         }

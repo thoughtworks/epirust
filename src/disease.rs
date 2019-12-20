@@ -12,23 +12,23 @@ pub mod small_pox {
 
     pub fn get_current_transmission_rate(infection_day: i32) -> f64 {
         if REGULAR_TRANSMISSION_START_DAY < infection_day && infection_day <= HIGH_TRANSMISSION_START_DAY {
-            return REGULAR_TRANSMISSION_RATE;
+            return REGULAR_TRANSMISSION_RATE
         } else if HIGH_TRANSMISSION_START_DAY < infection_day && infection_day <= DISEASE_LAST_DAY {
-            return HIGH_TRANSMISSION_RATE;
+            return HIGH_TRANSMISSION_RATE
         }
-        return 0.0;
+        0.0
     }
 
     pub fn to_be_quarantined(infection_day: i32) -> bool {
         let transmission_rate = get_current_transmission_rate(infection_day);
         if transmission_rate >= HIGH_TRANSMISSION_RATE{
-            return true;
+            return true
         }
         false
     }
 
     pub fn get_disease_last_day() -> i32{
-        return DISEASE_LAST_DAY
+        DISEASE_LAST_DAY
     }
 
     pub fn to_be_deceased() -> bool{

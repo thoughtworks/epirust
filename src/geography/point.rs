@@ -17,7 +17,7 @@ impl Point {
         Point{x, y}
     }
 
-    pub fn get_neighbor_cells(&self, size:i32) -> Vec<Point>{
+    pub fn get_neighbor_cells(self, size:i32) -> Vec<Point>{
         const NUMBER_OF_NEIGHBORS:i32 = 8;
         let mut neighbors_list = Vec::with_capacity(NUMBER_OF_NEIGHBORS as usize);
         let mut row_index = max(0, self.x - 1);
@@ -32,19 +32,19 @@ impl Point {
                     break;
                 }
                 if row_index == self.x && col_index == self.y {
-                    col_index = col_index + 1;
+                    col_index += 1;
                     continue;
                 }
                 neighbors_list.push(Point{x:row_index, y:col_index});
-                col_index = col_index + 1;
+                col_index += 1;
             }
-            row_index = row_index + 1;
+            row_index += 1;
         }
 
         neighbors_list
     }
 
-    pub fn get_neighbor_within_bounds(&self, start: Point, end: Point) -> Vec<Point>{
+    pub fn get_neighbor_within_bounds(self, start: Point, end: Point) -> Vec<Point>{
         const NUMBER_OF_NEIGHBORS:i32 = 8;
         let mut neighbors_list = Vec::with_capacity(NUMBER_OF_NEIGHBORS as usize);
         let mut row_index = max(start.x, self.x - 1);
@@ -59,13 +59,13 @@ impl Point {
                     break;
                 }
                 if row_index == self.x && col_index == self.y {
-                    col_index = col_index + 1;
+                    col_index += 1;
                     continue;
                 }
                 neighbors_list.push(Point{x:row_index, y:col_index});
-                col_index = col_index + 1;
+                col_index += 1;
             }
-            row_index = row_index + 1;
+            row_index += 1;
         }
 
         neighbors_list
@@ -105,8 +105,8 @@ pub fn point_factory(start:Point, end:Point, number_of_points:i32) -> Vec<Point>
 pub fn get_points_within(start: Point, end: Point) -> Vec<Point>{
     let mut point_vec:Vec<Point> = Vec::new();
 
-    for x in start.x..end.x+1{
-        for y in start.y..end.y+1{
+    for x in start.x..=end.x+1{
+        for y in start.y..=end.y+1{
             point_vec.push(Point::new(x, y));
         }
     }

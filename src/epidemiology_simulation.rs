@@ -84,7 +84,7 @@ impl Epidemiology {
         let work_locations = home_locations.iter()
             .map(|x| *x + point::Point::new(scaling_factor, 0)).collect();
 //        TODO: fix the hack
-        let number_of_agents_using_public_transport = (number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1));
+        let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
         let transport_locations = point::point_factory(transport_area.start_offset, transport_area.end_offset, number_of_agents_using_public_transport as i32);
         let agent_list = agent::citizen_factory(&home_locations, &work_locations, &transport_locations, public_transport_percentage, working_percentage);
         (home_locations, agent_list)
@@ -123,9 +123,9 @@ impl Epidemiology {
 
     fn stop_simulation(row: csv_service::Row) -> bool{
         if row.get_infected() == 0 && row.get_quarantined() == 0{
-            return true;
+            return true
         }
-        return false;
+        false
     }
 }
 
@@ -135,18 +135,18 @@ mod tests{
 
     #[test]
     fn should_init() {
-        let epidemiology:Epidemiology = Epidemiology::new(10, 10, 1.0, 1.0);
+        let epidemiology:Epidemiology = Epidemiology::new(20, 10, 1.0, 1.0);
         assert_eq!(epidemiology.housing_area.start_offset, Point::new(0, 0));
-        assert_eq!(epidemiology.housing_area.end_offset, Point::new(3, 9));
+        assert_eq!(epidemiology.housing_area.end_offset, Point::new(7, 19));
 
-        assert_eq!(epidemiology.transport_area.start_offset, Point::new(4, 0));
-        assert_eq!(epidemiology.transport_area.end_offset, Point::new(4, 9));
+        assert_eq!(epidemiology.transport_area.start_offset, Point::new(8, 0));
+        assert_eq!(epidemiology.transport_area.end_offset, Point::new(9, 19));
 
-        assert_eq!(epidemiology.hospital.start_offset, Point::new(5, 0));
-        assert_eq!(epidemiology.hospital.end_offset, Point::new(5, 9));
+        assert_eq!(epidemiology.hospital.start_offset, Point::new(10, 0));
+        assert_eq!(epidemiology.hospital.end_offset, Point::new(11, 19));
 
-        assert_eq!(epidemiology.work_area.start_offset, Point::new(6, 0));
-        assert_eq!(epidemiology.work_area.end_offset, Point::new(9, 9));
+        assert_eq!(epidemiology.work_area.start_offset, Point::new(12, 0));
+        assert_eq!(epidemiology.work_area.end_offset, Point::new(19, 19));
 
         assert_eq!(epidemiology.agent_location_map.agent_cell.len(), 10);
     }

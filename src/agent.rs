@@ -39,7 +39,7 @@ impl StateMachine{
 //        }
 //    }
 
-    pub fn get_infection_day(&self) -> i32{
+    pub fn get_infection_day(self) -> i32{
         match self.state {
             State::Infected{} => {
                 self.infection_day
@@ -83,7 +83,7 @@ impl Citizen {
         match self.state_machine.state {
             State::Susceptible{} => {
                     self.state_machine.state = State::Infected {};
-                    return 1;
+                    1
                 },
             _ => {
                 panic!("Invalid state transition!")
@@ -95,11 +95,10 @@ impl Citizen {
         match self.state_machine.state{
             State::Infected {} => {
                 if small_pox::to_be_quarantined(self.state_machine.infection_day + self.immunity) {
-//                    println!("Quarantine");
                     self.state_machine.state = State::Quarantined {};
-                    return 1;
+                    return 1
                 }
-                return 0;
+                0
             },
             _ => {
                 panic!("Invalid state transition!")
@@ -114,11 +113,9 @@ impl Citizen {
                     self.hospitalized = false;
 
                     if small_pox::to_be_deceased(){
-//                        println!("Deceased");
                         self.state_machine.state = State::Deceased {};
-                        return (1,0);
+                        return (1,0)
                     }
-//                    println!("Recovered");
                     self.state_machine.state = State::Recovered {};
                     return (0, 1)
                 }
@@ -127,52 +124,52 @@ impl Citizen {
                 panic!("Invalid state transition!")
             }
         }
-        return (0, 0)
+        (0, 0)
     }
 
     pub fn is_quarantined(&self) -> bool {
         match self.state_machine.state {
             State::Quarantined {} => {
-                return true;
+                true
             },
-            _ => return false
+            _ => false
         }
     }
 
     pub fn is_susceptible(&self) -> bool {
         match self.state_machine.state {
             State::Susceptible {} => {
-                return true;
+                true
             },
-            _ => return false
+            _ => false
         }
     }
 
     pub fn is_infected(&self) -> bool {
         match self.state_machine.state {
             State::Infected{} => {
-                return true;
+                true
             },
-            _ => return false
+            _ => false
         }
     }
 
     pub fn is_deceased(&self) -> bool {
         match self.state_machine.state {
             State::Deceased {} => {
-                return true;
+                true
             },
-            _ => return false
+            _ => false
         }
     }
 
     pub fn increment_infection_day(&mut self){
-        self.state_machine.infection_day = self.state_machine.infection_day + 1;
+        self.state_machine.infection_day += 1;
     }
 
     pub fn can_move(&self) -> bool{
         if self.is_quarantined() || self.hospitalized || self.is_deceased(){
-            return false;
+            return false
         }
         true
     }
@@ -187,22 +184,22 @@ impl Citizen {
     }
 }
 
-pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>, public_transport_locations: &Vec<Point>, percentage_public_transport: f64,
-                       working_percentage:f64) -> Vec<Citizen>{
+pub fn citizen_factory(home_locations: &[Point], work_locations: &Vec<Point>, public_transport_locations: &[Point],
+                       percentage_public_transport: f64, working_percentage:f64) -> Vec<Citizen>{
     let mut public_transport_range = thread_rng();
     let mut working_range = thread_rng();
     let mut agent_list = Vec::with_capacity(home_locations.len());
-    let mut public_transport_location = Point::new(0,0);
     let mut public_transport_counter = 0;
 
     for i in 0..home_locations.len(){
+        let mut public_transport_location = Point::new(0,0);
         let uses_public_transport_probability = public_transport_range.gen_bool(percentage_public_transport);
         let working_agent = working_range.gen_bool(working_percentage);
         let uses_public_transport = uses_public_transport_probability && working_agent;
 
         if uses_public_transport{
             public_transport_location = public_transport_locations[0];
-            public_transport_counter = public_transport_counter + 1;
+            public_transport_counter += 1;
         } else{
             public_transport_location = home_locations[i];
         }

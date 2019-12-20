@@ -20,7 +20,7 @@ pub struct AgentLocationMap {
 
 impl AgentLocationMap {
 
-    pub fn new(size: i32, agent_list: &Vec<agent::Citizen>, points: &Vec<Point>) -> AgentLocationMap {
+    pub fn new(size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
         let mut map:HashMap<Point, agent::Citizen> = HashMap::new();
         for i in 0..agent_list.len(){
             map.insert(points[i], agent_list[i]);
@@ -33,24 +33,23 @@ impl AgentLocationMap {
     pub fn move_agents(&mut self){
         let keys:Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
-            self.move_agent_from(&cell);
+            self.move_agent_from(cell);
         }
     }
 
     fn move_agent(&mut self, agent: agent::Citizen, old_cell: Point, new_cell: Point) -> bool{
         if self.agent_cell.contains_key(&new_cell){
-//            println!("Clash: Returning");
-            return false;
+            return false
         }
         self.agent_cell.remove(&old_cell);
         self.agent_cell.insert(new_cell, agent);
-        return true;
+        true
     }
 
     pub fn update_infections(&mut self){
         let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
-            self.update_infection(&cell);
+            self.update_infection(cell);
         }
     }
 
@@ -58,7 +57,7 @@ impl AgentLocationMap {
     pub fn goto<T: Area>(&mut self, area: T){
         let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
-            let agent = self.get_agent(&cell);
+            let agent = self.get_agent(cell);
             if !agent.can_move(){
                 continue;
             }
@@ -68,7 +67,7 @@ impl AgentLocationMap {
                 self.move_agent(agent, cell, utils::get_random_element_from(&vacant_cells, agent.home_location));
                 continue;
             }
-            self.move_agent_from(&cell);
+            self.move_agent_from(cell);
         }
     }
 
@@ -78,31 +77,30 @@ impl AgentLocationMap {
         for(_, agent) in self.agent_cell.iter_mut(){
             if !agent.is_infected() && rng.gen_bool(percentage){
                 agent.set_vaccination(true);
-//                println!("Agent {} is vaccinated", agent.id);
             }
         };
     }
 
     pub fn get_record(&self) -> Row{
-        return self.counts;
+        self.counts
     }
 
-    fn get_agent(&mut self, cell: &Point) -> agent::Citizen {
+    fn get_agent(&mut self, cell: Point) -> agent::Citizen {
         *self.agent_cell.get(&cell).unwrap()
     }
 
-    fn move_agent_from(&mut self, cell: &Point) {
-        let agent = self.get_agent(&cell);
+    fn move_agent_from(&mut self, cell: Point) {
+        let agent = self.get_agent(cell);
         if !agent.can_move(){
             return;
         }
         let neighbor_cells:Vec<Point> = cell.get_neighbor_cells(self.grid_size);
-        let new_cell: Point = utils::get_random_element_from(&self.get_empty_cells_from(neighbor_cells), *cell);
-        self.move_agent(agent, *cell, new_cell);
+        let new_cell: Point = utils::get_random_element_from(&self.get_empty_cells_from(neighbor_cells), cell);
+        self.move_agent(agent, cell, new_cell);
     }
 
-    fn update_infection(&mut self, cell: &Point) {
-        if self.get_agent(&cell).is_susceptible() && !self.get_agent(&cell).vaccinated {
+    fn update_infection(&mut self, cell: Point) {
+        if self.get_agent(cell).is_susceptible() && !self.get_agent(cell).vaccinated {
             let neighbors = self.get_agents_from(cell.get_neighbor_cells(self.grid_size));
             let infected_neighbors: Vec<agent::Citizen> = neighbors.into_iter().
                 filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized).collect();
@@ -130,11 +128,11 @@ impl AgentLocationMap {
     pub fn quarantine(&mut self, area: Hospital) {
         let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
-            let mut citizen = self.get_agent(&cell);
+            let mut citizen = self.get_agent(cell);
             if citizen.is_infected() && !citizen.is_quarantined(){
                 let number_of_quarantined = citizen.quarantine();
                 if number_of_quarantined > 0{
-                    if self.goto_hospital(area, &cell, &mut citizen){
+                    if self.goto_hospital(area, cell, &mut citizen){
                         citizen.hospitalized = true;
                     }
                     self.counts.update_quarantined(number_of_quarantined);
@@ -145,16 +143,16 @@ impl AgentLocationMap {
         }
     }
 
-    fn goto_hospital(&mut self, area: Hospital, cell: &Point, citizen: &mut agent::Citizen) -> bool{
+    fn goto_hospital(&mut self, area: Hospital, cell: Point, citizen: &mut agent::Citizen) -> bool{
         let area_dimensions = area.get_dimensions(*citizen);
         let vacant_cells = self.get_empty_cells_from(area_dimensions);
-        self.move_agent(*citizen, *cell, utils::get_random_element_from(&vacant_cells, citizen.home_location))
+        self.move_agent(*citizen, cell, utils::get_random_element_from(&vacant_cells, citizen.home_location))
     }
 
     pub fn deceased(&mut self) {
         let keys: Vec<Point> = self.agent_cell.keys().cloned().collect();
         for cell in keys {
-            let mut citizen = self.get_agent(&cell);
+            let mut citizen = self.get_agent(cell);
             if citizen.is_quarantined(){
                 let result = citizen.decease();
                 if result.0 == 1 || result.1 == 1{
@@ -162,7 +160,7 @@ impl AgentLocationMap {
                 }
                 self.counts.update_deceased(result.0);
                 self.counts.update_recovered(result.1);
-                self.counts.update_quarantined((result.0 + result.1)* -1);
+                self.counts.update_quarantined(-(result.0 + result.1));
             }
         }
     }
@@ -181,10 +179,7 @@ impl AgentLocationMap {
         let mut agent_list = Vec::new();
         for neighbor in neighbors{
             let agent = self.agent_cell.get(&neighbor);
-            match agent {
-                Some(x) => agent_list.push(*x),
-                _ => {}
-            }
+            if let Some(x) = agent { agent_list.push(*x) }
         }
         agent_list
     }
@@ -216,9 +211,12 @@ mod tests{
 
         map.move_agents();
 
-        let actual_citizen = map.agent_cell.get(&Point{x:0, y:1}).unwrap();
+        let citizen_option= map.agent_cell.get(&Point{x:0, y:1});
 
-        assert_ne!(actual_citizen.id, 1);
+        match citizen_option {
+            Some(x) => assert_ne!(x.id, 1),
+            None => assert_eq!(1, 1)
+        }
     }
 
     #[test]

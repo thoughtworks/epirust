@@ -20,31 +20,31 @@ impl Row{
     }
 
     pub fn get_infected(&self) -> i32{
-        return self.infected;
+        self.infected
     }
 
     pub fn get_quarantined(&self) -> i32{
-        return self.quarantined;
+        self.quarantined
     }
 
     pub fn update_susceptible(&mut self, count: i32){
-        self.susceptible = self.susceptible + count;
+        self.susceptible += count;
     }
 
     pub fn update_infected(&mut self, count:i32){
-        self.infected = self.infected + count;
+        self.infected += count;
     }
 
     pub fn update_recovered(&mut self, count:i32){
-        self.recovered = self.recovered + count;
+        self.recovered += count;
     }
 
     pub fn update_deceased(&mut self, count:i32){
-        self.deceased = self.deceased + count;
+        self.deceased += count;
     }
 
     pub fn update_quarantined(&mut self, count:i32){
-        self.quarantined = self.quarantined + count;
+        self.quarantined += count;
     }
 
     pub fn increment_hour(&mut self){
@@ -52,7 +52,7 @@ impl Row{
     }
 }
 
-pub fn write(file_path: &str, data: &Vec<Row>) -> Result<(), Box<dyn Error>> {
+pub fn write(file_path: &str, data: &[Row]) -> Result<(), Box<dyn Error>> {
     let mut wtr = Writer::from_path(file_path)?;
 
     for row in data{

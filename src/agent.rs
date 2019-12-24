@@ -4,6 +4,14 @@ use crate::geography::point::Point;
 use crate::constants;
 use rand::thread_rng;
 use rand::Rng;
+use crate::geography::hospital::Hospital;
+use crate::allocation_map::AgentLocationMap;
+use crate::geography::Area;
+use crate::utils;
+use crate::geography::transport_area::TransportArea;
+use crate::geography::work_area::WorkArea;
+use crate::geography::housing_area::HousingArea;
+use crate::csv_service::Row;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum State{
@@ -60,7 +68,7 @@ pub struct Citizen {
     pub working: bool,
     pub hospitalized: bool,
     pub transport_location: Point,
-    state_machine: StateMachine
+    pub state_machine: StateMachine
 }
 
 impl Citizen {
@@ -181,6 +189,121 @@ impl Citizen {
     fn generate_disease_randomness_factor() -> i32{
         let option = constants::IMMUNITY_RANGE.choose(&mut rand::thread_rng());
         *option.unwrap()
+    }
+
+    pub fn perform_operation(&mut self, cell: &Point, simulation_hour: i32, housing_area: HousingArea, hospital: &Hospital, transport_area: TransportArea, work_area: WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
+       self.routine(cell, simulation_hour, housing_area, hospital, transport_area, work_area, map, counts)
+    }
+
+    fn routine(&mut self, cell: &Point, simulation_hour: i32, housing_area: HousingArea, hospital: &Hospital, transport_area: TransportArea, work_area: WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
+        let mut new_cell = *cell;
+        match simulation_hour % constants::NUMBER_OF_HOURS {
+            constants::ROUTINE_START_TIME => {
+                self.update_infection_day();
+                new_cell = self.quarantine_all(cell, hospital, map, counts);
+            },
+            constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {},
+            constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
+                new_cell = self.goto(transport_area, map, *cell);
+                self.update_infection(*cell, map, counts);
+            },
+            constants::ROUTINE_WORK_TIME => {
+                new_cell = self.goto(work_area, map, *cell);
+                self.update_infection(*cell, map, counts);
+            },
+            constants::ROUTINE_WORK_END_TIME => {
+                new_cell = self.goto(housing_area, map, *cell);
+                self.update_infection(*cell, map, counts);
+            },
+            constants::ROUTINE_END_TIME => {
+                new_cell = self.deceased(map, *cell, counts)
+            },
+            _ => {
+                new_cell = self.move_agent_from(map, *cell);
+                self.update_infection(*cell, map, counts);
+            }
+        }
+        new_cell
+    }
+
+    fn update_infection_day(&mut self){
+        if self.is_infected() || self.is_quarantined(){
+            self.increment_infection_day();
+        }
+    }
+
+    fn quarantine_all(&mut self, cell: &Point, hospital: &Hospital, map: &AgentLocationMap, counts: &mut Row) -> Point {
+        let mut new_cell = *cell;
+        if self.is_infected() && !self.is_quarantined() {
+            let number_of_quarantined = self.quarantine();
+            if number_of_quarantined > 0 {
+                new_cell = AgentLocationMap::goto_hospital(map, *hospital, *cell, self);
+                if new_cell != *cell{
+                    self.hospitalized = true;
+                }
+                counts.update_quarantined(number_of_quarantined);
+                counts.update_infected(-number_of_quarantined);
+            }
+        }
+        new_cell
+    }
+
+    fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Row) {
+        if self.is_susceptible() && !self.vaccinated {
+            let neighbors = map.get_agents_from(cell.get_neighbor_cells(map.grid_size));
+            let infected_neighbors: Vec<Citizen> = neighbors.into_iter().
+                filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized).collect();
+            for neighbor in infected_neighbors {
+                let mut rng = thread_rng();
+                let transmission_rate = neighbor.get_infection_transmission_rate();
+                if rng.gen_bool(transmission_rate) {
+//                    println!("Infection rate {}", transmission_rate);
+                    self.infect();
+                    counts.update_infected(1);
+                    counts.update_susceptible(-1);
+                    return;
+                }
+            }
+        }
+    }
+
+    fn goto<T: Area>(&mut self, area: T, map: &AgentLocationMap, cell: Point) -> Point{
+        let mut new_cell = &cell;
+        if !self.can_move(){
+            return cell;
+        }
+        if self.working{
+            let area_dimensions = area.get_dimensions(*self);
+            let vacant_cells = self.get_empty_cells_from(area_dimensions, map);
+            let new_cell = utils::get_random_element_from(&vacant_cells, self.home_location);
+            return map.move_agent(*self, cell, new_cell)
+        }
+        self.move_agent_from(map, cell)
+    }
+
+    fn deceased(&mut self, map: &AgentLocationMap, cell: Point, counts: &mut Row) -> Point {
+        let mut new_cell = cell;
+        if self.is_quarantined() {
+            let result = self.decease();
+//            TODO: Remove check
+            if result.0 == 1 || result.1 == 1 {
+                new_cell = map.move_agent(*self, cell, self.home_location);
+            }
+            counts.update_deceased(result.0);
+            counts.update_recovered(result.1);
+            counts.update_quarantined(-(result.0 + result.1));
+        }
+        new_cell
+    }
+
+    fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point) -> Point{
+        let neighbor_cells: Vec<Point> = cell.get_neighbor_cells(map.grid_size);
+        let new_cell: Point = utils::get_random_element_from(&self.get_empty_cells_from(neighbor_cells, map), cell);
+        map.move_agent(*self, cell, new_cell)
+    }
+
+    fn get_empty_cells_from(&self, neighbors:Vec<Point>, map: &AgentLocationMap) -> Vec<Point>{
+        neighbors.into_iter().filter(|key| !map.agent_cell.contains_key(key)).collect()
     }
 }
 

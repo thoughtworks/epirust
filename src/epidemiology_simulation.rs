@@ -9,13 +9,16 @@ use crate::geography::point::Point;
 use crate::csv_service;
 use crate::geography::transport_area::TransportArea;
 use crate::geography::hospital::Hospital;
+use crate::csv_service::Row;
+use hashbrown::HashMap;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
+    pub write_agent_location_map: allocation_map::AgentLocationMap,
     pub housing_area: HousingArea,
     pub work_area: WorkArea,
     pub transport_area: TransportArea,
-    pub hospital: Hospital
+    pub hospital: Hospital,
 }
 
 impl Epidemiology {
@@ -30,41 +33,8 @@ impl Epidemiology {
         let (home_locations, agent_list) = Epidemiology::generate_population(number_of_agents,housing_area, transport_area, public_transport_percentage, working_percentage);
 
         let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &home_locations);
-        Epidemiology{agent_location_map, housing_area, work_area, transport_area, hospital}
-    }
-
-    pub fn run(&mut self, simulation_life_time:i32, vaccination_time:i32, vaccination_percentage:f64, output_file_name: &str) {
-        let mut records: Vec<csv_service::Row> = Vec::new();
-//        println!("Tick 0");
-        let mut count = 0;
-
-        let start_time = SystemTime::now();
-        self.agent_location_map.goto(self.housing_area);
-        for i in 1..simulation_life_time {
-            self.agent_location_map.counts.increment_hour();
-
-            self.routine(i);
-
-            if i == vaccination_time{
-                self.agent_location_map.vaccinate(vaccination_percentage);
-            }
-
-            let row = self.agent_location_map.get_record();
-            records.push(row);
-
-            if Epidemiology::stop_simulation(row){
-                break;
-            }
-            count = i;
-//            self.agent_location_map.print();
-        }
-        let end_time = SystemTime::now();
-        println!("Number of iterations: {}, Total Time taken {:?}", count, end_time.duration_since(start_time));
-        let result = csv_service::write(output_file_name, &records);
-        match result{
-            Ok(_) => {},
-            Err(e) => {println!("Error occurred while writing data to csv {:?}", e)}
-        }
+        let write_agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &home_locations);
+        Epidemiology{agent_location_map, write_agent_location_map, housing_area, work_area, transport_area, hospital}
     }
 
     fn define_geography(bound: i32, x_offset_for_home: i32, x_offset_for_transport:i32, x_offset_for_hospital: i32) -> (HousingArea, TransportArea, Hospital, WorkArea) {
@@ -90,42 +60,52 @@ impl Epidemiology {
         (home_locations, agent_list)
     }
 
-    fn routine(&mut self, i: i32) {
-        match i % constants::NUMBER_OF_HOURS {
-            constants::ROUTINE_START_TIME => {
-                self.agent_location_map.update_infection_day();
-                self.agent_location_map.quarantine(self.hospital);
-            },
-            constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => (),
-            constants::ROUTINE_TRAVEL_START_TIME => {
-                self.agent_location_map.goto(self.transport_area);
-                self.agent_location_map.update_infections();
-            },
-            constants::ROUTINE_WORK_TIME => {
-                self.agent_location_map.goto(self.work_area);
-                self.agent_location_map.update_infections();
-            },
-            constants::ROUTINE_TRAVEL_END_TIME => {
-                self.agent_location_map.goto(self.transport_area);
-                self.agent_location_map.update_infections();
-            },
-            constants::ROUTINE_WORK_END_TIME => {
-                self.agent_location_map.goto(self.housing_area);
-                self.agent_location_map.update_infections();
-            },
-            constants::ROUTINE_END_TIME => self.agent_location_map.deceased(),
-            _ => {
-                self.agent_location_map.move_agents();
-                self.agent_location_map.update_infections();
-            }
-        }
-    }
-
     fn stop_simulation(row: csv_service::Row) -> bool{
         if row.get_infected() == 0 && row.get_quarantined() == 0{
             return true
         }
         false
+    }
+
+    pub fn run_based_on_agents(&mut self, simulation_life_time:i32, vaccination_time:i32,
+                               vaccination_percentage:f64, output_file_name: &str){
+        let mut records: Vec<csv_service::Row> = Vec::new();
+        let mut csv_record = Row::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
+        let start_time = SystemTime::now();
+        let mut simulation_hour = 0;
+
+        for simulation_hour in 1..simulation_life_time {
+//            println!("Tick {}", simulation_hour);
+//            csv_record.increment_hour();
+            self.agent_location_map.agent_cell = self.write_agent_location_map.agent_cell.clone();
+            self.write_agent_location_map.agent_cell = HashMap::with_capacity(self.agent_location_map.agent_cell.len());
+
+//            if simulation_hour == vaccination_time{
+//                TODO: Vaccinate
+//            }
+
+            for (cell, agent) in self.agent_location_map.agent_cell.iter(){
+                let mut updated_agent = agent.clone();
+                let point = updated_agent.perform_operation(cell, simulation_hour, self.housing_area, &self.hospital,
+                                                            self.transport_area, self.work_area, &self.agent_location_map, &mut csv_record);
+
+                let agent_option = self.write_agent_location_map.agent_cell.get(&point);
+                match agent_option {
+                    Some(mut agent) => {
+                        self.write_agent_location_map.agent_cell.insert(*cell, updated_agent);
+                    },
+                    _ => {self.write_agent_location_map.agent_cell.insert(point, updated_agent);}
+                }
+            }
+//            records.push(csv_record);
+
+            if Epidemiology::stop_simulation(csv_record){
+                break;
+            }
+        }
+        let end_time = SystemTime::now();
+        println!("Number of iterations: {}, Total Time taken {:?}", simulation_hour, end_time.duration_since(start_time));
+//        let result = csv_service::write(output_file_name, &records);
     }
 }
 

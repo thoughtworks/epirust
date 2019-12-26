@@ -11,6 +11,9 @@ use crate::geography::transport_area::TransportArea;
 use crate::geography::hospital::Hospital;
 use crate::csv_service::Row;
 use hashbrown::HashMap;
+use core::borrow::BorrowMut;
+use crate::allocation_map::AgentLocationMap;
+use core::borrow::Borrow;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -72,40 +75,52 @@ impl Epidemiology {
         let mut records: Vec<csv_service::Row> = Vec::new();
         let mut csv_record = Row::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
         let start_time = SystemTime::now();
-        let mut simulation_hour = 0;
+        self.write_agent_location_map.agent_cell = HashMap::with_capacity(self.agent_location_map.agent_cell.len());
 
         for simulation_hour in 1..simulation_life_time {
 //            println!("Tick {}", simulation_hour);
-//            csv_record.increment_hour();
-            self.agent_location_map.agent_cell = self.write_agent_location_map.agent_cell.clone();
-            self.write_agent_location_map.agent_cell = HashMap::with_capacity(self.agent_location_map.agent_cell.len());
+            csv_record.increment_hour();
 
-//            if simulation_hour == vaccination_time{
-//                TODO: Vaccinate
-//            }
+            let mut read_buffer_reference = self.agent_location_map.borrow();
+            let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
 
-            for (cell, agent) in self.agent_location_map.agent_cell.iter(){
-                let mut updated_agent = agent.clone();
-                let point = updated_agent.perform_operation(cell, simulation_hour, self.housing_area, &self.hospital,
-                                                            self.transport_area, self.work_area, &self.agent_location_map, &mut csv_record);
-
-                let agent_option = self.write_agent_location_map.agent_cell.get(&point);
-                match agent_option {
-                    Some(mut agent) => {
-                        self.write_agent_location_map.agent_cell.insert(*cell, updated_agent);
-                    },
-                    _ => {self.write_agent_location_map.agent_cell.insert(point, updated_agent);}
-                }
+            if simulation_hour % 2 == 0{
+                read_buffer_reference = self.write_agent_location_map.borrow();
+                write_buffer_reference = self.agent_location_map.borrow_mut();
             }
-//            records.push(csv_record);
 
-            if Epidemiology::stop_simulation(csv_record){
+            Epidemiology::executor(&mut csv_record, simulation_hour, read_buffer_reference, write_buffer_reference, self.housing_area, &self.hospital, self.transport_area, self.work_area);
+
+            records.push(csv_record);
+
+            //            if simulation_hour == vaccination_time{
+            //                TODO: Vaccinate
+            //            }
+
+            if Epidemiology::stop_simulation(csv_record) {
                 break;
             }
         }
         let end_time = SystemTime::now();
-        println!("Number of iterations: {}, Total Time taken {:?}", simulation_hour, end_time.duration_since(start_time));
-//        let result = csv_service::write(output_file_name, &records);
+        println!("Number of iterations: {}, Total Time taken {:?}", csv_record.get_hour(), end_time.duration_since(start_time));
+        let result = csv_service::write(output_file_name, &records);
+    }
+
+    fn executor(mut csv_record: &mut Row, simulation_hour: i32, read_buffer: &AgentLocationMap, write_buffer: &mut AgentLocationMap, housing_area: HousingArea, hospital: &Hospital, transport_area: TransportArea, work_area: WorkArea) {
+        write_buffer.agent_cell.clear();
+        for (cell, agent) in read_buffer.agent_cell.iter() {
+            let mut updated_agent = agent.clone();
+            let point = updated_agent.perform_operation(cell, simulation_hour, housing_area, &hospital,
+                                                        transport_area, work_area, read_buffer, &mut csv_record);
+
+            let agent_option = write_buffer.agent_cell.get(&point);
+            match agent_option {
+                Some(mut agent) => {
+                    write_buffer.agent_cell.insert(*cell, updated_agent);
+                },
+                _ => { write_buffer.agent_cell.insert(point, updated_agent); }
+            }
+        }
     }
 }
 

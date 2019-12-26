@@ -27,6 +27,10 @@ impl Row{
         self.quarantined
     }
 
+    pub fn get_hour(&self) -> i32{
+        self.hour
+    }
+
     pub fn update_susceptible(&mut self, count: i32){
         self.susceptible += count;
     }

@@ -197,6 +197,8 @@ impl Citizen {
 
     fn routine(&mut self, cell: &Point, simulation_hour: i32, housing_area: &HousingArea, hospital: &Hospital, transport_area: &TransportArea, work_area: &WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
         let mut new_cell = *cell;
+//        TODO: Hardcoding
+        let mut vacant_cells: Vec<Point> = Vec::with_capacity(8);
         match simulation_hour % constants::NUMBER_OF_HOURS {
             constants::ROUTINE_START_TIME => {
                 self.update_infection_day();
@@ -204,22 +206,22 @@ impl Citizen {
             },
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {},
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
-                new_cell = self.goto(transport_area, map, *cell);
+                new_cell = self.goto(transport_area, map, *cell, &mut vacant_cells);
                 self.update_infection(*cell, map, counts);
             },
             constants::ROUTINE_WORK_TIME => {
-                new_cell = self.goto(work_area, map, *cell);
+                new_cell = self.goto(work_area, map, *cell, &mut vacant_cells);
                 self.update_infection(*cell, map, counts);
             },
             constants::ROUTINE_WORK_END_TIME => {
-                new_cell = self.goto(housing_area, map, *cell);
+                new_cell = self.goto(housing_area, map, *cell, &mut vacant_cells);
                 self.update_infection(*cell, map, counts);
             },
             constants::ROUTINE_END_TIME => {
                 new_cell = self.deceased(map, *cell, counts)
             },
             _ => {
-                new_cell = self.move_agent_from(map, *cell);
+                new_cell = self.move_agent_from(map, *cell, &mut vacant_cells);
                 self.update_infection(*cell, map, counts);
             }
         }
@@ -266,18 +268,18 @@ impl Citizen {
         }
     }
 
-    fn goto<T: Area>(&mut self, area: &T, map: &AgentLocationMap, cell: Point) -> Point{
+    fn goto<T: Area>(&mut self, area: &T, map: &AgentLocationMap, cell: Point, vacant_cells: &mut Vec<Point>) -> Point{
         let mut new_cell = &cell;
         if !self.can_move(){
             return cell;
         }
         if self.working{
             let area_dimensions = area.get_dimensions(*self);
-            let vacant_cells = self.get_empty_cells_from(&area_dimensions, map);
+            self.get_empty_cells_from(&area_dimensions, map, vacant_cells);
             let new_cell = utils::get_random_element_from(&vacant_cells, self.home_location);
             return map.move_agent(*self, cell, new_cell)
         }
-        self.move_agent_from(map, cell)
+        self.move_agent_from(map, cell, vacant_cells)
     }
 
     fn deceased(&mut self, map: &AgentLocationMap, cell: Point, counts: &mut Row) -> Point {
@@ -295,21 +297,21 @@ impl Citizen {
         new_cell
     }
 
-    fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point) -> Point{
+    fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point, vacant_cells: &mut Vec<Point>) -> Point{
         let neighbor_cells: Vec<Point> = cell.get_neighbor_cells(map.grid_size);
-        let new_cell: Point = utils::get_random_element_from(&self.get_empty_cells_from(&neighbor_cells, map), cell);
+        self.get_empty_cells_from(&neighbor_cells, map, vacant_cells);
+        let new_cell: Point = utils::get_random_element_from(&vacant_cells, cell);
         map.move_agent(*self, cell, new_cell)
     }
 
-    fn get_empty_cells_from(&self, neighbors:&Vec<Point>, map: &AgentLocationMap) -> Vec<Point>{
+    fn get_empty_cells_from(&self, neighbors:&Vec<Point>, map: &AgentLocationMap, vacant_cells: &mut Vec<Point>) {
 //        neighbors.into_iter().filter(|key| !map.agent_cell.contains_key(*key)).collect()
-        let mut empty_cells:Vec<Point> = Vec::with_capacity(8);
+
         for neighbor in neighbors{
             if !map.agent_cell.contains_key(neighbor){
-                empty_cells.push(*neighbor);
+                vacant_cells.push(*neighbor);
             }
         }
-        empty_cells
     }
 }
 

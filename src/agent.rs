@@ -191,11 +191,11 @@ impl Citizen {
         *option.unwrap()
     }
 
-    pub fn perform_operation(&mut self, cell: &Point, simulation_hour: i32, housing_area: HousingArea, hospital: &Hospital, transport_area: TransportArea, work_area: WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
+    pub fn perform_operation(&mut self, cell: &Point, simulation_hour: i32, housing_area: &HousingArea, hospital: &Hospital, transport_area: &TransportArea, work_area: &WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
        self.routine(cell, simulation_hour, housing_area, hospital, transport_area, work_area, map, counts)
     }
 
-    fn routine(&mut self, cell: &Point, simulation_hour: i32, housing_area: HousingArea, hospital: &Hospital, transport_area: TransportArea, work_area: WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
+    fn routine(&mut self, cell: &Point, simulation_hour: i32, housing_area: &HousingArea, hospital: &Hospital, transport_area: &TransportArea, work_area: &WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
         let mut new_cell = *cell;
         match simulation_hour % constants::NUMBER_OF_HOURS {
             constants::ROUTINE_START_TIME => {
@@ -266,7 +266,7 @@ impl Citizen {
         }
     }
 
-    fn goto<T: Area>(&mut self, area: T, map: &AgentLocationMap, cell: Point) -> Point{
+    fn goto<T: Area>(&mut self, area: &T, map: &AgentLocationMap, cell: Point) -> Point{
         let mut new_cell = &cell;
         if !self.can_move(){
             return cell;

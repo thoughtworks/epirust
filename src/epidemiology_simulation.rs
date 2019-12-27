@@ -109,8 +109,8 @@ impl Epidemiology {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
             let mut updated_agent = agent.clone();
-            let point = updated_agent.perform_operation(cell, simulation_hour, housing_area, &hospital,
-                                                        transport_area, work_area, read_buffer, &mut csv_record);
+            let point = updated_agent.perform_operation(cell, simulation_hour, &housing_area, &hospital,
+                                                        &transport_area, &work_area, read_buffer, &mut csv_record);
 
             let agent_option = write_buffer.agent_cell.get(&point);
             match agent_option {

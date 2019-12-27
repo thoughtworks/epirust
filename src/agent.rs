@@ -250,8 +250,7 @@ impl Citizen {
 
     fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Row) {
         if self.is_susceptible() && !self.vaccinated {
-            let neighbors = map.get_agents_from(cell.get_neighbor_cells(map.grid_size));
-            let infected_neighbors: Vec<Citizen> = neighbors.into_iter().
+            let infected_neighbors: Vec<&Citizen> = map.get_agents_from(&cell.get_neighbor_cells(map.grid_size)).into_iter().
                 filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized).collect();
             for neighbor in infected_neighbors {
                 let mut rng = thread_rng();
@@ -274,7 +273,7 @@ impl Citizen {
         }
         if self.working{
             let area_dimensions = area.get_dimensions(*self);
-            let vacant_cells = self.get_empty_cells_from(area_dimensions, map);
+            let vacant_cells = self.get_empty_cells_from(&area_dimensions, map);
             let new_cell = utils::get_random_element_from(&vacant_cells, self.home_location);
             return map.move_agent(*self, cell, new_cell)
         }
@@ -298,12 +297,19 @@ impl Citizen {
 
     fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point) -> Point{
         let neighbor_cells: Vec<Point> = cell.get_neighbor_cells(map.grid_size);
-        let new_cell: Point = utils::get_random_element_from(&self.get_empty_cells_from(neighbor_cells, map), cell);
+        let new_cell: Point = utils::get_random_element_from(&self.get_empty_cells_from(&neighbor_cells, map), cell);
         map.move_agent(*self, cell, new_cell)
     }
 
-    fn get_empty_cells_from(&self, neighbors:Vec<Point>, map: &AgentLocationMap) -> Vec<Point>{
-        neighbors.into_iter().filter(|key| !map.agent_cell.contains_key(key)).collect()
+    fn get_empty_cells_from(&self, neighbors:&Vec<Point>, map: &AgentLocationMap) -> Vec<Point>{
+//        neighbors.into_iter().filter(|key| !map.agent_cell.contains_key(*key)).collect()
+        let mut empty_cells:Vec<Point> = Vec::with_capacity(8);
+        for neighbor in neighbors{
+            if !map.agent_cell.contains_key(neighbor){
+                empty_cells.push(*neighbor);
+            }
+        }
+        empty_cells
     }
 }
 

@@ -14,8 +14,7 @@ use crate::geography::hospital::Hospital;
 
 pub struct AgentLocationMap {
     pub grid_size: i32,
-    pub agent_cell: HashMap<Point, agent::Citizen>,
-    pub counts: Row
+    pub agent_cell: HashMap<Point, agent::Citizen>
 }
 
 impl AgentLocationMap {
@@ -27,7 +26,7 @@ impl AgentLocationMap {
         }
         let row = Row::new((agent_list.len() - 1) as i32, 1);
 
-        AgentLocationMap {grid_size: size, agent_cell:map, counts: row }
+        AgentLocationMap {grid_size: size, agent_cell:map}
     }
 
     pub fn move_agent(&self, agent: agent::Citizen, old_cell: Point, new_cell: Point) -> Point{
@@ -57,11 +56,11 @@ impl AgentLocationMap {
         neighbors.into_iter().filter(|key| !hash_map.contains_key(key)).collect()
     }
 
-    pub fn get_agents_from(&self, neighbors:Vec<Point>) -> Vec<agent::Citizen> {
-        let mut agent_list = Vec::new();
+    pub fn get_agents_from(&self, neighbors:&Vec<Point>) -> Vec<&agent::Citizen> {
+        let mut agent_list = Vec::with_capacity(8);
         for neighbor in neighbors{
             let agent = self.agent_cell.get(&neighbor);
-            if let Some(x) = agent { agent_list.push(*x) }
+            if let Some(x) = agent { agent_list.push(x) }
         }
         agent_list
     }
@@ -99,7 +98,7 @@ mod tests{
     fn should_get_neighbor_agents(){
         let map = before_each();
 
-        let neighbor_agents= map.get_agents_from(Point{x: 0, y: 1}.get_neighbor_cells(5));
+        let neighbor_agents= map.get_agents_from(&Point{x: 0, y: 1}.get_neighbor_cells(5));
         assert_eq!(neighbor_agents.len(), 1);
     }
 

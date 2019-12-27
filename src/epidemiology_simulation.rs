@@ -90,7 +90,6 @@ impl Epidemiology {
             }
 
             Epidemiology::executor(&mut csv_record, simulation_hour, read_buffer_reference, write_buffer_reference, self.housing_area, &self.hospital, self.transport_area, self.work_area);
-
             records.push(csv_record);
 
             //            if simulation_hour == vaccination_time{

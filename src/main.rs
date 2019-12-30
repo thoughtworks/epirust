@@ -21,8 +21,8 @@ fn main() {
 fn sim100(){
     const GRID_SIZE:i32 = 250;
     const NUMBER_OF_AGENTS:i32 = 10000;
-    const SIMULATION_LIFE_TIME:i32 = 1000;
-    const VACCINATION_TIME:i32 = 10000;
+    const SIMULATION_LIFE_TIME:i32 = 10000;
+    const VACCINATION_TIME:i32 = 5000;
     const VACCINATION_PERCENTAGE:f64 = 0.2;
     const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
     const WORKING_PERCENTAGE:f64 = 0.7;

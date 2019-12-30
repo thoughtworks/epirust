@@ -14,6 +14,8 @@ use hashbrown::HashMap;
 use core::borrow::BorrowMut;
 use crate::allocation_map::AgentLocationMap;
 use core::borrow::Borrow;
+use rand::thread_rng;
+use rand::Rng;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -92,9 +94,9 @@ impl Epidemiology {
             Epidemiology::executor(&mut csv_record, simulation_hour, read_buffer_reference, write_buffer_reference, self.housing_area, &self.hospital, self.transport_area, self.work_area);
             records.push(csv_record);
 
-            //            if simulation_hour == vaccination_time{
-            //                TODO: Vaccinate
-            //            }
+            if simulation_hour == vaccination_time{
+                Epidemiology::vaccinate(vaccination_percentage, &mut write_buffer_reference);
+            }
 
             if Epidemiology::stop_simulation(csv_record) {
                 break;
@@ -103,6 +105,15 @@ impl Epidemiology {
         let end_time = SystemTime::now();
         println!("Number of iterations: {}, Total Time taken {:?}", csv_record.get_hour(), end_time.duration_since(start_time));
         let result = csv_service::write(output_file_name, &records);
+    }
+
+    fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap) -> () {
+        let mut rng = thread_rng();
+        for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
+            if agent.is_susceptible() && rng.gen_bool(vaccination_percentage) {
+                agent.set_vaccination(true);
+            }
+        }
     }
 
     fn executor(mut csv_record: &mut Row, simulation_hour: i32, read_buffer: &AgentLocationMap, write_buffer: &mut AgentLocationMap, housing_area: HousingArea, hospital: &Hospital, transport_area: TransportArea, work_area: WorkArea) {

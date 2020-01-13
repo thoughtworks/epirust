@@ -17,7 +17,6 @@ use crate::csv_service::Row;
 pub enum State{
     Susceptible{},
     Infected{},
-    Quarantined{},
     Recovered{},
     Deceased{}
 }
@@ -68,7 +67,8 @@ pub struct Citizen {
     pub working: bool,
     pub hospitalized: bool,
     pub transport_location: Point,
-    pub state_machine: StateMachine
+    pub state_machine: StateMachine,
+    pub quarantined: bool
 }
 
 impl Citizen {
@@ -76,7 +76,7 @@ impl Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor();
 
         Citizen{id, immunity: disease_randomness_factor, home_location, work_location, transport_location, vaccinated: false,
-            uses_public_transport, working, hospitalized: false, state_machine:StateMachine::new()}
+            uses_public_transport, working, hospitalized: false, state_machine:StateMachine::new(), quarantined: false}
     }
 
     pub fn get_infection_transmission_rate(&self) -> f64{
@@ -103,7 +103,7 @@ impl Citizen {
         match self.state_machine.state{
             State::Infected {} => {
                 if small_pox::to_be_quarantined(self.state_machine.infection_day + self.immunity) {
-                    self.state_machine.state = State::Quarantined {};
+                    self.quarantined = true;
                     return 1
                 }
                 0
@@ -116,9 +116,10 @@ impl Citizen {
 
     pub fn decease(&mut self) -> (i32, i32){
         match self.state_machine.state{
-            State::Quarantined {} => {
+            State::Infected {} => {
                 if self.state_machine.infection_day == small_pox::get_disease_last_day(){
                     self.hospitalized = false;
+                    self.quarantined = false;
 
                     if small_pox::to_be_deceased(){
                         self.state_machine.state = State::Deceased {};
@@ -136,12 +137,7 @@ impl Citizen {
     }
 
     pub fn is_quarantined(&self) -> bool {
-        match self.state_machine.state {
-            State::Quarantined {} => {
-                true
-            },
-            _ => false
-        }
+        self.quarantined
     }
 
     pub fn is_susceptible(&self) -> bool {
@@ -182,21 +178,17 @@ impl Citizen {
         true
     }
 
-    pub fn get_infection_day(&self) -> i32{
-        return self.state_machine.get_infection_day();
-    }
-
     fn generate_disease_randomness_factor() -> i32{
         let option = constants::IMMUNITY_RANGE.choose(&mut rand::thread_rng());
         *option.unwrap()
     }
 
-    pub fn perform_operation(&mut self, cell: &Point, simulation_hour: i32, housing_area: &HousingArea, hospital: &Hospital, transport_area: &TransportArea, work_area: &WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
+    pub fn perform_operation(&mut self, cell: Point, simulation_hour: i32, housing_area: &HousingArea, hospital: &Hospital, transport_area: &TransportArea, work_area: &WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
        self.routine(cell, simulation_hour, housing_area, hospital, transport_area, work_area, map, counts)
     }
 
-    fn routine(&mut self, cell: &Point, simulation_hour: i32, housing_area: &HousingArea, hospital: &Hospital, transport_area: &TransportArea, work_area: &WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
-        let mut new_cell = *cell;
+    fn routine(&mut self, cell:  Point, simulation_hour: i32, housing_area: &HousingArea, hospital: &Hospital, transport_area: &TransportArea, work_area: &WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
+        let mut new_cell = cell;
 //        TODO: Hardcoding
         let mut vacant_cells: Vec<Point> = Vec::with_capacity(8);
         match simulation_hour % constants::NUMBER_OF_HOURS {
@@ -206,23 +198,23 @@ impl Citizen {
             },
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {},
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
-                new_cell = self.goto(transport_area, map, *cell, &mut vacant_cells);
-                self.update_infection(*cell, map, counts);
+                new_cell = self.goto(transport_area, map, cell, &mut vacant_cells);
+                self.update_infection(cell, map, counts);
             },
             constants::ROUTINE_WORK_TIME => {
-                new_cell = self.goto(work_area, map, *cell, &mut vacant_cells);
-                self.update_infection(*cell, map, counts);
+                new_cell = self.goto(work_area, map, cell, &mut vacant_cells);
+                self.update_infection(cell, map, counts);
             },
             constants::ROUTINE_WORK_END_TIME => {
-                new_cell = self.goto(housing_area, map, *cell, &mut vacant_cells);
-                self.update_infection(*cell, map, counts);
+                new_cell = self.goto(housing_area, map, cell, &mut vacant_cells);
+                self.update_infection(cell, map, counts);
             },
             constants::ROUTINE_END_TIME => {
-                new_cell = self.deceased(map, *cell, counts)
+                new_cell = self.deceased(map, cell, counts)
             },
             _ => {
-                new_cell = self.move_agent_from(map, *cell, &mut vacant_cells);
-                self.update_infection(*cell, map, counts);
+                new_cell = self.move_agent_from(map, cell, &mut vacant_cells);
+                self.update_infection(cell, map, counts);
             }
         }
         new_cell
@@ -234,13 +226,13 @@ impl Citizen {
         }
     }
 
-    fn quarantine_all(&mut self, cell: &Point, hospital: &Hospital, map: &AgentLocationMap, counts: &mut Row) -> Point {
-        let mut new_cell = *cell;
+    fn quarantine_all(&mut self, cell: Point, hospital: &Hospital, map: &AgentLocationMap, counts: &mut Row) -> Point {
+        let mut new_cell = cell;
         if self.is_infected() && !self.is_quarantined() {
             let number_of_quarantined = self.quarantine();
             if number_of_quarantined > 0 {
-                new_cell = AgentLocationMap::goto_hospital(map, *hospital, *cell, self);
-                if new_cell != *cell{
+                new_cell = AgentLocationMap::goto_hospital(map, *hospital, cell, self);
+                if new_cell != cell{
                     self.hospitalized = true;
                 }
                 counts.update_quarantined(number_of_quarantined);
@@ -269,7 +261,6 @@ impl Citizen {
     }
 
     fn goto<T: Area>(&mut self, area: &T, map: &AgentLocationMap, cell: Point, vacant_cells: &mut Vec<Point>) -> Point{
-        let mut new_cell = &cell;
         if !self.can_move(){
             return cell;
         }
@@ -277,7 +268,7 @@ impl Citizen {
             let area_dimensions = area.get_dimensions(*self);
             self.get_empty_cells_from(&area_dimensions, map, vacant_cells);
             let new_cell = utils::get_random_element_from(&vacant_cells, self.home_location);
-            return map.move_agent(*self, cell, new_cell)
+            return map.move_agent(cell, new_cell)
         }
         self.move_agent_from(map, cell, vacant_cells)
     }
@@ -286,9 +277,9 @@ impl Citizen {
         let mut new_cell = cell;
         if self.is_quarantined() {
             let result = self.decease();
-//            TODO: Remove check
-            if result.0 == 1 || result.1 == 1 {
-                new_cell = map.move_agent(*self, cell, self.home_location);
+//            TODO: Remove check - validate movement for deceased
+            if result.1 == 1 {
+                new_cell = map.move_agent(cell, self.home_location);
             }
             counts.update_deceased(result.0);
             counts.update_recovered(result.1);
@@ -301,7 +292,7 @@ impl Citizen {
         let neighbor_cells: Vec<Point> = cell.get_neighbor_cells(map.grid_size);
         self.get_empty_cells_from(&neighbor_cells, map, vacant_cells);
         let new_cell: Point = utils::get_random_element_from(&vacant_cells, cell);
-        map.move_agent(*self, cell, new_cell)
+        map.move_agent(cell, new_cell)
     }
 
     fn get_empty_cells_from(&self, neighbors:&Vec<Point>, map: &AgentLocationMap, vacant_cells: &mut Vec<Point>) {

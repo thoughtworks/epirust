@@ -1,8 +1,5 @@
 use hashbrown::HashMap;
 
-use rand::thread_rng;
-use rand::Rng;
-
 use crate::agent;
 
 use std::prelude::v1::Vec;
@@ -29,21 +26,17 @@ impl AgentLocationMap {
         AgentLocationMap {grid_size: size, agent_cell:map}
     }
 
-    pub fn move_agent(&self, agent: agent::Citizen, old_cell: Point, new_cell: Point) -> Point{
+    pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point{
         if self.agent_cell.contains_key(&new_cell){
             return old_cell
         }
         new_cell
     }
 
-    fn get_agent(&mut self, cell: Point) -> agent::Citizen {
-        *self.agent_cell.get(&cell).unwrap()
-    }
-
     pub fn goto_hospital(&self, area: Hospital, cell: Point, citizen: &mut agent::Citizen) -> Point{
         let area_dimensions = area.get_dimensions(*citizen);
         let vacant_cells = AgentLocationMap::get_empty_cells_from_map(&self.agent_cell, area_dimensions);
-        self.move_agent(*citizen, cell, utils::get_random_element_from(&vacant_cells, citizen.home_location))
+        self.move_agent(cell, utils::get_random_element_from(&vacant_cells, citizen.home_location))
     }
 
     pub fn print(&self){

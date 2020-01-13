@@ -95,6 +95,7 @@ impl Epidemiology {
             records.push(csv_record);
 
             if simulation_hour == vaccination_time{
+                println!("Vaccination");
                 Epidemiology::vaccinate(vaccination_percentage, &mut write_buffer_reference);
             }
 
@@ -104,10 +105,10 @@ impl Epidemiology {
         }
         let end_time = SystemTime::now();
         println!("Number of iterations: {}, Total Time taken {:?}", csv_record.get_hour(), end_time.duration_since(start_time));
-        let result = csv_service::write(output_file_name, &records);
+        let _result = csv_service::write(output_file_name, &records);
     }
 
-    fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap) -> () {
+    fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap) {
         let mut rng = thread_rng();
         for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
             if agent.is_susceptible() && rng.gen_bool(vaccination_percentage) {
@@ -120,12 +121,12 @@ impl Epidemiology {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
             let mut updated_agent = agent.clone();
-            let point = updated_agent.perform_operation(cell, simulation_hour, &housing_area, &hospital,
+            let point = updated_agent.perform_operation(*cell, simulation_hour, &housing_area, &hospital,
                                                         &transport_area, &work_area, read_buffer, &mut csv_record);
 
             let agent_option = write_buffer.agent_cell.get(&point);
             match agent_option {
-                Some(mut agent) => {
+                Some(mut _agent) => {
                     write_buffer.agent_cell.insert(*cell, updated_agent);
                 },
                 _ => { write_buffer.agent_cell.insert(point, updated_agent); }

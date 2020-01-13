@@ -13,11 +13,6 @@ mod csv_service;
 
 fn main() {
     println!("Executing for 10000 agents");
-    sim100();
-    println!("Done");
-}
-
-fn sim100(){
     const GRID_SIZE:i32 = 250;
     const NUMBER_OF_AGENTS:i32 = 10000;
     const SIMULATION_LIFE_TIME:i32 = 10000;
@@ -29,4 +24,5 @@ fn sim100(){
 
     let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
     epidemiology.run_based_on_agents(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
+    println!("Done");
 }

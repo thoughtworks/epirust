@@ -3,6 +3,7 @@ use rand::Rng;
 use std::cmp::max;
 use std::cmp::min;
 use std::ops::Add;
+use crate::constants;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
 pub struct Point {
@@ -45,8 +46,7 @@ impl Point {
     }
 
     pub fn get_neighbor_within_bounds(self, start: Point, end: Point) -> Vec<Point>{
-        const NUMBER_OF_NEIGHBORS:i32 = 8;
-        let mut neighbors_list = Vec::with_capacity(NUMBER_OF_NEIGHBORS as usize);
+        let mut neighbors_list = Vec::with_capacity(constants::NEIGHBORS);
         let mut row_index = max(start.x, self.x - 1);
 
         loop{
@@ -101,7 +101,6 @@ pub fn point_factory(start:Point, end:Point, number_of_points:i32) -> Vec<Point>
     points
 }
 
-//TODO: Add tests
 pub fn get_points_within(start: Point, end: Point) -> Vec<Point>{
     let mut point_vec:Vec<Point> = Vec::new();
 
@@ -154,5 +153,17 @@ mod tests{
         let output = point + second_point;
         assert_eq!(output, Point::new(2, 2));
 
+    }
+
+    #[test]
+    fn get_points_within(){
+        let point1 = Point::new(1,1);
+        let point2 = Point::new(2,2);
+
+        let points = super::get_points_within(point1, point2);
+        assert_eq!(points.len(), 9);
+        assert_eq!(points[0], Point{x:1, y:1});
+        assert_eq!(points[2], Point{x:1, y:3});
+        assert_eq!(points[8], Point{x:3, y:3});
     }
 }

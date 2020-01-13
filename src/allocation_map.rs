@@ -6,7 +6,7 @@ use std::prelude::v1::Vec;
 use crate::geography::point::Point;
 use crate::utils;
 use crate::geography::Area;
-use crate::csv_service::Row;
+
 use crate::geography::hospital::Hospital;
 
 pub struct AgentLocationMap {
@@ -21,7 +21,6 @@ impl AgentLocationMap {
         for i in 0..agent_list.len(){
             map.insert(points[i], agent_list[i]);
         }
-        let row = Row::new((agent_list.len() - 1) as i32, 1);
 
         AgentLocationMap {grid_size: size, agent_cell:map}
     }
@@ -39,11 +38,11 @@ impl AgentLocationMap {
         self.move_agent(cell, utils::get_random_element_from(&vacant_cells, citizen.home_location))
     }
 
-    pub fn print(&self){
-        for (k,v) in self.agent_cell.iter(){
-            println!("x:{}, y:{} - id:{} infected:{} working:{} Transport:{}", k.x, k.y, v.id, v.is_infected(), v.working, v.uses_public_transport);
-        }
-    }
+//    pub fn print(&self){
+//        for (k,v) in self.agent_cell.iter(){
+//            println!("x:{}, y:{} - id:{} infected:{} working:{} Transport:{}", k.x, k.y, v.id, v.is_infected(), v.working, v.uses_public_transport);
+//        }
+//    }
 
     pub fn get_empty_cells_from_map(hash_map: &HashMap<Point, agent::Citizen>, neighbors:Vec<Point>) -> Vec<Point>{
         neighbors.into_iter().filter(|key| !hash_map.contains_key(key)).collect()
@@ -66,8 +65,7 @@ mod tests{
     fn before_each() -> AgentLocationMap {
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
         let agents = vec![agent::Citizen::new_citizen(1, points[0], points[1], points[0], false, false), agent::Citizen::new_citizen(2, points[1], points[0], points[0], true, true)];
-        let mut map = AgentLocationMap::new(5, &agents, &points);
-        map
+        AgentLocationMap::new(5, &agents, &points)
     }
 
     #[test]

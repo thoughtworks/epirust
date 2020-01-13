@@ -1,3 +1,5 @@
+pub const NEIGHBORS:usize = 8;
+
 pub const HOUSE_AREA_RELATIVE_SIZE:f32 = 0.4;
 pub const TRANSPORT_AREA_RELATIVE_SIZE:f32 = 0.1;
 pub const HOSPITAL_RELATIVE_SIZE:f32 = 0.1;

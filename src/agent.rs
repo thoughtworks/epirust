@@ -8,10 +8,8 @@ use crate::geography::hospital::Hospital;
 use crate::allocation_map::AgentLocationMap;
 use crate::geography::Area;
 use crate::utils;
-use crate::geography::transport_area::TransportArea;
-use crate::geography::work_area::WorkArea;
-use crate::geography::housing_area::HousingArea;
 use crate::csv_service::Row;
+use crate::geography::Grid;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum State{
@@ -35,17 +33,6 @@ impl StateMachine{
         }
     }
 
-//    pub fn next(&mut self){
-//        match self.state {
-//            State::Susceptible{} => self.state = State::Infected{},
-//            State::Infected {} => {
-//                if small_pox::to_be_quarantined(self.infection_day){
-//                    self.state = State::Quarantined {}
-//                }
-//            }
-//        }
-//    }
-
     pub fn get_infection_day(self) -> i32{
         match self.state {
             State::Infected{} => {
@@ -59,16 +46,16 @@ impl StateMachine{
 #[derive(Copy, Clone)]
 pub struct Citizen {
     pub id: i32,
-    pub immunity: i32,
+    immunity: i32,
     pub home_location: Point,
     pub work_location: Point,
-    pub vaccinated: bool,
+    vaccinated: bool,
     pub uses_public_transport: bool,
-    pub working: bool,
-    pub hospitalized: bool,
+    working: bool,
+    hospitalized: bool,
     pub transport_location: Point,
-    pub state_machine: StateMachine,
-    pub quarantined: bool
+    state_machine: StateMachine,
+    quarantined: bool
 }
 
 impl Citizen {
@@ -183,30 +170,29 @@ impl Citizen {
         *option.unwrap()
     }
 
-    pub fn perform_operation(&mut self, cell: Point, simulation_hour: i32, housing_area: &HousingArea, hospital: &Hospital, transport_area: &TransportArea, work_area: &WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
-       self.routine(cell, simulation_hour, housing_area, hospital, transport_area, work_area, map, counts)
+    pub fn perform_operation(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap, counts: &mut Row) -> Point{
+       self.routine(cell, simulation_hour, grid, map, counts)
     }
 
-    fn routine(&mut self, cell:  Point, simulation_hour: i32, housing_area: &HousingArea, hospital: &Hospital, transport_area: &TransportArea, work_area: &WorkArea, map: &AgentLocationMap, counts: &mut Row) -> Point{
+    fn routine(&mut self, cell:  Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap, counts: &mut Row) -> Point{
         let mut new_cell = cell;
-//        TODO: Hardcoding
-        let mut vacant_cells: Vec<Point> = Vec::with_capacity(8);
+        let mut vacant_cells: Vec<Point> = Vec::with_capacity(constants::NEIGHBORS);
         match simulation_hour % constants::NUMBER_OF_HOURS {
             constants::ROUTINE_START_TIME => {
                 self.update_infection_day();
-                new_cell = self.quarantine_all(cell, hospital, map, counts);
+                new_cell = self.quarantine_all(cell, &grid.hospital, map, counts);
             },
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {},
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
-                new_cell = self.goto(transport_area, map, cell, &mut vacant_cells);
+                new_cell = self.goto(&grid.transport_area, map, cell, &mut vacant_cells);
                 self.update_infection(cell, map, counts);
             },
             constants::ROUTINE_WORK_TIME => {
-                new_cell = self.goto(work_area, map, cell, &mut vacant_cells);
+                new_cell = self.goto(&grid.work_area, map, cell, &mut vacant_cells);
                 self.update_infection(cell, map, counts);
             },
             constants::ROUTINE_WORK_END_TIME => {
-                new_cell = self.goto(housing_area, map, cell, &mut vacant_cells);
+                new_cell = self.goto(&grid.housing_area, map, cell, &mut vacant_cells);
                 self.update_infection(cell, map, counts);
             },
             constants::ROUTINE_END_TIME => {
@@ -277,7 +263,6 @@ impl Citizen {
         let mut new_cell = cell;
         if self.is_quarantined() {
             let result = self.decease();
-//            TODO: Remove check - validate movement for deceased
             if result.1 == 1 {
                 new_cell = map.move_agent(cell, self.home_location);
             }
@@ -311,19 +296,16 @@ pub fn citizen_factory(home_locations: &[Point], work_locations: &Vec<Point>, pu
     let mut public_transport_range = thread_rng();
     let mut working_range = thread_rng();
     let mut agent_list = Vec::with_capacity(home_locations.len());
-    let mut public_transport_counter = 0;
 
     for i in 0..home_locations.len(){
-        let mut public_transport_location = Point::new(0,0);
         let uses_public_transport_probability = public_transport_range.gen_bool(percentage_public_transport);
         let working_agent = working_range.gen_bool(working_percentage);
         let uses_public_transport = uses_public_transport_probability && working_agent;
 
+        let mut public_transport_location = home_locations[i];
+
         if uses_public_transport{
             public_transport_location = public_transport_locations[0];
-            public_transport_counter += 1;
-        } else{
-            public_transport_location = home_locations[i];
         }
 
         let agent = Citizen::new_citizen(i as i32, home_locations[i], work_locations[i], public_transport_location, uses_public_transport_probability && working_agent, working_agent);

@@ -22,7 +22,7 @@ fn main() {
     const WORKING_PERCENTAGE:f64 = 0.7;
     const OUTPUT_FILE_NAME:&str = "simulation_10000.csv";
 
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
-    epidemiology.run_based_on_agents(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
+    let mut epidemiology_simulation = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
+    epidemiology_simulation.run(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
     println!("Done");
 }

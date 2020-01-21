@@ -1,15 +1,14 @@
-use crate::disease::small_pox;
-use rand::seq::SliceRandom;
-use crate::geography::point::Point;
-use crate::constants;
-use rand::thread_rng;
 use rand::Rng;
-use crate::geography::hospital::Hospital;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
+
 use crate::allocation_map::AgentLocationMap;
-use crate::geography::Area;
-use crate::utils;
+use crate::constants;
 use crate::csv_service::Row;
-use crate::geography::Grid;
+use crate::disease::small_pox;
+use crate::geography::{Area, Grid};
+use crate::geography::point::Point;
+use crate::utils;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum State {
@@ -195,15 +194,18 @@ impl Citizen {
             }
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {}
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
-                new_cell = self.goto(&grid.transport_area, map, cell, &mut vacant_cells);
+                let area_bounds = grid.transport_area.get_neighbors_of(self.transport_location);
+                new_cell = self.goto(area_bounds, map, cell, &mut vacant_cells);
                 self.update_infection(cell, map, counts);
             }
             constants::ROUTINE_WORK_TIME => {
-                new_cell = self.goto(&grid.work_area, map, cell, &mut vacant_cells);
+                let area_bounds = grid.work_area.get_neighbors_of(self.work_location);
+                new_cell = self.goto(area_bounds, map, cell, &mut vacant_cells);
                 self.update_infection(cell, map, counts);
             }
             constants::ROUTINE_WORK_END_TIME => {
-                new_cell = self.goto(&grid.housing_area, map, cell, &mut vacant_cells);
+                let area_bounds = grid.housing_area.get_neighbors_of(self.home_location);
+                new_cell = self.goto(area_bounds, map, cell, &mut vacant_cells);
                 self.update_infection(cell, map, counts);
             }
             constants::ROUTINE_END_TIME => {
@@ -223,7 +225,7 @@ impl Citizen {
         }
     }
 
-    fn quarantine_all(&mut self, cell: Point, hospital: &Hospital, map: &AgentLocationMap, counts: &mut Row) -> Point {
+    fn quarantine_all(&mut self, cell: Point, hospital: &Area, map: &AgentLocationMap, counts: &mut Row) -> Point {
         let mut new_cell = cell;
         if self.is_infected() && !self.is_quarantined() {
             let number_of_quarantined = self.quarantine();
@@ -257,12 +259,11 @@ impl Citizen {
         }
     }
 
-    fn goto<T: Area>(&mut self, area: &T, map: &AgentLocationMap, cell: Point, vacant_cells: &mut Vec<Point>) -> Point {
+    fn goto(&mut self, area_dimensions: Vec<Point>, map: &AgentLocationMap, cell: Point, vacant_cells: &mut Vec<Point>) -> Point {
         if !self.can_move() {
             return cell;
         }
         if self.working {
-            let area_dimensions = area.get_dimensions(*self);
             self.get_empty_cells_from(&area_dimensions, map, vacant_cells);
             let new_cell = utils::get_random_element_from(&vacant_cells, self.home_location);
             return map.move_agent(cell, new_cell);

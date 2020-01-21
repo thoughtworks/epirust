@@ -97,21 +97,22 @@ impl Epidemiology {
 mod tests {
     use super::*;
     use geography::point::Point;
+    use crate::geography::Area;
 
     #[test]
     fn should_init() {
         let epidemiology: Epidemiology = Epidemiology::new(20, 10, 1.0, 1.0);
-        assert_eq!(epidemiology.grid.housing_area.start_offset, Point::new(0, 0));
-        assert_eq!(epidemiology.grid.housing_area.end_offset, Point::new(7, 19));
+        let expected_housing_area = Area::new(Point::new(0, 0), Point::new(7, 19));
+        assert_eq!(epidemiology.grid.housing_area, expected_housing_area);
 
-        assert_eq!(epidemiology.grid.transport_area.start_offset, Point::new(8, 0));
-        assert_eq!(epidemiology.grid.transport_area.end_offset, Point::new(9, 19));
+        let expected_transport_area = Area::new(Point::new(8, 0), Point::new(9, 19));
+        assert_eq!(epidemiology.grid.transport_area, expected_transport_area);
 
-        assert_eq!(epidemiology.grid.hospital.start_offset, Point::new(10, 0));
-        assert_eq!(epidemiology.grid.hospital.end_offset, Point::new(11, 19));
+        let expected_hospital_area = Area::new(Point::new(10, 0), Point::new(11, 19));
+        assert_eq!(epidemiology.grid.hospital, expected_hospital_area);
 
-        assert_eq!(epidemiology.grid.work_area.start_offset, Point::new(12, 0));
-        assert_eq!(epidemiology.grid.work_area.end_offset, Point::new(19, 19));
+        let expected_work_area = Area::new(Point::new(12, 0), Point::new(19, 19));
+        assert_eq!(epidemiology.grid.work_area, expected_work_area);
 
         assert_eq!(epidemiology.agent_location_map.agent_cell.len(), 10);
     }

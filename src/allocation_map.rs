@@ -1,13 +1,9 @@
 use hashbrown::HashMap;
 
 use crate::agent;
-
-use std::prelude::v1::Vec;
+use crate::geography::Area;
 use crate::geography::point::Point;
 use crate::utils;
-use crate::geography::Area;
-
-use crate::geography::hospital::Hospital;
 
 pub struct AgentLocationMap {
     pub grid_size: i32,
@@ -31,8 +27,8 @@ impl AgentLocationMap {
         new_cell
     }
 
-    pub fn goto_hospital(&self, area: Hospital, cell: Point, citizen: &mut agent::Citizen) -> Point {
-        let area_dimensions = area.get_dimensions(*citizen);
+    pub fn goto_hospital(&self, area: Area, cell: Point, citizen: &mut agent::Citizen) -> Point {
+        let area_dimensions = area.get_points_within();
         let vacant_cells = AgentLocationMap::get_empty_cells_from_map(&self.agent_cell, area_dimensions);
         self.move_agent(cell, utils::get_random_element_from(&vacant_cells, citizen.home_location))
     }

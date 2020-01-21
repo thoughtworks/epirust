@@ -101,17 +101,6 @@ pub fn point_factory(start: Point, end: Point, number_of_points: i32) -> Vec<Poi
     points
 }
 
-pub fn get_points_within(start: Point, end: Point) -> Vec<Point> {
-    let mut point_vec: Vec<Point> = Vec::new();
-
-    for x in start.x..=end.x + 1 {
-        for y in start.y..=end.y + 1 {
-            point_vec.push(Point::new(x, y));
-        }
-    }
-    point_vec
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -152,17 +141,5 @@ mod tests {
 
         let output = point + second_point;
         assert_eq!(output, Point::new(2, 2));
-    }
-
-    #[test]
-    fn get_points_within() {
-        let point1 = Point::new(1, 1);
-        let point2 = Point::new(2, 2);
-
-        let points = super::get_points_within(point1, point2);
-        assert_eq!(points.len(), 9);
-        assert_eq!(points[0], Point { x: 1, y: 1 });
-        assert_eq!(points[2], Point { x: 1, y: 3 });
-        assert_eq!(points[8], Point { x: 3, y: 3 });
     }
 }

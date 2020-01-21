@@ -14,26 +14,25 @@ use crate::geography::Grid;
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
     pub write_agent_location_map: allocation_map::AgentLocationMap,
-    pub grid: Grid
+    pub grid: Grid,
 }
 
 impl Epidemiology {
-
-    pub fn new(grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage:f64) -> Epidemiology {
+    pub fn new(grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64) -> Epidemiology {
         let grid = geography::define_geography(grid_size);
         let (home_locations, agent_list) = grid.generate_population(number_of_agents, public_transport_percentage, working_percentage);
         let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &home_locations);
         let write_agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &home_locations);
 
-        Epidemiology{agent_location_map, write_agent_location_map, grid}
+        Epidemiology { agent_location_map, write_agent_location_map, grid }
     }
 
-    fn stop_simulation(row: csv_service::Row) -> bool{
+    fn stop_simulation(row: csv_service::Row) -> bool {
         row.get_infected() == 0 && row.get_quarantined() == 0
     }
 
-    pub fn run(&mut self, simulation_life_time:i32, vaccination_time:i32,
-               vaccination_percentage:f64, output_file_name: &str){
+    pub fn run(&mut self, simulation_life_time: i32, vaccination_time: i32,
+               vaccination_percentage: f64, output_file_name: &str) {
         let mut records: Vec<csv_service::Row> = Vec::new();
         let mut csv_record = Row::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
         let start_time = SystemTime::now();
@@ -46,7 +45,7 @@ impl Epidemiology {
             let mut read_buffer_reference = self.agent_location_map.borrow();
             let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
 
-            if simulation_hour % 2 == 0{
+            if simulation_hour % 2 == 0 {
                 read_buffer_reference = self.write_agent_location_map.borrow();
                 write_buffer_reference = self.agent_location_map.borrow_mut();
             }
@@ -54,7 +53,7 @@ impl Epidemiology {
             Epidemiology::simulate(&mut csv_record, simulation_hour, read_buffer_reference, write_buffer_reference, &self.grid);
             records.push(csv_record);
 
-            if simulation_hour == vaccination_time{
+            if simulation_hour == vaccination_time {
                 println!("Vaccination");
                 Epidemiology::vaccinate(vaccination_percentage, &mut write_buffer_reference);
             }
@@ -87,7 +86,7 @@ impl Epidemiology {
             match agent_option {
                 Some(mut _agent) => {
                     write_buffer.agent_cell.insert(*cell, current_agent);
-                },
+                }
                 _ => { write_buffer.agent_cell.insert(point, current_agent); }
             }
         }
@@ -95,13 +94,13 @@ impl Epidemiology {
 }
 
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::*;
     use geography::point::Point;
 
     #[test]
     fn should_init() {
-        let epidemiology:Epidemiology = Epidemiology::new(20, 10, 1.0, 1.0);
+        let epidemiology: Epidemiology = Epidemiology::new(20, 10, 1.0, 1.0);
         assert_eq!(epidemiology.grid.housing_area.start_offset, Point::new(0, 0));
         assert_eq!(epidemiology.grid.housing_area.end_offset, Point::new(7, 19));
 

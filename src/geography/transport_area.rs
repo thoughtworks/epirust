@@ -3,20 +3,20 @@ use crate::geography::Area;
 use crate::agent::Citizen;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq)]
-pub struct TransportArea{
+pub struct TransportArea {
     pub start_offset: Point,
-    pub end_offset: Point
+    pub end_offset: Point,
 }
 
-impl Area for TransportArea{
-    fn get_dimensions(&self, agent: Citizen) -> Vec<Point>{
+impl Area for TransportArea {
+    fn get_dimensions(&self, agent: Citizen) -> Vec<Point> {
         agent.transport_location.get_neighbor_within_bounds(self.start_offset, self.end_offset)
     }
 }
 
-impl TransportArea{
-    pub fn new(start: Point, end:Point) -> TransportArea{
-        TransportArea{start_offset: start, end_offset:end}
+impl TransportArea {
+    pub fn new(start: Point, end: Point) -> TransportArea {
+        TransportArea { start_offset: start, end_offset: end }
     }
 }
 

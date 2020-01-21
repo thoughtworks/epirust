@@ -12,18 +12,18 @@ pub mod work_area;
 pub mod transport_area;
 pub mod hospital;
 
-pub trait Area{
-    fn get_dimensions(&self, agent:agent::Citizen) -> Vec<Point>;
+pub trait Area {
+    fn get_dimensions(&self, agent: agent::Citizen) -> Vec<Point>;
 }
 
-pub struct Grid{
+pub struct Grid {
     pub housing_area: HousingArea,
     pub work_area: WorkArea,
     pub transport_area: TransportArea,
     pub hospital: Hospital,
 }
 
-impl Grid{
+impl Grid {
     pub fn generate_population(&self, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64)
                                -> (Vec<Point>, Vec<agent::Citizen>) {
         let home_locations = point::point_factory(self.housing_area.start_offset,

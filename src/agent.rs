@@ -186,7 +186,6 @@ impl Citizen {
 
     fn routine(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap, counts: &mut Row) -> Point {
         let mut new_cell = cell;
-        let mut vacant_cells: Vec<Point> = Vec::with_capacity(constants::NEIGHBORS);
         match simulation_hour % constants::NUMBER_OF_HOURS {
             constants::ROUTINE_START_TIME => {
                 self.update_infection_day();
@@ -195,24 +194,24 @@ impl Citizen {
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {}
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
                 let area_bounds = grid.transport_area.get_neighbors_of(self.transport_location);
-                new_cell = self.goto(area_bounds, map, cell, &mut vacant_cells);
+                new_cell = self.goto(area_bounds, map, cell);
                 self.update_infection(cell, map, counts);
             }
             constants::ROUTINE_WORK_TIME => {
                 let area_bounds = grid.work_area.get_neighbors_of(self.work_location);
-                new_cell = self.goto(area_bounds, map, cell, &mut vacant_cells);
+                new_cell = self.goto(area_bounds, map, cell);
                 self.update_infection(cell, map, counts);
             }
             constants::ROUTINE_WORK_END_TIME => {
                 let area_bounds = grid.housing_area.get_neighbors_of(self.home_location);
-                new_cell = self.goto(area_bounds, map, cell, &mut vacant_cells);
+                new_cell = self.goto(area_bounds, map, cell);
                 self.update_infection(cell, map, counts);
             }
             constants::ROUTINE_END_TIME => {
                 new_cell = self.deceased(map, cell, counts)
             }
             _ => {
-                new_cell = self.move_agent_from(map, cell, &mut vacant_cells);
+                new_cell = self.move_agent_from(map, cell);
                 self.update_infection(cell, map, counts);
             }
         }
@@ -259,16 +258,16 @@ impl Citizen {
         }
     }
 
-    fn goto(&mut self, area_dimensions: Vec<Point>, map: &AgentLocationMap, cell: Point, vacant_cells: &mut Vec<Point>) -> Point {
+    fn goto(&mut self, area_dimensions: Vec<Point>, map: &AgentLocationMap, cell: Point) -> Point {
         if !self.can_move() {
             return cell;
         }
         if self.working {
-            self.get_empty_cells_from(&area_dimensions, map, vacant_cells);
+            let vacant_cells = self.get_empty_cells_from(&area_dimensions, map);
             let new_cell = utils::get_random_element_from(&vacant_cells, self.home_location);
             return map.move_agent(cell, new_cell);
         }
-        self.move_agent_from(map, cell, vacant_cells)
+        self.move_agent_from(map, cell)
     }
 
     fn deceased(&mut self, map: &AgentLocationMap, cell: Point, counts: &mut Row) -> Point {
@@ -285,21 +284,22 @@ impl Citizen {
         new_cell
     }
 
-    fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point, vacant_cells: &mut Vec<Point>) -> Point {
+    fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point) -> Point {
         let neighbor_cells: Vec<Point> = cell.get_neighbor_cells(map.grid_size);
-        self.get_empty_cells_from(&neighbor_cells, map, vacant_cells);
+        let vacant_cells = self.get_empty_cells_from(&neighbor_cells, map);
         let new_cell: Point = utils::get_random_element_from(&vacant_cells, cell);
         map.move_agent(cell, new_cell)
     }
 
-    fn get_empty_cells_from(&self, neighbors: &Vec<Point>, map: &AgentLocationMap, vacant_cells: &mut Vec<Point>) {
+    fn get_empty_cells_from(&self, neighbors: &Vec<Point>, map: &AgentLocationMap) -> Vec<Point> {
 //        neighbors.into_iter().filter(|key| !map.agent_cell.contains_key(*key)).collect()
-
+        let mut vacant_cells: Vec<Point> = Vec::with_capacity(constants::NEIGHBORS);
         for neighbor in neighbors {
             if !map.agent_cell.contains_key(neighbor) {
                 vacant_cells.push(*neighbor);
             }
         }
+        vacant_cells
     }
 }
 

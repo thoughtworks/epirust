@@ -20,9 +20,9 @@ pub struct Epidemiology {
 impl Epidemiology {
     pub fn new(grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64) -> Epidemiology {
         let grid = geography::define_geography(grid_size);
-        let (home_locations, agent_list) = grid.generate_population(number_of_agents, public_transport_percentage, working_percentage);
-        let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &home_locations);
-        let write_agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &home_locations);
+        let (start_locations, agent_list) = grid.generate_population(number_of_agents, public_transport_percentage, working_percentage);
+        let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &start_locations);
+        let write_agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &start_locations);
 
         Epidemiology { agent_location_map, write_agent_location_map, grid }
     }

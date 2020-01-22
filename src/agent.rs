@@ -303,22 +303,25 @@ impl Citizen {
     }
 }
 
-pub fn citizen_factory(home_locations: &[Point], work_locations: &Vec<Point>, public_transport_locations: &[Point],
+pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>, public_transport_locations: &Vec<Point>,
                        percentage_public_transport: f64, working_percentage: f64) -> Vec<Citizen> {
     let mut public_transport_range = thread_rng();
     let mut working_range = thread_rng();
     let mut agent_list = Vec::with_capacity(home_locations.len());
 
     for i in 0..home_locations.len() {
-        let uses_public_transport_probability = public_transport_range.gen_bool(percentage_public_transport);
-        let working_agent = working_range.gen_bool(working_percentage);
-        let uses_public_transport = uses_public_transport_probability && working_agent;
+        let is_a_working_citizen = working_range.gen_bool(working_percentage);
 
-        let public_transport_location: Point = if uses_public_transport { public_transport_locations[0] } else {
+        let uses_public_transport = public_transport_range.gen_bool(percentage_public_transport)
+            && is_a_working_citizen
+            && i < public_transport_locations.len();
+
+        let public_transport_location: Point = if uses_public_transport { public_transport_locations[i] } else {
             home_locations[i]
         };
 
-        let agent = Citizen::new_citizen(i as i32, home_locations[i], work_locations[i], public_transport_location, uses_public_transport_probability && working_agent, working_agent);
+        let agent = Citizen::new_citizen(i as i32, home_locations[i],work_locations[i],
+                                         public_transport_location, uses_public_transport, is_a_working_citizen);
         agent_list.push(agent);
     }
 //TODO: pass number of infected as parameter

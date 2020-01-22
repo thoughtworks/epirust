@@ -1,7 +1,10 @@
-use crate::geography::point::Point;
-use crate::agent;
-use crate::constants;
 use std::cmp::{max, min};
+
+use rand::Rng;
+
+use crate::{agent, constants};
+use crate::agent::Citizen;
+use crate::geography::point::Point;
 
 pub mod point;
 
@@ -52,6 +55,27 @@ impl Area {
 
         neighbors_list
     }
+
+    //TODO improve randomness
+    pub fn random_points(&self, number_of_points: i32) -> Vec<Point> {
+        let mut points: Vec<Point> = Vec::with_capacity(number_of_points as usize);
+        let mut rng = rand::thread_rng();
+        while points.len() != (number_of_points as usize) {
+            let rand_x = rng.gen_range(self.start_offset.x, self.end_offset.x);
+            let rand_y = rng.gen_range(self.start_offset.y, self.end_offset.y);
+            let mut is_duplicate = false;
+            for point in points.iter_mut() {
+                if *point == (Point::new(rand_x, rand_y)) {
+//                println!("Duplicate");
+                    is_duplicate = true;
+                }
+            }
+            if !is_duplicate {
+                points.push(Point { x: rand_x, y: rand_y });
+            }
+        }
+        points
+    }
 }
 
 pub struct Grid {
@@ -63,15 +87,19 @@ pub struct Grid {
 
 impl Grid {
     pub fn generate_population(&self, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64)
-                               -> (Vec<Point>, Vec<agent::Citizen>) {
-        let home_locations = point::point_factory(self.housing_area.start_offset,
-                                                  self.housing_area.end_offset, number_of_agents);
-        let scaling_factor = self.housing_area.end_offset.x + self.transport_area.end_offset.x;
-        let work_locations = home_locations.iter()
-            .map(|x| *x + point::Point::new(scaling_factor, 0)).collect();
-//        TODO: fix the hack
+                               -> (Vec<Point>, Vec<Citizen>) {
+
+        //        TODO: fix the hack
         let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
-        let transport_locations = point::point_factory(self.transport_area.start_offset, self.transport_area.end_offset, number_of_agents_using_public_transport as i32);
+
+        let home_locations = self.housing_area.random_points(number_of_agents as i32);
+
+        let scaling_factor = self.housing_area.end_offset.x + self.transport_area.end_offset.x;
+        let work_locations: Vec<Point> = home_locations.iter()
+            .map(|x| *x + point::Point::new(scaling_factor, 0)).collect();
+
+        let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32);
+
         let agent_list = agent::citizen_factory(&home_locations, &work_locations, &transport_locations, public_transport_percentage, working_percentage);
         (home_locations, agent_list)
     }
@@ -118,5 +146,13 @@ mod tests {
 
         assert_eq!(point_vector1.len(), 8);
         assert_eq!(point_vector2.len(), 5);
+    }
+
+    #[test]
+    fn generate_points() {
+        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 5, y: 5 });
+        let points: Vec<Point> = area.random_points(10);
+
+        assert_eq!(points.len(), 10);
     }
 }

@@ -2,7 +2,7 @@ use hashbrown::HashMap;
 
 use crate::agent;
 use crate::geography::Area;
-use crate::geography::point::Point;
+use crate::geography::Point;
 use crate::utils;
 
 pub struct AgentLocationMap {

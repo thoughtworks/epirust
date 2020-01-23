@@ -6,8 +6,7 @@ use crate::allocation_map::AgentLocationMap;
 use crate::constants;
 use crate::csv_service::Row;
 use crate::disease::small_pox;
-use crate::geography::{Area, Grid};
-use crate::geography::point::Point;
+use crate::geography::{Area, Grid, Point};
 use crate::utils;
 
 #[derive(Copy, Clone, PartialEq)]

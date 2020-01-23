@@ -96,7 +96,7 @@ impl Epidemiology {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use geography::point::Point;
+    use crate::geography::Point;
     use crate::geography::Area;
 
     #[test]

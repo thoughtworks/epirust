@@ -319,7 +319,11 @@ pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>,
             home_locations[i]
         };
 
-        let agent = Citizen::new_citizen(i as i32, home_locations[i],work_locations[i],
+        let work_location = if is_a_working_citizen { work_locations[i] } else {
+            home_locations[i]
+        };
+
+        let agent = Citizen::new_citizen(i as i32, home_locations[i], work_location,
                                          public_transport_location, uses_public_transport, is_a_working_citizen);
         agent_list.push(agent);
     }
@@ -333,21 +337,26 @@ mod tests {
     use super::*;
 
     fn before_each() -> Vec<Citizen> {
-        let home_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
-        let work_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
-        let public_transport_location = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0)];
+        let home_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(0, 2), Point::new(0, 3)];
+        let work_locations = vec![Point::new(1, 0), Point::new(1, 1), Point::new(1, 2), Point::new(1, 3)];
+        let public_transport_location = vec![Point::new(2, 0), Point::new(2, 1), Point::new(2, 2), Point::new(2, 3)];
 
-        citizen_factory(&home_locations, &work_locations, &public_transport_location, 1.0, 1.0)
+        citizen_factory(&home_locations, &work_locations, &public_transport_location, 0.5, 0.5)
     }
 
     #[test]
     fn generate_citizen() {
-        let citizen_list = before_each();
-        assert_eq!(citizen_list.len(), 3);
-        assert_eq!(citizen_list[1].home_location, Point::new(0, 1));
-        assert_eq!(citizen_list[1].uses_public_transport, true);
-        assert_eq!(citizen_list[1].working, true);
+        let home_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(0, 2), Point::new(0, 3)];
+        let work_locations = vec![Point::new(1, 0), Point::new(1, 1), Point::new(1, 2), Point::new(1, 3)];
+        let public_transport_location = vec![Point::new(2, 0), Point::new(2, 1), Point::new(2, 2), Point::new(2, 3)];
+        let citizen_list = citizen_factory(&home_locations, &work_locations, &public_transport_location, 0.5, 0.5);
+
+        assert_eq!(citizen_list.len(), 4);
         assert_eq!(citizen_list.last().unwrap().is_infected(), true);
+
+        for citizen in &citizen_list {
+            assert!(home_locations.contains(&citizen.home_location));
+        }
     }
 
     #[test]

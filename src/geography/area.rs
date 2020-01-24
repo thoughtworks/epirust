@@ -71,6 +71,12 @@ impl Area {
         }
         points
     }
+
+    //used in test
+    pub fn contains(&self, point: &Point) -> bool {
+        self.start_offset.x <= point.x && self.end_offset.x >= point.x
+            && self.start_offset.y <= point.y && self.end_offset.y >= point.y
+    }
 }
 
 #[cfg(test)]

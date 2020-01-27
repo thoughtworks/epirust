@@ -1,0 +1,24 @@
+#ci.gocd.yaml
+format_version: 9
+pipelines:
+  epirust_build: # definition of mypipe1 pipeline
+    materials:
+      epirust_repo:
+        git: ssh://git@10.131.4.220:10022/jayantak/deep_thought.git
+        branch: active_agents
+    stages: # list of stages in order
+      - build: # name of stage
+          clean_workspace: true
+          jobs:
+            build: # name of the job
+              elastic_profile_id: "rust-dev"
+              artifacts:
+                - build:
+                    source: target/release
+                    destination: release
+              tasks: # ordered list of tasks to execute in job csharp
+                - exec: # indicates type of task
+                    command: cargo
+                    arguments:
+                      - "build"
+                      - "--release"

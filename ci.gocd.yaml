@@ -12,7 +12,6 @@ pipelines:
           clean_workspace: true
           jobs:
             build: # name of the job
-              elastic_profile_id: "rust-dev"
               artifacts:
                 - build:
                     source: target/release

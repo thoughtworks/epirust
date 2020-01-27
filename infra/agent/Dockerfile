@@ -3,4 +3,4 @@ FROM gocd/gocd-agent-debian-10:v19.12.0
 RUN curl https://sh.rustup.rs -sSf | \
     sh -s -- --default-toolchain stable -y
 
-ENV PATH=/root/.cargo/bin:$PATH
+ENV PATH=/home/go/.cargo/bin:$PATH

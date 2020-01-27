@@ -5,7 +5,7 @@ pipelines:
     group: epirust
     materials:
       epirust_repo:
-        git: ssh://git@10.131.4.220:10022/jayantak/deep_thought.git
+        git: http://10.131.4.220/gogs/jayantak/deep_thought.git
         branch: active_agents
     stages: # list of stages in order
       - build: # name of stage

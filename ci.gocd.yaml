@@ -17,6 +17,10 @@ pipelines:
                     source: target/release
                     destination: release
               tasks: # ordered list of tasks to execute in job csharp
+                - exec:
+                    command: cargo
+                    arguments:
+                      - "test"
                 - exec: # indicates type of task
                     command: cargo
                     arguments:

@@ -65,6 +65,12 @@ impl Epidemiology {
             if Epidemiology::stop_simulation(csv_record) {
                 break;
             }
+
+            if simulation_hour % 100 == 0 {
+                println!("Throughput: {} iterations/sec; simulation hour {} of {}",
+                         simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
+                         simulation_hour, simulation_life_time)
+            }
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();
         println!("Number of iterations: {}, Total Time taken {} seconds", csv_record.get_hour(), elapsed_time);

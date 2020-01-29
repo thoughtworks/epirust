@@ -1,13 +1,15 @@
+use core::borrow::Borrow;
+use core::borrow::BorrowMut;
+use std::time::Instant;
+
+use hashbrown::HashMap;
+use rand::Rng;
+use rand::thread_rng;
+
 use crate::allocation_map;
-use std::time::SystemTime;
+use crate::allocation_map::AgentLocationMap;
 use crate::csv_service;
 use crate::csv_service::Row;
-use hashbrown::HashMap;
-use core::borrow::BorrowMut;
-use crate::allocation_map::AgentLocationMap;
-use core::borrow::Borrow;
-use rand::thread_rng;
-use rand::Rng;
 use crate::geography;
 use crate::geography::Grid;
 
@@ -19,11 +21,13 @@ pub struct Epidemiology {
 
 impl Epidemiology {
     pub fn new(grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64) -> Epidemiology {
+        let start = Instant::now();
         let grid = geography::define_geography(grid_size);
         let (start_locations, agent_list) = grid.generate_population(number_of_agents, public_transport_percentage, working_percentage);
         let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &start_locations);
         let write_agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &start_locations);
 
+        println!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         Epidemiology { agent_location_map, write_agent_location_map, grid }
     }
 
@@ -35,7 +39,7 @@ impl Epidemiology {
                vaccination_percentage: f64, output_file_name: &str) {
         let mut records: Vec<csv_service::Row> = Vec::new();
         let mut csv_record = Row::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
-        let start_time = SystemTime::now();
+        let start_time = Instant::now();
         self.write_agent_location_map.agent_cell = HashMap::with_capacity(self.agent_location_map.agent_cell.len());
 
         for simulation_hour in 1..simulation_life_time {
@@ -62,8 +66,9 @@ impl Epidemiology {
                 break;
             }
         }
-        let end_time = SystemTime::now();
-        println!("Number of iterations: {}, Total Time taken {:?}", csv_record.get_hour(), end_time.duration_since(start_time));
+        let elapsed_time = start_time.elapsed().as_secs_f32();
+        println!("Number of iterations: {}, Total Time taken {} seconds", csv_record.get_hour(), elapsed_time);
+        println!("Iterations/sec: {}", csv_record.get_hour() as f32 / elapsed_time);
         let _result = csv_service::write(output_file_name, &records);
     }
 
@@ -95,9 +100,10 @@ impl Epidemiology {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::geography::Point;
     use crate::geography::Area;
+    use crate::geography::Point;
+
+    use super::*;
 
     #[test]
     fn should_init() {

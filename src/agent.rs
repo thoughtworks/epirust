@@ -241,8 +241,10 @@ impl Citizen {
 
     fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Row) {
         if self.is_susceptible() && !self.vaccinated {
-            let infected_neighbors: Vec<&Citizen> = map.get_agents_from(&cell.get_neighbor_cells(map.grid_size)).into_iter().
-                filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized).collect();
+            let infected_neighbors: Vec<&Citizen> = cell.get_neighbor_cells(map.grid_size).into_iter()
+                .filter_map(|cell| { map.get_agent_for(&cell) })
+                .filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized)
+                .collect();
             for neighbor in infected_neighbors {
                 let mut rng = thread_rng();
                 let transmission_rate = neighbor.get_infection_transmission_rate();

@@ -39,13 +39,8 @@ impl AgentLocationMap {
 //        }
 //    }
 
-    pub fn get_agents_from(&self, neighbors: &Vec<Point>) -> Vec<&agent::Citizen> {
-        let mut agent_list = Vec::with_capacity(8);
-        for neighbor in neighbors {
-            let agent = self.agent_cell.get(&neighbor);
-            if let Some(x) = agent { agent_list.push(x) }
-        }
-        agent_list
+    pub fn get_agent_for(&self, cell: &Point) -> Option<&agent::Citizen> {
+        self.agent_cell.get(cell)
     }
 }
 
@@ -66,14 +61,6 @@ mod tests {
 
         assert_eq!(map.grid_size, 5);
         assert_eq!(actual_citizen.id, 1);
-    }
-
-    #[test]
-    fn should_get_neighbor_agents() {
-        let map = before_each();
-
-        let neighbor_agents = map.get_agents_from(&Point { x: 0, y: 1 }.get_neighbor_cells(5));
-        assert_eq!(neighbor_agents.len(), 1);
     }
 
     #[test]

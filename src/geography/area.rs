@@ -7,22 +7,12 @@ use rand::Rng;
 pub struct Area {
     pub start_offset: Point,
     pub end_offset: Point,
+    iter_index: Point,
 }
 
 impl Area {
     pub fn new(start_offset: Point, end_offset: Point) -> Area {
-        Area { start_offset, end_offset }
-    }
-
-    pub fn get_points_within(&self) -> Vec<Point> {
-        let mut point_vec: Vec<Point> = Vec::new();
-
-        for x in self.start_offset.x..=self.end_offset.x + 1 {
-            for y in self.start_offset.y..=self.end_offset.y + 1 {
-                point_vec.push(Point::new(x, y));
-            }
-        }
-        point_vec
+        Area { start_offset, end_offset, iter_index: Point::new(start_offset.x - 1, start_offset.y) }
     }
 
     pub fn get_neighbors_of(&self, point: Point) -> Vec<Point> {
@@ -79,22 +69,27 @@ impl Area {
     }
 }
 
+impl Iterator for Area {
+    type Item = Point;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut new_x = self.iter_index.x + 1;
+        let mut new_y = self.iter_index.y;
+        if new_x > self.end_offset.x {
+            new_x = 0;
+            new_y += 1;
+        }
+        self.iter_index = Point::new(new_x, new_y);
+        if new_y > self.end_offset.y {
+            return Option::None;
+        }
+        Option::Some(self.iter_index)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn get_points_within() {
-        let point1 = Point::new(1, 1);
-        let point2 = Point::new(2, 2);
-        let area = Area::new(point1, point2);
-
-        let points = area.get_points_within();
-        assert_eq!(points.len(), 9);
-        assert_eq!(points[0], Point { x: 1, y: 1 });
-        assert_eq!(points[2], Point { x: 1, y: 3 });
-        assert_eq!(points[8], Point { x: 3, y: 3 });
-    }
 
     #[test]
     fn get_neighbor_within() {
@@ -115,5 +110,14 @@ mod tests {
         let points: Vec<Point> = area.random_points(10);
 
         assert_eq!(points.len(), 10);
+    }
+
+    #[test]
+    fn should_iterate_over_points_in_area() {
+        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let x: Vec<Point> = area.collect();
+        assert_eq!(x, vec![Point::new(0, 0), Point::new(1, 0), Point::new(2, 0),
+                           Point::new(0, 1), Point::new(1, 1), Point::new(2, 1),
+                           Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)])
     }
 }

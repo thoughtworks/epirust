@@ -228,7 +228,7 @@ impl Citizen {
         if self.is_infected() && !self.is_quarantined() {
             let number_of_quarantined = self.quarantine();
             if number_of_quarantined > 0 {
-                new_cell = AgentLocationMap::goto_hospital(map, *hospital, cell, self);
+                new_cell = AgentLocationMap::goto_hospital(map, hospital, cell, self);
                 if new_cell != cell {
                     self.hospitalized = true;
                 }

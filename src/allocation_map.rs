@@ -3,7 +3,6 @@ use fxhash::FxHashMap;
 use crate::agent;
 use crate::geography::Area;
 use crate::geography::Point;
-use crate::utils;
 
 pub struct AgentLocationMap {
     pub grid_size: i32,
@@ -27,10 +26,11 @@ impl AgentLocationMap {
         new_cell
     }
 
-    pub fn goto_hospital(&self, area: Area, cell: Point, citizen: &mut agent::Citizen) -> Point {
-        let area_dimensions = area.get_points_within();
-        let vacant_cells = AgentLocationMap::get_empty_cells_from_map(&self.agent_cell, area_dimensions);
-        self.move_agent(cell, utils::get_random_element_from(&vacant_cells, citizen.home_location))
+    pub fn goto_hospital(&self, hospital_area: &Area, cell: Point, citizen: &mut agent::Citizen) -> Point {
+        let vacant_hospital_cell = hospital_area.into_iter().find(|cell| {
+            !self.agent_cell.contains_key(&cell)
+        });
+        self.move_agent(cell, vacant_hospital_cell.unwrap_or(citizen.home_location))
     }
 
 //    pub fn print(&self){
@@ -38,10 +38,6 @@ impl AgentLocationMap {
 //            println!("x:{}, y:{} - id:{} infected:{} working:{} Transport:{}", k.x, k.y, v.id, v.is_infected(), v.working, v.uses_public_transport);
 //        }
 //    }
-
-    pub fn get_empty_cells_from_map(hash_map: &FxHashMap<Point, agent::Citizen>, neighbors: Vec<Point>) -> Vec<Point> {
-        neighbors.into_iter().filter(|key| !hash_map.contains_key(key)).collect()
-    }
 
     pub fn get_agents_from(&self, neighbors: &Vec<Point>) -> Vec<&agent::Citizen> {
         let mut agent_list = Vec::with_capacity(8);
@@ -73,18 +69,38 @@ mod tests {
     }
 
     #[test]
-    fn should_get_empty_cells() {
-        let map = before_each();
-
-        let empty_cells = AgentLocationMap::get_empty_cells_from_map(&map.agent_cell, Point { x: 0, y: 1 }.get_neighbor_cells(5));
-        assert_eq!(empty_cells.len(), 4);
-    }
-
-    #[test]
     fn should_get_neighbor_agents() {
         let map = before_each();
 
         let neighbor_agents = map.get_agents_from(&Point { x: 0, y: 1 }.get_neighbor_cells(5));
         assert_eq!(neighbor_agents.len(), 1);
+    }
+
+    #[test]
+    fn should_goto_hospital() {
+        let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
+        let mut citizen1 = agent::Citizen::new_citizen(1, points[0], points[1], points[0], false, false);
+        let citizen2 = agent::Citizen::new_citizen(2, points[1], points[0], points[0], true, true);
+        let agents = vec![citizen1, citizen2];
+        let map = AgentLocationMap::new(5, &agents, &points);
+        let hospital = Area::new(Point::new(2, 2), Point::new(4, 4));
+
+        assert_eq!(map.goto_hospital(&hospital, points[0], &mut citizen1), Point::new(2, 2));
+    }
+
+    #[test]
+    fn should_goto_home_location_when_hospital_full() {
+        let points = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0), Point::new(1, 1)];
+        let home = Point::new(2,0);
+        let work = Point::new(2,1);
+        let mut citizen1 = agent::Citizen::new_citizen(1, home, work, home, false, false);
+        let citizen2 = agent::Citizen::new_citizen(2, home, work, home, false, false);
+        let citizen3 = agent::Citizen::new_citizen(3, home, work, home, false, false);
+        let citizen4 = agent::Citizen::new_citizen(4, home, work, home, false, false);
+        let agents = vec![citizen1, citizen2, citizen3, citizen4];
+        let map = AgentLocationMap::new(5, &agents, &points);
+        let hospital = Area::new(Point::new(0, 0), Point::new(1, 1));
+
+        assert_eq!(map.goto_hospital(&hospital, points[0], &mut citizen1), home);
     }
 }

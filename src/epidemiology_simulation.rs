@@ -2,7 +2,7 @@ use core::borrow::Borrow;
 use core::borrow::BorrowMut;
 use std::time::Instant;
 
-use hashbrown::HashMap;
+use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 use rand::thread_rng;
 
@@ -40,7 +40,7 @@ impl Epidemiology {
         let mut records: Vec<csv_service::Row> = Vec::new();
         let mut csv_record = Row::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
         let start_time = Instant::now();
-        self.write_agent_location_map.agent_cell = HashMap::with_capacity(self.agent_location_map.agent_cell.len());
+        self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
         for simulation_hour in 1..simulation_life_time {
 //            println!("Tick {}", simulation_hour);

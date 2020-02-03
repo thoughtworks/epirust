@@ -1,4 +1,4 @@
-use hashbrown::HashMap;
+use fxhash::FxHashMap;
 
 use crate::agent;
 use crate::geography::Area;
@@ -7,12 +7,12 @@ use crate::utils;
 
 pub struct AgentLocationMap {
     pub grid_size: i32,
-    pub agent_cell: HashMap<Point, agent::Citizen>,
+    pub agent_cell: FxHashMap<Point, agent::Citizen>,
 }
 
 impl AgentLocationMap {
     pub fn new(size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
-        let mut map: HashMap<Point, agent::Citizen> = HashMap::new();
+        let mut map: FxHashMap<Point, agent::Citizen> = FxHashMap::default();
         for i in 0..agent_list.len() {
             map.insert(points[i], agent_list[i]);
         }
@@ -39,7 +39,7 @@ impl AgentLocationMap {
 //        }
 //    }
 
-    pub fn get_empty_cells_from_map(hash_map: &HashMap<Point, agent::Citizen>, neighbors: Vec<Point>) -> Vec<Point> {
+    pub fn get_empty_cells_from_map(hash_map: &FxHashMap<Point, agent::Citizen>, neighbors: Vec<Point>) -> Vec<Point> {
         neighbors.into_iter().filter(|key| !hash_map.contains_key(key)).collect()
     }
 

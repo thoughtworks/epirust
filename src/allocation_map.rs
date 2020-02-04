@@ -20,15 +20,15 @@ impl AgentLocationMap {
     }
 
     pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point {
-        if self.agent_cell.contains_key(&new_cell) {
-            return old_cell;
+        if self.is_cell_vacant(&new_cell) {
+            return new_cell;
         }
-        new_cell
+        old_cell
     }
 
     pub fn goto_hospital(&self, hospital_area: &Area, cell: Point, citizen: &mut agent::Citizen) -> Point {
         let vacant_hospital_cell = hospital_area.into_iter().find(|cell| {
-            !self.agent_cell.contains_key(&cell)
+            self.is_cell_vacant(cell)
         });
         self.move_agent(cell, vacant_hospital_cell.unwrap_or(citizen.home_location))
     }
@@ -41,6 +41,14 @@ impl AgentLocationMap {
 
     pub fn get_agent_for(&self, cell: &Point) -> Option<&agent::Citizen> {
         self.agent_cell.get(cell)
+    }
+
+    pub fn is_point_in_grid(&self, point: &Point) -> bool {
+        point.x >= 0 && point.y >= 0 && point.x < self.grid_size && point.y < self.grid_size
+    }
+
+    pub fn is_cell_vacant(&self, cell: &Point) -> bool {
+        !self.agent_cell.contains_key(cell)
     }
 }
 
@@ -78,8 +86,8 @@ mod tests {
     #[test]
     fn should_goto_home_location_when_hospital_full() {
         let points = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0), Point::new(1, 1)];
-        let home = Point::new(2,0);
-        let work = Point::new(2,1);
+        let home = Point::new(2, 0);
+        let work = Point::new(2, 1);
         let mut citizen1 = agent::Citizen::new_citizen(1, home, work, home, false, false);
         let citizen2 = agent::Citizen::new_citizen(2, home, work, home, false, false);
         let citizen3 = agent::Citizen::new_citizen(3, home, work, home, false, false);
@@ -89,5 +97,23 @@ mod tests {
         let hospital = Area::new(Point::new(0, 0), Point::new(1, 1));
 
         assert_eq!(map.goto_hospital(&hospital, points[0], &mut citizen1), home);
+    }
+
+    #[test]
+    fn should_return_true_when_point_is_in_grid() {
+        let map = before_each();
+        let points = vec![Point::new(0, 0), Point::new(4, 4), Point::new(2, 2)];
+        for point in points {
+            assert!(map.is_point_in_grid(&point))
+        }
+    }
+
+    #[test]
+    fn should_return_false_when_point_is_out_of_grid() {
+        let map = before_each();
+        let points = vec![Point::new(-1, -1), Point::new(5, 5), Point::new(2, 12)];
+        for point in points {
+            assert!(!map.is_point_in_grid(&point))
+        }
     }
 }

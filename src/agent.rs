@@ -1,4 +1,5 @@
 use rand::Rng;
+use rand::seq::IteratorRandom;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
@@ -7,7 +8,6 @@ use crate::constants;
 use crate::csv_service::Row;
 use crate::disease::small_pox;
 use crate::geography::{Area, Grid, Point};
-use crate::utils;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum State {
@@ -192,18 +192,15 @@ impl Citizen {
             }
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {}
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
-                let area_bounds = grid.transport_area.get_neighbors_of(self.transport_location);
-                new_cell = self.goto(area_bounds, map, cell);
+                new_cell = self.goto(self.transport_location, grid.transport_area, map, cell);
                 self.update_infection(cell, map, counts);
             }
             constants::ROUTINE_WORK_TIME => {
-                let area_bounds = grid.work_area.get_neighbors_of(self.work_location);
-                new_cell = self.goto(area_bounds, map, cell);
+                new_cell = self.goto(self.work_location, grid.work_area, map, cell);
                 self.update_infection(cell, map, counts);
             }
             constants::ROUTINE_WORK_END_TIME => {
-                let area_bounds = grid.housing_area.get_neighbors_of(self.home_location);
-                new_cell = self.goto(area_bounds, map, cell);
+                new_cell = self.goto(self.home_location, grid.housing_area, map, cell);
                 self.update_infection(cell, map, counts);
             }
             constants::ROUTINE_END_TIME => {
@@ -241,31 +238,31 @@ impl Citizen {
 
     fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Row) {
         if self.is_susceptible() && !self.vaccinated {
-            let infected_neighbors: Vec<&Citizen> = cell.get_neighbor_cells(map.grid_size).into_iter()
+            let mut rng = thread_rng();
+            let neighbor_that_spreads_infection = cell.neighbor_iterator()
+                .filter(|p| map.is_point_in_grid(p))
                 .filter_map(|cell| { map.get_agent_for(&cell) })
                 .filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized)
-                .collect();
-            for neighbor in infected_neighbors {
-                let mut rng = thread_rng();
-                let transmission_rate = neighbor.get_infection_transmission_rate();
-                if rng.gen_bool(transmission_rate) {
-//                    println!("Infection rate {}", transmission_rate);
-                    self.infect();
-                    counts.update_infected(1);
-                    counts.update_susceptible(-1);
-                    return;
-                }
+                .find(|neighbor| rng.gen_bool(neighbor.get_infection_transmission_rate()));
+
+            if neighbor_that_spreads_infection.is_some() {
+                self.infect();
+                counts.update_infected(1);
+                counts.update_susceptible(-1);
             }
         }
     }
 
-    fn goto(&mut self, area_dimensions: Vec<Point>, map: &AgentLocationMap, cell: Point) -> Point {
+    fn goto(&mut self, target_location: Point, target_area: Area, map: &AgentLocationMap, cell: Point) -> Point {
         if !self.can_move() {
             return cell;
         }
         if self.working {
-            let vacant_cells = self.get_empty_cells_from(&area_dimensions, map);
-            let new_cell = utils::get_random_element_from(&vacant_cells, self.home_location);
+            let mut rng = rand::thread_rng();
+            let new_cell: Point = target_area.get_neighbors_of(target_location)
+                .filter(|p| map.is_cell_vacant(p))
+                .choose(&mut rng)
+                .unwrap_or(self.home_location);
             return map.move_agent(cell, new_cell);
         }
         self.move_agent_from(map, cell)
@@ -286,21 +283,13 @@ impl Citizen {
     }
 
     fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point) -> Point {
-        let neighbor_cells: Vec<Point> = cell.get_neighbor_cells(map.grid_size);
-        let vacant_cells = self.get_empty_cells_from(&neighbor_cells, map);
-        let new_cell: Point = utils::get_random_element_from(&vacant_cells, cell);
+        let mut rng = rand::thread_rng();
+        let new_cell = cell.neighbor_iterator()
+            .filter(|p| map.is_point_in_grid(p))
+            .filter(|p| map.is_cell_vacant(p))
+            .choose(&mut rng)
+            .unwrap_or(cell);
         map.move_agent(cell, new_cell)
-    }
-
-    fn get_empty_cells_from(&self, neighbors: &Vec<Point>, map: &AgentLocationMap) -> Vec<Point> {
-//        neighbors.into_iter().filter(|key| !map.agent_cell.contains_key(*key)).collect()
-        let mut vacant_cells: Vec<Point> = Vec::with_capacity(constants::NEIGHBORS);
-        for neighbor in neighbors {
-            if !map.agent_cell.contains_key(neighbor) {
-                vacant_cells.push(*neighbor);
-            }
-        }
-        vacant_cells
     }
 }
 

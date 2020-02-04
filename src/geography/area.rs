@@ -1,7 +1,6 @@
-use crate::geography::Point;
-use crate::constants;
-use std::cmp::{max, min};
 use rand::Rng;
+
+use crate::geography::Point;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
 pub struct Area {
@@ -15,30 +14,10 @@ impl Area {
         Area { start_offset, end_offset, iter_index: Point::new(start_offset.x - 1, start_offset.y) }
     }
 
-    pub fn get_neighbors_of(&self, point: Point) -> Vec<Point> {
-        let mut neighbors_list = Vec::with_capacity(constants::NEIGHBORS);
-        let mut row_index = max(self.start_offset.x, point.x - 1);
-
-        loop {
-            if row_index > min(point.x + 1, self.end_offset.x) {
-                break;
-            }
-            let mut col_index = max(self.start_offset.y, point.y - 1);
-            loop {
-                if col_index > min(point.y + 1, self.end_offset.y) {
-                    break;
-                }
-                if row_index == point.x && col_index == point.y {
-                    col_index += 1;
-                    continue;
-                }
-                neighbors_list.push(Point { x: row_index, y: col_index });
-                col_index += 1;
-            }
-            row_index += 1;
-        }
-
-        neighbors_list
+    pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item = Point> + '_ {
+        point.neighbor_iterator().filter(move |p| {
+            self.contains(p)
+        })
     }
 
     //TODO improve randomness
@@ -62,7 +41,6 @@ impl Area {
         points
     }
 
-    //used in test
     pub fn contains(&self, point: &Point) -> bool {
         self.start_offset.x <= point.x && self.end_offset.x >= point.x
             && self.start_offset.y <= point.y && self.end_offset.y >= point.y
@@ -90,19 +68,6 @@ impl Iterator for Area {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn get_neighbor_within() {
-        let point1 = Point::new(1, 1);
-        let point2 = Point::new(1, 2);
-        let area1 = Area::new(Point::new(0, 0), Point::new(2, 2));
-        let area2 = Area::new(Point::new(0, 0), Point::new(2, 2));
-        let point_vector1 = area1.get_neighbors_of(point1);
-        let point_vector2 = area2.get_neighbors_of(point2);
-
-        assert_eq!(point_vector1.len(), 8);
-        assert_eq!(point_vector2.len(), 5);
-    }
 
     #[test]
     fn generate_points() {

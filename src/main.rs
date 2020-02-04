@@ -10,7 +10,6 @@ mod epidemiology_simulation;
 mod allocation_map;
 mod geography;
 mod disease;
-mod utils;
 mod csv_service;
 
 fn main() {

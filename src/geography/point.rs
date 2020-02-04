@@ -1,7 +1,5 @@
 extern crate rand;
 
-use std::cmp::max;
-use std::cmp::min;
 use std::ops::Add;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
@@ -16,31 +14,11 @@ impl Point {
         Point { x, y }
     }
 
-    pub fn get_neighbor_cells(self, size: i32) -> Vec<Point> {
-        const NUMBER_OF_NEIGHBORS: i32 = 8;
-        let mut neighbors_list = Vec::with_capacity(NUMBER_OF_NEIGHBORS as usize);
-        let mut row_index = max(0, self.x - 1);
-
-        loop {
-            if row_index > min(self.x + 1, size - 1) {
-                break;
-            }
-            let mut col_index = max(0, self.y - 1);
-            loop {
-                if col_index > min(self.y + 1, size - 1) {
-                    break;
-                }
-                if row_index == self.x && col_index == self.y {
-                    col_index += 1;
-                    continue;
-                }
-                neighbors_list.push(Point { x: row_index, y: col_index });
-                col_index += 1;
-            }
-            row_index += 1;
-        }
-
-        neighbors_list
+    /// Returns an iterator for walking through the points surrounding this point
+    /// Does NOT ensure that the points belong to any grid or area. The consumer needs to filter out
+    /// neighbors that are not valid
+    pub fn neighbor_iterator(&self) -> NeighborIterator {
+        NeighborIterator::new(*self)
     }
 }
 
@@ -52,20 +30,38 @@ impl Add for Point {
     }
 }
 
+pub struct NeighborIterator {
+    point: Point,
+    offsets: [(i32, i32); 8],
+    index: i32,
+}
+
+impl NeighborIterator {
+    fn new(point: Point) -> NeighborIterator {
+        NeighborIterator {
+            point,
+            offsets: [(-1, -1), (0, -1), (1, -1),
+                (-1, 0), (1, 0),
+                (-1, 1), (0, 1), (1, 1)],
+            index: -1,
+        }
+    }
+}
+
+impl Iterator for NeighborIterator {
+    type Item = Point;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.index += 1;
+        self.offsets.get(self.index as usize).map(|offset| {
+            self.point + Point::new(offset.0, offset.1)
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn get_neighbor_cells() {
-        let point = Point::new(1, 1);
-        let point_vector = point.get_neighbor_cells(5);
-
-        assert_eq!(point_vector.len(), 8);
-        assert_eq!(point_vector.contains(&Point::new(0, 0)), true);
-        assert_eq!(point_vector.contains(&Point::new(2, 2)), true);
-        assert_eq!(point_vector.contains(&Point::new(3, 3)), false);
-    }
 
     #[test]
     fn add() {
@@ -74,5 +70,16 @@ mod tests {
 
         let output = point + second_point;
         assert_eq!(output, Point::new(2, 2));
+    }
+
+    #[test]
+    fn should_iterate_over_neighbor_cells() {
+        let cell = Point::new(1, 1);
+        let neighbors: Vec<Point> = cell.neighbor_iterator().collect();
+        assert_eq!(neighbors,
+                   vec![Point::new(0, 0), Point::new(1, 0), Point::new(2, 0),
+                        Point::new(0, 1), Point::new(2, 1),
+                        Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)
+                   ])
     }
 }

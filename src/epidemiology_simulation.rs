@@ -4,7 +4,6 @@ use std::time::Instant;
 
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
-use rand::thread_rng;
 
 use crate::allocation_map;
 use crate::allocation_map::AgentLocationMap;
@@ -12,6 +11,7 @@ use crate::csv_service;
 use crate::csv_service::Row;
 use crate::geography;
 use crate::geography::Grid;
+use crate::random_wrapper::RandomWrapper;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -23,7 +23,8 @@ impl Epidemiology {
     pub fn new(grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64) -> Epidemiology {
         let start = Instant::now();
         let grid = geography::define_geography(grid_size);
-        let (start_locations, agent_list) = grid.generate_population(number_of_agents, public_transport_percentage, working_percentage);
+        let mut rng = RandomWrapper::new();
+        let (start_locations, agent_list) = grid.generate_population(number_of_agents, public_transport_percentage, working_percentage, &mut rng);
         let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &start_locations);
         let write_agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &start_locations);
 
@@ -39,6 +40,7 @@ impl Epidemiology {
                vaccination_percentage: f64, output_file_name: &str) {
         let mut records: Vec<csv_service::Row> = Vec::new();
         let mut csv_record = Row::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
+        let mut rng = RandomWrapper::new();
         let start_time = Instant::now();
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
@@ -54,12 +56,12 @@ impl Epidemiology {
                 write_buffer_reference = self.agent_location_map.borrow_mut();
             }
 
-            Epidemiology::simulate(&mut csv_record, simulation_hour, read_buffer_reference, write_buffer_reference, &self.grid);
+            Epidemiology::simulate(&mut csv_record, simulation_hour, read_buffer_reference, write_buffer_reference, &self.grid, &mut rng);
             records.push(csv_record);
 
             if simulation_hour == vaccination_time {
                 println!("Vaccination");
-                Epidemiology::vaccinate(vaccination_percentage, &mut write_buffer_reference);
+                Epidemiology::vaccinate(vaccination_percentage, &mut write_buffer_reference, &mut rng);
             }
 
             if Epidemiology::stop_simulation(csv_record) {
@@ -78,20 +80,20 @@ impl Epidemiology {
         let _result = csv_service::write(output_file_name, &records);
     }
 
-    fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap) {
-        let mut rng = thread_rng();
+    fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
         for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
-            if agent.is_susceptible() && rng.gen_bool(vaccination_percentage) {
+            if agent.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
                 agent.set_vaccination(true);
             }
         }
     }
 
-    fn simulate(mut csv_record: &mut Row, simulation_hour: i32, read_buffer: &AgentLocationMap, write_buffer: &mut AgentLocationMap, grid: &Grid) {
+    fn simulate(mut csv_record: &mut Row, simulation_hour: i32, read_buffer: &AgentLocationMap,
+                write_buffer: &mut AgentLocationMap, grid: &Grid, rng: &mut RandomWrapper) {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
             let mut current_agent = *agent;
-            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut csv_record);
+            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut csv_record, rng);
 
             let agent_option = write_buffer.agent_cell.get(&point);
             match agent_option {

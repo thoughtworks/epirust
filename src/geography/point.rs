@@ -1,5 +1,3 @@
-extern crate rand;
-
 use std::ops::Add;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]

@@ -1,6 +1,7 @@
 use rand::Rng;
 
 use crate::geography::Point;
+use crate::random_wrapper::RandomWrapper;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
 pub struct Area {
@@ -21,9 +22,9 @@ impl Area {
     }
 
     //TODO improve randomness
-    pub fn random_points(&self, number_of_points: i32) -> Vec<Point> {
+    pub fn random_points(&self, number_of_points: i32, rng: &mut RandomWrapper) -> Vec<Point> {
         let mut points: Vec<Point> = Vec::with_capacity(number_of_points as usize);
-        let mut rng = rand::thread_rng();
+        let rng = rng.get();
         while points.len() != (number_of_points as usize) {
             let rand_x = rng.gen_range(self.start_offset.x, self.end_offset.x);
             let rand_y = rng.gen_range(self.start_offset.y, self.end_offset.y);
@@ -72,7 +73,7 @@ mod tests {
     #[test]
     fn generate_points() {
         let area = Area::new(Point { x: 0, y: 0 }, Point { x: 5, y: 5 });
-        let points: Vec<Point> = area.random_points(10);
+        let points: Vec<Point> = area.random_points(10, &mut RandomWrapper::new());
 
         assert_eq!(points.len(), 10);
     }

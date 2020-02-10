@@ -1,5 +1,5 @@
 pub mod small_pox {
-    use rand::thread_rng;
+    use crate::random_wrapper::RandomWrapper;
     use rand::Rng;
 
     static REGULAR_TRANSMISSION_START_DAY: i32 = 10;
@@ -30,9 +30,8 @@ pub mod small_pox {
         DISEASE_LAST_DAY
     }
 
-    pub fn to_be_deceased() -> bool {
-        let mut rng = thread_rng();
-        if rng.gen_bool(DEATH_RATE) {
+    pub fn to_be_deceased(rng: &mut RandomWrapper) -> bool {
+        if rng.get().gen_bool(DEATH_RATE) {
             return true;
         }
         false

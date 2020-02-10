@@ -11,6 +11,7 @@ mod allocation_map;
 mod geography;
 mod disease;
 mod csv_service;
+mod random_wrapper;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

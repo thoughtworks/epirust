@@ -1,6 +1,7 @@
 use crate::geography::{Area, Point};
 use crate::agent::Citizen;
 use crate::agent;
+use crate::random_wrapper::RandomWrapper;
 
 pub struct Grid {
     pub housing_area: Area,
@@ -10,13 +11,13 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn generate_population(&self, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64)
+    pub fn generate_population(&self, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64, rng: &mut RandomWrapper)
                                -> (Vec<Point>, Vec<Citizen>) {
 
         //        TODO: fix the hack
         let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
 
-        let home_locations = self.housing_area.random_points(number_of_agents as i32);
+        let home_locations = self.housing_area.random_points(number_of_agents as i32, rng);
 
         // assumes that housing starts at 0,0 and work area is the same size as housing area
         // layout: housing | transport | hospital | work
@@ -24,9 +25,9 @@ impl Grid {
         let work_locations: Vec<Point> = home_locations.iter()
             .map(|p| *p + Point::new(scaling_factor, 0)).collect();
 
-        let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32);
+        let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32, rng);
 
-        let agent_list = agent::citizen_factory(&home_locations, &work_locations, &transport_locations, public_transport_percentage, working_percentage);
+        let agent_list = agent::citizen_factory(&home_locations, &work_locations, &transport_locations, public_transport_percentage, working_percentage, rng);
         (home_locations, agent_list)
     }
 }
@@ -37,13 +38,14 @@ mod tests {
 
     #[test]
     fn generate_population() {
+        let mut rng = RandomWrapper::new();
         let housing_area = Area::new(Point::new(0, 0), Point::new(10, 10));
         let transport_area = Area::new(Point::new(11, 0), Point::new(20, 10));
         let hospital = Area::new(Point::new(21, 0), Point::new(25, 10));
         let work_area = Area::new(Point::new(26, 0), Point::new(36, 10));
 
         let grid = Grid { housing_area, work_area, transport_area, hospital };
-        let (home_locations, agent_list) = grid.generate_population(10, 0.2, 0.2);
+        let (home_locations, agent_list) = grid.generate_population(10, 0.2, 0.2, &mut rng);
 
         assert_eq!(home_locations.len(), 10);
         assert_eq!(agent_list.len(), 10);

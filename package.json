@@ -22,6 +22,7 @@
     "babel-loader": "^8.0.6",
     "csv-loader": "^3.0.2",
     "html-webpack-plugin": "^3.2.0",
+    "papaparse": "^5.1.1",
     "plotly.js-dist": "^1.52.2",
     "webpack": "^4.41.6",
     "webpack-cli": "^3.3.11",

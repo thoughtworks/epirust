@@ -12,11 +12,12 @@ use crate::csv_service::Row;
 use crate::geography;
 use crate::geography::Grid;
 use crate::random_wrapper::RandomWrapper;
+use crate::disease_tracker::Hotspot;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
     pub write_agent_location_map: allocation_map::AgentLocationMap,
-    pub grid: Grid,
+    pub grid: Grid
 }
 
 impl Epidemiology {
@@ -29,7 +30,7 @@ impl Epidemiology {
         let write_agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &start_locations);
 
         println!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
-        Epidemiology { agent_location_map, write_agent_location_map, grid }
+        Epidemiology { agent_location_map, write_agent_location_map, grid}
     }
 
     fn stop_simulation(row: csv_service::Row) -> bool {
@@ -42,10 +43,10 @@ impl Epidemiology {
         let mut csv_record = Row::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
         let mut rng = RandomWrapper::new();
         let start_time = Instant::now();
+        let mut hotspot_tracker = Hotspot::new();
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
         for simulation_hour in 1..simulation_life_time {
-//            println!("Tick {}", simulation_hour);
             csv_record.increment_hour();
 
             let mut read_buffer_reference = self.agent_location_map.borrow();
@@ -56,7 +57,7 @@ impl Epidemiology {
                 write_buffer_reference = self.agent_location_map.borrow_mut();
             }
 
-            Epidemiology::simulate(&mut csv_record, simulation_hour, read_buffer_reference, write_buffer_reference, &self.grid, &mut rng);
+            Epidemiology::simulate(&mut csv_record, simulation_hour, read_buffer_reference, write_buffer_reference, &self.grid, &mut hotspot_tracker, &mut rng);
             records.push(csv_record);
 
             if simulation_hour == vaccination_time {
@@ -89,11 +90,16 @@ impl Epidemiology {
     }
 
     fn simulate(mut csv_record: &mut Row, simulation_hour: i32, read_buffer: &AgentLocationMap,
-                write_buffer: &mut AgentLocationMap, grid: &Grid, rng: &mut RandomWrapper) {
+                write_buffer: &mut AgentLocationMap, grid: &Grid, disease_hotspot_tracker: &mut Hotspot, rng: &mut RandomWrapper) {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
             let mut current_agent = *agent;
+            let infection_status = current_agent.is_infected();
             let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut csv_record, rng);
+
+            if infection_status == false && current_agent.is_infected() == true {
+                disease_hotspot_tracker.update(&cell);
+            }
 
             let agent_option = write_buffer.agent_cell.get(&point);
             match agent_option {

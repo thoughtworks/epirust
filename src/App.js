@@ -1,10 +1,10 @@
 import React from 'react';
-import './App.css';
+import styles from './app.module.scss';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
+    <div className={styles.app}>
+      <header className={styles.appHeader}>
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>

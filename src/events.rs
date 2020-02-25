@@ -49,3 +49,8 @@ impl Counts {
         self.hour += 1;
     }
 }
+
+pub trait Listener {
+    fn counts_updated(&mut self, counts: Counts);
+    fn simulation_ended(&self);
+}

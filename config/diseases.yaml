@@ -1,0 +1,8 @@
+---
+small_pox:
+  regular_transmission_start_day: 10
+  high_transmission_start_day: 16
+  last_day: 22
+  regular_transmission_rate: 0.05
+  high_transmission_rate: 0.5
+  death_rate: 0.2

@@ -5,14 +5,14 @@ use std::time::Instant;
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
-use crate::allocation_map;
+use crate::{allocation_map, events};
 use crate::allocation_map::AgentLocationMap;
 use crate::csv_service;
-use crate::csv_service::Row;
 use crate::geography;
 use crate::geography::Grid;
 use crate::random_wrapper::RandomWrapper;
 use crate::disease_tracker::Hotspot;
+use crate::events::Counts;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -33,21 +33,21 @@ impl Epidemiology {
         Epidemiology { agent_location_map, write_agent_location_map, grid}
     }
 
-    fn stop_simulation(row: csv_service::Row) -> bool {
+    fn stop_simulation(row: Counts) -> bool {
         row.get_infected() == 0 && row.get_quarantined() == 0
     }
 
     pub fn run(&mut self, simulation_life_time: i32, vaccination_time: i32,
                vaccination_percentage: f64, output_file_name: &str) {
-        let mut records: Vec<csv_service::Row> = Vec::new();
-        let mut csv_record = Row::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
+        let mut aggregates: Vec<Counts> = Vec::new();
+        let mut counts_at_hr = Counts::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
         let mut rng = RandomWrapper::new();
         let start_time = Instant::now();
         let mut hotspot_tracker = Hotspot::new();
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
         for simulation_hour in 1..simulation_life_time {
-            csv_record.increment_hour();
+            counts_at_hr.increment_hour();
 
             let mut read_buffer_reference = self.agent_location_map.borrow();
             let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
@@ -57,15 +57,15 @@ impl Epidemiology {
                 write_buffer_reference = self.agent_location_map.borrow_mut();
             }
 
-            Epidemiology::simulate(&mut csv_record, simulation_hour, read_buffer_reference, write_buffer_reference, &self.grid, &mut hotspot_tracker, &mut rng);
-            records.push(csv_record);
+            Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference, &self.grid, &mut hotspot_tracker, &mut rng);
+            aggregates.push(counts_at_hr);
 
             if simulation_hour == vaccination_time {
                 println!("Vaccination");
                 Epidemiology::vaccinate(vaccination_percentage, &mut write_buffer_reference, &mut rng);
             }
 
-            if Epidemiology::stop_simulation(csv_record) {
+            if Epidemiology::stop_simulation(counts_at_hr) {
                 break;
             }
 
@@ -76,9 +76,9 @@ impl Epidemiology {
             }
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();
-        println!("Number of iterations: {}, Total Time taken {} seconds", csv_record.get_hour(), elapsed_time);
-        println!("Iterations/sec: {}", csv_record.get_hour() as f32 / elapsed_time);
-        let _result = csv_service::write(output_file_name, &records);
+        println!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
+        println!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
+        let _result = csv_service::write(output_file_name, &aggregates);
     }
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
@@ -89,7 +89,7 @@ impl Epidemiology {
         }
     }
 
-    fn simulate(mut csv_record: &mut Row, simulation_hour: i32, read_buffer: &AgentLocationMap,
+    fn simulate(mut csv_record: &mut events::Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, disease_hotspot_tracker: &mut Hotspot, rng: &mut RandomWrapper) {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {

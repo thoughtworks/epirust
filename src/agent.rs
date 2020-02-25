@@ -4,10 +4,10 @@ use rand::seq::SliceRandom;
 
 use crate::allocation_map::AgentLocationMap;
 use crate::constants;
-use crate::csv_service::Row;
 use crate::disease::small_pox;
 use crate::geography::{Area, Grid, Point};
 use crate::random_wrapper::RandomWrapper;
+use crate::events::Counts;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum State {
@@ -180,11 +180,11 @@ impl Citizen {
     }
 
     pub fn perform_operation(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap,
-                             counts: &mut Row, rng: &mut RandomWrapper) -> Point {
+                             counts: &mut Counts, rng: &mut RandomWrapper) -> Point {
         self.routine(cell, simulation_hour, grid, map, counts, rng)
     }
 
-    fn routine(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap, counts: &mut Row, rng: &mut RandomWrapper) -> Point {
+    fn routine(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap, counts: &mut Counts, rng: &mut RandomWrapper) -> Point {
         let mut new_cell = cell;
         match simulation_hour % constants::NUMBER_OF_HOURS {
             constants::ROUTINE_START_TIME => {
@@ -221,7 +221,7 @@ impl Citizen {
         }
     }
 
-    fn quarantine_all(&mut self, cell: Point, hospital: &Area, map: &AgentLocationMap, counts: &mut Row) -> Point {
+    fn quarantine_all(&mut self, cell: Point, hospital: &Area, map: &AgentLocationMap, counts: &mut Counts) -> Point {
         let mut new_cell = cell;
         if self.is_infected() && !self.is_quarantined() {
             let number_of_quarantined = self.quarantine();
@@ -237,7 +237,7 @@ impl Citizen {
         new_cell
     }
 
-    fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Row, rng: &mut RandomWrapper) {
+    fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Counts, rng: &mut RandomWrapper) {
         if self.is_susceptible() && !self.vaccinated {
             let neighbor_that_spreads_infection = cell.neighbor_iterator()
                 .filter(|p| map.is_point_in_grid(p))
@@ -267,7 +267,7 @@ impl Citizen {
         self.move_agent_from(map, cell, rng)
     }
 
-    fn deceased(&mut self, map: &AgentLocationMap, cell: Point, counts: &mut Row, rng: &mut RandomWrapper) -> Point {
+    fn deceased(&mut self, map: &AgentLocationMap, cell: Point, counts: &mut Counts, rng: &mut RandomWrapper) -> Point {
         let mut new_cell = cell;
         if self.is_quarantined() {
             let result = self.decease(rng);

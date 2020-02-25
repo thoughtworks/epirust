@@ -12,6 +12,8 @@ fxhash = "0.2.1"
 csv = "1.1.1"
 serde = "1.0.103"
 serde_derive = "1.0.103"
+serde_json = "1.0.48"
+rdkafka = { version = "0.23", features = ["cmake-build"] }
 
 [profile.release]
 opt-level = 3

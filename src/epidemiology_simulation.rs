@@ -13,6 +13,7 @@ use crate::geography::Grid;
 use crate::random_wrapper::RandomWrapper;
 use crate::disease_tracker::Hotspot;
 use crate::events::{Counts, Listener};
+use crate::kafka_service::KafkaService;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -40,6 +41,7 @@ impl Epidemiology {
     pub fn run(&mut self, simulation_life_time: i32, vaccination_time: i32,
                vaccination_percentage: f64, output_file_name: &str) {
         let mut csv_listener = CsvListener::new(output_file_name);
+        let mut kafka_listener = KafkaService::new();
         let mut counts_at_hr = Counts::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
         let mut rng = RandomWrapper::new();
         let start_time = Instant::now();
@@ -59,6 +61,7 @@ impl Epidemiology {
 
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference, &self.grid, &mut hotspot_tracker, &mut rng);
             csv_listener.counts_updated(counts_at_hr);
+            kafka_listener.counts_updated(counts_at_hr);
 
             if simulation_hour == vaccination_time {
                 println!("Vaccination");
@@ -79,6 +82,7 @@ impl Epidemiology {
         println!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         println!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         csv_listener.simulation_ended();
+        kafka_listener.simulation_ended();
     }
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {

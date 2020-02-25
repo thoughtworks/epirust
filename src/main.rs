@@ -14,6 +14,7 @@ mod csv_service;
 mod random_wrapper;
 mod disease_tracker;
 mod events;
+mod kafka_service;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

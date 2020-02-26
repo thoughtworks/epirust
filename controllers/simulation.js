@@ -1,11 +1,16 @@
 /* GET simulation listing. */
-const app = require('express');
+const express = require('express');
+const router = express.Router();
 const EpirustService = require('../services/epirust');
 const KafkaConsumerService = require('../services/kafka');
 
-const router = app.Router();
+var ioInstance = require('../io');
 
 router.get('/', function(req, res, next) {
+  const io = ioInstance();
+  io.on('connection', function(socket){
+    console.log('a user connected');
+  });
   res.send("In simulation");
 });
 
@@ -14,8 +19,17 @@ router.post('/', function(req, res, next) {
   const epirustService = new EpirustService(numberOfAgents);
   const kafkaConsumer = new KafkaConsumerService('localhost:9092', 'counts_updated', 1);
   epirustService.start(numberOfAgents);
-  res.status(201);
-  res.send("Simulation started");
+
+  const io = ioInstance();
+  io.on('connect', function(socket){
+    console.log('a user connected');
+    kafkaConsumer.consumer.on('message', function (message) {
+      socket.emit('epidemicStats', message);
+    });
+  });
+
+  res.status(200);
+  res.send({ status: "Simulation started" });
 });
 
 module.exports = router;

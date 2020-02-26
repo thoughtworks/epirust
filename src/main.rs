@@ -16,6 +16,11 @@ mod disease_tracker;
 mod events;
 mod kafka_service;
 
+const VACCINATION_TIME: i32 = 5000;
+const VACCINATION_PERCENTAGE: f64 = 0.2;
+const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
+const WORKING_PERCENTAGE: f64 = 0.7;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -53,10 +58,6 @@ fn sim100() {
     const GRID_SIZE: i32 = 25;
     const NUMBER_OF_AGENTS: i32 = 100;
     const SIMULATION_LIFE_TIME: i32 = 10000;
-    const VACCINATION_TIME: i32 = 5000;
-    const VACCINATION_PERCENTAGE: f64 = 0.2;
-    const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
-    const WORKING_PERCENTAGE: f64 = 0.7;
     const OUTPUT_FILE_NAME: &str = "simulation_100.csv";
 
     let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
@@ -67,10 +68,6 @@ fn sim1000() {
     const GRID_SIZE: i32 = 80;
     const NUMBER_OF_AGENTS: i32 = 1000;
     const SIMULATION_LIFE_TIME: i32 = 10000;
-    const VACCINATION_TIME: i32 = 5000;
-    const VACCINATION_PERCENTAGE: f64 = 0.2;
-    const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
-    const WORKING_PERCENTAGE: f64 = 0.7;
     const OUTPUT_FILE_NAME: &str = "simulation_1000.csv";
 
     let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
@@ -81,10 +78,6 @@ fn sim10000() {
     const GRID_SIZE: i32 = 250;
     const NUMBER_OF_AGENTS: i32 = 10000;
     const SIMULATION_LIFE_TIME: i32 = 10000;
-    const VACCINATION_TIME: i32 = 5000;
-    const VACCINATION_PERCENTAGE: f64 = 0.2;
-    const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
-    const WORKING_PERCENTAGE: f64 = 0.7;
     const OUTPUT_FILE_NAME: &str = "simulation_10000.csv";
 
     let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
@@ -95,10 +88,6 @@ fn sim100_000() {
     const GRID_SIZE: i32 = 800;
     const NUMBER_OF_AGENTS: i32 = 100_000;
     const SIMULATION_LIFE_TIME: i32 = 10000;
-    const VACCINATION_TIME: i32 = 5000;
-    const VACCINATION_PERCENTAGE: f64 = 0.2;
-    const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
-    const WORKING_PERCENTAGE: f64 = 0.7;
     const OUTPUT_FILE_NAME: &str = "simulation_100_000.csv";
 
     let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
@@ -109,10 +98,6 @@ fn sim1_000_000() {
     const GRID_SIZE: i32 = 2500;
     const NUMBER_OF_AGENTS: i32 = 1_000_000;
     const SIMULATION_LIFE_TIME: i32 = 10000;
-    const VACCINATION_TIME: i32 = 5000;
-    const VACCINATION_PERCENTAGE: f64 = 0.2;
-    const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
-    const WORKING_PERCENTAGE: f64 = 0.7;
     const OUTPUT_FILE_NAME: &str = "simulation_1_000_000.csv";
 
     let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
@@ -138,10 +123,6 @@ fn sim5_000_000() {
     const GRID_SIZE: i32 = 5660;
     const NUMBER_OF_AGENTS: i32 = 5_000_000;
     const SIMULATION_LIFE_TIME: i32 = 10000;
-    const VACCINATION_TIME: i32 = 5000;
-    const VACCINATION_PERCENTAGE: f64 = 0.2;
-    const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
-    const WORKING_PERCENTAGE: f64 = 0.7;
     const OUTPUT_FILE_NAME: &str = "simulation_5_000_000.csv";
 
     let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);

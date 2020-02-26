@@ -6,3 +6,11 @@ small_pox:
   regular_transmission_rate: 0.05
   high_transmission_rate: 0.5
   death_rate: 0.2
+
+sars: #Guesstimated
+  regular_transmission_start_day: 5
+  high_transmission_start_day: 10
+  last_day: 23
+  regular_transmission_rate: 0.025
+  high_transmission_rate: 0.25
+  death_rate: 0.1

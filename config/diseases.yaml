@@ -14,3 +14,11 @@ sars: #Guesstimated
   regular_transmission_rate: 0.025
   high_transmission_rate: 0.25
   death_rate: 0.1
+
+covid_19: #Guesstimated
+  regular_transmission_start_day: 5
+  high_transmission_start_day: 20
+  last_day: 40
+  regular_transmission_rate: 0.025
+  high_transmission_rate: 0.25
+  death_rate: 0.2

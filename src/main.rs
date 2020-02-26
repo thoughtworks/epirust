@@ -60,13 +60,6 @@ fn main() {
             .help("The ratio of people working (values between 0-1)")
             .default_value("0.7")
             .takes_value(true))
-        .arg(Arg::with_name("working")
-            .short("work")
-            .long("working")
-            .value_name("NUMBER")
-            .help("The ratio of people working (values between 0-1)")
-            .default_value("0.7")
-            .takes_value(true))
         .arg(Arg::with_name("vaccinate_at")
             .long("vaccinate_at")
             .value_name("NUMBER")
@@ -79,6 +72,13 @@ fn main() {
             .help("The ratio of people to be vaccinated (values between 0-1)")
             .default_value("0.2")
             .takes_value(true))
+        .arg(Arg::with_name("disease")
+            .long("disease")
+            .short("d")
+            .value_name("NAME")
+            .help("One of the disease names configured in config/diseases.yaml (e.g. small_pox, sars, covid_19)")
+            .default_value("small_pox")
+            .takes_value(true))
         .get_matches();
 
     let count = value_t!(matches, "agents", i32).unwrap_or(10000);
@@ -87,48 +87,47 @@ fn main() {
     let working = value_t!(matches, "working", f64).unwrap_or(WORKING_PERCENTAGE);
     let vaccinate_at = value_t!(matches, "vaccinate_at", i32).unwrap_or(VACCINATION_TIME);
     let vaccinate_ratio = value_t!(matches, "vaccinate_ratio", f64).unwrap_or(VACCINATION_PERCENTAGE);
+    let disease_name = matches.value_of("disease").unwrap_or("small_pox");
+    let output_file: &str;
+    let grid_default: i32;
 
     if count <= 100 {
         println!("Executing for 100 agents");
-        let grid = value_t!(matches, "grid", i32).unwrap_or(25);
-        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
-              vaccinate_ratio, "simulation_100.csv");
+        grid_default = 25;
+        output_file = "simulation_100.csv"
     } else if count <= 1000 {
         println!("Executing for 1000 agents");
-        let grid = value_t!(matches, "grid", i32).unwrap_or(80);
-        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
-              vaccinate_ratio, "simulation_1000.csv");
+        grid_default = 80;
+        output_file = "simulation_1000.csv";
     } else if count <= 10000 {
         println!("Executing for 10,000 agents");
-        let grid = value_t!(matches, "grid", i32).unwrap_or(250);
-        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
-              vaccinate_ratio, "simulation_10000.csv");
-    } else if count <= 100000 {
+        grid_default = 250;
+        output_file = "simulation_10000.csv";
+    } else if count <= 100_000 {
         println!("Executing for 100,000 agents");
-        let grid = value_t!(matches, "grid", i32).unwrap_or(800);
-        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
-              vaccinate_ratio, "simulation_100_000.csv");
+        grid_default = 800;
+        output_file = "simulation_100_000.csv";
     } else if count <= 1_000_000 {
         println!("Executing for 1,000,000 agents");
-        let grid = value_t!(matches, "grid", i32).unwrap_or(2500);
-        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
-              vaccinate_ratio, "simulation_1_000_000.csv");
+        grid_default = 2500;
+        output_file = "simulation_1_000_000.csv";
     } else if count <= 2_000_000 {
         println!("Executing for 2,000,000 agents");
-        let grid = value_t!(matches, "grid", i32).unwrap_or(3550);
-        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
-              vaccinate_ratio, "simulation_2_000_000.csv");
+        grid_default = 3550;
+        output_file = "simulation_2_000_000.csv"
     } else {
         println!("Executing for 5,000,000 agents");
-        let grid = value_t!(matches, "grid", i32).unwrap_or(5660);
-        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
-              vaccinate_ratio, "simulation_5_000_000.csv");
+        grid_default = 5660;
+        output_file = "simulation_5_000_000.csv"
     }
+    let grid = value_t!(matches, "grid", i32).unwrap_or(grid_default);
+    start(disease_name, grid, count, simulation_hours, public_transport, working, vaccinate_at,
+          vaccinate_ratio, output_file);
     println!("Done");
 }
 
-fn start(grid: i32, agents: i32, simulation_hrs: i32, transport: f64, working: f64,
+fn start(disease_name: &str, grid: i32, agents: i32, simulation_hrs: i32, transport: f64, working: f64,
          vaccinate_at: i32, vaccinate_ratio: f64, output_file: &str) {
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(grid, agents, transport, working);
+    let mut epidemiology = epidemiology_simulation::Epidemiology::new(disease_name, grid, agents, transport, working);
     epidemiology.run(simulation_hrs, vaccinate_at, vaccinate_ratio, output_file);
 }

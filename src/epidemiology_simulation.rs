@@ -24,9 +24,9 @@ pub struct Epidemiology {
 }
 
 impl Epidemiology {
-    pub fn new(grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64) -> Epidemiology {
+    pub fn new(disease_name: &str, grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64) -> Epidemiology {
         let start = Instant::now();
-        let disease = Disease::init("config/diseases.yaml", "small_pox");
+        let disease = Disease::init("config/diseases.yaml", disease_name);
         let grid = geography::define_geography(grid_size);
         let mut rng = RandomWrapper::new();
         let (start_locations, agent_list) = grid.generate_population(number_of_agents, public_transport_percentage, working_percentage, &mut rng);
@@ -156,7 +156,7 @@ mod tests {
 
     #[test]
     fn should_init() {
-        let epidemiology: Epidemiology = Epidemiology::new(20, 10, 1.0, 1.0);
+        let epidemiology: Epidemiology = Epidemiology::new("small_pox", 20, 10, 1.0, 1.0);
         let expected_housing_area = Area::new(Point::new(0, 0), Point::new(7, 19));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);
 

@@ -15,6 +15,7 @@ serde_derive = "1.0.103"
 serde_json = "1.0.48"
 serde_yaml = "0.8.11"
 rdkafka = { version = "0.23", features = ["cmake-build"] }
+clap = "2.33.0"
 
 [profile.release]
 opt-level = 3

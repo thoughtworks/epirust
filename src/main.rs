@@ -1,7 +1,8 @@
+extern crate clap;
 #[macro_use]
 extern crate serde_derive;
 
-use std::env;
+use clap::{App, Arg, value_t};
 
 mod constants;
 
@@ -22,109 +23,112 @@ const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
 const WORKING_PERCENTAGE: f64 = 0.7;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let matches = App::new("EpiRust")
+        .version("0.1")
+        .about("Epidemiology Simulations in Rust")
+        .arg(Arg::with_name("agents")
+            .short("a")
+            .long("agents")
+            .value_name("NUMBER")
+            .help("Number of agents to run the simulation with. Valid values are 100 to 5000000")
+            .default_value("10000")
+            .takes_value(true))
+        .arg(Arg::with_name("grid")
+            .short("g")
+            .long("grid")
+            .value_name("NUMBER")
+            .help("The size of the Grid. E.g. entering '80' will create an 80x80 grid")
+            .takes_value(true))
+        .arg(Arg::with_name("hours")
+            .short("hr")
+            .long("hours")
+            .value_name("NUMBER")
+            .help("The total hours of the simulation")
+            .default_value("10000")
+            .takes_value(true))
+        .arg(Arg::with_name("public_transport")
+            .short("pub")
+            .long("public_transport")
+            .value_name("NUMBER")
+            .help("The ratio of people using public transport (values between 0-1)")
+            .default_value("0.2")
+            .takes_value(true))
+        .arg(Arg::with_name("working")
+            .short("work")
+            .long("working")
+            .value_name("NUMBER")
+            .help("The ratio of people working (values between 0-1)")
+            .default_value("0.7")
+            .takes_value(true))
+        .arg(Arg::with_name("working")
+            .short("work")
+            .long("working")
+            .value_name("NUMBER")
+            .help("The ratio of people working (values between 0-1)")
+            .default_value("0.7")
+            .takes_value(true))
+        .arg(Arg::with_name("vaccinate_at")
+            .long("vaccinate_at")
+            .value_name("NUMBER")
+            .help("The hour at which to start vaccination")
+            .default_value("5000")
+            .takes_value(true))
+        .arg(Arg::with_name("vaccinate_ratio")
+            .long("vaccinate_ratio")
+            .value_name("NUMBER")
+            .help("The ratio of people to be vaccinated (values between 0-1)")
+            .default_value("0.2")
+            .takes_value(true))
+        .get_matches();
 
-    let mut count = 10000;
-    if args.len() > 1 {
-        count = args[1].parse().unwrap_or(10000);
-    }
+    let count = value_t!(matches, "agents", i32).unwrap_or(10000);
+    let simulation_hours = value_t!(matches, "hours", i32).unwrap_or(10000);
+    let public_transport = value_t!(matches, "public_transport", f64).unwrap_or(PUBLIC_TRANSPORT_PERCENTAGE);
+    let working = value_t!(matches, "working", f64).unwrap_or(WORKING_PERCENTAGE);
+    let vaccinate_at = value_t!(matches, "vaccinate_at", i32).unwrap_or(VACCINATION_TIME);
+    let vaccinate_ratio = value_t!(matches, "vaccinate_ratio", f64).unwrap_or(VACCINATION_PERCENTAGE);
 
     if count <= 100 {
         println!("Executing for 100 agents");
-        sim100();
+        let grid = value_t!(matches, "grid", i32).unwrap_or(25);
+        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
+              vaccinate_ratio, "simulation_100.csv");
     } else if count <= 1000 {
         println!("Executing for 1000 agents");
-        sim1000();
+        let grid = value_t!(matches, "grid", i32).unwrap_or(80);
+        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
+              vaccinate_ratio, "simulation_1000.csv");
     } else if count <= 10000 {
         println!("Executing for 10,000 agents");
-        sim10000();
+        let grid = value_t!(matches, "grid", i32).unwrap_or(250);
+        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
+              vaccinate_ratio, "simulation_10000.csv");
     } else if count <= 100000 {
         println!("Executing for 100,000 agents");
-        sim100_000();
+        let grid = value_t!(matches, "grid", i32).unwrap_or(800);
+        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
+              vaccinate_ratio, "simulation_100_000.csv");
     } else if count <= 1_000_000 {
         println!("Executing for 1,000,000 agents");
-        sim1_000_000();
+        let grid = value_t!(matches, "grid", i32).unwrap_or(2500);
+        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
+              vaccinate_ratio, "simulation_1_000_000.csv");
     } else if count <= 2_000_000 {
         println!("Executing for 2,000,000 agents");
-        sim2_000_000();
+        let grid = value_t!(matches, "grid", i32).unwrap_or(3550);
+        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
+              vaccinate_ratio, "simulation_2_000_000.csv");
     } else {
         println!("Executing for 5,000,000 agents");
-        sim5_000_000();
+        let grid = value_t!(matches, "grid", i32).unwrap_or(5660);
+        start(grid, count, simulation_hours, public_transport, working, vaccinate_at,
+              vaccinate_ratio, "simulation_5_000_000.csv");
     }
     println!("Done");
 }
 
-fn sim100() {
-    const GRID_SIZE: i32 = 25;
-    const NUMBER_OF_AGENTS: i32 = 100;
-    const SIMULATION_LIFE_TIME: i32 = 10000;
-    const OUTPUT_FILE_NAME: &str = "simulation_100.csv";
-
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
-    epidemiology.run(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
-}
-
-fn sim1000() {
-    const GRID_SIZE: i32 = 80;
-    const NUMBER_OF_AGENTS: i32 = 1000;
-    const SIMULATION_LIFE_TIME: i32 = 10000;
-    const OUTPUT_FILE_NAME: &str = "simulation_1000.csv";
-
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
-    epidemiology.run(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
-}
-
-fn sim10000() {
-    const GRID_SIZE: i32 = 250;
-    const NUMBER_OF_AGENTS: i32 = 10000;
-    const SIMULATION_LIFE_TIME: i32 = 10000;
-    const OUTPUT_FILE_NAME: &str = "simulation_10000.csv";
-
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
-    epidemiology.run(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
-}
-
-fn sim100_000() {
-    const GRID_SIZE: i32 = 800;
-    const NUMBER_OF_AGENTS: i32 = 100_000;
-    const SIMULATION_LIFE_TIME: i32 = 10000;
-    const OUTPUT_FILE_NAME: &str = "simulation_100_000.csv";
-
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
-    epidemiology.run(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
-}
-
-fn sim1_000_000() {
-    const GRID_SIZE: i32 = 2500;
-    const NUMBER_OF_AGENTS: i32 = 1_000_000;
-    const SIMULATION_LIFE_TIME: i32 = 10000;
-    const OUTPUT_FILE_NAME: &str = "simulation_1_000_000.csv";
-
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
-    epidemiology.run(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
-}
-
-fn sim2_000_000() {
-    const GRID_SIZE: i32 = 3550;
-    const NUMBER_OF_AGENTS: i32 = 2_000_000;
-    const SIMULATION_LIFE_TIME: i32 = 10000;
-    const VACCINATION_TIME: i32 = 5000;
-    const VACCINATION_PERCENTAGE: f64 = 0.2;
-    const PUBLIC_TRANSPORT_PERCENTAGE: f64 = 0.2;
-    const WORKING_PERCENTAGE: f64 = 0.7;
-    const OUTPUT_FILE_NAME: &str = "simulation_2_000_000.csv";
-
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
-    epidemiology.run(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
-}
-
-
-fn sim5_000_000() {
-    const GRID_SIZE: i32 = 5660;
-    const NUMBER_OF_AGENTS: i32 = 5_000_000;
-    const SIMULATION_LIFE_TIME: i32 = 10000;
-    const OUTPUT_FILE_NAME: &str = "simulation_5_000_000.csv";
-
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(GRID_SIZE, NUMBER_OF_AGENTS, PUBLIC_TRANSPORT_PERCENTAGE, WORKING_PERCENTAGE);
-    epidemiology.run(SIMULATION_LIFE_TIME, VACCINATION_TIME, VACCINATION_PERCENTAGE, OUTPUT_FILE_NAME);
+fn start(grid: i32, agents: i32, simulation_hrs: i32, transport: f64, working: f64,
+         vaccinate_at: i32, vaccinate_ratio: f64, output_file: &str) {
+    let mut epidemiology = epidemiology_simulation::Epidemiology::new(grid, agents, transport, working);
+    epidemiology.run(simulation_hrs, vaccinate_at, vaccinate_ratio, output_file);
 }

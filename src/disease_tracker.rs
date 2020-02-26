@@ -1,5 +1,6 @@
 use crate::geography::Point;
 use fxhash::FxHashMap;
+use crate::events::{Listener, Counts};
 
 pub struct Hotspot {
     disease_hotspot_tracker: FxHashMap<Point, i32>
@@ -10,8 +11,16 @@ impl Hotspot {
         let disease_hotspot_tracker = FxHashMap::default();
         Hotspot{disease_hotspot_tracker}
     }
+}
 
-    pub fn update(&mut self, cell: &Point){
+impl Listener for Hotspot {
+    fn counts_updated(&mut self, _counts: Counts) {
+    }
+
+    fn simulation_ended(&mut self) {
+    }
+
+    fn citizen_got_infected(&mut self, cell: &Point) {
         let counter = self.disease_hotspot_tracker.entry(*cell).or_insert(0);
         *counter += 1;
     }
@@ -22,6 +31,7 @@ mod tests{
     use crate::disease_tracker::Hotspot;
     use fxhash::FxHashMap;
     use crate::geography::Point;
+    use crate::events::Listener;
 
     #[test]
     fn should_initialize(){
@@ -34,7 +44,7 @@ mod tests{
         let mut tracker = Hotspot::new();
         let current_point = Point::new(0, 1);
 
-        tracker.update(&current_point);
+        tracker.citizen_got_infected(&current_point);
 
         assert_eq!(*tracker.disease_hotspot_tracker.get(&current_point).unwrap(), 1);
     }
@@ -44,8 +54,8 @@ mod tests{
         let mut tracker = Hotspot::new();
         let current_point = Point::new(0, 1);
 
-        tracker.update(&current_point);
-        tracker.update(&current_point);
+        tracker.citizen_got_infected(&current_point);
+        tracker.citizen_got_infected(&current_point);
 
         assert_eq!(*tracker.disease_hotspot_tracker.get(&current_point).unwrap(), 2);
     }

@@ -5,6 +5,7 @@ use std::error::Error;
 use csv::Writer;
 
 use crate::events::{Counts, Listener};
+use crate::geography::Point;
 
 pub struct CsvListener {
     output_file_name: String,
@@ -39,8 +40,11 @@ impl Listener for CsvListener {
         self.counts.push(counts);
     }
 
-    fn simulation_ended(&self) {
+    fn simulation_ended(&mut self) {
         CsvListener::write(&self.output_file_name, &self.counts)
             .expect("Failed to write to file");
+    }
+
+    fn citizen_got_infected(&mut self, _cell: &Point) {
     }
 }

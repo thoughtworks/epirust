@@ -1,3 +1,5 @@
+use crate::geography::Point;
+
 #[derive(Serialize, Copy, Clone)]
 pub struct Counts {
     hour: i32,
@@ -52,5 +54,6 @@ impl Counts {
 
 pub trait Listener {
     fn counts_updated(&mut self, counts: Counts);
-    fn simulation_ended(&self);
+    fn simulation_ended(&mut self);
+    fn citizen_got_infected(&mut self, cell: &Point);
 }

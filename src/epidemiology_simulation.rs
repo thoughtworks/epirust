@@ -8,13 +8,13 @@ use rand::Rng;
 use crate::{allocation_map, events};
 use crate::allocation_map::AgentLocationMap;
 use crate::csv_service::CsvListener;
-use crate::geography;
-use crate::geography::Grid;
-use crate::random_wrapper::RandomWrapper;
+use crate::disease::Disease;
 use crate::disease_tracker::Hotspot;
 use crate::events::{Counts, Listener};
+use crate::geography;
+use crate::geography::{Grid, Point};
 use crate::kafka_service::KafkaService;
-use crate::disease::Disease;
+use crate::random_wrapper::RandomWrapper;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -43,12 +43,16 @@ impl Epidemiology {
 
     pub fn run(&mut self, simulation_life_time: i32, vaccination_time: i32,
                vaccination_percentage: f64, output_file_name: &str) {
-        let mut csv_listener = CsvListener::new(output_file_name);
-        let mut kafka_listener = KafkaService::new();
+        let csv_listener = CsvListener::new(output_file_name);
+        let kafka_listener = KafkaService::new();
+        let hotspot_tracker = Hotspot::new();
+        let mut listeners = Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)]);
+
         let mut counts_at_hr = Counts::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
         let mut rng = RandomWrapper::new();
         let start_time = Instant::now();
-        let mut hotspot_tracker = Hotspot::new();
+
+
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
         for simulation_hour in 1..simulation_life_time {
@@ -63,9 +67,8 @@ impl Epidemiology {
             }
 
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
-                                   &self.grid, &mut hotspot_tracker, &mut rng, &self.disease);
-            csv_listener.counts_updated(counts_at_hr);
-            kafka_listener.counts_updated(counts_at_hr);
+                                   &self.grid, &mut listeners, &mut rng, &self.disease);
+            listeners.counts_updated(counts_at_hr);
 
             if simulation_hour == vaccination_time {
                 println!("Vaccination");
@@ -85,8 +88,7 @@ impl Epidemiology {
         let elapsed_time = start_time.elapsed().as_secs_f32();
         println!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         println!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
-        csv_listener.simulation_ended();
-        kafka_listener.simulation_ended();
+        listeners.simulation_ended();
     }
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
@@ -98,7 +100,7 @@ impl Epidemiology {
     }
 
     fn simulate(mut csv_record: &mut events::Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
-                write_buffer: &mut AgentLocationMap, grid: &Grid, disease_hotspot_tracker: &mut Hotspot,
+                write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease) {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
@@ -107,7 +109,7 @@ impl Epidemiology {
             let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut csv_record, rng, disease);
 
             if infection_status == false && current_agent.is_infected() == true {
-                disease_hotspot_tracker.update(&cell);
+                listeners.citizen_got_infected(&cell);
             }
 
             let agent_option = write_buffer.agent_cell.get(&point);
@@ -118,6 +120,30 @@ impl Epidemiology {
                 _ => { write_buffer.agent_cell.insert(point, current_agent); }
             }
         }
+    }
+}
+
+struct Listeners {
+    listeners: Vec<Box<dyn Listener>>,
+}
+
+impl Listeners {
+    fn from(listeners: Vec<Box<dyn Listener>>) -> Listeners {
+        Listeners { listeners }
+    }
+}
+
+impl Listener for Listeners {
+    fn counts_updated(&mut self, counts: Counts) {
+        self.listeners.iter_mut().for_each(|listener| { listener.counts_updated(counts) });
+    }
+
+    fn simulation_ended(&mut self) {
+        self.listeners.iter_mut().for_each(|listener| { listener.simulation_ended() });
+    }
+
+    fn citizen_got_infected(&mut self, cell: &Point) {
+        self.listeners.iter_mut().for_each(|listener| { listener.citizen_got_infected(cell) });
     }
 }
 

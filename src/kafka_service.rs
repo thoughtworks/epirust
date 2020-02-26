@@ -1,6 +1,7 @@
 use rdkafka::producer::{FutureProducer, FutureRecord};
 use rdkafka::ClientConfig;
 use crate::events::{Listener, Counts};
+use crate::geography::Point;
 
 pub struct KafkaService {
     producer: FutureProducer
@@ -24,6 +25,9 @@ impl Listener for KafkaService {
         self.producer.send(record, 0);
     }
 
-    fn simulation_ended(&self) {
+    fn simulation_ended(&mut self) {
+    }
+
+    fn citizen_got_infected(&mut self, _cell: &Point) {
     }
 }

@@ -1,3 +1,21 @@
 <body>
     Hello World!
 </body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    
+    fetch("/simulation", {
+    method: 'POST', // *GET, POST, PUT, DELETE, etc.
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({numberOfAgents: 1000}) // body data type must match "Content-Type" header
+  }).then((res) => {
+    var socket = io();
+    res.json().then((json) => console.log(json));  
+    socket.on('epidemicStats', function(message){
+        console.log("Reading from socket");
+        console.log(message);
+    });
+})
+</script>

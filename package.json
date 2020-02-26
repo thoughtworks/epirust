@@ -7,8 +7,8 @@
     "test": "NODE_ENV=test jest"
   },
   "dependencies": {
-    "execa": "^4.0.0",
     "debug": "~2.6.9",
+    "execa": "^4.0.0",
     "express": "~4.16.1",
     "http": "0.0.0",
     "morgan": "^1.9.1",
@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "jest": "^25.1.0",
-    "supertest": "^4.0.2"
+    "supertest": "^4.0.2",
+    "socket.io": "^2.3.0"
   }
 }

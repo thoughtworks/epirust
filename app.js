@@ -1,23 +1,51 @@
-var express = require('express');
-var path = require('path');
-var logger = require('morgan');
-var router = require('./routes/router');
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const logger = require('morgan');
+const debug = require('debug')('epirust-server');
+const router = require('./routes/router');
+const ioInstance = require('./io');
+const app = express();
 
-var app = express();  
-
+var server = http.createServer(app);
+server.listen(3000);
+server.on('error', onError);
+server.on('listening', onListening);
+ioInstance(server);
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-
 app.use('/', router);
 
-// TODO: Add error handler
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
 
-const server = require('http').createServer(app);
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
 
-if (process.env.NODE_ENV !== 'test') {
-    server.listen(4200);
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
 }
 
-module.exports = app;
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}

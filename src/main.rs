@@ -16,6 +16,7 @@ mod random_wrapper;
 mod disease_tracker;
 mod events;
 mod kafka_service;
+mod population;
 
 const VACCINATION_TIME: i32 = 5000;
 const VACCINATION_PERCENTAGE: f64 = 0.2;

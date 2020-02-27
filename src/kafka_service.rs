@@ -13,7 +13,7 @@ impl KafkaService {
             producer: ClientConfig::new()
                 .set("bootstrap.servers", "localhost:9092")
                 .create()
-                .expect("Could not crate Kafka Producer")
+                .expect("Could not create Kafka Producer")
         }
     }
 }

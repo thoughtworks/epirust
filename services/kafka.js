@@ -8,9 +8,5 @@ module.exports = class KafkaConsumerService {
         };
         const client = new kafka.KafkaClient(consumerOptions);
         this.consumer = new kafka.Consumer(client, [{ topic: topic }], {});
-
-        this.consumer.on('message', function (message) {
-            console.log(message);
-        });
     }
 };

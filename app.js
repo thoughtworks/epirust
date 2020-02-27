@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const logger = require('morgan');
+const cors = require('cors')
 const debug = require('debug')('epirust-server');
 const router = require('./routes/router');
 const ioInstance = require('./io');
@@ -13,6 +14,7 @@ server.on('error', onError);
 server.on('listening', onListening);
 ioInstance(server);
 app.use(logger('dev'));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));

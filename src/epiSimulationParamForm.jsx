@@ -39,32 +39,31 @@ export default function() {
           type: 'scatter',
           name: 'susceptible'
         };
-        // var infectedData = {
-        //   x: hours,
-        //   y: infected,
-        //   type: 'scatter',
-        //   name: 'infected'
-        // };
-        // var quarantinedData = {
-        //   x: hours,
-        //   y: quarantined,
-        //   type: 'scatter',
-        //   name: 'quarantined'
-        // };
-        // var recoveredData = {
-        //   x: hours,
-        //   y: recovered,
-        //   type: 'scatter',
-        //   name: 'recovered'
-        // };
-
-        // var deceasedData = {
-        //   x: hours,
-        //   y: deceased,
-        //   type: 'scatter',
-        //   name: 'deceased'
-        // };
-        patients = [susceptibleData];
+        var infectedData = {
+          x: hours,
+          y: infected,
+          type: 'scatter',
+          name: 'infected'
+        };
+        var quarantinedData = {
+          x: hours,
+          y: quarantined,
+          type: 'scatter',
+          name: 'quarantined'
+        };
+        var recoveredData = {
+          x: hours,
+          y: recovered,
+          type: 'scatter',
+          name: 'recovered'
+        };
+        var deceasedData = {
+          x: hours,
+          y: deceased,
+          type: 'scatter',
+          name: 'deceased'
+        };
+        patients = [susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData];
         var layout = {
           xaxis: {
           },
@@ -73,12 +72,14 @@ export default function() {
             y: 3.5
           }
         };
-        if(hours.length === 1){
-          Plotly.newPlot('myDiv', patients, layout);
-        } else {
-          Plotly.restyle('myDiv', 'y', [susceptible]);
-          Plotly.restyle('myDiv', 'x', [hours]);
-        }
+        Plotly.newPlot('myDiv', patients, layout);
+        // if(hours.length === 1){
+        // } else {
+        //   Plotly.newPlot('myDiv', patients, layout);
+
+        //   Plotly.restyle('myDiv', 'y', [susceptible]);
+        //   Plotly.restyle('myDiv', 'x', [hours]);
+        // }
         console.log(patients);
       });
     })

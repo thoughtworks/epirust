@@ -16,6 +16,8 @@ app.use('/', router);
 
 const server = require('http').createServer(app);
 
-server.listen(4200);
+if (process.env.NODE_ENV !== 'test') {
+    server.listen(4200);
+}
 
 module.exports = app;

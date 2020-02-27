@@ -1,9 +1,9 @@
 const execa = require('execa');
 
 module.exports = class EpirustService{
-    engine = './external/epirust';
 
     start(numberOfAgents) {
+        this.engine = './external/epirust';
         (async () => {
             try {
                 const {stdout} = await execa(this.engine, [numberOfAgents]);

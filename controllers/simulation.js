@@ -6,7 +6,9 @@ const KafkaConsumerService = require('../services/kafka');
 const router = app.Router();
 
 router.get('/', function(req, res, next) {
-  res.send("In simulation");
+
+  res.status(200);
+  res.send('In simulation');
 });
 
 router.post('/', function(req, res, next) {

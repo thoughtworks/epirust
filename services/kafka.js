@@ -1,7 +1,6 @@
 const kafka = require('kafka-node');
 
 module.exports = class KafkaConsumerService{
-    consumer;
 
     constructor(host, topic, id) {
         const consumerOptions = {

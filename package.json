@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "test": "NODE_ENV=test jest"
   },
   "dependencies": {
     "execa": "^4.0.0",
@@ -12,5 +13,9 @@
     "http": "0.0.0",
     "morgan": "^1.9.1",
     "kafka-node": "^5.0.0"
+  },
+  "devDependencies": {
+    "jest": "^25.1.0",
+    "supertest": "^4.0.2"
   }
 }

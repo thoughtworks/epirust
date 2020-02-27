@@ -118,9 +118,8 @@ async fn main() {
         };
         let grid = value_t!(matches, "grid", i32).unwrap_or(grid_default);
 
-        let output_file = format!("simulation_{}.csv", count);
         let params = SimulationParams::new(String::from(disease_name), grid, count, simulation_hours,
-                                           public_transport, working, vaccinate_at, vaccinate_ratio, output_file);
+                                           public_transport, working, vaccinate_at, vaccinate_ratio);
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&params);
         epidemiology.run(&params);
         println!("Done");

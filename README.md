@@ -18,7 +18,7 @@ You can specify the `--daemon` parameter to run the engine in daemon mode. In th
 ## Kafka setup
 In the daemon mode, the engine will consume the `simulation_requests` topic for starting the simulation. It expects a JSON payload to be sent in the following format
 ```json
-{"disease_name": "small_pox", "grid_size": 250, "number_of_agents": 10000, "simulation_hrs": 10000, "public_transport_percentage": 0.2, "working_percentage": 0.7, "vaccinate_at": 5000, "vaccinate_percentage": 0.2, "output_file": "simulation_10000.csv"}
+{"disease_name": "small_pox", "grid_size": 250, "number_of_agents": 10000, "simulation_hrs": 10000, "public_transport_percentage": 0.2, "working_percentage": 0.7, "vaccinate_at": 5000, "vaccinate_percentage": 0.2}
 ```
 
 When the simulation is running, it will produce events on the `counts_updated` topic on each simulation hour. The payload will look like:

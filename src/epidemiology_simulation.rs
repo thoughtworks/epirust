@@ -25,8 +25,7 @@ pub struct SimulationParams {
     public_transport_percentage: f64,
     working_percentage: f64,
     vaccinate_at: i32,
-    vaccinate_percentage: f64,
-    output_file: String,
+    vaccinate_percentage: f64
 }
 
 impl SimulationParams {
@@ -37,8 +36,7 @@ impl SimulationParams {
                public_transport_percentage: f64,
                working_percentage: f64,
                vaccinate_at: i32,
-               vaccinate_percentage: f64,
-               output_file: String) -> SimulationParams {
+               vaccinate_percentage: f64) -> SimulationParams {
         SimulationParams {
             disease_name,
             grid_size,
@@ -48,7 +46,6 @@ impl SimulationParams {
             working_percentage,
             vaccinate_at,
             vaccinate_percentage,
-            output_file,
         }
     }
 }
@@ -79,7 +76,8 @@ impl Epidemiology {
     }
 
     pub fn run(&mut self, params: &SimulationParams) {
-        let csv_listener = CsvListener::new(params.output_file.clone());
+        let output_file_name = format!("simulation_{}.csv", params.number_of_agents);
+        let csv_listener = CsvListener::new(output_file_name);
         let kafka_listener = KafkaProducer::new();
         let hotspot_tracker = Hotspot::new();
         let mut listeners = Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)]);
@@ -192,7 +190,7 @@ mod tests {
 
     #[test]
     fn should_init() {
-        let params = SimulationParams::new(String::from("small_pox"), 20, 10, 10000, 1.0, 1.0, 5000, 0.2, String::from("foo"));
+        let params = SimulationParams::new(String::from("small_pox"), 20, 10, 10000, 1.0, 1.0, 5000, 0.2);
         let epidemiology: Epidemiology = Epidemiology::new(&params);
         let expected_housing_area = Area::new(Point::new(0, 0), Point::new(7, 19));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);

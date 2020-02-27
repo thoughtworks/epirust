@@ -98,57 +98,31 @@ async fn main() {
         let consumer = KafkaConsumer::new();
         consumer.listen_loop().await;
     } else {
-        let count = value_t!(matches, "agents", i32).unwrap_or(10000);
+        let input_count = value_t!(matches, "agents", i32).unwrap_or(10000);
         let simulation_hours = value_t!(matches, "hours", i32).unwrap_or(10000);
         let public_transport = value_t!(matches, "public_transport", f64).unwrap_or(PUBLIC_TRANSPORT_PERCENTAGE);
         let working = value_t!(matches, "working", f64).unwrap_or(WORKING_PERCENTAGE);
         let vaccinate_at = value_t!(matches, "vaccinate_at", i32).unwrap_or(VACCINATION_TIME);
         let vaccinate_ratio = value_t!(matches, "vaccinate_ratio", f64).unwrap_or(VACCINATION_PERCENTAGE);
         let disease_name = matches.value_of("disease").unwrap_or("small_pox");
-        let output_file: &str;
-        let grid_default: i32;
 
-        if count <= 100 {
-            println!("Executing for 100 agents");
-            grid_default = 25;
-            output_file = "simulation_100.csv"
-        } else if count <= 1000 {
-            println!("Executing for 1000 agents");
-            grid_default = 80;
-            output_file = "simulation_1000.csv";
-        } else if count <= 10000 {
-            println!("Executing for 10,000 agents");
-            grid_default = 250;
-            output_file = "simulation_10000.csv";
-        } else if count <= 100_000 {
-            println!("Executing for 100,000 agents");
-            grid_default = 800;
-            output_file = "simulation_100_000.csv";
-        } else if count <= 1_000_000 {
-            println!("Executing for 1,000,000 agents");
-            grid_default = 2500;
-            output_file = "simulation_1_000_000.csv";
-        } else if count <= 2_000_000 {
-            println!("Executing for 2,000,000 agents");
-            grid_default = 3550;
-            output_file = "simulation_2_000_000.csv"
-        } else {
-            println!("Executing for 5,000,000 agents");
-            grid_default = 5660;
-            output_file = "simulation_5_000_000.csv"
-        }
+        let (count, grid_default) = match input_count {
+            0..=100 => (100, 25),
+            101..=1000 => (1000, 80),
+            1001..=10000 => (10000, 250),
+            10001..=100000 => (100000, 800),
+            100001..=1_000_000 => (1_000_000, 2500),
+            1_000_001..=2_000_000 => (2_000_000, 3550),
+            2_000_001..=5_000_000 => (5_000_000, 5660),
+            _ => panic!("Cannot run for {} agents", input_count)
+        };
         let grid = value_t!(matches, "grid", i32).unwrap_or(grid_default);
 
-
-        start(disease_name, grid, count, simulation_hours, public_transport, working, vaccinate_at,
-              vaccinate_ratio, output_file);
+        let output_file = format!("simulation_{}.csv", count);
+        let params = SimulationParams::new(String::from(disease_name), grid, count, simulation_hours,
+                                           public_transport, working, vaccinate_at, vaccinate_ratio, output_file);
+        let mut epidemiology = epidemiology_simulation::Epidemiology::new(&params);
+        epidemiology.run(&params);
         println!("Done");
     }
-}
-
-fn start(disease_name: &str, grid: i32, agents: i32, simulation_hrs: i32, transport: f64, working: f64,
-         vaccinate_at: i32, vaccinate_ratio: f64, output_file: &str) {
-    let params = SimulationParams::new(String::from(disease_name), grid, agents, simulation_hrs, transport, working, vaccinate_at, vaccinate_ratio, String::from(output_file));
-    let mut epidemiology = epidemiology_simulation::Epidemiology::new(&params);
-    epidemiology.run(&params);
 }

@@ -363,7 +363,7 @@ mod tests {
     #[should_panic]
     fn should_panic() {
         let mut citizen_list = before_each();
-        let disease = Disease::init("config/diseases.yaml", "small_pox");
+        let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
 
         citizen_list[0].quarantine(&disease);
     }

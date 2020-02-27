@@ -17,6 +17,8 @@ serde_yaml = "0.8.11"
 rdkafka = { version = "0.23", features = ["cmake-build"] }
 clap = "2.33.0"
 ndarray = "0.13.0"
+futures = "0.3.4"
+tokio = { version = "0.2.11", features = ["full"] }
 
 [profile.release]
 opt-level = 3

@@ -13,8 +13,45 @@ use crate::disease_tracker::Hotspot;
 use crate::events::{Counts, Listener};
 use crate::geography;
 use crate::geography::{Grid, Point};
-use crate::kafka_service::KafkaService;
+use crate::kafka_service::KafkaProducer;
 use crate::random_wrapper::RandomWrapper;
+
+#[derive(Deserialize)]
+pub struct SimulationParams {
+    disease_name: String,
+    grid_size: i32,
+    number_of_agents: i32,
+    simulation_hrs: i32,
+    public_transport_percentage: f64,
+    working_percentage: f64,
+    vaccinate_at: i32,
+    vaccinate_percentage: f64,
+    output_file: String,
+}
+
+impl SimulationParams {
+    pub fn new(disease_name: String,
+               grid_size: i32,
+               number_of_agents: i32,
+               simulation_hrs: i32,
+               public_transport_percentage: f64,
+               working_percentage: f64,
+               vaccinate_at: i32,
+               vaccinate_percentage: f64,
+               output_file: String) -> SimulationParams {
+        SimulationParams {
+            disease_name,
+            grid_size,
+            number_of_agents,
+            simulation_hrs,
+            public_transport_percentage,
+            working_percentage,
+            vaccinate_at,
+            vaccinate_percentage,
+            output_file,
+        }
+    }
+}
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -24,14 +61,14 @@ pub struct Epidemiology {
 }
 
 impl Epidemiology {
-    pub fn new(disease_name: &str, grid_size: i32, number_of_agents: i32, public_transport_percentage: f64, working_percentage: f64) -> Epidemiology {
+    pub fn new(params: &SimulationParams) -> Epidemiology {
         let start = Instant::now();
-        let disease = Disease::init("config/diseases.yaml", disease_name);
-        let grid = geography::define_geography(grid_size);
+        let disease = Disease::init("config/diseases.yaml", &params.disease_name);
+        let grid = geography::define_geography(params.grid_size);
         let mut rng = RandomWrapper::new();
-        let (start_locations, agent_list) = grid.generate_population(number_of_agents, public_transport_percentage, working_percentage, &mut rng);
-        let agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &start_locations);
-        let write_agent_location_map = allocation_map::AgentLocationMap::new(grid_size, &agent_list, &start_locations);
+        let (start_locations, agent_list) = grid.generate_population(params.number_of_agents, params.public_transport_percentage, params.working_percentage, &mut rng);
+        let agent_location_map = allocation_map::AgentLocationMap::new(params.grid_size, &agent_list, &start_locations);
+        let write_agent_location_map = allocation_map::AgentLocationMap::new(params.grid_size, &agent_list, &start_locations);
 
         println!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         Epidemiology { agent_location_map, write_agent_location_map, grid, disease }
@@ -41,10 +78,9 @@ impl Epidemiology {
         row.get_infected() == 0 && row.get_quarantined() == 0
     }
 
-    pub fn run(&mut self, simulation_life_time: i32, vaccination_time: i32,
-               vaccination_percentage: f64, output_file_name: &str) {
-        let csv_listener = CsvListener::new(output_file_name);
-        let kafka_listener = KafkaService::new();
+    pub fn run(&mut self, params: &SimulationParams) {
+        let csv_listener = CsvListener::new(params.output_file.clone());
+        let kafka_listener = KafkaProducer::new();
         let hotspot_tracker = Hotspot::new();
         let mut listeners = Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)]);
 
@@ -55,7 +91,7 @@ impl Epidemiology {
 
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
-        for simulation_hour in 1..simulation_life_time {
+        for simulation_hour in 1..params.simulation_hrs {
             counts_at_hr.increment_hour();
 
             let mut read_buffer_reference = self.agent_location_map.borrow();
@@ -70,9 +106,9 @@ impl Epidemiology {
                                    &self.grid, &mut listeners, &mut rng, &self.disease);
             listeners.counts_updated(counts_at_hr);
 
-            if simulation_hour == vaccination_time {
+            if simulation_hour == params.vaccinate_at {
                 println!("Vaccination");
-                Epidemiology::vaccinate(vaccination_percentage, &mut write_buffer_reference, &mut rng);
+                Epidemiology::vaccinate(params.vaccinate_percentage, &mut write_buffer_reference, &mut rng);
             }
 
             if Epidemiology::stop_simulation(counts_at_hr) {
@@ -82,7 +118,7 @@ impl Epidemiology {
             if simulation_hour % 100 == 0 {
                 println!("Throughput: {} iterations/sec; simulation hour {} of {}",
                          simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
-                         simulation_hour, simulation_life_time)
+                         simulation_hour, params.simulation_hrs)
             }
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();
@@ -156,7 +192,8 @@ mod tests {
 
     #[test]
     fn should_init() {
-        let epidemiology: Epidemiology = Epidemiology::new("small_pox", 20, 10, 1.0, 1.0);
+        let params = SimulationParams::new(String::from("small_pox"), 20, 10, 10000, 1.0, 1.0, 5000, 0.2, String::from("foo"));
+        let epidemiology: Epidemiology = Epidemiology::new(&params);
         let expected_housing_area = Area::new(Point::new(0, 0), Point::new(7, 19));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);
 

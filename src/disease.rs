@@ -17,10 +17,10 @@ pub struct Disease {
 }
 
 impl Disease {
-    pub fn init(config_file_path: &str, disease_name: &str) -> Disease {
+    pub fn init(config_file_path: &str, disease_name: &String) -> Disease {
         let reader = File::open(config_file_path).expect("Failed to open disease config file");
         let yaml: HashMap<String, Disease> = serde_yaml::from_reader(reader).expect("Failed to parse disease config file");
-        let disease = yaml.get(&String::from(disease_name)).expect("Failed to find disease");
+        let disease = yaml.get(disease_name).expect("Failed to find disease");
         *disease
     }
 
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn get_current_transmission_rate() {
-        let disease = Disease::init("config/diseases.yaml", "small_pox");
+        let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
         let infection_rate = disease.get_current_transmission_rate(12);
         assert_eq!(infection_rate, 0.05);
 
@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn to_be_quarantined() {
-        let disease = Disease::init("config/diseases.yaml", "small_pox");
+        let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
         let actual = disease.to_be_quarantined(12);
         assert_eq!(actual, false);
 
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn read_smallpox_config() {
-        let disease = Disease::init("config/diseases.yaml", "small_pox");
+        let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
         let expected = Disease {
             regular_transmission_start_day: 10,
             high_transmission_start_day: 16,

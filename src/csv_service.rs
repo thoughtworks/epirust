@@ -13,8 +13,8 @@ pub struct CsvListener {
 }
 
 impl CsvListener {
-    pub fn new(output_file_name: &str) -> CsvListener {
-        CsvListener { output_file_name: String::from(output_file_name), counts: Vec::new() }
+    pub fn new(output_file_name: String) -> CsvListener {
+        CsvListener { output_file_name, counts: Vec::new() }
     }
 
     pub fn write(file_path: &String, data: &Vec<Counts>) -> Result<(), Box<dyn Error>> {

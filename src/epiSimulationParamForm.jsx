@@ -1,6 +1,7 @@
+/* global Plotly */
+
 import React, { useRef } from 'react';
 import io from 'socket.io-client';
-import Plotly from 'plotly.js-dist';
 
 export default function() {
   const graphHolder = useRef();
@@ -21,54 +22,64 @@ export default function() {
       if(!socket) {
         socket = io('http://localhost:3000/');
       }
-      res.json().then((json) => console.log(json));  
+      res.json().then((json) => console.log(json));
+      let hours = [], susceptible = [], infected = [], quarantined = [], recovered = [], deceased = [];
       socket.on('epidemicStats', function(message) {
-        // var susceptible = {
-        //   x: message.hours_data,
-        //   y: message.susceptible_data,
-        //   type: 'scatter',
-        //   name: 'susceptible'
-        // };
-        // var infected = {
-        //   x: message.hours_data,
-        //   y: message.infected_data,
+        var patients;  
+        message = JSON.parse(message);
+        hours.push(message.hour);
+        susceptible.push(message.susceptible);
+        infected.push(message.infected);
+        quarantined.push(message.quarantined);
+        recovered.push(message.recovered);
+        deceased.push(message.deceased);
+        var susceptibleData = {
+          x: hours,
+          y: susceptible,
+          type: 'scatter',
+          name: 'susceptible'
+        };
+        // var infectedData = {
+        //   x: hours,
+        //   y: infected,
         //   type: 'scatter',
         //   name: 'infected'
         // };
-
-        // var quarantined = {
-        //   x: message.hours_data,
-        //   y: message.quarantined_data,
+        // var quarantinedData = {
+        //   x: hours,
+        //   y: quarantined,
         //   type: 'scatter',
         //   name: 'quarantined'
         // };
-
-        // var recovered = {
-        //   x: message.hours_data,
-        //   y: message.recovered_data,
+        // var recoveredData = {
+        //   x: hours,
+        //   y: recovered,
         //   type: 'scatter',
         //   name: 'recovered'
         // };
 
-        // var deceased = {
-        //   x: message.hours_data,
-        //   y: message.deceased_data,
+        // var deceasedData = {
+        //   x: hours,
+        //   y: deceased,
         //   type: 'scatter',
         //   name: 'deceased'
         // };
-
-        // var patients = [susceptible, infected, quarantined, recovered, deceased];
-        // var layout = {
-        //   xaxis: {
-        //   },
-
-        //   legend: {
-        //     x: 1,
-        //     y: 3.5
-        //   }
-        // };
-        // Plotly.newPlot('myDiv', patients, layout);
-        console.log(message);
+        patients = [susceptibleData];
+        var layout = {
+          xaxis: {
+          },
+          legend: {
+            x: 1,
+            y: 3.5
+          }
+        };
+        if(hours.length === 1){
+          Plotly.newPlot('myDiv', patients, layout);
+        } else {
+          Plotly.restyle('myDiv', 'y', [susceptible]);
+          Plotly.restyle('myDiv', 'x', [hours]);
+        }
+        console.log(patients);
       });
     })
   }

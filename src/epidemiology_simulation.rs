@@ -1,6 +1,6 @@
 use core::borrow::Borrow;
 use core::borrow::BorrowMut;
-use std::time::Instant;
+use std::time::{Instant, SystemTime};
 
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
@@ -16,6 +16,7 @@ use crate::geography::{Grid, Point};
 use crate::kafka_service::KafkaProducer;
 use crate::random_wrapper::RandomWrapper;
 use std::any::Any;
+use chrono::{DateTime, Local};
 
 #[derive(Deserialize)]
 pub struct SimulationParams {
@@ -77,7 +78,8 @@ impl Epidemiology {
     }
 
     pub fn run(&mut self, params: &SimulationParams) {
-        let output_file_name = format!("simulation_{}.csv", params.number_of_agents);
+        let now: DateTime<Local> = SystemTime::now().into();
+        let output_file_name = format!("simulation_{}_{}_{}.csv", params.number_of_agents, params.disease_name, now.format("%Y-%m-%dT%H:%M:%S"));
         let csv_listener = CsvListener::new(output_file_name);
         let kafka_listener = KafkaProducer::new();
         let hotspot_tracker = Hotspot::new();

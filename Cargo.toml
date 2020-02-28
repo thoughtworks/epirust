@@ -19,6 +19,7 @@ clap = "2.33.0"
 ndarray = "0.13.0"
 futures = "0.3.4"
 tokio = { version = "0.2.11", features = ["full"] }
+chrono = "0.4.10"
 
 [profile.release]
 opt-level = 3

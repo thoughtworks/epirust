@@ -6,6 +6,7 @@ use csv::Writer;
 
 use crate::events::{Counts, Listener};
 use crate::geography::Point;
+use std::any::Any;
 
 pub struct CsvListener {
     output_file_name: String,
@@ -46,5 +47,9 @@ impl Listener for CsvListener {
     }
 
     fn citizen_got_infected(&mut self, _cell: &Point) {
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

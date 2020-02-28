@@ -1,6 +1,7 @@
 use crate::geography::Point;
 use fxhash::FxHashMap;
 use crate::events::{Listener, Counts};
+use std::any::Any;
 
 pub struct Hotspot {
     disease_hotspot_tracker: FxHashMap<Point, i32>
@@ -23,6 +24,10 @@ impl Listener for Hotspot {
     fn citizen_got_infected(&mut self, cell: &Point) {
         let counter = self.disease_hotspot_tracker.entry(*cell).or_insert(0);
         *counter += 1;
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

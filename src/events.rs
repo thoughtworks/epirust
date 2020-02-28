@@ -1,4 +1,5 @@
 use crate::geography::Point;
+use std::any::Any;
 
 #[derive(Serialize, Copy, Clone)]
 pub struct Counts {
@@ -56,6 +57,7 @@ pub trait Listener {
     fn counts_updated(&mut self, counts: Counts);
     fn simulation_ended(&mut self);
     fn citizen_got_infected(&mut self, cell: &Point);
+    fn as_any(&self) -> &dyn Any;
 }
 
 #[cfg(test)]

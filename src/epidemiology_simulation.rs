@@ -15,6 +15,7 @@ use crate::geography;
 use crate::geography::{Grid, Point};
 use crate::kafka_service::KafkaProducer;
 use crate::random_wrapper::RandomWrapper;
+use std::any::Any;
 
 #[derive(Deserialize)]
 pub struct SimulationParams {
@@ -25,7 +26,7 @@ pub struct SimulationParams {
     public_transport_percentage: f64,
     working_percentage: f64,
     vaccinate_at: i32,
-    vaccinate_percentage: f64
+    vaccinate_percentage: f64,
 }
 
 impl SimulationParams {
@@ -179,6 +180,10 @@ impl Listener for Listeners {
     fn citizen_got_infected(&mut self, cell: &Point) {
         self.listeners.iter_mut().for_each(|listener| { listener.citizen_got_infected(cell) });
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 #[cfg(test)]
@@ -205,5 +210,61 @@ mod tests {
         assert_eq!(epidemiology.grid.work_area, expected_work_area);
 
         assert_eq!(epidemiology.agent_location_map.agent_cell.len(), 10);
+    }
+
+    struct MockListener {
+        calls_counts_updated: u32,
+        calls_simulation_ended: u32,
+        calls_citizen_got_infected: u32,
+    }
+
+    impl MockListener {
+        fn new() -> MockListener {
+            MockListener {
+                calls_counts_updated: 0,
+                calls_simulation_ended: 0,
+                calls_citizen_got_infected: 0,
+            }
+        }
+    }
+
+    impl Listener for MockListener {
+        fn counts_updated(&mut self, _counts: Counts) {
+            self.calls_counts_updated += 1;
+        }
+
+        fn simulation_ended(&mut self) {
+            self.calls_simulation_ended += 1;
+        }
+
+        fn citizen_got_infected(&mut self, _cell: &Point) {
+            self.calls_citizen_got_infected += 1;
+        }
+
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+    }
+
+    #[test]
+    fn should_notify_all_listeners() {
+        let mock1 = Box::new(MockListener::new());
+        let mock2 = Box::new(MockListener::new());
+
+        let mocks: Vec<Box<dyn Listener>> = vec![mock1, mock2];
+        let mut listeners = Listeners::from(mocks);
+
+
+        listeners.counts_updated(Counts::new(10, 1));
+        listeners.citizen_got_infected(&Point::new(1,1));
+        listeners.simulation_ended();
+
+        for i in 0..=1 {
+            //ownership has moved. We need to read the value from the struct, and downcast to MockListener to assert
+            let mock = listeners.listeners.get(i).unwrap().as_any().downcast_ref::<MockListener>().unwrap();
+            assert_eq!(mock.calls_counts_updated, 1);
+            assert_eq!(mock.calls_citizen_got_infected, 1);
+            assert_eq!(mock.calls_simulation_ended, 1);
+        }
     }
 }

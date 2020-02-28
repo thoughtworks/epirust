@@ -10,6 +10,7 @@ use rdkafka::producer::{FutureProducer, FutureRecord};
 use crate::epidemiology_simulation::{Epidemiology, SimulationParams};
 use crate::events::{Counts, Listener};
 use crate::geography::Point;
+use std::any::Any;
 
 pub struct KafkaProducer {
     producer: FutureProducer
@@ -36,6 +37,10 @@ impl Listener for KafkaProducer {
     fn simulation_ended(&mut self) {}
 
     fn citizen_got_infected(&mut self, _cell: &Point) {}
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 pub struct KafkaConsumer {

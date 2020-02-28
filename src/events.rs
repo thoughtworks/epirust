@@ -57,3 +57,91 @@ pub trait Listener {
     fn simulation_ended(&mut self);
     fn citizen_got_infected(&mut self, cell: &Point);
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::events::Counts;
+
+    #[test]
+    fn should_create_counts() {
+        let counts = Counts::new(100, 1);
+        assert_eq!(counts.susceptible, 100);
+        assert_eq!(counts.infected, 1);
+        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.recovered, 0);
+        assert_eq!(counts.deceased, 0);
+        assert_eq!(counts.hour, 0);
+    }
+
+    #[test]
+    fn should_update_susceptible() {
+        let mut counts = Counts::new(100, 1);
+        counts.update_susceptible(5);
+        assert_eq!(counts.susceptible, 105);
+        assert_eq!(counts.infected, 1);
+        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.recovered, 0);
+        assert_eq!(counts.deceased, 0);
+        assert_eq!(counts.hour, 0);
+    }
+
+    #[test]
+    fn should_update_infected() {
+        let mut counts = Counts::new(100, 1);
+        counts.update_infected(5);
+        assert_eq!(counts.susceptible, 100);
+        assert_eq!(counts.infected, 6);
+        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.recovered, 0);
+        assert_eq!(counts.deceased, 0);
+        assert_eq!(counts.hour, 0);
+    }
+
+    #[test]
+    fn should_update_recovered() {
+        let mut counts = Counts::new(100, 1);
+        counts.update_recovered(5);
+        assert_eq!(counts.susceptible, 100);
+        assert_eq!(counts.infected, 1);
+        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.recovered, 5);
+        assert_eq!(counts.deceased, 0);
+        assert_eq!(counts.hour, 0);
+    }
+
+    #[test]
+    fn should_update_deceased() {
+        let mut counts = Counts::new(100, 1);
+        counts.update_deceased(5);
+        assert_eq!(counts.susceptible, 100);
+        assert_eq!(counts.infected, 1);
+        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.recovered, 0);
+        assert_eq!(counts.deceased, 5);
+        assert_eq!(counts.hour, 0);
+    }
+
+    #[test]
+    fn should_update_quarantined() {
+        let mut counts = Counts::new(100, 1);
+        counts.update_quarantined(5);
+        assert_eq!(counts.susceptible, 100);
+        assert_eq!(counts.infected, 1);
+        assert_eq!(counts.quarantined, 5);
+        assert_eq!(counts.recovered, 0);
+        assert_eq!(counts.deceased, 0);
+        assert_eq!(counts.hour, 0);
+    }
+
+    #[test]
+    fn should_increment_hour() {
+        let mut counts = Counts::new(100, 1);
+        counts.increment_hour();
+        assert_eq!(counts.susceptible, 100);
+        assert_eq!(counts.infected, 1);
+        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.recovered, 0);
+        assert_eq!(counts.deceased, 0);
+        assert_eq!(counts.hour, 1);
+    }
+}

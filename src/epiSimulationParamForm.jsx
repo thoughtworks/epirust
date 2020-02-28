@@ -1,10 +1,65 @@
 /* global Plotly */
 
-import React, { useRef } from 'react';
+import React from 'react';
 import io from 'socket.io-client';
+import { useState } from 'react';
+import { useRef } from 'react';
+import Chart from 'chart.js';
 
+const LineChartConfig = {
+    type: 'scatter',
+    data: {
+      datasets: [{
+      label: 'susceptible',
+      data: [],
+      showLine: true,
+      borderColor: 'black',
+      fill: false
+    },{
+      label: 'infected',
+      data: [],
+      showLine: true,
+      borderColor: 'red',
+      fill: false
+    },{
+      label: 'quarantined',
+      data: [],
+      showLine: true,
+      borderColor: 'green',
+      fill: false
+    },{
+      label: 'recovered',
+      data: [],
+      showLine: true,
+      borderColor: 'blue',
+      fill: false
+    },{
+      label: 'deceased',
+      data: [],
+      showLine: true,
+      borderColor: 'yellow',
+      fill: false
+    }],
+    options: {
+      scales: {
+        xAxes: [{
+          type: 'linear',
+          position: 'bottom'
+        }]
+      }
+    }
+  }
+}
+let iteration = 0;
+let susceptible = [], infected = [], quarantined = [], recovered = [], deceased = [];
 export default function() {
-  const graphHolder = useRef();
+  const [socket, setSocket] = useState(null);
+  const [chart, setChart] = useState(null);
+  const chartCanvas = useRef();
+  const stopSimulation = function(e) {
+    e.preventDefault();
+    socket.close();
+  }
   const startSimulation = function(e) {
     e.preventDefault();
     const paramsData = {}
@@ -18,82 +73,102 @@ export default function() {
       },
       body: JSON.stringify(paramsData)
     }).then((res) => {
-      let socket = null;
-      if(!socket) {
-        socket = io('http://localhost:3000/');
-      }
-      res.json().then((json) => console.log(json));
-      let hours = [], susceptible = [], infected = [], quarantined = [], recovered = [], deceased = [];
-      socket.on('epidemicStats', function(message) {
-        var patients;  
-        message = JSON.parse(message);
-        hours.push(message.hour);
-        susceptible.push(message.susceptible);
-        infected.push(message.infected);
-        quarantined.push(message.quarantined);
-        recovered.push(message.recovered);
-        deceased.push(message.deceased);
-        var susceptibleData = {
-          x: hours,
-          y: susceptible,
-          type: 'scatter',
-          name: 'susceptible'
-        };
-        var infectedData = {
-          x: hours,
-          y: infected,
-          type: 'scatter',
-          name: 'infected'
-        };
-        var quarantinedData = {
-          x: hours,
-          y: quarantined,
-          type: 'scatter',
-          name: 'quarantined'
-        };
-        var recoveredData = {
-          x: hours,
-          y: recovered,
-          type: 'scatter',
-          name: 'recovered'
-        };
-        var deceasedData = {
-          x: hours,
-          y: deceased,
-          type: 'scatter',
-          name: 'deceased'
-        };
-        patients = [susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData];
-        var layout = {
-          xaxis: {
-          },
-          legend: {
-            x: 1,
-            y: 3.5
-          }
-        };
-        Plotly.newPlot('myDiv', patients, layout);
-        // if(hours.length === 1){
-        // } else {
-        //   Plotly.newPlot('myDiv', patients, layout);
-
-        //   Plotly.restyle('myDiv', 'y', [susceptible]);
-        //   Plotly.restyle('myDiv', 'x', [hours]);
-        // }
-        console.log(patients);
-      });
+      // chartCanvas.current.width = window.innerWidth;
+      // chartCanvas.current.height = window.innerHeight;
+      // setChart(new Chart(chartCanvas.current, LineChartConfig));
+      setSocket(io('http://localhost:3000/'));
     })
   }
+  const updateChart = (message) => {
+    setTimeout(() => {
+      console.log(iteration++);
+      message = JSON.parse(message);
+      LineChartConfig.data.datasets[0].data.push({
+        x: message.hour,
+        y: message.susceptible
+      });
+      LineChartConfig.data.datasets[0].data.push({
+        x: message.hour,
+        y: message.infected
+      });
+      LineChartConfig.data.datasets[0].data.push({
+        x: message.hour,
+        y: message.quarantined
+      });
+      LineChartConfig.data.datasets[0].data.push({
+        x: message.hour,
+        y: message.recovered
+      });
+      LineChartConfig.data.datasets[0].data.push({
+        x: message.hour,
+        y: message.deceased
+      });
+      chart.update();
+    }, 0);
+  }
+
+  const _updateChart = () => {
+    setInterval(() => {
+      console.log([susceptible[iteration], infected[iteration], quarantined[iteration], recovered[iteration], deceased[iteration]]);
+      Plotly.extendTraces('myDiv', {
+        y: [[susceptible[iteration]], [infected[iteration]], [quarantined[iteration]], [recovered[iteration]], [deceased[iteration]]]
+      }, [0, 1, 2, 3, 4]);
+      iteration++;
+    }, 500);
+  }
+
+  socket && socket.on('epidemicStats', function(message) {
+    //updateChart(message);
+    message = JSON.parse(message);
+    var susceptibleData = {
+      y: [message.susceptible],
+      mode: 'lines+markers',
+      name: 'susceptible'
+    };
+    var infectedData = {
+      y: [message.infected],
+      mode: 'lines+markers',
+      name: 'infected'
+    };
+    var quarantinedData = {
+      y: [message.quarantined],
+      mode: 'lines+markers',
+      name: 'quarantined'
+    };
+    var recoveredData = {
+      y: [message.recovered],
+      mode: 'lines+markers',
+      name: 'recovered'
+    };
+    var deceasedData = {
+      y: [message.deceased],
+      mode: 'lines+markers',
+      name: 'deceased'
+    };
+    if(iteration === 0) {
+      iteration++;
+      Plotly.newPlot('myDiv', [susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData]);
+    } else {
+      susceptible.push(message.susceptible);
+      infected.push(message.infected);
+      quarantined.push(message.quarantined);
+      recovered.push(message.recovered);
+      deceased.push(message.deceased);
+      _updateChart();
+    }
+  });
     return (
       <>
-        <div ref={graphHolder} id="myDiv"></div>
+        {/* <canvas ref={chartCanvas} id="myChart" width="100vw" height="100vh"></canvas> */}
+        <div id="myDiv"></div>
         <form onSubmit={startSimulation}>
           <div className="form-row">
             <div className="col">
               <input type="number" name="numberOfAgents" className="form-control" id="numberOfAgents" aria-describedby="numberOfAgents" placeholder="Number of Agents" defaultValue="10000"/>
             </div>
             <div className="col">
-              <button type="submit" className="btn btn-primary">Submit</button>
+              <button type="submit" className="btn btn-primary">Start</button>
+              <button type="button" className="btn btn-danger" onClick={stopSimulation}>Stop</button>
             </div>
           </div>
           {/* <div className="form-group">

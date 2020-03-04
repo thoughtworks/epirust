@@ -1,0 +1,12 @@
+{
+"type": "FeatureCollection",
+"name": "test_multipolygons",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "full_id": "w683469884", "osm_id": "683469884", "osm_type": "way", "amenity": "", "building": "yes"}, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 73.8277721, 18.5298297 ], [ 73.8279078, 18.5298191 ], [ 73.8279001, 18.5297165 ], [ 73.8277627, 18.5297327 ], [ 73.8277721, 18.5298297 ] ] ] ] } },
+{ "type": "Feature", "properties": { "full_id": "w683469885", "osm_id": "683469885", "osm_type": "way", "amenity": "", "building": "residential"}, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 73.8277721, 18.5298297 ], [ 73.8279078, 18.5298191 ], [ 73.8279001, 18.5297165 ], [ 73.8277627, 18.5297327 ], [ 73.8277721, 18.5298297 ] ] ] ] } },
+{ "type": "Feature", "properties": { "full_id": "w683469886", "osm_id": "683469886", "osm_type": "way", "amenity": "", "building": "commercial"}, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 73.8277721, 18.5298297 ], [ 73.8279078, 18.5298191 ], [ 73.8279001, 18.5297165 ], [ 73.8277627, 18.5297327 ], [ 73.8277721, 18.5298297 ] ] ] ] } },
+{ "type": "Feature", "properties": { "full_id": "w683469887", "osm_id": "683469887", "osm_type": "way", "amenity": "", "building": "apartments"}, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 73.8277721, 18.5298297 ], [ 73.8279078, 18.5298191 ], [ 73.8279001, 18.5297165 ], [ 73.8277627, 18.5297327 ], [ 73.8277721, 18.5298297 ] ] ] ] } },
+{ "type": "Feature", "properties": { "full_id": "w683469888", "osm_id": "683469888", "osm_type": "way", "amenity": "", "building": "industrial"}, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 73.8277721, 18.5298297 ], [ 73.8279078, 18.5298191 ], [ 73.8279001, 18.5297165 ], [ 73.8277627, 18.5297327 ], [ 73.8277721, 18.5298297 ] ] ] ] } }
+]
+}

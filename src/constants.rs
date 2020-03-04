@@ -13,3 +13,5 @@ pub const ROUTINE_WORK_END_TIME: i32 = 18;
 pub const ROUTINE_END_TIME: i32 = 23;
 
 pub const IMMUNITY_RANGE: [i32; 5] = [-2, -1, 0, 1, 2];
+
+pub const BUILDING:&str = &"building";

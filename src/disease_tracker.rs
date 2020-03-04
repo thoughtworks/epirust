@@ -34,7 +34,6 @@ impl Listener for Hotspot {
 #[cfg(test)]
 mod tests{
     use crate::disease_tracker::Hotspot;
-    use fxhash::FxHashMap;
     use crate::geography::Point;
     use crate::events::Listener;
 

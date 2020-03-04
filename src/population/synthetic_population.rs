@@ -8,9 +8,7 @@ pub fn ipfn(margins: &Array1<Array1<f64>>) -> Matrix {
     let seed_matrix: Matrix = Array2::ones((row_count, column_count));
     //TODO: repeat the adjustment until difference between resultant matrices is within acceptable threshold - Jayanta
     let m1 = adjustment(&seed_matrix, &margins);
-    let m2 = adjustment(&m1, &margins);
-
-    m2
+    adjustment(&m1, &margins)
 }
 
 fn adjustment(current_matrix: &Matrix, margins: &Array1<Array1<f64>>) -> Matrix {
@@ -18,9 +16,8 @@ fn adjustment(current_matrix: &Matrix, margins: &Array1<Array1<f64>>) -> Matrix 
     let row_adjusted_matrix =
         adjust(&current_matrix, &margins, &totals, true);
     let new_totals = compute_totals(&row_adjusted_matrix);
-    let column_adjusted_matrix =
-        adjust(&row_adjusted_matrix, &margins, &new_totals, false);
-    column_adjusted_matrix
+    adjust(&row_adjusted_matrix, &margins, &new_totals, false)
+
 }
 
 fn adjust(current_matrix: &Matrix, margins: &Array1<Array1<f64>>, totals: &(Array1<f64>, Array1<f64>), is_row_adjustment: bool) -> Matrix {
@@ -57,7 +54,7 @@ fn column_adjust(current: &mut Matrix, last_iteration: &Matrix, row_count: usize
 }
 
 fn compute_totals(matrix: &Matrix) -> (Array1<f64>, Array1<f64>) {
-    return (matrix.sum_axis(Axis(1)), matrix.sum_axis(Axis(0)));
+    (matrix.sum_axis(Axis(1)), matrix.sum_axis(Axis(0)))
 }
 
 #[cfg(test)]

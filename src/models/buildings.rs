@@ -51,7 +51,7 @@ impl Buildings {
                 return key.to_string();
             }
         }
-        return "".to_string();
+        "".to_string()
     }
 }
 

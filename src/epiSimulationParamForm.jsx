@@ -12,44 +12,42 @@ const LineChartConfig = {
       datasets: [{
       label: 'susceptible',
       data: [],
-      showLine: true,
       borderColor: 'black',
-      fill: false
     },{
       label: 'infected',
       data: [],
-      showLine: true,
       borderColor: 'red',
-      fill: false
     },{
       label: 'quarantined',
       data: [],
-      showLine: true,
       borderColor: 'green',
-      fill: false
     },{
       label: 'recovered',
       data: [],
-      showLine: true,
       borderColor: 'blue',
-      fill: false
     },{
       label: 'deceased',
       data: [],
-      showLine: true,
       borderColor: 'yellow',
-      fill: false
     }],
     options: {
+      responsive: true,
       scales: {
         xAxes: [{
-          type: 'linear',
-          position: 'bottom'
+          display: 'true'
         }]
       }
     }
   }
 }
+LineChartConfig.data.datasets.forEach(function(dataset){
+  dataset.borderWidth = 1;
+  dataset.showLine = true;
+  dataset.lineTension = 0;
+  dataset.fill = false;
+  dataset.pointRadius = 1;
+});
+
 let iteration = 0;
 let susceptible = [], infected = [], quarantined = [], recovered = [], deceased = [];
 export default function() {
@@ -73,38 +71,39 @@ export default function() {
       },
       body: JSON.stringify(paramsData)
     }).then((res) => {
-      // chartCanvas.current.width = window.innerWidth;
-      // chartCanvas.current.height = window.innerHeight;
-      // setChart(new Chart(chartCanvas.current, LineChartConfig));
+      chartCanvas.current.width = window.innerWidth;
+      chartCanvas.current.height = window.innerHeight;
+      setChart(new Chart(chartCanvas.current, LineChartConfig));
       setSocket(io('http://localhost:3000/'));
     })
   }
   const updateChart = (message) => {
-    setTimeout(() => {
       console.log(iteration++);
       message = JSON.parse(message);
       LineChartConfig.data.datasets[0].data.push({
         x: message.hour,
         y: message.susceptible
       });
-      LineChartConfig.data.datasets[0].data.push({
+      LineChartConfig.data.datasets[1].data.push({
         x: message.hour,
         y: message.infected
       });
-      LineChartConfig.data.datasets[0].data.push({
+      LineChartConfig.data.datasets[2].data.push({
         x: message.hour,
         y: message.quarantined
       });
-      LineChartConfig.data.datasets[0].data.push({
+      LineChartConfig.data.datasets[3].data.push({
         x: message.hour,
         y: message.recovered
       });
-      LineChartConfig.data.datasets[0].data.push({
+      LineChartConfig.data.datasets[4].data.push({
         x: message.hour,
         y: message.deceased
       });
-      chart.update();
-    }, 0);
+      /* batching updates for performance */
+      if(iteration % 1000 === 0){
+        chart.update();
+      }
   }
 
   const _updateChart = () => {
@@ -118,49 +117,49 @@ export default function() {
   }
 
   socket && socket.on('epidemicStats', function(message) {
-    //updateChart(message);
-    message = JSON.parse(message);
-    var susceptibleData = {
-      y: [message.susceptible],
-      mode: 'lines+markers',
-      name: 'susceptible'
-    };
-    var infectedData = {
-      y: [message.infected],
-      mode: 'lines+markers',
-      name: 'infected'
-    };
-    var quarantinedData = {
-      y: [message.quarantined],
-      mode: 'lines+markers',
-      name: 'quarantined'
-    };
-    var recoveredData = {
-      y: [message.recovered],
-      mode: 'lines+markers',
-      name: 'recovered'
-    };
-    var deceasedData = {
-      y: [message.deceased],
-      mode: 'lines+markers',
-      name: 'deceased'
-    };
-    if(iteration === 0) {
-      iteration++;
-      Plotly.newPlot('myDiv', [susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData]);
-    } else {
-      susceptible.push(message.susceptible);
-      infected.push(message.infected);
-      quarantined.push(message.quarantined);
-      recovered.push(message.recovered);
-      deceased.push(message.deceased);
-      _updateChart();
-    }
+    updateChart(message);
+    // message = JSON.parse(message);
+    // var susceptibleData = {
+    //   y: [message.susceptible],
+    //   mode: 'lines+markers',
+    //   name: 'susceptible'
+    // };
+    // var infectedData = {
+    //   y: [message.infected],
+    //   mode: 'lines+markers',
+    //   name: 'infected'
+    // };
+    // var quarantinedData = {
+    //   y: [message.quarantined],
+    //   mode: 'lines+markers',
+    //   name: 'quarantined'
+    // };
+    // var recoveredData = {
+    //   y: [message.recovered],
+    //   mode: 'lines+markers',
+    //   name: 'recovered'
+    // };
+    // var deceasedData = {
+    //   y: [message.deceased],
+    //   mode: 'lines+markers',
+    //   name: 'deceased'
+    // };
+    // if(iteration === 0) {
+    //   iteration++;
+    //   Plotly.newPlot('myDiv', [susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData]);
+    // } else {
+    //   susceptible.push(message.susceptible);
+    //   infected.push(message.infected);
+    //   quarantined.push(message.quarantined);
+    //   recovered.push(message.recovered);
+    //   deceased.push(message.deceased);
+      // _updateChart();
+    // }
   });
     return (
       <>
-        {/* <canvas ref={chartCanvas} id="myChart" width="100vw" height="100vh"></canvas> */}
-        <div id="myDiv"></div>
+        <canvas ref={chartCanvas} id="myChart" width="100vw" height="100vh"></canvas>
+        {/* <div id="myDiv"></div> */}
         <form onSubmit={startSimulation}>
           <div className="form-row">
             <div className="col">

@@ -6,12 +6,14 @@ const debug = require('debug')('epirust-server');
 const router = require('./routes/router');
 const ioInstance = require('./io');
 const app = express();
+const cors = require('cors');
 
 var server = http.createServer(app);
 server.listen(3000);
 server.on('error', onError);
 server.on('listening', onListening);
 ioInstance(server);
+app.use(cors({origin:'http://localhost:3001'}));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

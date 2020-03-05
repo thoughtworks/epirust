@@ -24,7 +24,7 @@ router.post('/', function(req, res, next) {
   io.on('connect', function(socket){
     console.log('a user connected');
     kafkaConsumer.consumer.on('message', function (message) {
-      socket.emit('epidemicStats', message);
+      socket.emit('epidemicStats', message.value);
     });
   });
 

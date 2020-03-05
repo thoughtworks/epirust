@@ -106,55 +106,8 @@ export default function() {
       }
   }
 
-  const _updateChart = () => {
-    setInterval(() => {
-      console.log([susceptible[iteration], infected[iteration], quarantined[iteration], recovered[iteration], deceased[iteration]]);
-      Plotly.extendTraces('myDiv', {
-        y: [[susceptible[iteration]], [infected[iteration]], [quarantined[iteration]], [recovered[iteration]], [deceased[iteration]]]
-      }, [0, 1, 2, 3, 4]);
-      iteration++;
-    }, 500);
-  }
-
   socket && socket.on('epidemicStats', function(message) {
     updateChart(message);
-    // message = JSON.parse(message);
-    // var susceptibleData = {
-    //   y: [message.susceptible],
-    //   mode: 'lines+markers',
-    //   name: 'susceptible'
-    // };
-    // var infectedData = {
-    //   y: [message.infected],
-    //   mode: 'lines+markers',
-    //   name: 'infected'
-    // };
-    // var quarantinedData = {
-    //   y: [message.quarantined],
-    //   mode: 'lines+markers',
-    //   name: 'quarantined'
-    // };
-    // var recoveredData = {
-    //   y: [message.recovered],
-    //   mode: 'lines+markers',
-    //   name: 'recovered'
-    // };
-    // var deceasedData = {
-    //   y: [message.deceased],
-    //   mode: 'lines+markers',
-    //   name: 'deceased'
-    // };
-    // if(iteration === 0) {
-    //   iteration++;
-    //   Plotly.newPlot('myDiv', [susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData]);
-    // } else {
-    //   susceptible.push(message.susceptible);
-    //   infected.push(message.infected);
-    //   quarantined.push(message.quarantined);
-    //   recovered.push(message.recovered);
-    //   deceased.push(message.deceased);
-      // _updateChart();
-    // }
   });
     return (
       <>

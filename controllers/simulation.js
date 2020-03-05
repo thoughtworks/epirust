@@ -6,28 +6,17 @@ const KafkaConsumerService = require('../services/kafka');
 
 var ioInstance = require('../io');
 
-router.get('/', function(req, res, next) {
-  const io = ioInstance();
-  io.on('connection', function(socket){
-    console.log('a user connected');
-  });
-  res.send("In simulation");
-});
-
-router.post('/', function(req, res, next) {
+router.post('/', function (req, res, next) {
   const numberOfAgents = req.body.numberOfAgents;
   const epirustService = new EpirustService(numberOfAgents);
   const kafkaConsumer = new KafkaConsumerService('localhost:9092', 'counts_updated', 1);
   epirustService.start(numberOfAgents);
-
   const io = ioInstance();
-  io.on('connect', function(socket){
-    console.log('a user connected');
+  io.on('connect', function (socket) {
     kafkaConsumer.consumer.on('message', function (message) {
       socket.emit('epidemicStats', message.value);
     });
   });
-
   res.status(200);
   res.send({ status: "Simulation started" });
 });

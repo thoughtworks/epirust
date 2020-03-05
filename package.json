@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./app"
+    "start": "nodemon ./app",
+    "test": "NODE_ENV=test jest"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -11,8 +12,16 @@
     "execa": "^4.0.0",
     "express": "~4.16.1",
     "http": "0.0.0",
+    "morgan": "^1.9.1",
+    "socket.io": "^2.3.0",
+    "kafka-node": "^5.0.0"
+  },
+  "devDependencies": {
+    "jest": "^25.1.0",
+    "supertest": "^4.0.2",
     "kafka-node": "^5.0.0",
     "morgan": "^1.9.1",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.3.0",
+    "nodemon": "^2.0.2"
   }
 }

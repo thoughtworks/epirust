@@ -13,6 +13,7 @@
     "normalize.css": "^8.0.1",
     "popper.js": "^1.16.1",
     "react": "^16.12.0",
+    "react-chartjs-2": "^2.9.0",
     "react-dom": "^16.12.0",
     "react-scripts": "3.4.0",
     "socket.io-client": "^2.3.0"

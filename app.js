@@ -7,7 +7,7 @@ const router = require('./routes/router');
 const ioInstance = require('./io');
 const app = express();
 const cors = require('cors');
-
+ 
 var server = http.createServer(app);
 server.listen(3000);
 server.on('error', onError);
@@ -52,3 +52,5 @@ function onError(error) {
       : 'port ' + addr.port;
     debug('Listening on ' + bind);
   }
+
+  module.exports = server

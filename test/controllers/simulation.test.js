@@ -10,20 +10,13 @@ jest.mock('../../services/epirust');
 
 describe('simulation controller', () => {
 
-    test('should get request', async done => {
-        const response = await request.get('/simulation/');
-
-        expect(response.status).toBe(200);
-        done();
-    });
-
     test('should post request', async done => {
         const response = await request.post('/simulation/');
         //TODO: Add matcher for order of execution - Jayanta
         expect(kafkaConsumerService).toHaveBeenCalledWith('localhost:9092', 'counts_updated', 1);
         expect(epirustService).toHaveBeenCalledTimes(1);
         //TODO: validate start has been called
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(200);
         done();
     });
 });

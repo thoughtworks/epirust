@@ -1,4 +1,4 @@
-const kafkaConsumerService = require('../../services/kafka');
+const kafkaService = require('../../services/kafka');
 const kafka = require('kafka-node');
 
 jest.mock('kafka-node');
@@ -14,7 +14,7 @@ describe('Kafka service', () => {
             id: 1
         };
 
-        new kafkaConsumerService("localhost:9000", "test", 1);
+        new kafkaService.KafkaConsumerService("localhost:9000", "test", 1);
 
         expect(kafkaClientSpy).toHaveBeenCalledWith(expectedClientArguments);
         expect(kafkaConsumerSpy).toHaveBeenCalledWith({client: "dummy"}, [{topic: 'test'}], {});

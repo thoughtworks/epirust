@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="An app that lets you visualize epidemiology data sets" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <style>
+        .form-row {
+            margin: 20px;
+            width: 50%;
+        }
+
+        input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <form onSubmit="startSimulation(event)">
+        <div class="form-row">
+            <div class="col">
+                <input type="number" name="numberOfAgents" class="form-control" id="numberOfAgents"
+                    aria-describedby="numberOfAgents" placeholder="Number of Agents" defaultValue="10000" />
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-primary">Start</button>
+                <button type="button" class="btn btn-danger" onClick="stopSimulation(event)">Stop</button>
+            </div>
+        </div>
+    </form>
+    <div id="vis"></div>
+
+    <script>
+
+        const spec = {
+            $schema: 'https://vega.github.io/schema/vega-lite/v4.json',
+            data: { name: 'table' },
+            width: window.innerWidth - 200,
+            height: window.innerHeight - 200,
+            mark: 'line',
+            encoding: {
+                x: { field: 'hour', type: 'quantitative', scale: { zero: false } },
+                y: { field: 'agents', type: 'quantitative' },
+                color: { field: 'category', type: 'nominal' }
+            }
+        };
+
+        const data = [];
+        let socket = null;
+        let renderResult = null;
+
+        vegaEmbed('#vis', spec, { defaultStyle: true })
+            .then(function (result) {
+                const view = result.view;
+                renderResult = view;
+            })
+            .catch(console.warn);
+
+        function stopSimulation(e) {
+            e.preventDefault();
+            socket.close();
+        }
+
+        function startSimulation(e) {
+            e.preventDefault();
+            const paramsData = {}
+            new FormData(e.target).forEach(function (value, key) {
+                paramsData[key] = value;
+            });
+
+            fetch("http://localhost:3000/simulation", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(paramsData)
+            }).then((res) => {
+                socket = io('http://localhost:3000/');
+            })
+
+            start()
+        }
+
+        function start() {
+            // connect to simple echo server
+            const socket = io('http://localhost:3000/')
+
+            socket.on('epidemicStats', function (messageRaw) {
+                const message = JSON.parse(messageRaw);
+                console.log(message.hour);
+
+                let susceptibleData = {
+                    hour: message.hour,
+                    agents: message.susceptible,
+                    category: 'susceptible'
+                }
+                let infectedData = {
+                    hour: message.hour,
+                    agents: message.infected,
+                    category: 'infected'
+                }
+                let quarantinedData = {
+                    hour: message.hour,
+                    agents: message.quarantined,
+                    category: 'quarantined'
+                }
+                let recoveredData = {
+                    hour: message.hour,
+                    agents: message.recovered,
+                    category: 'recovered'
+                }
+                let deceasedData = {
+                    hour: message.hour,
+                    agents: message.deceased,
+                    category: 'deceased'
+                }
+
+                // Use the Vega view api to insert data
+                let changeSet = vega.changeset().insert([susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData]);
+
+                renderResult.change('table', changeSet).run();
+
+            });
+
+        }
+
+    </script>
+</body>

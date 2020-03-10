@@ -46,12 +46,75 @@
             data: { name: 'table' },
             width: window.innerWidth - 200,
             height: window.innerHeight - 200,
-            mark: 'line',
-            encoding: {
-                x: { field: 'hour', type: 'quantitative', scale: { zero: false } },
-                y: { field: 'agents', type: 'quantitative' },
-                color: { field: 'category', type: 'nominal' }
-            }
+
+
+            layer: [
+                {
+                    encoding: {
+                        x: { field: 'hour', type: 'quantitative', scale: { zero: false } },
+                        y: { field: 'agents', type: 'quantitative' },
+                        color: { field: 'category', type: 'nominal' }
+                    },
+                    "layer": [
+                        { "mark": "line" },
+                        {
+                            "selection": {
+                                "label": {
+                                    "type": "single",
+                                    "nearest": true,
+                                    "on": "mouseover",
+                                    "encodings": ["x"],
+                                    "empty": "none"
+                                }
+                            },
+                            "mark": "point",
+                            "encoding": {
+                                "opacity": {
+                                    "condition": { "selection": "label", "value": 1 },
+                                    "value": 0
+                                }
+                            }
+                        }
+                    ]
+                },
+
+                {
+                    "transform": [{ "filter": { "selection": "label" } }],
+                    "layer": [
+                        {
+                            "mark": { "type": "rule", "color": "gray" },
+                            "encoding": {
+                                "x": { "type": "quantitative", "field": "hour" }
+                            }
+                        },
+                        {
+                            "encoding": {
+                                text: { type: "quantitative", field: "agents" },
+                                x: { field: 'hour', type: 'quantitative' },
+                                y: { field: 'agents', type: 'quantitative' },
+                            },
+                            "layer": [
+                                {
+                                    "mark": {
+                                        "type": "text",
+                                        "stroke": "white",
+                                        "strokeWidth": 3,
+                                        "align": "left",
+                                        "dx": 5,
+                                        "dy": -5
+                                    }
+                                },
+                                {
+                                    "mark": { "type": "text", "align": "left", "dx": 5, "dy": -5 },
+                                    "encoding": {
+                                        "color": { "type": "nominal", "field": "category", "legend": null }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         };
 
         const data = [];

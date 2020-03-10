@@ -94,6 +94,8 @@
             // connect to simple echo server
             const socket = io('http://localhost:3000/')
 
+            let dataBuffer = [];
+
             socket.on('epidemicStats', function (messageRaw) {
                 const message = JSON.parse(messageRaw);
                 console.log(message.hour);
@@ -124,10 +126,14 @@
                     category: 'deceased'
                 }
 
+                dataBuffer = [...dataBuffer, susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData]
                 // Use the Vega view api to insert data
-                let changeSet = vega.changeset().insert([susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData]);
 
-                renderResult.change('table', changeSet).run();
+                if (message.hour % 100 === 0) {
+                    let changeSet = vega.changeset().insert(dataBuffer);
+                    renderResult.change('table', changeSet).run();
+                    dataBuffer = [];
+                }
 
             });
 

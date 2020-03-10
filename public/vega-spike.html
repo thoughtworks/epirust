@@ -6,9 +6,11 @@
     <meta name="description" content="An app that lets you visualize epidemiology data sets" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.9.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.5.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.3.2"></script>
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
         integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
@@ -44,75 +46,49 @@
         const spec = {
             $schema: 'https://vega.github.io/schema/vega-lite/v4.json',
             data: { name: 'table' },
+            autosize: {
+                "resize": true
+            },
             width: window.innerWidth - 200,
             height: window.innerHeight - 200,
-
-
+            encoding: { "x": { "field": "hour", "type": "quantitative" } },
             layer: [
                 {
                     encoding: {
-                        x: { field: 'hour', type: 'quantitative', scale: { zero: false } },
-                        y: { field: 'agents', type: 'quantitative' },
-                        color: { field: 'category', type: 'nominal' }
+                        color: { field: 'category', type: 'nominal' },
+                        y: { field: 'agents', type: 'quantitative' }
                     },
-                    "layer": [
+                    layer: [
                         { "mark": "line" },
-                        {
-                            "selection": {
-                                "label": {
-                                    "type": "single",
-                                    "nearest": true,
-                                    "on": "mouseover",
-                                    "encodings": ["x"],
-                                    "empty": "none"
-                                }
-                            },
-                            "mark": "point",
-                            "encoding": {
-                                "opacity": {
-                                    "condition": { "selection": "label", "value": 1 },
-                                    "value": 0
-                                }
-                            }
-                        }
+                        { "transform": [{ "filter": { "selection": "hover" } }], "mark": "point" }
                     ]
                 },
-
                 {
-                    "transform": [{ "filter": { "selection": "label" } }],
-                    "layer": [
-                        {
-                            "mark": { "type": "rule", "color": "gray" },
-                            "encoding": {
-                                "x": { "type": "quantitative", "field": "hour" }
-                            }
+                    "transform": [{ "pivot": "category", "value": "agents", "groupby": ["hour"] }],
+                    "mark": "rule",
+                    "encoding": {
+                        "opacity": {
+                            "condition": { "value": 0.3, "selection": "hover" },
+                            "value": 0
                         },
-                        {
-                            "encoding": {
-                                text: { type: "quantitative", field: "agents" },
-                                x: { field: 'hour', type: 'quantitative' },
-                                y: { field: 'agents', type: 'quantitative' },
-                            },
-                            "layer": [
-                                {
-                                    "mark": {
-                                        "type": "text",
-                                        "stroke": "white",
-                                        "strokeWidth": 3,
-                                        "align": "left",
-                                        "dx": 5,
-                                        "dy": -5
-                                    }
-                                },
-                                {
-                                    "mark": { "type": "text", "align": "left", "dx": 5, "dy": -5 },
-                                    "encoding": {
-                                        "color": { "type": "nominal", "field": "category", "legend": null }
-                                    }
-                                }
-                            ]
+                        "tooltip": [
+                            { "field": "susceptible", "type": "quantitative" },
+                            { "field": "infected", "type": "quantitative" },
+                            { "field": "quarantined", "type": "quantitative" },
+                            { "field": "recovered", "type": "quantitative" },
+                            { "field": "deceased", "type": "quantitative" }
+                        ]
+                    },
+                    "selection": {
+                        "hover": {
+                            "type": "single",
+                            "fields": ["hour"],
+                            "nearest": true,
+                            "on": "mouseover",
+                            "empty": "none",
+                            "clear": "mouseout"
                         }
-                    ]
+                    }
                 }
             ]
         };

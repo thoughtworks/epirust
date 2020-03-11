@@ -18,11 +18,13 @@ class KafkaProducerService {
     }
 
     send(topicName, message) {
-        this.producer.send({
+        this.producer.send([{
             topic: topicName,
             messages: JSON.stringify(message), // multi messages should be a array, single message can be just a string or a KeyedMessage instance
             timestamp: Date.now() // <-- defaults to Date.now() (only available with kafka v0.10+)
-        })
+        }], function(err,data){
+            console.log("Message sent to topic");
+        });
     }
 };
 

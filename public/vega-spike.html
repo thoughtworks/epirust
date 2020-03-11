@@ -4,22 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="An app that lets you visualize epidemiology data sets" />
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/vega@5.9.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.5.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.3.2"></script>
-
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">  
     <style>
         .form-row {
             margin: 20px;
             width: 50%;
         }
-
+        
         input {
             margin-bottom: 10px;
         }
@@ -30,8 +26,8 @@
     <form onSubmit="startSimulation(event)">
         <div class="form-row">
             <div class="col">
-                <input type="number" name="numberOfAgents" class="form-control" id="numberOfAgents"
-                    aria-describedby="numberOfAgents" placeholder="Number of Agents" defaultValue="10000" />
+                <input type="number" name="number_of_agents" class="form-control" id="number_of_agents"
+                aria-describedby="number_of_agents" placeholder="Number of Agents" defaultValue="10000" />
             </div>
             <div class="col">
                 <button type="submit" class="btn btn-primary">Start</button>
@@ -40,9 +36,9 @@
         </div>
     </form>
     <div id="vis"></div>
-
+    
     <script>
-
+        
         const spec = {
             $schema: 'https://vega.github.io/schema/vega-lite/v4.json',
             data: { name: 'table' },
@@ -53,92 +49,111 @@
             height: window.innerHeight - 200,
             encoding: { "x": { "field": "hour", "type": "quantitative" } },
             layer: [
-                {
-                    encoding: {
-                        color: { field: 'category', type: 'nominal' },
-                        y: { field: 'agents', type: 'quantitative' }
+            {
+                encoding: {
+                    color: { field: 'category', type: 'nominal' },
+                    y: { field: 'agents', type: 'quantitative' }
+                },
+                layer: [
+                { "mark": "line" },
+                { "transform": [{ "filter": { "selection": "hover" } }], "mark": "point" }
+                ]
+            },
+            {
+                "transform": [{ "pivot": "category", "value": "agents", "groupby": ["hour"] }],
+                "mark": "rule",
+                "encoding": {
+                    "opacity": {
+                        "condition": { "value": 0.3, "selection": "hover" },
+                        "value": 0
                     },
-                    layer: [
-                        { "mark": "line" },
-                        { "transform": [{ "filter": { "selection": "hover" } }], "mark": "point" }
+                    "tooltip": [
+                    { "field": "susceptible", "type": "quantitative" },
+                    { "field": "infected", "type": "quantitative" },
+                    { "field": "quarantined", "type": "quantitative" },
+                    { "field": "recovered", "type": "quantitative" },
+                    { "field": "deceased", "type": "quantitative" }
                     ]
                 },
-                {
-                    "transform": [{ "pivot": "category", "value": "agents", "groupby": ["hour"] }],
-                    "mark": "rule",
-                    "encoding": {
-                        "opacity": {
-                            "condition": { "value": 0.3, "selection": "hover" },
-                            "value": 0
-                        },
-                        "tooltip": [
-                            { "field": "susceptible", "type": "quantitative" },
-                            { "field": "infected", "type": "quantitative" },
-                            { "field": "quarantined", "type": "quantitative" },
-                            { "field": "recovered", "type": "quantitative" },
-                            { "field": "deceased", "type": "quantitative" }
-                        ]
-                    },
-                    "selection": {
-                        "hover": {
-                            "type": "single",
-                            "fields": ["hour"],
-                            "nearest": true,
-                            "on": "mouseover",
-                            "empty": "none",
-                            "clear": "mouseout"
-                        }
+                "selection": {
+                    "hover": {
+                        "type": "single",
+                        "fields": ["hour"],
+                        "nearest": true,
+                        "on": "mouseover",
+                        "empty": "none",
+                        "clear": "mouseout"
                     }
                 }
+            }
             ]
         };
-
+        
         const data = [];
         let socket = null;
         let renderResult = null;
-
+        
         vegaEmbed('#vis', spec, { defaultStyle: true })
-            .then(function (result) {
-                const view = result.view;
-                renderResult = view;
-            })
-            .catch(console.warn);
-
+        .then(function (result) {
+            const view = result.view;
+            renderResult = view;
+        })
+        .catch(console.warn);
+        
         function stopSimulation(e) {
             e.preventDefault();
             socket.close();
         }
-
+        
         function startSimulation(e) {
             e.preventDefault();
-            const paramsData = {}
+            let paramsData = {}
             new FormData(e.target).forEach(function (value, key) {
+                if(key === "number_of_agents"){
+                    value = Number(value);
+                }
                 paramsData[key] = value;
             });
-
-            fetch("http://localhost:3000/simulation", {
+            
+            paramsData = {...paramsData,  
+            "disease_name": "small_pox",
+            "grid_size": 250,
+            "simulation_hrs": 10000,
+            "public_transport_percentage": 0.2,
+            "working_percentage": 0.7,
+            "vaccinate_at": 5000,
+            "vaccinate_percentage": 0.2}
+            
+            fetch("http://localhost:3000/simulation/init", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(paramsData)
-            }).then((res) => {
+            });
+            
+            fetch("http://localhost:3000/simulation", {
+                method: 'POST',
+                headers: {
+                    'Content-Type':'application/json'
+                }
+            })
+            .then((res) => {
                 socket = io('http://localhost:3000/');
             })
-
             start()
         }
-
+        
         function start() {
             // connect to simple echo server
             const socket = io('http://localhost:3000/')
-
+            
             let dataBuffer = [];
-
+            
             socket.on('epidemicStats', function (messageRaw) {
                 const message = JSON.parse(messageRaw);
                 console.log(message.hour);
-
+                
                 let susceptibleData = {
                     hour: message.hour,
                     agents: message.susceptible,
@@ -164,19 +179,19 @@
                     agents: message.deceased,
                     category: 'deceased'
                 }
-
+                
                 dataBuffer = [...dataBuffer, susceptibleData, infectedData, quarantinedData, recoveredData, deceasedData]
                 // Use the Vega view api to insert data
-
+                
                 if (message.hour % 100 === 0) {
                     let changeSet = vega.changeset().insert(dataBuffer);
                     renderResult.change('table', changeSet).run();
                     dataBuffer = [];
                 }
-
+                
             });
-
+            
         }
-
+        
     </script>
 </body>

@@ -23,7 +23,7 @@
 </head>
 
 <body>
-    <form onSubmit="startSimulation(event)">
+    <form onsubmit="handleSubmitData(event)">
         <div class="form-row">
             <div class="col">
                 
@@ -60,11 +60,13 @@
                 aria-describedby="vaccinate_percentage" placeholder="Vaccinate Percentage" value="0.2" />
             </div>
             <div class="col">
-                <button type="submit" class="btn btn-primary">Start</button>
-                <button type="button" class="btn btn-danger" onClick="stopSimulation(event)">Stop</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="button" class="btn btn-danger" onclick="handleStopSimulation(event)">Stop</button>
+                <button type="button" class="btn btn-primary" id="startBtn" disabled onclick="handleStartSimulation(event)">Start</button>
             </div>
         </div>
     </form>
+
     <div id="vis"></div>
     
     <script>
@@ -119,7 +121,6 @@
             ]
         };
         
-        const data = [];
         let socket = null;
         let renderResult = null;
         
@@ -129,13 +130,8 @@
             renderResult = view;
         })
         .catch(console.warn);
-        
-        function stopSimulation(e) {
-            e.preventDefault();
-            socket.close();
-        }
-        
-        function startSimulation(e) {
+
+        function handleSubmitData(e) {
             e.preventDefault();
             let paramsData = {}
             new FormData(e.target).forEach(function (value, key) {
@@ -157,8 +153,19 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(paramsData)
+            })
+            .then(()=> {
+                document.getElementById("startBtn").disabled = false;
             });
-            
+        }
+
+        function handleStopSimulation(e) {
+            e.preventDefault();
+            socket.close();
+        }
+        
+        function handleStartSimulation(e){
+            e.preventDefault();
             fetch("http://localhost:3000/simulation", {
                 method: 'POST',
                 headers: {
@@ -168,10 +175,10 @@
             .then((res) => {
                 socket = io('http://localhost:3000/');
             })
-            start()
+            startSocket()
         }
         
-        function start() {
+        function startSocket() {
             // connect to simple echo server
             const socket = io('http://localhost:3000/')
             
@@ -219,6 +226,6 @@
             });
             
         }
-        
+
     </script>
 </body>

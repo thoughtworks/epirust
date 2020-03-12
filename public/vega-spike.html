@@ -26,8 +26,38 @@
     <form onSubmit="startSimulation(event)">
         <div class="form-row">
             <div class="col">
+                
+                <label for="number_of_agents">Number of Agents</label>
                 <input type="number" name="number_of_agents" class="form-control" id="number_of_agents"
-                aria-describedby="number_of_agents" placeholder="Number of Agents" defaultValue="10000" />
+                aria-describedby="number_of_agents" placeholder="Number of Agents" value="10000" />
+                
+                <label for="disease_name">Disease Name</label>
+                <input type="text" name="disease_name" class="form-control" id="disease_name"
+                aria-describedby="disease_name" placeholder="Disease Name" value="small_pox" />
+                
+                <label for="grid_size">Grid Size</label>
+                <input type="number" name="grid_size" class="form-control" id="grid_size"
+                aria-describedby="grid_size" placeholder="Grid Size" value="250" />
+                
+                <label for="simulation_hrs">Simulation Hours</label>
+                <input type="number" name="simulation_hrs" class="form-control" id="simulation_hrs"
+                aria-describedby="simulation_hrs" placeholder="Simulation Hours" value="10000" />
+                
+                <label for="public_transport_percentage">Public Transport Percentage</label>
+                <input type="number" name="public_transport_percentage" class="form-control" id="public_transport_percentage"
+                aria-describedby="public_transport_percentage" placeholder="Public Transport Percentage" value="0.2" />
+                
+                <label for="working_percentage">Working Percentage</label>
+                <input type="number" name="working_percentage" class="form-control" id="working_percentage"
+                aria-describedby="working_percentage" placeholder="Working Percentage" value="0.7" />
+                
+                <label for="vaccinate_at">Vaccinate At</label>
+                <input type="number" name="vaccinate_at" class="form-control" id="vaccinate_at"
+                aria-describedby="vaccinate_at" placeholder="Vaccinate At" value="5000" />
+                
+                <label for="vaccinate_percentage">Vaccinate Percentage</label>
+                <input type="number" name="vaccinate_percentage" class="form-control" id="vaccinate_percentage"
+                aria-describedby="vaccinate_percentage" placeholder="Vaccinate Percentage" value="0.2" />
             </div>
             <div class="col">
                 <button type="submit" class="btn btn-primary">Start</button>
@@ -109,20 +139,17 @@
             e.preventDefault();
             let paramsData = {}
             new FormData(e.target).forEach(function (value, key) {
-                if(key === "number_of_agents"){
+                if(["number_of_agents", 
+                "grid_size", 
+                "simulation_hrs", 
+                "public_transport_percentage", 
+                "working_percentage", 
+                "vaccinate_at", 
+                "vaccinate_percentage"].includes(key)){
                     value = Number(value);
                 }
                 paramsData[key] = value;
             });
-            
-            paramsData = {...paramsData,  
-            "disease_name": "small_pox",
-            "grid_size": 250,
-            "simulation_hrs": 10000,
-            "public_transport_percentage": 0.2,
-            "working_percentage": 0.7,
-            "vaccinate_at": 5000,
-            "vaccinate_percentage": 0.2}
             
             fetch("http://localhost:3000/simulation/init", {
                 method: 'POST',

@@ -54,6 +54,7 @@ pub struct Citizen {
     pub transport_location: Point,
     state_machine: StateMachine,
     quarantined: bool,
+    isolated: bool
 }
 
 impl Citizen {
@@ -72,6 +73,7 @@ impl Citizen {
             hospitalized: false,
             state_machine: StateMachine::new(),
             quarantined: false,
+            isolated: false
         }
     }
 
@@ -168,10 +170,14 @@ impl Citizen {
     }
 
     pub fn can_move(&self) -> bool {
-        if self.is_quarantined() || self.hospitalized || self.is_deceased() {
+        if self.is_quarantined() || self.hospitalized || self.is_deceased() || self.isolated {
             return false;
         }
         true
+    }
+
+    pub fn set_isolation(&mut self, state: bool){
+        self.isolated = state;
     }
 
     fn generate_disease_randomness_factor(rng: &mut RandomWrapper) -> i32 {

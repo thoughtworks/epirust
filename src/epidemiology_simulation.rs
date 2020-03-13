@@ -8,7 +8,7 @@ use chrono::{DateTime, Local};
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
-use crate::{allocation_map, events};
+use crate::{allocation_map, events, constants};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Intervention, Population};
 use crate::csv_service::CsvListener;
@@ -25,6 +25,7 @@ pub struct Epidemiology {
     pub write_agent_location_map: allocation_map::AgentLocationMap,
     pub grid: Grid,
     pub disease: Disease,
+    is_city_under_quarantine: bool
 }
 
 impl Epidemiology {
@@ -44,9 +45,10 @@ impl Epidemiology {
 
         let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid(), &agent_list, &start_locations);
         let write_agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid(), &agent_list, &start_locations);
+        let is_city_under_quarantine = false;
 
         println!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
-        Epidemiology { agent_location_map, write_agent_location_map, grid, disease }
+        Epidemiology { agent_location_map, write_agent_location_map, grid, disease, is_city_under_quarantine }
     }
 
     fn stop_simulation(row: Counts) -> bool {
@@ -85,6 +87,13 @@ impl Epidemiology {
                                    &self.grid, &mut listeners, &mut rng, &self.disease);
             listeners.counts_updated(counts_at_hr);
 
+            let is_city_under_quarantine = false;
+
+            if should_lock_down{
+                self.is_city_under_quarantine = true;
+                println!("Locking the city");
+                Epidemiology::lock_city(&mut write_buffer_reference);
+            }
 
             match vaccinations.get(&simulation_hour) {
                 Some(vac_percent) => {
@@ -151,6 +160,16 @@ impl Epidemiology {
                 }
                 _ => { write_buffer.agent_cell.insert(point, current_agent); }
             }
+        }
+    }
+
+    fn check_lock_down(csv_record: & events::Counts) -> bool {
+        csv_record.get_infected() > constants::CITY_LOCK_DOWN_THRESHOLD
+    }
+
+    fn lock_city(write_buffer_reference: &mut AgentLocationMap){
+        for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
+            agent.set_isolation(true);
         }
     }
 }

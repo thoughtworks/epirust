@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="An app that lets you visualize epidemiology data sets" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega@5.9.2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.5.1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.3.2"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
         integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <style>
@@ -100,7 +99,7 @@
         </div>
     </form>
 
-    <div id="vis"></div>
+    <div id="vis" style="width: 70%; height: 600px"></div>
 
-    <script src="index.js"></script>
+    <script src="index_dygraphs.js"></script>
 </body>

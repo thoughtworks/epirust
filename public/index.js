@@ -84,6 +84,7 @@ function handleSubmitData(e) {
     })
         .then(() => {
             document.getElementById("startBtn").disabled = false;
+            document.getElementById("submitBtn").disabled = true;
         });
 }
 
@@ -106,6 +107,10 @@ function handleStartSimulation(e) {
 
 function startSocket() {
     // connect to simple echo server
+    if (socket) {
+        socket.close();
+    }
+
     socket = io('http://localhost:3000/')
 
     let dataBuffer = [];

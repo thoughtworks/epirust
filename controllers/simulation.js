@@ -2,15 +2,17 @@
 const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
-
 var ioInstance = require('../io');
-const kafkaConsumer = new KafkaServices.KafkaConsumerService('localhost:9092', 'counts_updated', 1);
+
 
 router.post('/', (req, res, next) => {
+  const kafkaConsumer = new KafkaServices.KafkaConsumerService('localhost:9092', 'counts_updated', 1);
   const io = ioInstance();
 
   io.once('connect', function (socket) {
+
     kafkaConsumer.consumer.resumeTopics(['counts_updated']);
+
     kafkaConsumer.consumer.on('message', function (message) {
       socket.emit('epidemicStats', message.value);
     });
@@ -20,7 +22,6 @@ router.post('/', (req, res, next) => {
     });
 
     socket.on('disconnect', reason => console.log("Disconnect", reason));
-
   });
 
   res.sendStatus(200);

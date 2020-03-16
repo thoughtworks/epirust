@@ -82,19 +82,7 @@ function handleSubmitData(e) {
         },
         body: JSON.stringify(paramsData)
     })
-        .then(() => {
-            document.getElementById("startBtn").disabled = false;
-            document.getElementById("submitBtn").disabled = true;
-        });
-}
 
-function handleStopSimulation(e) {
-    e.preventDefault();
-    socket.close();
-}
-
-function handleStartSimulation(e) {
-    e.preventDefault();
     fetch("http://localhost:3000/simulation", {
         method: 'POST',
         headers: {
@@ -103,6 +91,11 @@ function handleStartSimulation(e) {
     }).then((res) => {
         startSocket()
     })
+}
+
+function handleResetSimulation(e) {
+    socket && socket.close()
+    renderResult.remove('table', function (d) { return true; }).run();
 }
 
 function startSocket() {
@@ -154,6 +147,6 @@ function startSocket() {
             dataBuffer = [];
         }
 
-    });
+    }); 
 
 }

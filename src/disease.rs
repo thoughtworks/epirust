@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use crate::random_wrapper::RandomWrapper;
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 pub struct Disease {
     regular_transmission_start_day: i32,
     high_transmission_start_day: i32,
@@ -22,6 +22,18 @@ impl Disease {
         let yaml: HashMap<String, Disease> = serde_yaml::from_reader(reader).expect("Failed to parse disease config file");
         let disease = yaml.get(disease_name).expect("Failed to find disease");
         *disease
+    }
+
+    pub fn new(regular_transmission_start_day: i32, high_transmission_start_day: i32, last_day: i32,
+               regular_transmission_rate: f64, high_transmission_rate: f64, death_rate: f64) -> Disease {
+        Disease {
+            regular_transmission_start_day,
+            high_transmission_start_day,
+            last_day,
+            regular_transmission_rate,
+            high_transmission_rate,
+            death_rate,
+        }
     }
 
     pub fn get_current_transmission_rate(&self, infection_day: i32) -> f64 {
@@ -53,6 +65,21 @@ impl Disease {
     }
 }
 
+/// Override disease parameters for a specific population trait
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct DiseaseOverride {
+    population_param: String,
+    values: Vec<String>,
+    disease: Disease,
+}
+
+impl DiseaseOverride {
+    pub fn new(population_param: String, values: Vec<String>, disease: Disease) -> DiseaseOverride {
+        DiseaseOverride {
+            population_param, values, disease
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -22,6 +22,7 @@ mod kafka_service;
 mod population;
 mod geojson_service;
 mod models;
+mod config;
 
 const VACCINATION_TIME: i32 = 5000;
 const VACCINATION_PERCENTAGE: f64 = 0.2;

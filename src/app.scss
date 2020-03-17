@@ -1,0 +1,39 @@
+.app {
+  text-align: center;
+}
+
+.appHeader {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: black;
+}
+
+.form-row {
+  margin: 20px;
+  display: flex;
+  width: 80%;
+  flex-direction: column;
+}
+
+.col.inputs {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex-basis: 100%;
+  justify-content: space-between;
+  align-content: space-around;
+}
+
+.col .input-control {
+  flex-basis: 40%;
+
+}
+
+input {
+  margin-bottom: 10px;
+}

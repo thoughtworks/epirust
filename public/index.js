@@ -60,6 +60,11 @@ vegaEmbed('#vis', spec, { defaultStyle: true })
     .catch(console.warn);
 
 function handleSubmitData(e) {
+    //Clear laready existing socket and clean graph
+    socket && socket.close()
+    renderResult && renderResult.remove('table', function (d) { return true; }).run();
+
+
     e.preventDefault();
     let paramsData = {}
     new FormData(e.target).forEach(function (value, key) {
@@ -93,11 +98,6 @@ function handleSubmitData(e) {
     })
 }
 
-function handleResetSimulation(e) {
-    socket && socket.close()
-    renderResult.remove('table', function (d) { return true; }).run();
-}
-
 function startSocket() {
     // connect to simple echo server
     if (socket) {
@@ -112,6 +112,7 @@ function startSocket() {
         const message = JSON.parse(messageRaw);
         console.log(message.hour);
 
+        //TODO: remove this duplication
         let susceptibleData = {
             hour: message.hour,
             agents: message.susceptible,
@@ -147,6 +148,6 @@ function startSocket() {
             dataBuffer = [];
         }
 
-    }); 
+    });
 
 }

@@ -4,6 +4,7 @@ let renderResult = null;
 function handleSubmitData(e) {
     e.preventDefault();
     let paramsData = {}
+
     new FormData(e.target).forEach(function (value, key) {
         if (["number_of_agents",
             "grid_size",
@@ -17,31 +18,31 @@ function handleSubmitData(e) {
         paramsData[key] = value;
     });
 
-    fetch("http://localhost:3000/simulation/init", {
+    pushData(paramsData)
+        .then(startSimulation)
+        .then(startSocket)
+}
+
+function pushData(paramsData) {
+    return fetch("http://localhost:3000/simulation/init", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(paramsData)
-    })
+    });
+}
 
-    fetch("http://localhost:3000/simulation", {
+function startSimulation() {
+    return fetch("http://localhost:3000/simulation", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         }
-    }).then((res) => {
-        startSocket()
-    })
-}
-
-function handleResetSimulation(e) {
-    socket && socket.close()
-    renderResult.remove('table', function (d) { return true; }).run();
+    });
 }
 
 function startSocket() {
-    // connect to simple echo server
     if (socket) {
         socket.close();
     }
@@ -49,24 +50,25 @@ function startSocket() {
     socket = io('http://localhost:3000/');
 
     let dataBuffer = [];
-    let g;
+    let graph;
 
     socket.on('epidemicStats', function (messageRaw) {
         const message = JSON.parse(messageRaw);
         console.log(message.hour);
-        dataBuffer.push([message.hour, message.susceptible, message.infected, message.quarantined, message.recovered,
-            message.deceased]);
+
+        const { hour, susceptible, infected, quarantined, recovered, deceased } = message;
+
+        dataBuffer.push([hour, susceptible, infected, quarantined, recovered, deceased]);
 
         if (message.hour % 100 === 0) {
-            if (g) {
-                g.updateOptions( { 'file': dataBuffer } );
-            } else {
-                g = new Dygraph(document.getElementById("vis"), dataBuffer, {
+
+            if (!graph) {
+                graph = new Dygraph(document.getElementById("vis"), dataBuffer, {
                     labels: ["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]
                 });
+                return;
             }
+            graph.updateOptions({ 'file': dataBuffer });
         }
-
     });
-
 }

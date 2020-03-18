@@ -87,7 +87,7 @@ impl Epidemiology {
                                    &self.grid, &mut listeners, &mut rng, &self.disease);
             listeners.counts_updated(counts_at_hr);
 
-            let is_city_under_quarantine = false;
+            let should_lock_down = !self.is_city_under_quarantine &&  Epidemiology::check_lock_down(&counts_at_hr);
 
             if should_lock_down{
                 self.is_city_under_quarantine = true;

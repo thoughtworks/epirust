@@ -42,10 +42,33 @@ impl Area {
         points
     }
 
+    pub fn get_random_point(&self, rng: &mut RandomWrapper) -> Point{
+        let rand_x = rng.get().gen_range(self.start_offset.x, self.end_offset.x);
+        let rand_y = rng.get().gen_range(self.start_offset.y, self.end_offset.y);
+
+        Point::new(rand_x, rand_y)
+    }
+
     pub fn contains(&self, point: &Point) -> bool {
         self.start_offset.x <= point.x && self.end_offset.x >= point.x
             && self.start_offset.y <= point.y && self.end_offset.y >= point.y
     }
+}
+
+pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area>{
+    let mut areas = Vec::with_capacity((end_point.x / size) as usize);
+    let mut area_start_point = start_point;
+    for _i in 0..(end_point.x/size * end_point.y/size) {
+        let area_end_point:Point = Point::new(area_start_point.x + size, area_start_point.y + size);
+        areas.push(Area::new(area_start_point, area_end_point));
+        area_start_point.x = area_start_point.x + size;
+
+        if area_start_point.x == end_point.x{
+            area_start_point.x = 0;
+            area_start_point.y = area_start_point.y + size;
+        }
+    }
+    areas
 }
 
 impl Iterator for Area {
@@ -90,5 +113,16 @@ mod tests {
         let x: Vec<Point> = area.collect();
         assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1),
                            Point::new(1, 2), Point::new(2, 2)])
+    }
+
+    #[test]
+    fn should_create_areas(){
+        let homes = area_factory(Point::new(0, 0), Point::new(10, 10), 2);
+
+        assert_eq!(homes.len(), 25);
+        assert_eq!(homes.get(0).unwrap().start_offset, Point::new(0, 0));
+        assert_eq!(homes.get(0).unwrap().end_offset, Point::new(2, 2));
+        assert_eq!(homes.get(24).unwrap().start_offset, Point::new(8, 8));
+        assert_eq!(homes.get(24).unwrap().end_offset, Point::new(10, 10));
     }
 }

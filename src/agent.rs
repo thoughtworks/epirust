@@ -45,8 +45,8 @@ impl StateMachine {
 pub struct Citizen {
     pub id: i32,
     immunity: i32,
-    pub home_location: Point,
-    pub work_location: Point,
+    pub home_location: Area,
+    pub work_location: Area,
     vaccinated: bool,
     pub uses_public_transport: bool,
     working: bool,
@@ -54,11 +54,12 @@ pub struct Citizen {
     pub transport_location: Point,
     state_machine: StateMachine,
     quarantined: bool,
-    isolated: bool
+    isolated: bool,
+    current_area: Area
 }
 
 impl Citizen {
-    pub fn new_citizen(id: i32, home_location: Point, work_location: Point, transport_location: Point, uses_public_transport: bool, working: bool, rng: &mut RandomWrapper) -> Citizen {
+    pub fn new_citizen(id: i32, home_location: Area, work_location: Area, transport_location: Point, uses_public_transport: bool, working: bool, rng: &mut RandomWrapper) -> Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor(rng);
 
         Citizen {
@@ -73,7 +74,8 @@ impl Citizen {
             hospitalized: false,
             state_machine: StateMachine::new(),
             quarantined: false,
-            isolated: false
+            isolated: false,
+            current_area: home_location
         }
     }
 
@@ -200,15 +202,16 @@ impl Citizen {
             }
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {}
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
-                new_cell = self.goto(self.transport_location, grid.transport_area, map, cell, rng);
+                new_cell = self.goto_area(grid.transport_area, map, cell, rng);
+                self.current_area = grid.transport_area;
                 self.update_infection(cell, map, counts, rng, disease);
             }
             constants::ROUTINE_WORK_TIME => {
-                new_cell = self.goto(self.work_location, grid.work_area, map, cell, rng);
+                new_cell = self.goto_area(self.work_location, map, cell, rng);
                 self.update_infection(cell, map, counts, rng, disease);
             }
             constants::ROUTINE_WORK_END_TIME => {
-                new_cell = self.goto(self.home_location, grid.housing_area, map, cell, rng);
+                new_cell = self.goto_area(self.home_location, map, cell, rng);
                 self.update_infection(cell, map, counts, rng, disease);
             }
             constants::ROUTINE_END_TIME => {
@@ -248,7 +251,9 @@ impl Citizen {
     fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Counts, rng: &mut RandomWrapper,
                         disease: &Disease) {
         if self.is_susceptible() && !self.vaccinated {
-            let neighbor_that_spreads_infection = cell.neighbor_iterator()
+            let neighbours = self.current_area.get_neighbors_of(cell);
+
+            let neighbor_that_spreads_infection = neighbours
                 .filter(|p| map.is_point_in_grid(p))
                 .filter_map(|cell| { map.get_agent_for(&cell) })
                 .filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized)
@@ -262,15 +267,16 @@ impl Citizen {
         }
     }
 
-    fn goto(&mut self, target_location: Point, target_area: Area, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
+    fn goto_area(&mut self, target_area: Area, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
         if !self.can_move() {
             return cell;
         }
         if self.working {
-            let new_cell: Point = target_area.get_neighbors_of(target_location)
-                .filter(|p| map.is_cell_vacant(p))
-                .choose(rng.get())
-                .unwrap_or(self.home_location);
+            let mut new_cell: Point = target_area.get_random_point(rng);
+                if !map.is_cell_vacant(&new_cell){
+                    new_cell = cell;
+                }
+
             return map.move_agent(cell, new_cell);
         }
         self.move_agent_from(map, cell, rng)
@@ -282,7 +288,7 @@ impl Citizen {
         if self.is_quarantined() {
             let result = self.decease(rng, disease);
             if result.1 == 1 {
-                new_cell = map.move_agent(cell, self.home_location);
+                new_cell = map.move_agent(cell, self.home_location.get_random_point(rng));
             }
             counts.update_deceased(result.0);
             counts.update_recovered(result.1);
@@ -292,7 +298,7 @@ impl Citizen {
     }
 
     fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
-        let new_cell = cell.neighbor_iterator()
+        let new_cell = self.current_area.get_neighbors_of(cell)
             .filter(|p| map.is_point_in_grid(p))
             .filter(|p| map.is_cell_vacant(p))
             .choose(rng.get())
@@ -301,11 +307,11 @@ impl Citizen {
     }
 }
 
-pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>, public_transport_locations: &Vec<Point>,
+pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_locations: &Vec<Area>, public_transport_locations: &Vec<Point>,
                        percentage_public_transport: f64, working_percentage: f64, rng: &mut RandomWrapper) -> Vec<Citizen> {
     let mut agent_list = Vec::with_capacity(home_locations.len());
 
-    for i in 0..home_locations.len() {
+    for i in 0..number_of_agents as usize {
         let is_a_working_citizen = rng.get().gen_bool(working_percentage);
 
         let uses_public_transport = rng.get().gen_bool(percentage_public_transport)
@@ -313,14 +319,14 @@ pub fn citizen_factory(home_locations: &Vec<Point>, work_locations: &Vec<Point>,
             && i < public_transport_locations.len();
 
         let public_transport_location: Point = if uses_public_transport { public_transport_locations[i] } else {
-            home_locations[i]
+            home_locations[(i / number_of_agents as usize)].get_random_point(rng)
         };
 
-        let work_location = if is_a_working_citizen { work_locations[i] } else {
-            home_locations[i]
+        let work_location = if is_a_working_citizen { work_locations[(i / number_of_agents as usize)] } else {
+            home_locations[(i / number_of_agents as usize)]
         };
 
-        let agent = Citizen::new_citizen(i as i32, home_locations[i], work_location,
+        let agent = Citizen::new_citizen(i as i32, home_locations[(i / number_of_agents as usize)], work_location,
                                          public_transport_location, uses_public_transport, is_a_working_citizen, rng);
         agent_list.push(agent);
     }
@@ -335,26 +341,24 @@ mod tests {
 
     fn before_each() -> Vec<Citizen> {
         let mut rng = RandomWrapper::new();
-        let home_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(0, 2), Point::new(0, 3)];
-        let work_locations = vec![Point::new(1, 0), Point::new(1, 1), Point::new(1, 2), Point::new(1, 3)];
-        let public_transport_location = vec![Point::new(2, 0), Point::new(2, 1), Point::new(2, 2), Point::new(2, 3)];
+        let home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
 
-        citizen_factory(&home_locations, &work_locations, &public_transport_location, 0.5, 0.5, &mut rng)
+        let work_locations = vec![Area::new(Point::new(5, 0), Point::new(6, 2)), Area::new(Point::new(7, 0), Point::new(8, 2))];
+
+        let public_transport_location = vec![Point::new(5, 0), Point::new(5, 1), Point::new(5, 2), Point::new(5, 3)];
+        citizen_factory(4, &home_locations, &work_locations, &public_transport_location, 0.5, 0.5, &mut rng)
     }
 
     #[test]
     fn generate_citizen() {
-        let mut rng = RandomWrapper::new();
-        let home_locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(0, 2), Point::new(0, 3)];
-        let work_locations = vec![Point::new(1, 0), Point::new(1, 1), Point::new(1, 2), Point::new(1, 3)];
-        let public_transport_location = vec![Point::new(2, 0), Point::new(2, 1), Point::new(2, 2), Point::new(2, 3)];
-        let citizen_list = citizen_factory(&home_locations, &work_locations, &public_transport_location, 0.5, 0.5, &mut rng);
+        let citizen_list = before_each();
+        let expected_home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
 
         assert_eq!(citizen_list.len(), 4);
         assert_eq!(citizen_list.last().unwrap().is_infected(), true);
 
         for citizen in &citizen_list {
-            assert!(home_locations.contains(&citizen.home_location));
+            assert!(expected_home_locations.contains(&citizen.home_location));
         }
     }
 

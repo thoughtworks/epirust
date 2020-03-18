@@ -1,6 +1,6 @@
-use crate::geography::{Area, Point};
+use crate::geography::{Area, Point, area};
 use crate::agent::Citizen;
-use crate::agent;
+use crate::{agent, constants};
 use crate::random_wrapper::RandomWrapper;
 use crate::config::{AutoPopulation, CsvPopulation};
 
@@ -22,16 +22,20 @@ impl Grid {
         let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
 
         let home_locations = self.housing_area.random_points(number_of_agents as i32, rng);
+        let homes = area::area_factory(self.housing_area.start_offset, self.housing_area.end_offset, constants::HOME_SIZE);
 
         // assumes that housing starts at 0,0 and work area is the same size as housing area
         // layout: housing | transport | hospital | work
         let scaling_factor = self.hospital.end_offset.x + 1;
-        let work_locations: Vec<Point> = home_locations.iter()
-            .map(|p| *p + Point::new(scaling_factor, 0)).collect();
+
+        let office_start_point = Point::new(self.hospital.end_offset.x + 1, self.housing_area.start_offset.y);
+        let office_end_point = Point::new(scaling_factor + self.housing_area.end_offset.x + 1, self.hospital.end_offset.y + 1);
+
+        let offices = area::area_factory(office_start_point, office_end_point, constants::OFFICE_SIZE);
 
         let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32, rng);
 
-        let agent_list = agent::citizen_factory(&home_locations, &work_locations, &transport_locations, public_transport_percentage, working_percentage, rng);
+        let agent_list = agent::citizen_factory(number_of_agents, &homes, &offices, &transport_locations, public_transport_percentage, working_percentage, rng);
         (home_locations, agent_list)
     }
 
@@ -64,9 +68,9 @@ mod tests {
         assert_eq!(agent_list.len(), 10);
 
         for agent in agent_list {
-            assert!(housing_area.contains(&agent.home_location));
-            assert!(work_area.contains(&agent.work_location)
-                || housing_area.contains(&agent.home_location)); //for citizens that are not working
+            assert!(housing_area.contains(&agent.home_location.start_offset));
+            assert!(work_area.contains(&agent.work_location.end_offset)
+                || housing_area.contains(&agent.home_location.start_offset)); //for citizens that are not working
             assert!(transport_area.contains(&agent.transport_location)
                 || housing_area.contains(&agent.transport_location)) //for citizens that aren't using public transport
         }

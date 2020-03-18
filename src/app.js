@@ -12,7 +12,6 @@ function App() {
   const [socket, setSocket] = useState(null);
 
   const [dataBuffer, setDataBuffer] = useState([]);
-  const [graph, setGraph] = useState(null);
 
   useEffect(() => {
 
@@ -37,7 +36,55 @@ function App() {
     });
   }, [socket])
 
+  function startSimulation() {
+    return fetch("http://localhost:3000/simulation", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+
+  function startSocket() {
+    setSocket(io('http://localhost:3000/'));
+    setDataBuffer([]);
+  }
+
+  function handleFormSubmit() {
+    if (socket)
+      socket.close()
+
+    setDataBuffer(null);
+
+    startSimulation()
+      .then(startSocket)
+  }
+
+  return (
+    <>
+      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a className="navbar-brand" href="/">EpiViz</a>
+      </nav>
+      <div className="container mt-4">
+        <ParamterInputForm onSubmit={handleFormSubmit} />
+        <Graph dataBuffer={dataBuffer} />
+      </div>
+    </>
+  );
+}
+
+export default App;
+
+function Graph({ dataBuffer }) {
+  const [graph, setGraph] = useState(null);
+
   useEffect(() => {
+
+    if (dataBuffer === null) {
+      graph && graph.destroy()
+      setGraph(null);
+      return
+    }
 
     if (dataBuffer.length === 0)
       return
@@ -55,44 +102,5 @@ function App() {
 
   }, [graph, dataBuffer])
 
-  function startSimulation() {
-    return fetch("http://localhost:3000/simulation", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  }
-
-  function startSocket() {
-    setSocket(io('http://localhost:3000/'));
-  }
-
-  function handleFormSubmit() {
-    if (socket)
-      socket.close()
-
-    if (graph) {
-      setDataBuffer([]);
-      graph.destroy()
-      setGraph(null);
-    }
-
-    startSimulation()
-      .then(startSocket)
-  }
-
-  return (
-    <>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a className="navbar-brand" href="/">EpiViz</a>
-      </nav>
-      <div className="container mt-4">
-        <ParamterInputForm onSubmit={handleFormSubmit} />
-        <div id="vis" style={{ width: "70%", height: "600px" }}></div>
-      </div>
-    </>
-  );
+  return <div id="vis" style={{ width: "70%", height: "600px" }}></div>;
 }
-
-export default App;

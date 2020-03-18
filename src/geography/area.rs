@@ -55,7 +55,7 @@ impl Iterator for Area {
         let mut new_x = self.iter_index.x + 1;
         let mut new_y = self.iter_index.y;
         if new_x > self.end_offset.x {
-            new_x = 0;
+            new_x = self.start_offset.x;
             new_y += 1;
         }
         self.iter_index = Point::new(new_x, new_y);
@@ -84,6 +84,11 @@ mod tests {
         let x: Vec<Point> = area.collect();
         assert_eq!(x, vec![Point::new(0, 0), Point::new(1, 0), Point::new(2, 0),
                            Point::new(0, 1), Point::new(1, 1), Point::new(2, 1),
-                           Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)])
+                           Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)]);
+
+        let area = Area::new(Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
+        let x: Vec<Point> = area.collect();
+        assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1),
+                           Point::new(1, 2), Point::new(2, 2)])
     }
 }

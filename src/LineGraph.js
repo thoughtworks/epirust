@@ -6,15 +6,11 @@ export default function Graph({ dataBuffer }) {
     const [graph, setGraph] = useState(null);
 
     useEffect(() => {
-
-        if (dataBuffer === null) {
+        if (dataBuffer.length === 0) {
             graph && graph.destroy()
             setGraph(null);
             return
         }
-
-        if (dataBuffer.length === 0)
-            return
 
         if (!graph) {
             let graphInstance = new Dygraph(document.getElementById("vis"), dataBuffer, {

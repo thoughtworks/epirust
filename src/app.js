@@ -1,36 +1,12 @@
 import React from 'react';
 import ParamterInputForm from './ParameterInputForm';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import io from 'socket.io-client'
 import './app.scss';
-import Graph from './LineGraph';
+import SocketAwareGraph from './SocketAwareGraph'
 
 function App() {
   const [socket, setSocket] = useState(null);
-  const [dataBuffer, setDataBuffer] = useState(null);
-
-  useEffect(() => {
-
-    if (!socket)
-      return
-
-    let buff = [];
-
-    socket.on('epidemicStats', function (messageRaw) {
-      const message = JSON.parse(messageRaw);
-      const { hour, susceptible, infected, quarantined, recovered, deceased } = message;
-
-      buff.push([hour, susceptible, infected, quarantined, recovered, deceased]);
-
-      if (hour % 100 === 0) {
-        setDataBuffer(buffer => {
-          let total = [...buffer, ...buff]
-          buff = [];
-          return total;
-        });
-      }
-    });
-  }, [socket])
 
   function startSimulation() {
     return fetch("http://localhost:3000/simulation", {
@@ -43,14 +19,13 @@ function App() {
 
   function startSocket() {
     setSocket(io('http://localhost:3000/'));
-    setDataBuffer([]);
   }
 
   function handleFormSubmit() {
-    if (socket)
+    if (socket) {
       socket.close()
-
-    setDataBuffer(null);
+      setSocket(null)
+    }
 
     startSimulation()
       .then(startSocket)
@@ -63,7 +38,7 @@ function App() {
       </nav>
       <div className="container mt-4">
         <ParamterInputForm onSubmit={handleFormSubmit} />
-        <Graph dataBuffer={dataBuffer} />
+        <SocketAwareGraph socket={socket} />
       </div>
     </>
   );

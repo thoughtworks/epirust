@@ -34,7 +34,12 @@ impl Listener for KafkaProducer {
         self.producer.send(record, 0);
     }
 
-    fn simulation_ended(&mut self) {}
+    fn simulation_ended(&mut self) {
+        let message = r#"{"simulation_ended": true}"#.to_string();
+        let record: FutureRecord<String, String> = FutureRecord::to("counts_updated")
+            .payload(&message);
+        self.producer.send(record, 0);
+    }
 
     fn citizen_got_infected(&mut self, _cell: &Point) {}
 

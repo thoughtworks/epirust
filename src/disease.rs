@@ -66,7 +66,7 @@ impl Disease {
 }
 
 /// Override disease parameters for a specific population trait
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct DiseaseOverride {
     population_param: String,
     values: Vec<String>,

@@ -12,37 +12,82 @@ pub struct Config {
     grid: i32,
     hours: i32,
     interventions: Vec<Intervention>,
+    output_file: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+impl Config {
+    pub fn get_disease(&self) -> Disease {
+        self.disease
+    }
+
+    pub fn get_population(&self) -> Population {
+        self.population.clone()
+    }
+
+    pub fn get_disease_overrides(&self) -> Vec<DiseaseOverride> {
+        self.disease_overrides.clone()
+    }
+
+    pub fn get_grid(&self) -> i32 {
+        self.grid
+    }
+
+    pub fn get_hours(&self) -> i32 {
+        self.hours
+    }
+
+    pub fn get_interventions(&self) -> Vec<Intervention> {
+        self.interventions.clone()
+    }
+
+    pub fn get_output_file(&self) -> Option<String> {
+        self.output_file.clone()
+    }
+
+    pub fn new(population: Population, disease: Disease, disease_overrides: Vec<DiseaseOverride>,
+               grid: i32, hours: i32, interventions: Vec<Intervention>, output_file: Option<String>)
+        -> Config {
+        Config {
+            population,
+            disease,
+            disease_overrides,
+            grid,
+            hours,
+            interventions,
+            output_file,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum Population {
     Csv(CsvPopulation),
     Auto(AutoPopulation),
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CsvPopulation {
-    file: String,
-    cols: Vec<String>,
+    pub file: String,
+    pub cols: Vec<String>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct AutoPopulation {
-    number_of_agents: i32,
-    public_transport_percentage: f64,
-    working_percentage: f64,
+    pub number_of_agents: i32,
+    pub public_transport_percentage: f64,
+    pub working_percentage: f64,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub enum Intervention {
     Vaccinate(Vaccinate),
     Lockdown(Lockdown),
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct Vaccinate {
-    at_hour: i32,
-    percent: f64,
+    pub at_hour: i32,
+    pub percent: f64,
 }
 
 impl Vaccinate {
@@ -51,7 +96,7 @@ impl Vaccinate {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct Lockdown {
     at_hour: i32,
 }
@@ -62,7 +107,7 @@ impl Lockdown {
     }
 }
 
-fn read(filename: String) -> Result<Config, Box<dyn Error>> {
+pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {
     let reader = File::open(filename)?;
     let v: Config = serde_json::from_reader(reader)?;
     Ok(v)
@@ -85,7 +130,7 @@ mod tests {
         let population = Population::Csv(CsvPopulation {
             file: "config/pune_population.csv".to_string(),
             cols: vec![String::from("age"), String::from("sex"), String::from("working"),
-                       String::from("pub_transport")]
+                       String::from("pub_transport")],
         });
 
         let expected_config = Config {
@@ -95,6 +140,7 @@ mod tests {
             grid: 5660,
             hours: 10000,
             interventions: vec![Intervention::Vaccinate(vaccinate)],
+            output_file: None,
         };
 
         assert_eq!(expected_config, read_config);
@@ -109,7 +155,7 @@ mod tests {
         let population = Population::Auto(AutoPopulation {
             number_of_agents: 10000,
             public_transport_percentage: 0.2,
-            working_percentage: 0.7
+            working_percentage: 0.7,
         });
 
         let expected_config = Config {
@@ -119,6 +165,7 @@ mod tests {
             grid: 5660,
             hours: 10000,
             interventions: vec![Intervention::Vaccinate(vaccinate)],
+            output_file: Some("simulation_default_config".to_string()),
         };
 
         assert_eq!(expected_config, read_config);

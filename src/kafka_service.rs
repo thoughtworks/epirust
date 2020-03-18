@@ -7,10 +7,11 @@ use rdkafka::error::KafkaError;
 use rdkafka::message::BorrowedMessage;
 use rdkafka::producer::{FutureProducer, FutureRecord};
 
-use crate::epidemiology_simulation::{Epidemiology, SimulationParams};
+use crate::epidemiology_simulation::Epidemiology;
 use crate::events::{Counts, Listener};
 use crate::geography::Point;
 use std::any::Any;
+use crate::config::Config;
 
 pub struct KafkaProducer {
     producer: FutureProducer
@@ -70,21 +71,21 @@ impl KafkaConsumer {
     pub async fn listen_loop(&self) {
         let mut message_stream = self.consumer.start();
         while let Some(message) = message_stream.next().await {
-            let simulation_params = self.parse_message(message);
-            match simulation_params {
+            let simulation_config = self.parse_message(message);
+            match simulation_config {
                 Err(e) => {
                     println!("Received a message, but could not parse it.\n\
                         Error Details: {}",  e)
                 }
-                Ok(params) => {
-                    let mut epidemiology = Epidemiology::new(&params);
-                    epidemiology.run(&params);
+                Ok(config) => {
+                    let mut epidemiology = Epidemiology::new(&config);
+                    epidemiology.run(&config);
                 }
             };
         }
     }
 
-    fn parse_message(&self, message: Result<BorrowedMessage, KafkaError>) -> Result<SimulationParams, Box<dyn Error>> {
+    fn parse_message(&self, message: Result<BorrowedMessage, KafkaError>) -> Result<Config, Box<dyn Error>> {
         let borrowed_message = message?;
         let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
         serde_json::from_str(parsed_message).map_err(|e| e.into())

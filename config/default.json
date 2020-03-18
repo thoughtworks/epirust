@@ -1,4 +1,5 @@
 {
+  "output_file": "simulation_default_config",
   "population": {
     "Auto": {
       "number_of_agents": 10000,
@@ -14,7 +15,7 @@
     "high_transmission_rate": 0.25,
     "death_rate": 0.035
   },
-  "grid": 5660,
+  "grid": 250,
   "hours": 10000,
   "interventions": [
     {

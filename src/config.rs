@@ -162,7 +162,7 @@ mod tests {
             population,
             disease: Disease::new(5, 20, 40, 0.025, 0.25, 0.035),
             disease_overrides: vec![],
-            grid: 5660,
+            grid: 250,
             hours: 10000,
             interventions: vec![Intervention::Vaccinate(vaccinate)],
             output_file: Some("simulation_default_config".to_string()),

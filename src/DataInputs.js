@@ -3,7 +3,7 @@ import FileDataInput from './FileDataInput';
 import ParametersForm from './ParamtersForm';
 import './DataInputs.scss'
 
-export default function DataInputs({ onSubmit }) {
+export default function DataInputs({ onSubmit, onFileDataInput }) {
 
     function pushData(paramsData) {
         return fetch("http://localhost:3000/simulation/init", {
@@ -22,7 +22,7 @@ export default function DataInputs({ onSubmit }) {
     }
 
     function handleFileData(data) {
-        console.log(data)
+        onFileDataInput(data)
     }
 
     return (

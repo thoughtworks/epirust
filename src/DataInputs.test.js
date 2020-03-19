@@ -2,7 +2,9 @@ import React from 'react'
 import { render, fireEvent, getByTestId } from '@testing-library/react'
 import DataInputs from './DataInputs'
 
-test('invoke onsubmit handler passed on form submit', () => {
+jest.useFakeTimers();
+
+test('invoke submit form data to server on submit', () => {
     jest.spyOn(global, 'fetch')
         .mockImplementation(() => Promise.resolve())
 
@@ -30,7 +32,7 @@ test('invoke onsubmit handler passed on form submit', () => {
     expect(global.fetch.mock.calls[0][1].body).toBe(JSON.stringify(expectedBody))
 })
 
-test('invoke onsubmit handler passed on form submit', () => {
+test('invoke onsubmit handler passed on a file upload', () => {
     const fileBlobObject = {}
 
     jest.spyOn(window, 'FileReader')
@@ -46,8 +48,8 @@ test('invoke onsubmit handler passed on form submit', () => {
         })
     window.FileReader.DONE = 2
 
-    const onSubmitSpy = jest.fn()
-    const { getByTestId } = render(<DataInputs onSubmit={onSubmitSpy} />)
+    const onFileDataInputSpy = jest.fn(()=>"ABCBD")
+    const { getByTestId } = render(<DataInputs onFileDataInput={onFileDataInputSpy} />)
 
     fireEvent.change(getByTestId('import-input'), {
         target: {
@@ -57,6 +59,9 @@ test('invoke onsubmit handler passed on form submit', () => {
         }
     })
 
+    jest.runAllTimers();
+
+
     expect(window.FileReader).toHaveBeenCalled()
-    // expect(onSubmitSpy).toHaveBeenCalledWith([[1, 2, 3, 4, 5], [1, 2, 3, 4, 5]])
+    expect(onFileDataInputSpy).toHaveBeenCalledTimes(1)
 })

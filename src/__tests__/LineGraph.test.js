@@ -1,5 +1,5 @@
 import React from 'react'
-import Graph from './LineGraph'
+import Graph from '../LineGraph'
 import { render, getByTestId, rerender } from '@testing-library/react'
 import Dygraph from 'dygraphs'
 

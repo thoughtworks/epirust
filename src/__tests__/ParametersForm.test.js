@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react'
-import ParametersForm from './ParamtersForm'
+import ParametersForm from '../ParamtersForm'
 
 test('renders ParameterInputForm with defaults', () => {
     const { getByText, getByLabelText } = render(<ParametersForm />)

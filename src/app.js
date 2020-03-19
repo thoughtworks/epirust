@@ -1,5 +1,5 @@
 import React from 'react';
-import ParamterInputForm from './ParameterInputForm';
+import DataInputs from './DataInputs';
 import { useState } from 'react';
 import io from 'socket.io-client'
 import './app.scss';
@@ -37,7 +37,7 @@ function App() {
         <a className="navbar-brand" href="/">EpiViz</a>
       </nav>
       <div className="container mt-4">
-        <ParamterInputForm onSubmit={handleFormSubmit} />
+        <DataInputs onSubmit={handleFormSubmit} />
         <SocketAwareGraph socket={socket} />
       </div>
     </>

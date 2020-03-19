@@ -15,7 +15,6 @@ export default function ParamterInputForm(props) {
     function handleSubmitData(e) {
         e.preventDefault();
         let paramsData = {}
-
         new FormData(e.target).forEach(function (value, key) {
             if (["number_of_agents",
                 "grid_size",
@@ -35,7 +34,7 @@ export default function ParamterInputForm(props) {
     }
 
     return (
-        <form onSubmit={handleSubmitData}>
+        <form onSubmit={handleSubmitData} data-testid='simulationForm'>
 
             <div className="form-row">
                 <div className="col inputs">

@@ -1,9 +1,9 @@
 import React from 'react'
 import { render, fireEvent, getByTestId } from '@testing-library/react'
-import ParameterInputForm from './ParameterInputForm'
+import ParametersForm from './ParamtersForm'
 
 test('renders ParameterInputForm with defaults', () => {
-    const { getByText, getByLabelText } = render(<ParameterInputForm />)
+    const { getByText, getByLabelText } = render(<ParametersForm />)
 
     expect(getByLabelText('Number of Agents').value).toBe('10000')
     expect(getByLabelText('Disease Name').value).toBe('small_pox')
@@ -18,7 +18,7 @@ test('renders ParameterInputForm with defaults', () => {
 
 test('invoke onsubmit handler passed on form submit', () => {
     const handleSubmitData = jest.fn()
-    const { getByTestId } = render(<ParameterInputForm onSubmit={handleSubmitData} />)
+    const { getByTestId } = render(<ParametersForm onDataSubmit={handleSubmitData} />)
 
     fireEvent.submit(getByTestId('simulationForm'))
 
@@ -29,8 +29,8 @@ test('make API call on form submit', () => {
     jest.spyOn(global, 'fetch')
         .mockImplementation(() => Promise.resolve())
     const handleSubmitData = jest.fn()
-    const { getByText, getByTestId } = render(<ParameterInputForm onSubmit={handleSubmitData} />)
-    const expectedBody = {
+    const { getByTestId } = render(<ParametersForm onDataSubmit={handleSubmitData} />)
+    const expectedData = {
         "number_of_agents": 10000,
         "disease_name": "small_pox",
         "grid_size": 250,
@@ -42,11 +42,11 @@ test('make API call on form submit', () => {
     }
 
     fireEvent.submit(getByTestId('simulationForm'))
+    expect(handleSubmitData).toHaveBeenCalledWith(expectedData)
 
-    expect(global.fetch).toHaveBeenCalledTimes(1)
-    expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:3000/simulation/init")
-    expect(global.fetch.mock.calls[0][1].method).toBe("POST")
-    expect(global.fetch.mock.calls[0][1].body)
-        .toBe(JSON.stringify(expectedBody))
+    // expect(global.fetch).toHaveBeenCalledTimes(1)
+    // expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:3000/simulation/init")
+    // expect(global.fetch.mock.calls[0][1].method).toBe("POST")
+    // expect(global.fetch.mock.calls[0][1].body).toBe(JSON.stringify(expectedBody))
 })
 

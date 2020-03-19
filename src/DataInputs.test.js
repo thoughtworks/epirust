@@ -29,3 +29,34 @@ test('invoke onsubmit handler passed on form submit', () => {
     expect(global.fetch.mock.calls[0][1].method).toBe("POST")
     expect(global.fetch.mock.calls[0][1].body).toBe(JSON.stringify(expectedBody))
 })
+
+test('invoke onsubmit handler passed on form submit', () => {
+    const fileBlobObject = {}
+
+    jest.spyOn(window, 'FileReader')
+        .mockImplementation(function () {
+            this.readAsBinaryString = function () {
+                setTimeout(this.onloadend, 0, {
+                    target: {
+                        readyState: 2,
+                        result: "[[1,2,3,4,5],[1,2,3,4,5]]"
+                    }
+                });
+            };
+        })
+    window.FileReader.DONE = 2
+
+    const onSubmitSpy = jest.fn()
+    const { getByTestId } = render(<DataInputs onSubmit={onSubmitSpy} />)
+
+    fireEvent.change(getByTestId('import-input'), {
+        target: {
+            files: [
+                { size: 100, slice: () => fileBlobObject }
+            ]
+        }
+    })
+
+    expect(window.FileReader).toHaveBeenCalled()
+    // expect(onSubmitSpy).toHaveBeenCalledWith([[1, 2, 3, 4, 5], [1, 2, 3, 4, 5]])
+})

@@ -25,6 +25,7 @@ export default function FileDataInput({ onFileDataSubmit }) {
             <label htmlFor="import-input">Choose a file to import data from:</label>
             < input type="file"
                 id="import-input"
+                data-testid="import-input"
                 name="import"
                 onChange={handleFileUpload}
                 accept="application/json" >

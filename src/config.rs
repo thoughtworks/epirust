@@ -13,6 +13,8 @@ pub struct Config {
     hours: i32,
     interventions: Vec<Intervention>,
     output_file: Option<String>,
+    #[serde(default)]
+    enable_citizen_state_messages: bool,
 }
 
 impl Config {
@@ -44,6 +46,10 @@ impl Config {
         self.output_file.clone()
     }
 
+    pub fn enable_citizen_state_messages(&self) -> bool {
+        self.enable_citizen_state_messages
+    }
+
     pub fn new(population: Population, disease: Disease, disease_overrides: Vec<DiseaseOverride>,
                grid: i32, hours: i32, interventions: Vec<Intervention>, output_file: Option<String>)
         -> Config {
@@ -55,6 +61,7 @@ impl Config {
             hours,
             interventions,
             output_file,
+            enable_citizen_state_messages: false,
         }
     }
 }
@@ -141,6 +148,7 @@ mod tests {
             hours: 10000,
             interventions: vec![Intervention::Vaccinate(vaccinate)],
             output_file: None,
+            enable_citizen_state_messages: false
         };
 
         assert_eq!(expected_config, read_config);
@@ -166,6 +174,7 @@ mod tests {
             hours: 10000,
             interventions: vec![Intervention::Vaccinate(vaccinate)],
             output_file: Some("simulation_default_config".to_string()),
+            enable_citizen_state_messages: false
         };
 
         assert_eq!(expected_config, read_config);

@@ -19,13 +19,14 @@ use crate::geography;
 use crate::geography::{Grid, Point};
 use crate::kafka_service::KafkaProducer;
 use crate::random_wrapper::RandomWrapper;
+use crate::agent::Citizen;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
     pub write_agent_location_map: allocation_map::AgentLocationMap,
     pub grid: Grid,
     pub disease: Disease,
-    is_city_under_quarantine: bool
+    is_city_under_quarantine: bool,
 }
 
 impl Epidemiology {
@@ -60,7 +61,8 @@ impl Epidemiology {
         let output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
         let output_file_name = format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"));
         let csv_listener = CsvListener::new(output_file_name);
-        let kafka_listener = KafkaProducer::new();
+        let kafka_listener = KafkaProducer::new(self.agent_location_map.agent_cell.len(),
+                                                config.enable_citizen_state_messages());
         let hotspot_tracker = Hotspot::new();
         let mut listeners = Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)]);
 
@@ -87,9 +89,9 @@ impl Epidemiology {
                                    &self.grid, &mut listeners, &mut rng, &self.disease);
             listeners.counts_updated(counts_at_hr);
 
-            let should_lock_down = !self.is_city_under_quarantine &&  Epidemiology::check_lock_down(&counts_at_hr);
+            let should_lock_down = !self.is_city_under_quarantine && Epidemiology::check_lock_down(&counts_at_hr);
 
-            if should_lock_down{
+            if should_lock_down {
                 self.is_city_under_quarantine = true;
                 println!("Locking the city");
                 Epidemiology::lock_city(&mut write_buffer_reference);
@@ -154,20 +156,20 @@ impl Epidemiology {
             }
 
             let agent_option = write_buffer.agent_cell.get(&point);
-            match agent_option {
-                Some(mut _agent) => {
-                    write_buffer.agent_cell.insert(*cell, current_agent);
-                }
-                _ => { write_buffer.agent_cell.insert(point, current_agent); }
-            }
+            let new_location = match agent_option {
+                Some(mut _agent) => cell, //occupied
+                _ =>  &point
+            };
+            write_buffer.agent_cell.insert(*new_location, current_agent);
+            listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
         }
     }
 
-    fn check_lock_down(csv_record: & events::Counts) -> bool {
+    fn check_lock_down(csv_record: &events::Counts) -> bool {
         csv_record.get_infected() > constants::CITY_LOCK_DOWN_THRESHOLD
     }
 
-    fn lock_city(write_buffer_reference: &mut AgentLocationMap){
+    fn lock_city(write_buffer_reference: &mut AgentLocationMap) {
         for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
             agent.set_isolation(true);
         }
@@ -195,6 +197,12 @@ impl Listener for Listeners {
 
     fn citizen_got_infected(&mut self, cell: &Point) {
         self.listeners.iter_mut().for_each(|listener| { listener.citizen_got_infected(cell) });
+    }
+
+    fn citizen_state_updated(&mut self, hr: i32, citizen: &Citizen, location: &Point) {
+        self.listeners.iter_mut().for_each(|listener| {
+            listener.citizen_state_updated(hr, citizen, location);
+        })
     }
 
     fn as_any(&self) -> &dyn Any {

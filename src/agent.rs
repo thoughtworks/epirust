@@ -19,7 +19,7 @@ pub enum State {
 
 #[derive(Copy, Clone, PartialEq)]
 pub struct StateMachine {
-    state: State,
+    pub state: State,
     infection_day: i32,
 }
 
@@ -52,7 +52,7 @@ pub struct Citizen {
     working: bool,
     hospitalized: bool,
     pub transport_location: Point,
-    state_machine: StateMachine,
+    pub state_machine: StateMachine,
     quarantined: bool,
     isolated: bool,
     current_area: Area

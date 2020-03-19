@@ -3,12 +3,12 @@ import Dygraph from 'dygraphs';
 import { useState, useEffect } from 'react';
 
 export default function Graph({ dataBuffer }) {
-    const [graph, setGraph] = useState(null);
+    const [graph, setGraph] = useState();
 
     useEffect(() => {
         if (dataBuffer.length === 0) {
             graph && graph.destroy()
-            setGraph(null);
+            setGraph();
             return
         }
 
@@ -25,5 +25,5 @@ export default function Graph({ dataBuffer }) {
 
     }, [graph, dataBuffer])
 
-    return <div id="vis" style={{ width: "70%", height: "600px" }}></div>;
+    return <div id="vis" data-testid="visualization" style={{ width: "70%", height: "600px" }}></div>;
 }

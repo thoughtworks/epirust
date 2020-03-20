@@ -18,7 +18,8 @@
     "react-chartjs-2": "^2.9.0",
     "react-dom": "^16.12.0",
     "react-scripts": "3.4.0",
-    "socket.io-client": "^2.3.0"
+    "socket.io-client": "^2.3.0",
+    "socket.io-mock": "^1.2.4"
   },
   "scripts": {
     "start": "react-scripts start",

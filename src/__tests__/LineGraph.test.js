@@ -41,10 +41,12 @@ test('should update dygraph chart when data buffer is not 0 and graph is not nul
     2,15,6,0,0,0
     3,20,7,0,0,1`
     const simulationData2 = "4,30,8,0,0,2"
-    const dygraphMockFn = Dygraph.mockImplementation(() => { })
-    const { rerender } = render(<Graph dataBuffer={simulationData1} />)
-    expect(dygraphMockFn).toHaveBeenCalledTimes(1)
+    const updateSpyFn = jest.fn()
+    const dygraphMockFn = Dygraph.mockImplementation(() => ({updateOptions: updateSpyFn}))
+    const {rerender} = render(<Graph dataBuffer={simulationData1}/>)
+    expect(dygraphMockFn).toHaveBeenCalled()
+    expect(updateSpyFn).toHaveBeenNthCalledWith(1, {file: simulationData1}) //TODO: stop update if new Dygraph has already been generated
 
-    rerender(<Graph dataBuffer={simulationData2} />)
-    //TODO: test if update method was called with arguments expected
+    rerender(<Graph dataBuffer={simulationData2}/>)
+    expect(updateSpyFn).toHaveBeenNthCalledWith(2, {file: simulationData2})
 })

@@ -24,7 +24,7 @@ export default function Graph({ dataBuffer }) {
                 showRoller: true
             });
 
-            setGraph(graphInstance);
+            setGraph(graphInstance)
         }
         else {
             graph.updateOptions({ 'file': dataBuffer });

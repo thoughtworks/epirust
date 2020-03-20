@@ -1,4 +1,6 @@
 import React from 'react';
+import PropTypes from 'prop-types'
+
 export default function FileDataInput({ onFileDataSubmit }) {
 
     function handleFileUpload(e) {
@@ -34,4 +36,8 @@ export default function FileDataInput({ onFileDataSubmit }) {
             <small>You can export a data file when a graph is plotted, for importing later.</small>
         </form>
     )
+}
+
+FileDataInput.propTypes = {
+    onFileDataSubmit: PropTypes.func.isRequired
 }

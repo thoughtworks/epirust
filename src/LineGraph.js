@@ -2,9 +2,10 @@ import React from 'react';
 import Dygraph from 'dygraphs';
 import { useState, useEffect } from 'react';
 import './LineGraph.scss'
+import PropTypes from 'prop-types'
 
 export default function Graph({ dataBuffer }) {
-    const [graph, setGraph] = useState();
+    const [graph, setGraph] = useState(null);
 
     useEffect(() => {
         if (dataBuffer.length === 0) {
@@ -59,4 +60,8 @@ export default function Graph({ dataBuffer }) {
 
         </div>
     );
+}
+
+Graph.propTypes = {
+    dataBuffer: PropTypes.array.isRequired
 }

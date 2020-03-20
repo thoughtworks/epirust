@@ -3,7 +3,7 @@ import { render, fireEvent } from '@testing-library/react'
 import ParametersForm from '../ParamtersForm'
 
 test('renders ParameterInputForm with defaults', () => {
-    const { getByText, getByLabelText } = render(<ParametersForm />)
+    const { getByText, getByLabelText } = render(<ParametersForm onDataSubmit={jest.fn()}/>)
 
     expect(getByLabelText('Number of Agents').value).toBe('10000')
     expect(getByLabelText('Disease Name').value).toBe('small_pox')

@@ -20,7 +20,7 @@ test('invoke submit form data to server on submit', () => {
     }
 
     const onSubmitSpy = jest.fn()
-    const { getByTestId } = render(<DataInputs onSubmit={onSubmitSpy} />)
+    const { getByTestId } = render(<DataInputs onSubmit={onSubmitSpy} onFileDataInput={jest.fn()}/>)
 
     fireEvent.submit(getByTestId('simulationForm'))
 
@@ -49,7 +49,7 @@ test('invoke onsubmit handler passed on a file upload', () => {
     window.FileReader.DONE = 2
 
     const onFileDataInputSpy = jest.fn(()=>"ABCBD")
-    const { getByTestId } = render(<DataInputs onFileDataInput={onFileDataInputSpy} />)
+    const { getByTestId } = render(<DataInputs onSubmit={jest.fn()} onFileDataInput={onFileDataInputSpy} />)
 
     fireEvent.change(getByTestId('import-input'), {
         target: {

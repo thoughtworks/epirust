@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Graph from './LineGraph';
+import PropTypes from 'prop-types'
 
 export default function SocketAwareGraph({ socket }) {
     const [dataBuffer, setDataBuffer] = useState([]);
@@ -30,4 +31,8 @@ export default function SocketAwareGraph({ socket }) {
     }, [socket])
 
     return <Graph dataBuffer={dataBuffer} />
+}
+
+SocketAwareGraph.propTypes = {
+    socket: PropTypes.object
 }

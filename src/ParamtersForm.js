@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types'
 
 export default function ParametersForm({ onDataSubmit }) {
 
@@ -73,4 +74,8 @@ export default function ParametersForm({ onDataSubmit }) {
 
         </form>
     )
+}
+
+ParametersForm.propTypes = {
+    onDataSubmit: PropTypes.func.isRequired
 }

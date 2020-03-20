@@ -132,8 +132,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn should_read_pune_config() {
-        let read_config = read(String::from("config/pune.json")).unwrap();
+    fn should_read_config_with_csv_population() {
+        let read_config = read(String::from("config/test/csv_pop.json")).unwrap();
 
         let vaccinate = Vaccinate::new(5000, 0.2);
         let disease_override = DiseaseOverride::new(
@@ -162,8 +162,8 @@ mod tests {
     }
 
     #[test]
-    fn should_read_default_config() {
-        let read_config = read(String::from("config/default.json")).unwrap();
+    fn should_read_config_with_auto_population() {
+        let read_config = read(String::from("config/test/auto_pop.json")).unwrap();
 
         let vaccinate = Vaccinate::new(5000, 0.2);
 

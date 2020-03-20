@@ -20,7 +20,8 @@ export default function Graph({ dataBuffer }) {
                 animatedZooms: true,
                 title: 'Time Series Graph',
                 ylabel: 'Number of Agents',
-                xlabel: 'Hours'
+                xlabel: 'Hours',
+                showRoller: true
             });
 
             setGraph(graphInstance);
@@ -31,6 +32,5 @@ export default function Graph({ dataBuffer }) {
 
     }, [graph, dataBuffer])
 
-    return <div id="vis" data-testid="visualization" style={{ width: "85%", height: "600px" }}></div>;
-
+    return <div id="vis" data-testid="visualization" style={{ width: "100%", height: "600px" }}></div>;
 }

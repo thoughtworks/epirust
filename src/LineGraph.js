@@ -32,14 +32,31 @@ export default function Graph({ dataBuffer }) {
 
     }, [graph, dataBuffer])
 
+    function handleExportClick() {
+        let filename = "export.json";
+        let contentType = "application/json;charset=utf-8;";
+
+        var a = document.createElement('a');
+        a.download = filename;
+        a.href = 'data:' + contentType + ',' + encodeURIComponent(JSON.stringify(dataBuffer));
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
     return (
-        <>
-            <p className="graph-actions">
-                <span className="action">Zoom: <span className='control'>click-drag</span></span>
-                <span className="action">Pan: <span className='control'>shift-click-drag</span></span>
-                <span className="action">Restore: <span className='control'>double-click</span></span>
-            </p>
-            <div id="vis" data-testid="visualization" style={{ margin: "0 auto", width: "80%", height: "600px" }}></div>
-        </>
+        <div className="graph-wrap">
+
+            <div id="vis" data-testid="visualization"></div>
+
+            <div className="graph-actions">
+                <p className="action">Zoom: <span className='control'>click-drag</span></p>
+                <p className="action">Pan: <span className='control'>shift-click-drag</span></p>
+                <p className="action">Restore: <span className='control'>double-click</span></p>
+                <button onClick={handleExportClick} className="btn btn-secondary">Export graph</button>
+            </div>
+
+        </div>
     );
 }

@@ -122,24 +122,35 @@
     -ms-transform: rotate(-90deg);
   }
 
-  .graph-actions {
-    text-align: center;
-  }
+  .graph-wrap {
+    display: flex;
+    flex-direction: row;
 
-  .action {
-    margin-right: 15px;
-    font-size: 0.9rem;
-    color: rgb(41, 134, 233);
-
-    .control {
-      padding: 4px;
-      color: gray;
-      font-weight: bold;
-      background-color: #f1f1f1;
-      border-radius: 2px;
+    #vis {
+      padding: 20px;
+      flex-basis: 80%;
+      height: 600px;
     }
 
-    &:last-child {
-      margin-right: 0;
+    .graph-actions {
+      padding: 20px;
+    }
+  
+    .action {
+      margin-right: 15px;
+      font-size: 0.9rem;
+      color: rgb(41, 134, 233);
+  
+      .control {
+        padding: 4px;
+        color: gray;
+        font-weight: bold;
+        background-color: #f1f1f1;
+        border-radius: 2px;
+      }
+  
+      &:last-child {
+        margin-right: 0;
+      }
     }
   }

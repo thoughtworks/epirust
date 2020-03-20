@@ -3,14 +3,17 @@ import SocketAwareGraph from '../SocketAwareGraph'
 import {render, getByTestId, act} from '@testing-library/react'
 import MockSocket from 'socket.io-mock'
 import Dygraph from 'dygraphs'
+import renderer from 'react-test-renderer'
 
 jest.mock('dygraphs')
 jest.useFakeTimers();
 
 
-test('should render graph', () => {
-    const {getByTestId} = render(<SocketAwareGraph/>)
-    expect(getByTestId('visualization')).toBeInTheDocument()
+test('should render SocketAwareGraph', () => {
+    const component = renderer.create(<SocketAwareGraph />)
+    let tree = component.toJSON()
+
+    expect(tree).toMatchSnapshot()
 })
 
 test('should recieve data sent on socket and parse & set graph to empty', () => {

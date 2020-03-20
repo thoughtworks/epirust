@@ -1,0 +1,177 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should render ParametersForm with defaults 1`] = `
+<form
+  data-testid="simulationForm"
+  onSubmit={[Function]}
+>
+  <div
+    className="form-row"
+  >
+    <div
+      className="col inputs"
+    >
+      <div
+        className="input-control"
+      >
+        <label
+          htmlFor="number_of_agents"
+        >
+          Number of Agents
+        </label>
+        <input
+          aria-describedby="number_of_agents"
+          className="form-control"
+          defaultValue="10000"
+          id="number_of_agents"
+          name="number_of_agents"
+          placeholder="Number of Agents"
+          type="number"
+        />
+      </div>
+      <div
+        className="input-control"
+      >
+        <label
+          htmlFor="disease_name"
+        >
+          Disease Name
+        </label>
+        <input
+          aria-describedby="disease_name"
+          className="form-control"
+          defaultValue="small_pox"
+          id="disease_name"
+          name="disease_name"
+          placeholder="Disease Name"
+          type="text"
+        />
+      </div>
+      <div
+        className="input-control"
+      >
+        <label
+          htmlFor="grid_size"
+        >
+          Grid Size
+        </label>
+        <input
+          aria-describedby="grid_size"
+          className="form-control"
+          defaultValue="250"
+          id="grid_size"
+          name="grid_size"
+          placeholder="Grid Size"
+          type="number"
+        />
+      </div>
+      <div
+        className="input-control"
+      >
+        <label
+          htmlFor="simulation_hrs"
+        >
+          Simulation Hours
+        </label>
+        <input
+          aria-describedby="simulation_hrs"
+          className="form-control"
+          defaultValue="10000"
+          id="simulation_hrs"
+          name="simulation_hrs"
+          placeholder="Simulation Hours"
+          type="number"
+        />
+      </div>
+      <div
+        className="input-control"
+      >
+        <label
+          htmlFor="public_transport_percentage"
+        >
+          Public Transport Percentage
+        </label>
+        <input
+          aria-describedby="public_transport_percentage"
+          className="form-control"
+          defaultValue="0.2"
+          id="public_transport_percentage"
+          name="public_transport_percentage"
+          placeholder="Public Transport Percentage"
+          step="any"
+          type="number"
+        />
+      </div>
+      <div
+        className="input-control"
+      >
+        <label
+          htmlFor="working_percentage"
+        >
+          Working Percentage
+        </label>
+        <input
+          aria-describedby="working_percentage"
+          className="form-control"
+          defaultValue="0.7"
+          id="working_percentage"
+          max="1"
+          min="0"
+          name="working_percentage"
+          placeholder="Working Percentage"
+          step="any"
+          type="number"
+        />
+      </div>
+      <div
+        className="input-control"
+      >
+        <label
+          htmlFor="vaccinate_at"
+        >
+          Vaccinate At
+        </label>
+        <input
+          aria-describedby="vaccinate_at"
+          className="form-control"
+          defaultValue="5000"
+          id="vaccinate_at"
+          name="vaccinate_at"
+          placeholder="Vaccinate At"
+          type="number"
+        />
+      </div>
+      <div
+        className="input-control"
+      >
+        <label
+          htmlFor="vaccinate_percentage"
+        >
+          Vaccinate Percentage
+        </label>
+        <input
+          aria-describedby="vaccinate_percentage"
+          className="form-control"
+          defaultValue="0.2"
+          id="vaccinate_percentage"
+          name="vaccinate_percentage"
+          placeholder="Vaccinate Percentage"
+          step="any"
+          type="number"
+        />
+      </div>
+    </div>
+    <div
+      className="col"
+    >
+      <button
+        className="btn btn-primary"
+        id="submitBtn"
+        type="submit"
+      >
+        Start
+      </button>
+    </div>
+  </div>
+</form>
+`;

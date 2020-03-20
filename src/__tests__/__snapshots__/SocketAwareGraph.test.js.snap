@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should render SocketAwareGraph 1`] = `
+<div
+  className="graph-wrap"
+>
+  <div
+    data-testid="visualization"
+    id="vis"
+  />
+  <div
+    className="graph-actions"
+  >
+    <p
+      className="action"
+    >
+      Zoom: 
+      <span
+        className="control"
+      >
+        click-drag
+      </span>
+    </p>
+    <p
+      className="action"
+    >
+      Pan: 
+      <span
+        className="control"
+      >
+        shift-click-drag
+      </span>
+    </p>
+    <p
+      className="action"
+    >
+      Restore: 
+      <span
+        className="control"
+      >
+        double-click
+      </span>
+    </p>
+    <button
+      className="btn btn-secondary"
+      onClick={[Function]}
+    >
+      Export graph
+    </button>
+  </div>
+</div>
+`;

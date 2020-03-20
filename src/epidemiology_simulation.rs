@@ -75,9 +75,11 @@ impl Epidemiology {
 
         let vaccinations = Epidemiology::prepare_vaccinations(config);
         let hospital_intervention = Intervention::get_hospital_intervention(config);
+        let mut infection_count_for_yesterday = 0;
 
         for simulation_hour in 1..config.get_hours() {
             counts_at_hr.increment_hour();
+            let start_of_day = simulation_hour % 24 == 0;
 
             let mut read_buffer_reference = self.agent_location_map.borrow();
             let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
@@ -87,12 +89,15 @@ impl Epidemiology {
                 write_buffer_reference = self.agent_location_map.borrow_mut();
             }
 
-            match hospital_intervention  {
-                Some(x) if x.at_hour == simulation_hour => {
-                    println!("Increasing the hospital size");
-                    self.grid.increase_hospital_size(config.get_grid_size(), x.new_scale_factor);
-                },
-                _ => {},
+            if start_of_day {
+                let rate_of_spread = counts_at_hr.get_infected() - infection_count_for_yesterday;
+                match hospital_intervention {
+                    Some(x) if rate_of_spread >= x.spread_rate_threshold => {
+                        println!("Increasing the hospital size");
+                        self.grid.increase_hospital_size(config.get_grid_size(), x.new_scale_factor);
+                    }
+                    _ => {}
+                }
             }
 
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
@@ -123,6 +128,10 @@ impl Epidemiology {
                 println!("Throughput: {} iterations/sec; simulation hour {} of {}",
                          simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
                          simulation_hour, config.get_hours());
+            }
+
+            if start_of_day {
+                infection_count_for_yesterday = counts_at_hr.get_infected();
             }
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();

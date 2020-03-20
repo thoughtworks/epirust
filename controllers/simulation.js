@@ -46,7 +46,7 @@ router.post('/init', (req, res, next) => {
       "high_transmission_rate": 0.5,
       "death_rate": 0.2
     },
-    "grid": message.grid_size,
+    "grid_size": message.grid_size,
     "hours": message.simulation_hrs,
     "interventions": [
       {

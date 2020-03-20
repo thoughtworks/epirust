@@ -50,7 +50,7 @@ function App() {
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
         <a className="navbar-brand" href="/">EpiViz</a>
       </nav>
-      <div className="container mt-4">
+      <div className="container-fluid mt-4">
         <DataInputs onFileDataInput={handleFileData} onSubmit={handleFormSubmit} />
         {fileData.length > 1 ? <Graph dataBuffer={fileData} /> : <SocketAwareGraph socket={socket} />}
       </div>

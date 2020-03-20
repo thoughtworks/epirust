@@ -39,7 +39,7 @@ export default function Graph({ dataBuffer }) {
                 <span className="action">Pan: <span className='control'>shift-click-drag</span></span>
                 <span className="action">Restore: <span className='control'>double-click</span></span>
             </p>
-            <div id="vis" data-testid="visualization" style={{ width: "100%", height: "600px" }}></div>
+            <div id="vis" data-testid="visualization" style={{ margin: "0 auto", width: "80%", height: "600px" }}></div>
         </>
     );
 }

@@ -50,9 +50,9 @@ impl Grid {
         for home in homes {
             Grid::draw_rect(&mut svg, &home, &plotters::style::RGBColor(204, 153, 0));
         }
-        // for office in offices {
-        //     Grid::draw_rect(&mut svg, &office, &plotters::style::RGBColor(51, 153, 255));
-        // }
+        for office in offices {
+            Grid::draw_rect(&mut svg, &office, &plotters::style::RGBColor(51, 153, 255));
+        }
         (home_locations, agent_list)
     }
 

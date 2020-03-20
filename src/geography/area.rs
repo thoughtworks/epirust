@@ -57,15 +57,19 @@ impl Area {
 
 pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area>{
     let mut areas = Vec::with_capacity((end_point.x / size) as usize);
-    let mut area_start_point = start_point;
+    let mut current_start_point = start_point;
     for _i in 0..(end_point.x/size * end_point.y/size) {
-        let area_end_point:Point = Point::new(area_start_point.x + size, area_start_point.y + size);
-        areas.push(Area::new(area_start_point, area_end_point));
-        area_start_point.x = area_start_point.x + size;
+        let current_end_point:Point = Point::new(current_start_point.x + size, current_start_point.y + size);
+        areas.push(Area::new(current_start_point, current_end_point));
+        current_start_point.x = current_start_point.x + size;
 
-        if area_start_point.x == end_point.x{
-            area_start_point.x = 0;
-            area_start_point.y = area_start_point.y + size;
+        if current_start_point.x >= end_point.x{
+            current_start_point.x = start_point.x;
+            current_start_point.y = current_start_point.y + size;
+        }
+
+        if current_end_point.x >= end_point.x && current_end_point.y == end_point.y{
+            break;
         }
     }
     areas
@@ -122,7 +126,9 @@ mod tests {
         assert_eq!(homes.len(), 25);
         assert_eq!(homes.get(0).unwrap().start_offset, Point::new(0, 0));
         assert_eq!(homes.get(0).unwrap().end_offset, Point::new(2, 2));
-        assert_eq!(homes.get(24).unwrap().start_offset, Point::new(8, 8));
-        assert_eq!(homes.get(24).unwrap().end_offset, Point::new(10, 10));
+        assert_eq!(homes.get(5).unwrap().start_offset, Point::new(0, 2));
+        assert_eq!(homes.get(5).unwrap().end_offset, Point::new(2, 4));
+        assert_eq!(homes.last().unwrap().start_offset, Point::new(8, 8));
+        assert_eq!(homes.last().unwrap().end_offset, Point::new(10, 10));
     }
 }

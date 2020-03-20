@@ -314,19 +314,25 @@ pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_l
     for i in 0..number_of_agents as usize {
         let is_a_working_citizen = rng.get().gen_bool(working_percentage);
 
+        let total_home_locations = home_locations.len();
+        let total_work_locations = work_locations.len();
+
+        let home_location = home_locations[(i % total_home_locations)];
+        let work_location = work_locations[(i % total_work_locations)];
+
         let uses_public_transport = rng.get().gen_bool(percentage_public_transport)
             && is_a_working_citizen
             && i < public_transport_locations.len();
-
+        //TODO: Check the logic - Jayanta
         let public_transport_location: Point = if uses_public_transport { public_transport_locations[i] } else {
-            home_locations[(i / number_of_agents as usize)].get_random_point(rng)
+            home_location.get_random_point(rng)
         };
 
-        let work_location = if is_a_working_citizen { work_locations[(i / number_of_agents as usize)] } else {
-            home_locations[(i / number_of_agents as usize)]
+        let work_location = if is_a_working_citizen { work_location } else {
+            home_location
         };
 
-        let agent = Citizen::new_citizen(i as i32, home_locations[(i / number_of_agents as usize)], work_location,
+        let agent = Citizen::new_citizen(i as i32, home_location, work_location,
                                          public_transport_location, uses_public_transport, is_a_working_citizen, rng);
         agent_list.push(agent);
     }

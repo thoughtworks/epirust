@@ -32,5 +32,14 @@ export default function Graph({ dataBuffer }) {
 
     }, [graph, dataBuffer])
 
-    return <div id="vis" data-testid="visualization" style={{ width: "100%", height: "600px" }}></div>;
+    return (
+        <>
+            <p className="graph-actions">
+                <span className="action">Zoom: <span className='control'>click-drag</span></span>
+                <span className="action">Pan: <span className='control'>shift-click-drag</span></span>
+                <span className="action">Restore: <span className='control'>double-click</span></span>
+            </p>
+            <div id="vis" data-testid="visualization" style={{ width: "100%", height: "600px" }}></div>
+        </>
+    );
 }

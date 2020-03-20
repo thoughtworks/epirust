@@ -121,3 +121,24 @@
     -o-transform: rotate(-90deg);
     -ms-transform: rotate(-90deg);
   }
+
+  .graph-actions {
+    text-align: center;
+  }
+
+  .action {
+    margin-right: 15px;
+    color: rgb(34, 77, 249);
+
+    .control {
+      padding: 4px;
+      color: gray;
+      font-weight: bold;
+      background-color: #f1f1f1;
+      border-radius: 2px;
+    }
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }

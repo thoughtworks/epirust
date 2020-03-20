@@ -1,10 +1,15 @@
-use crate::geography::{Area, Point, area};
-use crate::agent::Citizen;
+use plotters::drawing::SVGBackend;
+use plotters::prelude::*;
+
 use crate::{agent, constants};
-use crate::random_wrapper::RandomWrapper;
+use crate::agent::Citizen;
 use crate::config::{AutoPopulation, CsvPopulation};
+use crate::geography::{Area, area, Point};
+use crate::random_wrapper::RandomWrapper;
+use plotters::drawing::rasterizer::draw_rect;
 
 pub struct Grid {
+    pub grid_size: i32,
     pub housing_area: Area,
     pub work_area: Area,
     pub transport_area: Area,
@@ -36,7 +41,25 @@ impl Grid {
         let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32, rng);
 
         let agent_list = agent::citizen_factory(number_of_agents, &homes, &offices, &transport_locations, public_transport_percentage, working_percentage, rng);
+
+        let mut svg = SVGBackend::new("grid.svg", (self.grid_size as u32, self.grid_size as u32));
+        Grid::draw_rect(&mut svg, &self.housing_area, &plotters::style::YELLOW);
+        Grid::draw_rect(&mut svg, &self.transport_area, &plotters::style::RGBColor(121, 121, 121));
+        Grid::draw_rect(&mut svg, &self.work_area, &plotters::style::BLUE);
+        Grid::draw_rect(&mut svg, &self.hospital_area, &plotters::style::RED);
+        for home in homes {
+            Grid::draw_rect(&mut svg, &home, &plotters::style::RGBColor(204, 153, 0));
+        }
+        // for office in offices {
+        //     Grid::draw_rect(&mut svg, &office, &plotters::style::RGBColor(51, 153, 255));
+        // }
         (home_locations, agent_list)
+    }
+
+    fn draw_rect(svg: &mut SVGBackend, area: &Area, style: &RGBColor) {
+        svg.draw_rect((area.start_offset.x, area.start_offset.y),
+                      (area.end_offset.x, area.end_offset.y),
+                      style, true).unwrap();
     }
 
     pub fn read_population(&self, csv_pop: &CsvPopulation) -> (Vec<Point>, Vec<Citizen>) {
@@ -66,7 +89,7 @@ mod tests {
         let hospital_area = Area::new(Point::new(21, 0), Point::new(25, 10));
         let work_area = Area::new(Point::new(26, 0), Point::new(36, 10));
 
-        let grid = Grid { housing_area, work_area, transport_area, hospital_area };
+        let grid = Grid { grid_size: 36, housing_area, work_area, transport_area, hospital_area };
         let pop = AutoPopulation {
             number_of_agents: 10,
             public_transport_percentage: 0.2,

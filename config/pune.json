@@ -38,7 +38,7 @@
       }
     }
   ],
-  "grid": 5660,
+  "grid_size": 5660,
   "hours": 10000,
   "interventions": [
     {

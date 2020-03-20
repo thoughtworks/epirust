@@ -9,7 +9,7 @@ pub struct Config {
     disease: Disease,
     #[serde(default)]
     disease_overrides: Vec<DiseaseOverride>,
-    grid: i32,
+    grid_size: i32,
     hours: i32,
     interventions: Vec<Intervention>,
     output_file: Option<String>,
@@ -30,8 +30,8 @@ impl Config {
         self.disease_overrides.clone()
     }
 
-    pub fn get_grid(&self) -> i32 {
-        self.grid
+    pub fn get_grid_size(&self) -> i32 {
+        self.grid_size
     }
 
     pub fn get_hours(&self) -> i32 {
@@ -52,12 +52,12 @@ impl Config {
 
     pub fn new(population: Population, disease: Disease, disease_overrides: Vec<DiseaseOverride>,
                grid: i32, hours: i32, interventions: Vec<Intervention>, output_file: Option<String>)
-        -> Config {
+               -> Config {
         Config {
             population,
             disease,
             disease_overrides,
-            grid,
+            grid_size: grid,
             hours,
             interventions,
             output_file,
@@ -89,6 +89,7 @@ pub struct AutoPopulation {
 pub enum Intervention {
     Vaccinate(Vaccinate),
     Lockdown(Lockdown),
+    BuildNewHospital(BuildNewHospital)
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
@@ -112,6 +113,12 @@ impl Lockdown {
     pub fn new(at_hour: i32) -> Lockdown {
         Lockdown { at_hour }
     }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
+pub struct BuildNewHospital {
+    pub at_hour: i32,
+    pub new_scale_factor: i32
 }
 
 pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {
@@ -144,7 +151,7 @@ mod tests {
             population,
             disease: Disease::new(5, 20, 40, 0.025, 0.25, 0.035),
             disease_overrides: vec![disease_override],
-            grid: 5660,
+            grid_size: 5660,
             hours: 10000,
             interventions: vec![Intervention::Vaccinate(vaccinate)],
             output_file: None,
@@ -170,7 +177,7 @@ mod tests {
             population,
             disease: Disease::new(5, 20, 40, 0.025, 0.25, 0.035),
             disease_overrides: vec![],
-            grid: 250,
+            grid_size: 250,
             hours: 10000,
             interventions: vec![Intervention::Vaccinate(vaccinate)],
             output_file: Some("simulation_default_config".to_string()),

@@ -16,8 +16,8 @@ pub fn define_geography(grid_size: i32) -> Grid {
 
     let housing_area = Area::new(Point::new(0, 0), Point::new(x_offset_for_home, bound));
     let transport_area = Area::new(Point::new(x_offset_for_home + 1, 0), Point::new(x_offset_for_transport, bound));
-    let hospital = Area::new(Point::new(x_offset_for_transport + 1, 0), Point::new(x_offset_for_hospital, bound));
+    let hospital_area = Area::new(Point::new(x_offset_for_transport + 1, 0), Point::new(x_offset_for_hospital, bound));
     let work_area = Area::new(Point::new(x_offset_for_hospital + 1, 0), Point::new(bound, bound));
-    Grid { housing_area, transport_area, hospital, work_area }
+    Grid { housing_area, transport_area, hospital_area, work_area }
 }
 

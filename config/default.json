@@ -15,7 +15,7 @@
     "high_transmission_rate": 0.25,
     "death_rate": 0.035
   },
-  "grid": 250,
+  "grid_size": 250,
   "hours": 10000,
   "interventions": [
     {

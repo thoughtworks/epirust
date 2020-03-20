@@ -8,7 +8,7 @@ pub struct Grid {
     pub housing_area: Area,
     pub work_area: Area,
     pub transport_area: Area,
-    pub hospital: Area,
+    pub hospital_area: Area,
 }
 
 impl Grid {
@@ -26,10 +26,10 @@ impl Grid {
 
         // assumes that housing starts at 0,0 and work area is the same size as housing area
         // layout: housing | transport | hospital | work
-        let scaling_factor = self.hospital.end_offset.x + 1;
+        let scaling_factor = self.hospital_area.end_offset.x + 1;
 
-        let office_start_point = Point::new(self.hospital.end_offset.x + 1, self.housing_area.start_offset.y);
-        let office_end_point = Point::new(scaling_factor + self.housing_area.end_offset.x + 1, self.hospital.end_offset.y + 1);
+        let office_start_point = Point::new(self.hospital_area.end_offset.x + 1, self.housing_area.start_offset.y);
+        let office_end_point = Point::new(scaling_factor + self.housing_area.end_offset.x + 1, self.hospital_area.end_offset.y + 1);
 
         let offices = area::area_factory(office_start_point, office_end_point, constants::OFFICE_SIZE);
 
@@ -42,6 +42,16 @@ impl Grid {
     pub fn read_population(&self, csv_pop: &CsvPopulation) -> (Vec<Point>, Vec<Citizen>) {
         panic!("Not yet implemented");
     }
+
+    pub fn increase_hospital_size(&mut self, grid_size: i32, scale_factor: i32) {
+        let bound = grid_size - 1;
+        let hospital_increased_relative_size = constants::HOSPITAL_RELATIVE_SIZE * scale_factor as f32;
+        let new_x_offset = (bound as f32 * hospital_increased_relative_size).ceil() as i32;
+        let start_offset = self.hospital_area.start_offset;
+        let end_offset = Point::new(new_x_offset, bound);
+
+        self.hospital_area = Area::new(start_offset, end_offset)
+    }
 }
 
 #[cfg(test)]
@@ -53,10 +63,10 @@ mod tests {
         let mut rng = RandomWrapper::new();
         let housing_area = Area::new(Point::new(0, 0), Point::new(10, 10));
         let transport_area = Area::new(Point::new(11, 0), Point::new(20, 10));
-        let hospital = Area::new(Point::new(21, 0), Point::new(25, 10));
+        let hospital_area = Area::new(Point::new(21, 0), Point::new(25, 10));
         let work_area = Area::new(Point::new(26, 0), Point::new(36, 10));
 
-        let grid = Grid { housing_area, work_area, transport_area, hospital };
+        let grid = Grid { housing_area, work_area, transport_area, hospital_area };
         let pop = AutoPopulation {
             number_of_agents: 10,
             public_transport_percentage: 0.2,

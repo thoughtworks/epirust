@@ -198,7 +198,7 @@ impl Citizen {
         match simulation_hour % constants::NUMBER_OF_HOURS {
             constants::ROUTINE_START_TIME => {
                 self.update_infection_day();
-                new_cell = self.quarantine_all(cell, &grid.hospital, map, counts, disease);
+                new_cell = self.quarantine_all(cell, &grid.hospital_area, map, counts, disease);
             }
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {}
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {

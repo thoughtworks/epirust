@@ -10,7 +10,7 @@ use rand::Rng;
 
 use crate::{allocation_map, events, constants};
 use crate::allocation_map::AgentLocationMap;
-use crate::config::{Config, Intervention, Population};
+use crate::config::{Config, Intervention, Population, BuildNewHospital};
 use crate::csv_service::CsvListener;
 use crate::disease::Disease;
 use crate::disease_tracker::Hotspot;
@@ -19,6 +19,8 @@ use crate::geography;
 use crate::geography::{Grid, Point};
 use crate::kafka_service::KafkaProducer;
 use crate::random_wrapper::RandomWrapper;
+use std::iter::Filter;
+use std::slice::Iter;
 use crate::agent::Citizen;
 
 pub struct Epidemiology {
@@ -33,7 +35,7 @@ impl Epidemiology {
     pub fn new(config: &Config) -> Epidemiology {
         let start = Instant::now();
         let disease = config.get_disease();
-        let grid = geography::define_geography(config.get_grid());
+        let grid = geography::define_geography(config.get_grid_size());
         let mut rng = RandomWrapper::new();
         let (start_locations, agent_list) = match config.get_population() {
             Population::Csv(csv_pop) => {
@@ -44,8 +46,8 @@ impl Epidemiology {
             }
         };
 
-        let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid(), &agent_list, &start_locations);
-        let write_agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid(), &agent_list, &start_locations);
+        let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
+        let write_agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
         let is_city_under_quarantine = false;
 
         println!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
@@ -73,6 +75,12 @@ impl Epidemiology {
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
         let vaccinations = Epidemiology::prepare_vaccinations(config);
+        let hospital_intervention = config.get_interventions().iter().filter_map(|i| {
+            match i {
+                Intervention::BuildNewHospital(x) => Some(x),
+                _ => None
+            }
+        }).next().copied().expect("Hospital intervention config not found!");
 
         for simulation_hour in 1..config.get_hours() {
             counts_at_hr.increment_hour();
@@ -83,6 +91,12 @@ impl Epidemiology {
             if simulation_hour % 2 == 0 {
                 read_buffer_reference = self.write_agent_location_map.borrow();
                 write_buffer_reference = self.agent_location_map.borrow_mut();
+            }
+
+            if simulation_hour == hospital_intervention.at_hour {
+                println!("Increasing the hospital size");
+
+                self.grid.increase_hospital_size(config.get_grid_size(), hospital_intervention.new_scale_factor);
             }
 
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
@@ -240,7 +254,7 @@ mod tests {
         assert_eq!(epidemiology.grid.transport_area, expected_transport_area);
 
         let expected_hospital_area = Area::new(Point::new(10, 0), Point::new(11, 19));
-        assert_eq!(epidemiology.grid.hospital, expected_hospital_area);
+        assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
 
         let expected_work_area = Area::new(Point::new(12, 0), Point::new(19, 19));
         assert_eq!(epidemiology.grid.work_area, expected_work_area);

@@ -22,6 +22,7 @@ mod population;
 mod geojson_service;
 mod models;
 mod config;
+mod interventions;
 
 #[tokio::main]
 async fn main() {

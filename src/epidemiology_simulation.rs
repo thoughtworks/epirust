@@ -10,7 +10,7 @@ use rand::Rng;
 
 use crate::{allocation_map, events, constants};
 use crate::allocation_map::AgentLocationMap;
-use crate::config::{Config, Intervention, Population, BuildNewHospital};
+use crate::config::{Config, Population};
 use crate::csv_service::CsvListener;
 use crate::disease::Disease;
 use crate::disease_tracker::Hotspot;
@@ -19,9 +19,8 @@ use crate::geography;
 use crate::geography::{Grid, Point};
 use crate::kafka_service::KafkaProducer;
 use crate::random_wrapper::RandomWrapper;
-use std::iter::Filter;
-use std::slice::Iter;
 use crate::agent::Citizen;
+use crate::interventions::{Intervention, BuildNewHospital};
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -75,12 +74,7 @@ impl Epidemiology {
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
         let vaccinations = Epidemiology::prepare_vaccinations(config);
-        let hospital_intervention = config.get_interventions().iter().filter_map(|i| {
-            match i {
-                Intervention::BuildNewHospital(x) => Some(x),
-                _ => None
-            }
-        }).next().copied().expect("Hospital intervention config not found!");
+        let hospital_intervention = Intervention::get_hospital_intervention(config);
 
         for simulation_hour in 1..config.get_hours() {
             counts_at_hr.increment_hour();
@@ -93,10 +87,12 @@ impl Epidemiology {
                 write_buffer_reference = self.agent_location_map.borrow_mut();
             }
 
-            if simulation_hour == hospital_intervention.at_hour {
-                println!("Increasing the hospital size");
-
-                self.grid.increase_hospital_size(config.get_grid_size(), hospital_intervention.new_scale_factor);
+            match hospital_intervention  {
+                Some(x) if x.at_hour == simulation_hour => {
+                    println!("Increasing the hospital size");
+                    self.grid.increase_hospital_size(config.get_grid_size(), x.new_scale_factor);
+                },
+                _ => {},
             }
 
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
@@ -172,7 +168,7 @@ impl Epidemiology {
             let agent_option = write_buffer.agent_cell.get(&point);
             let new_location = match agent_option {
                 Some(mut _agent) => cell, //occupied
-                _ =>  &point
+                _ => &point
             };
             write_buffer.agent_cell.insert(*new_location, current_agent);
             listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
@@ -226,7 +222,8 @@ impl Listener for Listeners {
 
 #[cfg(test)]
 mod tests {
-    use crate::config::{AutoPopulation, Vaccinate};
+    use crate::config::AutoPopulation;
+    use crate::interventions::Vaccinate;
     use crate::geography::Area;
     use crate::geography::Point;
 

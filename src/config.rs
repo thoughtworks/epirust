@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fs::File;
 
 use crate::disease::{Disease, DiseaseOverride};
+use crate::interventions::{Intervention, Vaccinate};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Config {
@@ -83,42 +84,6 @@ pub struct AutoPopulation {
     pub number_of_agents: i32,
     pub public_transport_percentage: f64,
     pub working_percentage: f64,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
-pub enum Intervention {
-    Vaccinate(Vaccinate),
-    Lockdown(Lockdown),
-    BuildNewHospital(BuildNewHospital)
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
-pub struct Vaccinate {
-    pub at_hour: i32,
-    pub percent: f64,
-}
-
-impl Vaccinate {
-    pub fn new(at_hour: i32, percent: f64) -> Vaccinate {
-        Vaccinate { at_hour, percent }
-    }
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
-pub struct Lockdown {
-    at_hour: i32,
-}
-
-impl Lockdown {
-    pub fn new(at_hour: i32) -> Lockdown {
-        Lockdown { at_hour }
-    }
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
-pub struct BuildNewHospital {
-    pub at_hour: i32,
-    pub new_scale_factor: i32
 }
 
 pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {

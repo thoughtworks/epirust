@@ -66,12 +66,10 @@ impl Grid {
         panic!("Not yet implemented");
     }
 
-    pub fn increase_hospital_size(&mut self, grid_size: i32, scale_factor: i32) {
+    pub fn increase_hospital_size(&mut self, grid_size: i32) {
         let bound = grid_size - 1;
-        let hospital_increased_relative_size = constants::HOSPITAL_RELATIVE_SIZE * scale_factor as f32;
-        let new_x_offset = (bound as f32 * hospital_increased_relative_size).ceil() as i32;
         let start_offset = self.hospital_area.start_offset;
-        let end_offset = Point::new(new_x_offset, bound);
+        let end_offset = Point::new(bound, bound);
 
         self.hospital_area = Area::new(start_offset, end_offset)
     }

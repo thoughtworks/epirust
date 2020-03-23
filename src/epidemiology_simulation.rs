@@ -37,12 +37,8 @@ impl Epidemiology {
         let grid = geography::define_geography(config.get_grid_size());
         let mut rng = RandomWrapper::new();
         let (start_locations, agent_list) = match config.get_population() {
-            Population::Csv(csv_pop) => {
-                grid.read_population(&csv_pop)
-            }
-            Population::Auto(auto_pop) => {
-                grid.generate_population(&auto_pop, &mut rng)
-            }
+            Population::Csv(csv_pop) => grid.read_population(&csv_pop),
+            Population::Auto(auto_pop) => grid.generate_population(&auto_pop, &mut rng),
         };
 
         let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
@@ -95,7 +91,7 @@ impl Epidemiology {
                 match hospital_intervention {
                     Some(x) if rate_of_spread >= x.spread_rate_threshold => {
                         println!("Increasing the hospital size");
-                        self.grid.increase_hospital_size(config.get_grid_size(), x.new_scale_factor);
+                        self.grid.increase_hospital_size(config.get_grid_size());
                     }
                     _ => {}
                 }
@@ -272,11 +268,11 @@ mod tests {
         let expected_transport_area = Area::new(Point::new(8, 0), Point::new(9, 19));
         assert_eq!(epidemiology.grid.transport_area, expected_transport_area);
 
-        let expected_hospital_area = Area::new(Point::new(10, 0), Point::new(11, 19));
-        assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
-
-        let expected_work_area = Area::new(Point::new(12, 0), Point::new(19, 19));
+        let expected_work_area = Area::new(Point::new(10, 0), Point::new(13, 19));
         assert_eq!(epidemiology.grid.work_area, expected_work_area);
+
+        let expected_hospital_area = Area::new(Point::new(14, 0), Point::new(15, 19));
+        assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.agent_location_map.agent_cell.len(), 10);
     }

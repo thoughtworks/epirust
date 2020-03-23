@@ -33,8 +33,7 @@ impl Lockdown {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct BuildNewHospital {
-    pub spread_rate_threshold: i32,
-    pub new_scale_factor: i32
+    pub spread_rate_threshold: i32
 }
 
 impl Intervention {

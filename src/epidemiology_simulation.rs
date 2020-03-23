@@ -20,7 +20,7 @@ use crate::geography::{Grid, Point};
 use crate::kafka_service::KafkaProducer;
 use crate::random_wrapper::RandomWrapper;
 use crate::agent::Citizen;
-use crate::interventions::{Intervention, BuildNewHospital};
+use crate::interventions::{Intervention, BuildNewHospital, Lockdown};
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -74,6 +74,7 @@ impl Epidemiology {
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
         let vaccinations = Epidemiology::prepare_vaccinations(config);
+        let lockdown_details = Epidemiology::get_lock_down_details(config);
         let hospital_intervention = Intervention::get_hospital_intervention(config);
         let mut infection_count_for_yesterday = 0;
 
@@ -104,12 +105,12 @@ impl Epidemiology {
                                    &self.grid, &mut listeners, &mut rng, &self.disease);
             listeners.counts_updated(counts_at_hr);
 
-            let should_lock_down = !self.is_city_under_quarantine && Epidemiology::check_lock_down(&counts_at_hr);
+            let should_lock_down = !self.is_city_under_quarantine && (&counts_at_hr.get_infected() > &lockdown_details.at_number_of_infections);
 
             if should_lock_down {
                 self.is_city_under_quarantine = true;
                 println!("Locking the city");
-                Epidemiology::lock_city(&mut write_buffer_reference);
+                Epidemiology::lock_city(&mut write_buffer_reference, &mut rng, &lockdown_details);
             }
 
             match vaccinations.get(&simulation_hour) {
@@ -184,13 +185,25 @@ impl Epidemiology {
         }
     }
 
-    fn check_lock_down(csv_record: &events::Counts) -> bool {
-        csv_record.get_infected() > constants::CITY_LOCK_DOWN_THRESHOLD
+    fn get_lock_down_details(config: &Config) -> Lockdown{
+        let mut lockdown_at_infection_count: Vec<Lockdown> = Vec::new();
+        config.get_interventions().iter().filter_map(|i| {
+            match i {
+                Intervention::Lockdown(v) => Some(v),
+                _ => None,
+            }
+        }).for_each(|v| {
+            lockdown_at_infection_count.push(*v);
+        });
+
+        *lockdown_at_infection_count.first().unwrap()
     }
 
-    fn lock_city(write_buffer_reference: &mut AgentLocationMap) {
+    fn lock_city(write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper, lockdown_details: &Lockdown) {
         for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
-            agent.set_isolation(true);
+            if rng.get().gen_bool(1.0 - lockdown_details.emergency_workers_population) {
+                agent.set_isolation(true);
+            }
         }
     }
 }

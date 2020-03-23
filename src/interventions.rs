@@ -21,12 +21,13 @@ impl Vaccinate {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct Lockdown {
-    at_hour: i32,
+    pub at_number_of_infections: i32,
+    pub emergency_workers_population: f64
 }
 
 impl Lockdown {
-    pub fn new(at_hour: i32) -> Lockdown {
-        Lockdown { at_hour }
+    pub fn new(at_number_of_infections: i32, emergency_workers_population: f64) -> Lockdown {
+        Lockdown { at_number_of_infections, emergency_workers_population }
     }
 }
 

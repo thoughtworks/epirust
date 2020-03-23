@@ -17,7 +17,6 @@
  *
  */
 
-use plotters::drawing::SVGBackend;
 use plotters::prelude::*;
 
 use crate::{agent, constants};
@@ -25,7 +24,6 @@ use crate::agent::Citizen;
 use crate::config::{AutoPopulation, CsvPopulation};
 use crate::geography::{Area, area, Point};
 use crate::random_wrapper::RandomWrapper;
-use plotters::drawing::rasterizer::draw_rect;
 
 pub struct Grid {
     pub grid_size: i32,
@@ -46,22 +44,15 @@ impl Grid {
         let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
 
         let home_locations = self.housing_area.random_points(number_of_agents as i32, rng);
+
         let homes = area::area_factory(self.housing_area.start_offset, self.housing_area.end_offset, constants::HOME_SIZE);
-
-        // assumes that housing starts at 0,0 and work area is the same size as housing area
-        // layout: housing | transport | hospital | work
-        let scaling_factor = self.hospital_area.end_offset.x + 1;
-
-        let office_start_point = Point::new(self.hospital_area.end_offset.x + 1, self.housing_area.start_offset.y);
-        let office_end_point = Point::new(scaling_factor + self.housing_area.end_offset.x + 1, self.hospital_area.end_offset.y + 1);
-
-        let offices = area::area_factory(office_start_point, office_end_point, constants::OFFICE_SIZE);
+        let offices = area::area_factory(self.work_area.start_offset, self.work_area.end_offset, constants::OFFICE_SIZE);
 
         let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32, rng);
 
         let agent_list = agent::citizen_factory(number_of_agents, &homes, &offices, &transport_locations, public_transport_percentage, working_percentage, rng);
 
-        let mut svg = SVGBackend::new("grid.svg", (self.grid_size as u32, self.grid_size as u32));
+        let mut svg = BitMapBackend::new("grid.png", (self.grid_size as u32, self.grid_size as u32));
         Grid::draw_rect(&mut svg, &self.housing_area, &plotters::style::YELLOW);
         Grid::draw_rect(&mut svg, &self.transport_area, &plotters::style::RGBColor(121, 121, 121));
         Grid::draw_rect(&mut svg, &self.work_area, &plotters::style::BLUE);
@@ -75,7 +66,7 @@ impl Grid {
         (home_locations, agent_list)
     }
 
-    fn draw_rect(svg: &mut SVGBackend, area: &Area, style: &RGBColor) {
+    fn draw_rect(svg: &mut BitMapBackend, area: &Area, style: &RGBColor) {
         svg.draw_rect((area.start_offset.x, area.start_offset.y),
                       (area.end_offset.x, area.end_offset.y),
                       style, true).unwrap();
@@ -103,10 +94,9 @@ mod tests {
     fn generate_population() {
         let mut rng = RandomWrapper::new();
 
-        let grid = define_geography(36);
+        let grid = define_geography(100);
         let housing_area = grid.housing_area;
         let transport_area = grid.transport_area;
-        let hospital_area = grid.hospital_area;
         let work_area = grid.work_area;
 
         let pop = AutoPopulation {

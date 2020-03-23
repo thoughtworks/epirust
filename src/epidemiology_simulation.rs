@@ -27,7 +27,7 @@ use chrono::{DateTime, Local};
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
-use crate::{allocation_map, events, constants};
+use crate::{allocation_map, events};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population};
 use crate::csv_service::CsvListener;
@@ -39,7 +39,7 @@ use crate::geography::{Grid, Point};
 use crate::kafka_service::KafkaProducer;
 use crate::random_wrapper::RandomWrapper;
 use crate::agent::Citizen;
-use crate::interventions::{Intervention, BuildNewHospital, Lockdown};
+use crate::interventions::{Intervention, Lockdown};
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -278,19 +278,19 @@ mod tests {
             at_hour: 5000,
             percent: 0.2,
         };
-        let config = Config::new(Population::Auto(pop), disease, vec![], 20, 10000,
+        let config = Config::new(Population::Auto(pop), disease, vec![], 100, 10000,
                                  vec![Intervention::Vaccinate(vac)], None);
         let epidemiology: Epidemiology = Epidemiology::new(&config);
-        let expected_housing_area = Area::new(Point::new(0, 0), Point::new(7, 19));
+        let expected_housing_area = Area::new(Point::new(0, 0), Point::new(39, 99));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);
 
-        let expected_transport_area = Area::new(Point::new(8, 0), Point::new(9, 19));
+        let expected_transport_area = Area::new(Point::new(40, 0), Point::new(49, 99));
         assert_eq!(epidemiology.grid.transport_area, expected_transport_area);
 
-        let expected_work_area = Area::new(Point::new(10, 0), Point::new(13, 19));
+        let expected_work_area = Area::new(Point::new(50, 0), Point::new(69, 99));
         assert_eq!(epidemiology.grid.work_area, expected_work_area);
 
-        let expected_hospital_area = Area::new(Point::new(14, 0), Point::new(15, 19));
+        let expected_hospital_area = Area::new(Point::new(70, 0), Point::new(79, 99));
         assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.agent_location_map.agent_cell.len(), 10);

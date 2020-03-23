@@ -40,4 +40,3 @@ pub fn define_geography(grid_size: i32) -> Grid {
     let hospital_area = Area::new(Point::new(x_offset_for_work_area + 1, 0), Point::new(x_offset_for_hospital, bound));
     Grid { grid_size, housing_area, transport_area, hospital_area, work_area }
 }
-

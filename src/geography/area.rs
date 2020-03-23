@@ -34,7 +34,7 @@ impl Area {
         Area { start_offset, end_offset, iter_index: Point::new(start_offset.x - 1, start_offset.y) }
     }
 
-    pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item = Point> + '_ {
+    pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item=Point> + '_ {
         point.neighbor_iterator().filter(move |p| {
             self.contains(p)
         })
@@ -61,7 +61,7 @@ impl Area {
         points
     }
 
-    pub fn get_random_point(&self, rng: &mut RandomWrapper) -> Point{
+    pub fn get_random_point(&self, rng: &mut RandomWrapper) -> Point {
         let rand_x = rng.get().gen_range(self.start_offset.x, self.end_offset.x);
         let rand_y = rng.get().gen_range(self.start_offset.y, self.end_offset.y);
 
@@ -74,23 +74,26 @@ impl Area {
     }
 }
 
-pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area>{
-    let mut areas = Vec::with_capacity((end_point.x / size) as usize);
+pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area> {
+    let feasible_houses_in_x_dim = (end_point.x - start_point.x) / size;
+    let feasible_houses_in_y_dim = (end_point.y - start_point.y) / size;
+
+    let mut areas = Vec::with_capacity((feasible_houses_in_y_dim * feasible_houses_in_x_dim) as usize);
     let mut current_start_point = start_point;
-    for _i in 0..(end_point.x/size * end_point.y/size) {
-        let current_end_point:Point = Point::new(current_start_point.x + size, current_start_point.y + size);
-        areas.push(Area::new(current_start_point, current_end_point));
-        current_start_point.x = current_start_point.x + size;
 
-        if current_start_point.x >= end_point.x{
-            current_start_point.x = start_point.x;
-            current_start_point.y = current_start_point.y + size;
+    for _i in 0..feasible_houses_in_y_dim {
+        for _j in 0..feasible_houses_in_x_dim {
+            let current_end_point: Point = Point::new(current_start_point.x + size, current_start_point.y + size);
+
+            areas.push(Area::new(current_start_point, current_end_point));
+
+            current_start_point.x = current_start_point.x + size;
         }
 
-        if current_end_point.x >= end_point.x && current_end_point.y == end_point.y{
-            break;
-        }
+        current_start_point.x = start_point.x;
+        current_start_point.y = current_start_point.y + size;
     }
+
     areas
 }
 
@@ -139,15 +142,15 @@ mod tests {
     }
 
     #[test]
-    fn should_create_areas(){
-        let homes = area_factory(Point::new(0, 0), Point::new(10, 10), 2);
+    fn should_create_areas() {
+        let buildings = area_factory(Point::new(10, 0), Point::new(21, 10), 3);
 
-        assert_eq!(homes.len(), 25);
-        assert_eq!(homes.get(0).unwrap().start_offset, Point::new(0, 0));
-        assert_eq!(homes.get(0).unwrap().end_offset, Point::new(2, 2));
-        assert_eq!(homes.get(5).unwrap().start_offset, Point::new(0, 2));
-        assert_eq!(homes.get(5).unwrap().end_offset, Point::new(2, 4));
-        assert_eq!(homes.last().unwrap().start_offset, Point::new(8, 8));
-        assert_eq!(homes.last().unwrap().end_offset, Point::new(10, 10));
+        assert_eq!(buildings.len(), 9);
+        assert_eq!(buildings.get(0).unwrap().start_offset, Point::new(10, 0));
+        assert_eq!(buildings.get(0).unwrap().end_offset, Point::new(13, 3));
+        assert_eq!(buildings.get(5).unwrap().start_offset, Point::new(16, 3));
+        assert_eq!(buildings.get(5).unwrap().end_offset, Point::new(19, 6));
+        assert_eq!(buildings.last().unwrap().start_offset, Point::new(16, 6));
+        assert_eq!(buildings.last().unwrap().end_offset, Point::new(19, 9));
     }
 }

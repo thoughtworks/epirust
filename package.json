@@ -8,19 +8,14 @@
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "bootstrap": "^4.4.1",
-    "chart.js": "^2.9.3",
     "dygraphs": "^2.1.0",
-    "jquery": "^3.4.1",
     "node-sass": "^4.13.1",
     "normalize.css": "^8.0.1",
-    "popper.js": "^1.16.1",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
-    "react-chartjs-2": "^2.9.0",
     "react-dom": "^16.12.0",
     "react-scripts": "3.4.0",
-    "socket.io-client": "^2.3.0",
-    "socket.io-mock": "^1.2.4"
+    "socket.io-client": "^2.3.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -45,7 +40,8 @@
   },
   "devDependencies": {
     "husky": "^4.2.3",
-    "react-test-renderer": "^16.13.1"
+    "react-test-renderer": "^16.13.1",
+    "socket.io-mock": "^1.2.4"
   },
   "husky": {
       "hooks": {

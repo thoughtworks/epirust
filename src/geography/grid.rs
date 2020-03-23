@@ -78,16 +78,18 @@ impl Grid {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::geography::define_geography;
 
     #[test]
     fn generate_population() {
         let mut rng = RandomWrapper::new();
-        let housing_area = Area::new(Point::new(0, 0), Point::new(10, 10));
-        let transport_area = Area::new(Point::new(11, 0), Point::new(20, 10));
-        let hospital_area = Area::new(Point::new(21, 0), Point::new(25, 10));
-        let work_area = Area::new(Point::new(26, 0), Point::new(36, 10));
 
-        let grid = Grid { grid_size: 36, housing_area, work_area, transport_area, hospital_area };
+        let grid = define_geography(36);
+        let housing_area = grid.housing_area;
+        let transport_area = grid.transport_area;
+        let hospital_area = grid.hospital_area;
+        let work_area = grid.work_area;
+
         let pop = AutoPopulation {
             number_of_agents: 10,
             public_transport_percentage: 0.2,

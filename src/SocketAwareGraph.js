@@ -16,11 +16,17 @@ export default function SocketAwareGraph({ socket }) {
 
         socket.on('epidemicStats', function (messageRaw) {
             const message = JSON.parse(messageRaw);
-            const { hour, susceptible, infected, quarantined, recovered, deceased } = message;
 
-            buff.push([hour, susceptible, infected, quarantined, recovered, deceased]);
+            let simulationEnded = false
+            if ("simulation_ended" in message) {
+                simulationEnded = true;
+            }
+            else {
+                const { hour, susceptible, infected, quarantined, recovered, deceased } = message;
+                buff.push([hour, susceptible, infected, quarantined, recovered, deceased]);
+            }
 
-            if (hour % 100 === 0) {
+            if (message.hour % 100 === 0 || simulationEnded) {
                 setDataBuffer(buffer => {
                     let total = [...buffer, ...buff]
                     buff = [];

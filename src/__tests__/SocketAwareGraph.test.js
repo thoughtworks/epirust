@@ -53,4 +53,31 @@ test('should set dataBuffer and render graph and plot graph', () => {
     // })
     jest.runAllTimers();
     expect(mockDygraphfn).toHaveBeenCalledWith(expect.anything(), Array.of(Object.values(hourStatistics)), expect.anything())
+    jest.clearAllMocks()
+})
+
+
+test('should set residue also into data buffer when simulation ended flag is true', () => {
+    const updateSpyFn = jest.fn()
+    const mockDygraphfn = Dygraph.mockImplementation(()=>({
+        updateOptions : updateSpyFn
+    }))
+    let socket = new MockSocket()
+    const hourStatistics = {
+        hour: 100,
+        susceptible: 9,
+        infected: 2,
+        quarantined: 1,
+        recovered: 0,
+        deceased: 0
+    }
+    const hourStatistics101 = {...hourStatistics, hour: 101}
+    render(<SocketAwareGraph socket={socket.socketClient}/>)
+    socket.emit("epidemicStats", JSON.stringify(hourStatistics))
+    socket.emit("epidemicStats", JSON.stringify(hourStatistics101))
+    socket.emit("epidemicStats", JSON.stringify({"simulation_ended": true}))
+    jest.runAllTimers();
+   
+    expect(mockDygraphfn).toHaveBeenCalledTimes(1) 
+    expect(updateSpyFn).toHaveBeenCalledWith({file: [Object.values(hourStatistics), Object.values(hourStatistics101)]})
 })

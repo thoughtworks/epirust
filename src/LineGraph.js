@@ -6,14 +6,12 @@ import PropTypes from 'prop-types'
 
 export default function Graph({ dataBuffer }) {
     const [graph, setGraph] = useState(null);
-
     useEffect(() => {
         if (dataBuffer.length === 0) {
             graph && graph.destroy()
             setGraph();
             return
         }
-
         if (!graph) {
             let graphInstance = new Dygraph(document.getElementById("vis"), dataBuffer, {
                 labels: ["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"],

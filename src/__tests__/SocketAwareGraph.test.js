@@ -1,6 +1,6 @@
 import React from 'react'
 import SocketAwareGraph from '../SocketAwareGraph'
-import {render, getByTestId, act} from '@testing-library/react'
+import {render, act, prettyDOM} from '@testing-library/react'
 import MockSocket from 'socket.io-mock'
 import Dygraph from 'dygraphs'
 import renderer from 'react-test-renderer'
@@ -80,4 +80,17 @@ test('should set residue also into data buffer when simulation ended flag is tru
    
     expect(mockDygraphfn).toHaveBeenCalledTimes(1) 
     expect(updateSpyFn).toHaveBeenCalledWith({file: [Object.values(hourStatistics), Object.values(hourStatistics101)]})
+})
+
+test("should enable export in graph if simulation has ended", () => {
+    let socket = new MockSocket()
+    const {getByTestId, container} = render(<SocketAwareGraph socket={socket.socketClient}/>)
+    console.log(prettyDOM(container))
+    console.log(container.querySelector(".graph-actions .btn-secondary"))
+    expect(container.querySelector(".graph-actions .btn-secondary")).toBeDisabled()
+
+    socket.emit("epidemicStats", JSON.stringify({"simulation_ended": true}))
+    jest.runAllTimers();
+   
+    expect(container.querySelector(".graph-actions .btn-secondary")).toBeEnabled()
 })

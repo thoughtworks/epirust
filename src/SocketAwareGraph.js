@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 
 export default function SocketAwareGraph({ socket }) {
     const [dataBuffer, setDataBuffer] = useState([]);
-
+    const [simulationEnded, setSimulationEnded] = useState(false);
     useEffect(() => {
 
         if (!socket) {
@@ -17,26 +17,28 @@ export default function SocketAwareGraph({ socket }) {
         socket.on('epidemicStats', function (messageRaw) {
             const message = JSON.parse(messageRaw);
 
-            let simulationEnded = false
+            let simulationEndedTemp = false
             if ("simulation_ended" in message) {
-                simulationEnded = true;
+                simulationEndedTemp = true;
             }
             else {
                 const { hour, susceptible, infected, quarantined, recovered, deceased } = message;
                 buff.push([hour, susceptible, infected, quarantined, recovered, deceased]);
             }
-
-            if (message.hour % 100 === 0 || simulationEnded) {
+            if (message.hour % 100 === 0 || simulationEndedTemp) {
                 setDataBuffer(buffer => {
                     let total = [...buffer, ...buff]
                     buff = [];
                     return total;
                 });
             }
+            if(simulationEndedTemp) {
+                setSimulationEnded(true)
+            }
         });
     }, [socket])
 
-    return <Graph dataBuffer={dataBuffer} />
+    return <Graph dataBuffer={dataBuffer} enableExport={simulationEnded}/>
 }
 
 SocketAwareGraph.propTypes = {

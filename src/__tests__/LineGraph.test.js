@@ -2,8 +2,16 @@ import React from 'react'
 import Graph from '../LineGraph'
 import { render, getByTestId, rerender } from '@testing-library/react'
 import Dygraph from 'dygraphs'
+import renderer from 'react-test-renderer'
 
 jest.mock('dygraphs')
+
+test("should render Graph", () => {
+    const component = renderer.create(<Graph dataBuffer={[]} />)
+    let tree = component.toJSON()
+
+    expect(tree).toMatchSnapshot()
+})
 
 test('should render an empty Graph without calling dygraphs for empty data buffer', () => {
     const dygraphMockFn = Dygraph.mockImplementation(() => { graph: "mockGraph" })

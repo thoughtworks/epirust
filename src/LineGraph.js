@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import './LineGraph.scss'
 import PropTypes from 'prop-types'
 
-export default function Graph({ dataBuffer }) {
+export default function Graph({ dataBuffer , enableExport = false}) {
     const [graph, setGraph] = useState(null);
     useEffect(() => {
         if (dataBuffer.length === 0) {
@@ -28,7 +28,6 @@ export default function Graph({ dataBuffer }) {
         else {
             graph.updateOptions({ 'file': dataBuffer });
         }
-
     }, [graph, dataBuffer])
 
     function handleExportClick() {
@@ -53,7 +52,7 @@ export default function Graph({ dataBuffer }) {
                 <p className="action">Zoom: <span className='control'>click-drag</span></p>
                 <p className="action">Pan: <span className='control'>shift-click-drag</span></p>
                 <p className="action">Restore: <span className='control'>double-click</span></p>
-                <button onClick={handleExportClick} className="btn btn-secondary">Export graph</button>
+                <button onClick={handleExportClick} className="btn btn-secondary" disabled={!enableExport}>Export graph</button>
             </div>
 
         </div>
@@ -61,5 +60,7 @@ export default function Graph({ dataBuffer }) {
 }
 
 Graph.propTypes = {
-    dataBuffer: PropTypes.array.isRequired
+    dataBuffer: PropTypes.array.isRequired,
+    enableExport: PropTypes.bool
 }
+

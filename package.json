@@ -4,9 +4,6 @@
   "private": true,
   "dependencies": {
     "@babel/runtime": "^7.8.7",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.3.2",
-    "@testing-library/user-event": "^7.1.2",
     "bootstrap": "^4.4.1",
     "dygraphs": "^2.1.0",
     "jquery": "^3.4.1",
@@ -43,6 +40,9 @@
   "devDependencies": {
     "husky": "^4.2.3",
     "react-test-renderer": "^16.13.1",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
     "socket.io-mock": "^1.2.4"
   },
   "husky": {

@@ -52,7 +52,7 @@ impl Grid {
 
         let agent_list = agent::citizen_factory(number_of_agents, &homes, &offices, &transport_locations, public_transport_percentage, working_percentage, rng);
 
-        let mut svg = BitMapBackend::new("grid.png", (self.grid_size as u32, self.grid_size as u32));
+        let mut svg = SVGBackend::new("grid.svg", (self.grid_size as u32, self.grid_size as u32));
         Grid::draw_rect(&mut svg, &self.housing_area, &plotters::style::YELLOW);
         Grid::draw_rect(&mut svg, &self.transport_area, &plotters::style::RGBColor(121, 121, 121));
         Grid::draw_rect(&mut svg, &self.work_area, &plotters::style::BLUE);
@@ -66,7 +66,7 @@ impl Grid {
         (home_locations, agent_list)
     }
 
-    fn draw_rect(svg: &mut BitMapBackend, area: &Area, style: &RGBColor) {
+    fn draw_rect(svg: &mut SVGBackend, area: &Area, style: &RGBColor) {
         svg.draw_rect((area.start_offset.x, area.start_offset.y),
                       (area.end_offset.x, area.end_offset.y),
                       style, true).unwrap();

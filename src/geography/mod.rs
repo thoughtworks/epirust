@@ -28,15 +28,38 @@ pub use self::grid::Grid;
 pub use self::point::Point;
 
 pub fn define_geography(grid_size: i32) -> Grid {
-    let bound = grid_size - 1;
-    let x_offset_for_home = (bound as f32 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32 - 1;
-    let x_offset_for_transport = x_offset_for_home + (bound as f32 * constants::TRANSPORT_AREA_RELATIVE_SIZE).ceil() as i32;
-    let x_offset_for_work_area = x_offset_for_transport + (bound as f32 * constants::WORK_AREA_RELATIVE_SIZE).ceil() as i32;
-    let x_offset_for_hospital = x_offset_for_work_area + (bound as f32 * constants::INITIAL_HOSPITAL_RELATIVE_SIZE).ceil() as i32;
+    let home_width = (grid_size as f32 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32;
+    let transport_start = home_width;
+    let transport_end = home_width + (grid_size as f32 * constants::TRANSPORT_AREA_RELATIVE_SIZE).ceil() as i32;
+    let work_area_start = transport_end;
+    let work_area_end = transport_end + (grid_size as f32 * constants::WORK_AREA_RELATIVE_SIZE).ceil() as i32;
+    let hospital_start = work_area_end;
+    let hospital_end = work_area_end + (grid_size as f32 * constants::INITIAL_HOSPITAL_RELATIVE_SIZE).ceil() as i32;
 
-    let housing_area = Area::new(Point::new(0, 0), Point::new(x_offset_for_home, bound));
-    let transport_area = Area::new(Point::new(x_offset_for_home + 1, 0), Point::new(x_offset_for_transport, bound));
-    let work_area = Area::new(Point::new(x_offset_for_transport + 1, 0), Point::new(x_offset_for_work_area, bound));
-    let hospital_area = Area::new(Point::new(x_offset_for_work_area + 1, 0), Point::new(x_offset_for_hospital, bound));
+    let housing_area = Area::new(Point::new(0, 0), Point::new(home_width, grid_size));
+    let transport_area = Area::new(Point::new(transport_start, 0), Point::new(transport_end, grid_size));
+    let work_area = Area::new(Point::new(work_area_start, 0), Point::new(work_area_end, grid_size));
+    let hospital_area = Area::new(Point::new(hospital_start, 0), Point::new(hospital_end, grid_size));
     Grid { grid_size, housing_area, transport_area, hospital_area, work_area }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_define_geography(){
+        let grid = define_geography(10);
+        assert_eq!(grid.housing_area.start_offset, Point::new(0,0));
+        assert_eq!(grid.housing_area.end_offset, Point::new(4,10));
+
+        assert_eq!(grid.transport_area.start_offset, Point::new(4,0));
+        assert_eq!(grid.transport_area.end_offset, Point::new(5,10));
+
+        assert_eq!(grid.work_area.start_offset, Point::new(5,0));
+        assert_eq!(grid.work_area.end_offset, Point::new(7,10));
+
+        assert_eq!(grid.hospital_area.start_offset, Point::new(7,0));
+        assert_eq!(grid.hospital_area.end_offset, Point::new(8,10));
+    }
 }

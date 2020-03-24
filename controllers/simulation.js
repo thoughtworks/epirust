@@ -28,7 +28,7 @@ router.post('/', (req, res, next) => {
 })
 
 router.post('/init', (req, res, next) => {
-  const message = req.body; // { disease_name, grid_size, number_of_agents, simulation_hrs, public_transport_percentage, working_percentage, vaccinate_at, vaccinate_percentage }
+  const message = req.body; 
   const simulation_config = {
     "population": {
       "Auto": {
@@ -37,14 +37,13 @@ router.post('/init', (req, res, next) => {
         "working_percentage": message.working_percentage
       }
     },
-    //TODO Currently hardcoded. These params must come from the UI
     "disease": {
-      "regular_transmission_start_day": 10,
-      "high_transmission_start_day": 16,
-      "last_day": 22,
-      "regular_transmission_rate": 0.05,
-      "high_transmission_rate": 0.5,
-      "death_rate": 0.2
+      "regular_transmission_start_day": message.regular_transmission_start_day,
+      "high_transmission_start_day": message.high_transmission_start_day,
+      "last_day": message.last_day,
+      "regular_transmission_rate": message.regular_transmission_rate,
+      "high_transmission_rate": message.high_transmission_rate,
+      "death_rate": message.death_rate
     },
     "grid_size": message.grid_size,
     "hours": message.simulation_hrs,
@@ -53,10 +52,18 @@ router.post('/init', (req, res, next) => {
         "Vaccinate": {
           "at_hour": message.vaccinate_at,
           "percent": message.vaccinate_percentage
+        },
+        "Lockdown": {
+          "at_number_of_infections": message.lockdown_at_number_of_infections,
+          "emergency_workers_population": message.emergency_workers_population
+        },
+        "BuildNewHospital": {
+          "spread_rate_threshold": message.hospital_spread_rate_threshold
         }
       }
     ]
   };
+  console.log(simulation_config)
   const kafkaProducer = new KafkaServices.KafkaProducerService();
 
   kafkaProducer.send('simulation_requests', simulation_config);

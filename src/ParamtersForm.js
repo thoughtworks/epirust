@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types'
+import DiseaseDynamics from './DiseaseDynamics'
 
 export default function ParametersForm({ onDataSubmit }) {
 
@@ -13,7 +14,13 @@ export default function ParametersForm({ onDataSubmit }) {
                 "public_transport_percentage",
                 "working_percentage",
                 "vaccinate_at",
-                "vaccinate_percentage"].includes(key)) {
+                "vaccinate_percentage",
+                "death_rate",
+                "high_transmission_rate",
+                "high_transmission_start_day",
+                "last_day",
+                "regular_transmission_rate",
+                "regular_transmission_start_day"].includes(key)) {
                 value = Number(value);
             }
             paramsData[key] = value;
@@ -23,18 +30,15 @@ export default function ParametersForm({ onDataSubmit }) {
     }
 
     return (
-        <form onSubmit={handleSubmit} data-testid='simulationForm'>
+        <form className="user-inputs" onSubmit={handleSubmit} data-testid='simulationForm'>
 
             <div className="form-row">
+
                 <div className="col inputs">
+                    <DiseaseDynamics />
                     <div className="input-control">
                         <label htmlFor="number_of_agents">Number of Agents</label>
                         <input type="number" name="number_of_agents" className="form-control" id="number_of_agents" aria-describedby="number_of_agents" placeholder="Number of Agents" defaultValue="10000" />
-                    </div>
-
-                    <div className="input-control">
-                        <label htmlFor="disease_name">Disease Name</label>
-                        <input type="text" name="disease_name" className="form-control" id="disease_name" aria-describedby="disease_name" placeholder="Disease Name" defaultValue="small_pox" />
                     </div>
 
                     <div className="input-control">
@@ -66,8 +70,9 @@ export default function ParametersForm({ onDataSubmit }) {
                         <label htmlFor="vaccinate_percentage">Vaccinate Percentage</label>
                         <input type="number" name="vaccinate_percentage" className="form-control" id="vaccinate_percentage" aria-describedby="vaccinate_percentage" placeholder="Vaccinate Percentage" defaultValue="0.2" step="any" />
                     </div>
+
                 </div>
-                <div className="col">
+                <div className="col actions">
                     <button type="submit" className="btn btn-primary" id="submitBtn">Start</button>
                 </div>
             </div>

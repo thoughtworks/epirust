@@ -2,6 +2,7 @@
 
 exports[`should render ParametersForm with defaults 1`] = `
 <form
+  className="user-inputs"
   data-testid="simulationForm"
   onSubmit={[Function]}
 >
@@ -11,6 +12,154 @@ exports[`should render ParametersForm with defaults 1`] = `
     <div
       className="col inputs"
     >
+      <fieldset>
+        <legend>
+          Disease Dynamics
+        </legend>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="disease_name"
+          >
+            Disease Name
+          </label>
+          <select
+            aria-describedby="disease_name"
+            className="form-control"
+            data-testid="select-disease"
+            defaultValue="small_pox"
+            id="disease_name"
+            name="disease_name"
+            onChange={[Function]}
+            placeholder="Disease Name"
+          >
+            <option
+              value="small_pox"
+            >
+              Small Pox
+            </option>
+            <option
+              value="sars"
+            >
+              SARS
+            </option>
+            <option
+              value="covid_19"
+            >
+              COVID-19
+            </option>
+          </select>
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="regular_transmission_start_day"
+          >
+            Regular Transmission Start Day
+          </label>
+          <input
+            aria-describedby="regular_transmission_start_day"
+            className="form-control"
+            defaultValue={10}
+            id="regular_transmission_start_day"
+            name="regular_transmission_start_day"
+            placeholder="Regular Transmission Start Day"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="high_transmission_start_day"
+          >
+            High Transmission Start Day
+          </label>
+          <input
+            aria-describedby="high_transmission_start_day"
+            className="form-control"
+            defaultValue={16}
+            id="high_transmission_start_day"
+            name="high_transmission_start_day"
+            placeholder="High Transmission Start Day"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="last_day"
+          >
+            Last Day
+          </label>
+          <input
+            aria-describedby="last_day"
+            className="form-control"
+            defaultValue={22}
+            id="last_day"
+            name="last_day"
+            placeholder="Last Day"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="regular_transmission_rate"
+          >
+            Regular Transmission Rate
+          </label>
+          <input
+            aria-describedby="regular_transmission_rate"
+            className="form-control"
+            defaultValue={0.05}
+            id="regular_transmission_rate"
+            name="regular_transmission_rate"
+            placeholder="Regular Transmission Rate"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="high_transmission_rate"
+          >
+            High Transmission Rate
+          </label>
+          <input
+            aria-describedby="high_transmission_rate"
+            className="form-control"
+            defaultValue={0.5}
+            id="high_transmission_rate"
+            name="high_transmission_rate"
+            placeholder="High Transmission Rate"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="death_rate"
+          >
+            Death Rate
+          </label>
+          <input
+            aria-describedby="death_rate"
+            className="form-control"
+            defaultValue={0.2}
+            id="death_rate"
+            name="death_rate"
+            placeholder="Death Rate"
+            type="text"
+          />
+        </div>
+      </fieldset>
       <div
         className="input-control"
       >
@@ -27,24 +176,6 @@ exports[`should render ParametersForm with defaults 1`] = `
           name="number_of_agents"
           placeholder="Number of Agents"
           type="number"
-        />
-      </div>
-      <div
-        className="input-control"
-      >
-        <label
-          htmlFor="disease_name"
-        >
-          Disease Name
-        </label>
-        <input
-          aria-describedby="disease_name"
-          className="form-control"
-          defaultValue="small_pox"
-          id="disease_name"
-          name="disease_name"
-          placeholder="Disease Name"
-          type="text"
         />
       </div>
       <div
@@ -162,7 +293,7 @@ exports[`should render ParametersForm with defaults 1`] = `
       </div>
     </div>
     <div
-      className="col"
+      className="col actions"
     >
       <button
         className="btn btn-primary"

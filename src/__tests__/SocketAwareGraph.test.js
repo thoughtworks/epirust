@@ -84,9 +84,7 @@ test('should set residue also into data buffer when simulation ended flag is tru
 
 test("should enable export in graph if simulation has ended", () => {
     let socket = new MockSocket()
-    const {getByTestId, container} = render(<SocketAwareGraph socket={socket.socketClient}/>)
-    console.log(prettyDOM(container))
-    console.log(container.querySelector(".graph-actions .btn-secondary"))
+    const {container} = render(<SocketAwareGraph socket={socket.socketClient}/>)
     expect(container.querySelector(".graph-actions .btn-secondary")).toBeDisabled()
 
     socket.emit("epidemicStats", JSON.stringify({"simulation_ended": true}))

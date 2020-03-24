@@ -12,32 +12,3 @@
   font-size: calc(10px + 2vmin);
   color: black;
 }
-
-.form-row {
-  margin: 10px;
-  display: flex;
-  width: 80%;
-  flex-direction: column;
-}
-
-.col.inputs {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  flex-basis: 100%;
-  justify-content: space-between;
-  align-content: space-around;
-}
-
-.col .input-control {
-  flex-basis: 40%;
-
-}
-
-label {
-  margin-bottom: 0.1rem;
-}
-
-input {
-  margin-bottom: 0.5rem;
-}

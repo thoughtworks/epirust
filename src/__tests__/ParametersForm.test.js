@@ -4,7 +4,7 @@ import ParametersForm from '../ParamtersForm'
 import renderer from 'react-test-renderer'
 
 test('should render ParametersForm with defaults', () => {
-    const component = renderer.create(<ParametersForm onDataSubmit={jest.fn()}/>)
+    const component = renderer.create(<ParametersForm onDataSubmit={jest.fn()} />)
     let tree = component.toJSON()
 
     expect(tree).toMatchSnapshot()
@@ -19,18 +19,24 @@ test('invoke onsubmit handler passed on form submit', () => {
     expect(handleSubmitData).toHaveBeenCalledTimes(1)
 })
 
-test('make API call on form submit', () => {
+test('invoke handler on form submit', () => {
     const handleSubmitData = jest.fn()
     const { getByTestId } = render(<ParametersForm onDataSubmit={handleSubmitData} />)
     const expectedData = {
-        "number_of_agents": 10000,
+        "death_rate": 0.2,
         "disease_name": "small_pox",
         "grid_size": 250,
-        "simulation_hrs": 10000,
+        "high_transmission_rate": 0.5,
+        "high_transmission_start_day": 16,
+        "last_day": 22,
+        "number_of_agents": 10000,
         "public_transport_percentage": 0.2,
-        "working_percentage": 0.7,
+        "regular_transmission_rate": 0.05,
+        "regular_transmission_start_day": 10,
+        "simulation_hrs": 10000,
         "vaccinate_at": 5000,
-        "vaccinate_percentage": 0.2
+        "vaccinate_percentage": 0.2,
+        "working_percentage": 0.7,
     }
 
     fireEvent.submit(getByTestId('simulationForm'))

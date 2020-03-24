@@ -4,23 +4,29 @@ import DataInputs from '../DataInputs'
 
 jest.useFakeTimers();
 
-test('invoke submit form data to server on submit', () => {
+test('make API call form data to server on submit', () => {
     jest.spyOn(global, 'fetch')
         .mockImplementation(() => Promise.resolve())
 
     const expectedBody = {
-        "number_of_agents": 10000,
         "disease_name": "small_pox",
+        "regular_transmission_start_day": 10,
+        "high_transmission_start_day": 16,
+        "last_day": 22,
+        "regular_transmission_rate": 0.05,
+        "high_transmission_rate": 0.5,
+        "death_rate": 0.2,
+        "number_of_agents": 10000,
         "grid_size": 250,
         "simulation_hrs": 10000,
         "public_transport_percentage": 0.2,
         "working_percentage": 0.7,
         "vaccinate_at": 5000,
-        "vaccinate_percentage": 0.2
+        "vaccinate_percentage": 0.2,
     }
 
     const onSubmitSpy = jest.fn()
-    const { getByTestId } = render(<DataInputs onSubmit={onSubmitSpy} onFileDataInput={jest.fn()}/>)
+    const { getByTestId } = render(<DataInputs onSubmit={onSubmitSpy} onFileDataInput={jest.fn()} />)
 
     fireEvent.submit(getByTestId('simulationForm'))
 
@@ -29,7 +35,8 @@ test('invoke submit form data to server on submit', () => {
     expect(global.fetch).toHaveBeenCalledTimes(1)
     expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:3000/simulation/init")
     expect(global.fetch.mock.calls[0][1].method).toBe("POST")
-    expect(global.fetch.mock.calls[0][1].body).toBe(JSON.stringify(expectedBody))
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toStrictEqual(expectedBody)
+
 })
 
 test('invoke onsubmit handler passed on a file upload', () => {
@@ -48,7 +55,7 @@ test('invoke onsubmit handler passed on a file upload', () => {
         })
     window.FileReader.DONE = 2
 
-    const onFileDataInputSpy = jest.fn(()=>"ABCBD")
+    const onFileDataInputSpy = jest.fn(() => "ABCBD")
     const { getByTestId } = render(<DataInputs onSubmit={jest.fn()} onFileDataInput={onFileDataInputSpy} />)
 
     fireEvent.change(getByTestId('import-input'), {

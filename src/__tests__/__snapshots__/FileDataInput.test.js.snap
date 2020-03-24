@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`should render FileDataInput 1`] = `
-<form>
+<form
+  className="file-input"
+>
   <label
     htmlFor="import-input"
   >

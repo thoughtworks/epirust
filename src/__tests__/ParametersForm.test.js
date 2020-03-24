@@ -25,10 +25,13 @@ test('invoke handler on form submit', () => {
     const expectedData = {
         "death_rate": 0.2,
         "disease_name": "small_pox",
+        "emergency_workers_population": 0.1,
         "grid_size": 250,
         "high_transmission_rate": 0.5,
         "high_transmission_start_day": 16,
+        "hospital_spread_rate_threshold": 100,
         "last_day": 22,
+        "lockdown_at_number_of_infections": 100,
         "number_of_agents": 10000,
         "public_transport_percentage": 0.2,
         "regular_transmission_rate": 0.05,

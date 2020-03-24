@@ -23,7 +23,7 @@ export default function FileDataInput({ onFileDataSubmit }) {
     }
 
     return (
-        <form>
+        <form className="file-input">
             <label htmlFor="import-input">Choose a file to import data from:</label>
             < input type="file"
                 id="import-input"

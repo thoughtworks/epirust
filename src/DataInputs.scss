@@ -1,13 +1,17 @@
 .graph-input {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: baseline;
     width: 80%;
     margin: 0 auto;
 }
 
 .user-inputs {
     flex-basis: 85%;
+}
+
+.file-input {
+  width: 25%;
 }
 
 .actions {
@@ -23,8 +27,8 @@
   
   .col.inputs {
     display: flex;
-    flex-direction: column;
-    height: 555px;
+    flex-direction: row;
+    // height: 555px;
     flex-wrap: wrap;
     flex-basis: 100%;
     justify-content: space-between;

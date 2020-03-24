@@ -21,6 +21,7 @@ use rand::Rng;
 
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
+use std::slice::IterMut;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
 pub struct Area {
@@ -115,6 +116,40 @@ impl Iterator for Area {
     }
 }
 
+
+/// loops through points in multiple areas
+pub struct AreaPointIterator<'a> {
+    areas_iter: IterMut<'a, Area>,
+    current_area: Area,
+}
+
+impl AreaPointIterator<'_> {
+    pub fn init(areas: &mut Vec<Area>) -> AreaPointIterator {
+        let mut areas_iter = areas.into_iter();
+        let current_area = *areas_iter.next().unwrap();
+        AreaPointIterator { areas_iter, current_area }
+    }
+}
+
+impl Iterator for AreaPointIterator<'_> {
+    type Item = (Area, Point);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let maybe_point = self.current_area.next();
+        if maybe_point.is_some() {
+            return Some((self.current_area, maybe_point.unwrap()));
+        }
+        //no Points left in current area, pick up next area
+        let next_area = self.areas_iter.next();
+        if next_area.is_some() {
+            self.current_area = *next_area.unwrap();
+            let point = self.current_area.next().unwrap();
+            return Some((self.current_area, point));
+        }
+        return None;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -152,5 +187,23 @@ mod tests {
         assert_eq!(buildings.get(5).unwrap().end_offset, Point::new(19, 6));
         assert_eq!(buildings.last().unwrap().start_offset, Point::new(16, 6));
         assert_eq!(buildings.last().unwrap().end_offset, Point::new(19, 9));
+    }
+
+    #[test]
+    fn should_iterate_over_points_in_multiple_areas() {
+        let area1 = Area::new(Point { x: 0, y: 0 }, Point { x: 1, y: 1 });
+        let area2 = Area::new(Point { x: 2, y: 0 }, Point { x: 3, y: 1 });
+        let mut areas = vec![area1, area2];
+        let areas_points_iter = AreaPointIterator::init(&mut areas);
+
+        let mut points = Vec::new();
+        for (area, point) in areas_points_iter {
+            points.push(point);
+        }
+
+        assert_eq!(points, vec![
+            Point::new(0,0), Point::new(1,0), Point::new(0,1), Point::new(1,1),
+            Point::new(2,0), Point::new(3,0), Point::new(2,1), Point::new(3,1),
+        ])
     }
 }

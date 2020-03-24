@@ -56,7 +56,7 @@ impl Epidemiology {
         let grid = geography::define_geography(config.get_grid_size());
         let mut rng = RandomWrapper::new();
         let (start_locations, agent_list) = match config.get_population() {
-            Population::Csv(csv_pop) => grid.read_population(&csv_pop),
+            Population::Csv(csv_pop) => grid.read_population(&csv_pop, &mut rng),
             Population::Auto(auto_pop) => grid.generate_population(&auto_pop, &mut rng),
         };
 

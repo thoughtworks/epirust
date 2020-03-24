@@ -20,10 +20,12 @@
 use plotters::prelude::*;
 
 use crate::{agent, constants};
-use crate::agent::Citizen;
+use crate::agent::{Citizen, PopulationRecord};
 use crate::config::{AutoPopulation, CsvPopulation};
 use crate::geography::{Area, area, Point};
 use crate::random_wrapper::RandomWrapper;
+use std::fs::File;
+use crate::geography::area::AreaPointIterator;
 
 pub struct Grid {
     pub grid_size: i32,
@@ -35,7 +37,6 @@ pub struct Grid {
 
 impl Grid {
     pub fn generate_population(&self, auto_pop: &AutoPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
-
         let number_of_agents = auto_pop.number_of_agents;
         let working_percentage = auto_pop.working_percentage;
         let public_transport_percentage = auto_pop.public_transport_percentage;
@@ -52,18 +53,25 @@ impl Grid {
 
         let agent_list = agent::citizen_factory(number_of_agents, &homes, &offices, &transport_locations, public_transport_percentage, working_percentage, rng);
 
+        self.draw(&home_locations, &homes, &offices);
+        (home_locations, agent_list)
+    }
+
+    fn draw(&self, home_locations: &Vec<Point>, homes: &Vec<Area>, offices: &Vec<Area>) {
         let mut svg = SVGBackend::new("grid.svg", (self.grid_size as u32, self.grid_size as u32));
         Grid::draw_rect(&mut svg, &self.housing_area, &plotters::style::YELLOW);
         Grid::draw_rect(&mut svg, &self.transport_area, &plotters::style::RGBColor(121, 121, 121));
         Grid::draw_rect(&mut svg, &self.work_area, &plotters::style::BLUE);
         Grid::draw_rect(&mut svg, &self.hospital_area, &plotters::style::RED);
         for home in homes {
-            Grid::draw_rect(&mut svg, &home, &plotters::style::RGBColor(204, 153, 0));
+            Grid::draw_rect(&mut svg, home, &plotters::style::RGBColor(204, 153, 0));
         }
         for office in offices {
-            Grid::draw_rect(&mut svg, &office, &plotters::style::RGBColor(51, 153, 255));
+            Grid::draw_rect(&mut svg, office, &plotters::style::RGBColor(51, 153, 255));
         }
-        (home_locations, agent_list)
+        for home in home_locations {
+            svg.draw_pixel((home.x, home.y), &plotters::style::BLACK.to_rgba()).unwrap();
+        }
     }
 
     fn draw_rect(svg: &mut SVGBackend, area: &Area, style: &RGBColor) {
@@ -72,8 +80,37 @@ impl Grid {
                       style, true).unwrap();
     }
 
-    pub fn read_population(&self, csv_pop: &CsvPopulation) -> (Vec<Point>, Vec<Citizen>) {
-        panic!("Not yet implemented");
+    pub fn read_population(&self, csv_pop: &CsvPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
+        let file = File::open(&csv_pop.file).expect("Could not read population file");
+        let mut rdr = csv::Reader::from_reader(file);
+        let mut homes = area::area_factory(self.housing_area.start_offset, self.housing_area.end_offset, constants::HOME_SIZE);
+        let scaling_factor = self.hospital_area.end_offset.x + 1;
+
+        let office_start_point = Point::new(self.hospital_area.end_offset.x + 1, self.housing_area.start_offset.y);
+        let office_end_point = Point::new(scaling_factor + self.housing_area.end_offset.x + 1, self.hospital_area.end_offset.y + 1);
+
+        let offices = area::area_factory(office_start_point, office_end_point, constants::OFFICE_SIZE);
+
+        let mut citizens = Vec::new();
+
+        // let mut current_home = homes_iterator.next().expect("Ran out of homes!");
+        // let mut office_iterator = offices.iter();
+        // let mut current_office = office_iterator.next().unwrap();
+        let mut home_loc = Vec::new();
+
+        let mut home_points_iter = AreaPointIterator::init(&mut homes);
+
+        for result in rdr.deserialize() {
+            let record: PopulationRecord = result.expect("Could not deserialize population line");
+            let (home_area, home_point) = home_points_iter.next().expect("Ran out of homes!");
+
+            //TODO seems like transport point isn't being used on the routine() function
+            let citizen = Citizen::from_record(record, home_area, home_area, home_point, rng);
+            citizens.push(citizen);
+            home_loc.push(home_point);
+        }
+        self.draw(&home_loc, &homes, &offices);
+        (home_loc, citizens)
     }
 
     pub fn increase_hospital_size(&mut self, grid_size: i32) {

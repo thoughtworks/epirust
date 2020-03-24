@@ -27,6 +27,8 @@ use crate::geography::{Area, Grid, Point};
 use crate::random_wrapper::RandomWrapper;
 use crate::events::Counts;
 use crate::disease::Disease;
+use serde::{Deserializer, Deserialize, de};
+use serde::de::{Unexpected, Error};
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum State {
@@ -60,6 +62,32 @@ impl StateMachine {
     }
 }
 
+#[derive(Deserialize)]
+pub struct PopulationRecord {
+    //TODO move to a better place
+    pub ind: i32,
+    pub age: String,
+    #[serde(deserialize_with = "bool_from_string")]
+    pub working: bool,
+    #[serde(deserialize_with = "bool_from_string")]
+    pub pub_transport: bool,
+}
+
+/// Deserialize bool from String with custom value mapping
+fn bool_from_string<'de, D>(deserializer: D) -> Result<bool, D::Error>
+    where
+        D: Deserializer<'de>,
+{
+    match String::deserialize(deserializer)?.as_ref() {
+        "True" => Ok(true),
+        "False" => Ok(false),
+        other => Err(de::Error::invalid_value(
+            Unexpected::Str(other),
+            &"True or False",
+        )),
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Citizen {
     pub id: i32,
@@ -90,6 +118,27 @@ impl Citizen {
             vaccinated: false,
             uses_public_transport,
             working,
+            hospitalized: false,
+            state_machine: StateMachine::new(),
+            quarantined: false,
+            isolated: false,
+            current_area: home_location
+        }
+    }
+
+    pub fn from_record(record: PopulationRecord, home_location: Area, work_location: Area,
+                       transport_location: Point, rng: &mut RandomWrapper) -> Citizen {
+        let disease_randomness_factor = Citizen::generate_disease_randomness_factor(rng);
+
+        Citizen {
+            id: record.ind,
+            immunity: disease_randomness_factor,
+            home_location,
+            work_location,
+            transport_location,
+            vaccinated: false,
+            uses_public_transport: record.pub_transport,
+            working: record.working,
             hospitalized: false,
             state_machine: StateMachine::new(),
             quarantined: false,

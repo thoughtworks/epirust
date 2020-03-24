@@ -21,4 +21,4 @@ covid_19: #Guesstimated
   last_day: 40
   regular_transmission_rate: 0.025
   high_transmission_rate: 0.25
-  death_rate: 0.2
+  death_rate: 0.035

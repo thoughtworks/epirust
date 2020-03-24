@@ -89,7 +89,7 @@ impl Grid {
         let office_start_point = Point::new(self.hospital_area.end_offset.x + 1, self.housing_area.start_offset.y);
         let office_end_point = Point::new(scaling_factor + self.housing_area.end_offset.x + 1, self.hospital_area.end_offset.y + 1);
 
-        let mut offices = area::area_factory(office_start_point, office_end_point, constants::OFFICE_SIZE);
+        let offices = area::area_factory(office_start_point, office_end_point, constants::OFFICE_SIZE);
         let mut offices_iter = offices.iter().cycle();
 
         let mut citizens = Vec::new();

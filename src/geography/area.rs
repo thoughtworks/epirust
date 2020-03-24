@@ -197,7 +197,7 @@ mod tests {
         let areas_points_iter = AreaPointIterator::init(&mut areas);
 
         let mut points = Vec::new();
-        for (area, point) in areas_points_iter {
+        for (_area, point) in areas_points_iter {
             points.push(point);
         }
 

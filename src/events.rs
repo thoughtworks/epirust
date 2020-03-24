@@ -76,8 +76,8 @@ impl Counts {
 pub trait Listener {
     fn counts_updated(&mut self, counts: Counts);
     fn simulation_ended(&mut self);
-    fn citizen_got_infected(&mut self, cell: &Point) {}
-    fn citizen_state_updated(&mut self, hr: i32, citizen: &Citizen, location: &Point) {}
+    fn citizen_got_infected(&mut self, _cell: &Point) {}
+    fn citizen_state_updated(&mut self, _hr: i32, _citizen: &Citizen, _location: &Point) {}
     fn as_any(&self) -> &dyn Any;
 }
 

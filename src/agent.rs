@@ -28,7 +28,7 @@ use crate::random_wrapper::RandomWrapper;
 use crate::events::Counts;
 use crate::disease::Disease;
 use serde::{Deserializer, Deserialize, de};
-use serde::de::{Unexpected, Error};
+use serde::de::{Unexpected};
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum State {

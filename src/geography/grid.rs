@@ -89,15 +89,11 @@ impl Grid {
         let office_start_point = Point::new(self.hospital_area.end_offset.x + 1, self.housing_area.start_offset.y);
         let office_end_point = Point::new(scaling_factor + self.housing_area.end_offset.x + 1, self.hospital_area.end_offset.y + 1);
 
-        let offices = area::area_factory(office_start_point, office_end_point, constants::OFFICE_SIZE);
+        let mut offices = area::area_factory(office_start_point, office_end_point, constants::OFFICE_SIZE);
+        let mut offices_iter = offices.iter().cycle();
 
         let mut citizens = Vec::new();
-
-        // let mut current_home = homes_iterator.next().expect("Ran out of homes!");
-        // let mut office_iterator = offices.iter();
-        // let mut current_office = office_iterator.next().unwrap();
         let mut home_loc = Vec::new();
-
         let mut home_points_iter = AreaPointIterator::init(&mut homes);
 
         for result in rdr.deserialize() {
@@ -105,7 +101,7 @@ impl Grid {
             let (home_area, home_point) = home_points_iter.next().expect("Ran out of homes!");
 
             //TODO seems like transport point isn't being used on the routine() function
-            let citizen = Citizen::from_record(record, home_area, home_area, home_point, rng);
+            let citizen = Citizen::from_record(record, home_area, *offices_iter.next().unwrap(), home_point, rng);
             citizens.push(citizen);
             home_loc.push(home_point);
         }

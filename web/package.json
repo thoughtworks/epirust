@@ -1,0 +1,54 @@
+{
+  "name": "epirust",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@babel/runtime": "^7.8.7",
+    "bootstrap": "^4.4.1",
+    "dygraphs": "^2.1.0",
+    "jquery": "^3.4.1",
+    "node-sass": "^4.13.1",
+    "normalize.css": "^8.0.1",
+    "popper.js": "^1.16.1",
+    "prop-types": "^15.7.2",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-scripts": "3.4.0",
+    "socket.io-client": "^2.3.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^4.2.3",
+    "react-test-renderer": "^16.13.1",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "socket.io-mock": "^1.2.4"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "react-scripts test --watchAll=false",
+      "pre-push": "react-scripts test --watchAll=false"
+    }
+  }
+}

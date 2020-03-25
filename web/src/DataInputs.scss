@@ -1,0 +1,45 @@
+.graph-input {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    width: 80%;
+    margin: 0 auto;
+}
+
+.user-inputs {
+    flex-basis: 85%;
+}
+
+.file-input {
+  width: 25%;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+}
+
+.form-row {
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .col.inputs {
+    display: flex;
+    flex-direction: row;
+    // height: 555px;
+    flex-wrap: wrap;
+    flex-basis: 100%;
+    justify-content: space-between;
+    align-content: space-around;
+  }
+  
+  label {
+    margin-bottom: 0.1rem;
+  }
+  
+  input {
+    margin-bottom: 0.5rem;
+  }
+  

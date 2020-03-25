@@ -1,0 +1,379 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should render ParametersForm with defaults 1`] = `
+<form
+  className="user-inputs"
+  data-testid="simulationForm"
+  onSubmit={[Function]}
+>
+  <div
+    className="form-row"
+  >
+    <div
+      className="col inputs"
+    >
+      <div>
+        <fieldset>
+          <legend>
+            Population
+          </legend>
+          <div
+            className="input-control"
+          >
+            <label
+              htmlFor="number_of_agents"
+            >
+              Number of Agents
+            </label>
+            <input
+              aria-describedby="number_of_agents"
+              className="form-control"
+              defaultValue="10000"
+              id="number_of_agents"
+              name="number_of_agents"
+              placeholder="Number of Agents"
+              type="number"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              htmlFor="public_transport_percentage"
+            >
+              Public Transport Percentage
+            </label>
+            <input
+              aria-describedby="public_transport_percentage"
+              className="form-control"
+              defaultValue="0.2"
+              id="public_transport_percentage"
+              name="public_transport_percentage"
+              placeholder="Public Transport Percentage"
+              step="any"
+              type="number"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              htmlFor="working_percentage"
+            >
+              Working Percentage
+            </label>
+            <input
+              aria-describedby="working_percentage"
+              className="form-control"
+              defaultValue="0.7"
+              id="working_percentage"
+              max="1"
+              min="0"
+              name="working_percentage"
+              placeholder="Working Percentage"
+              step="any"
+              type="number"
+            />
+          </div>
+        </fieldset>
+        <fieldset>
+          <div
+            className="input-control"
+          >
+            <label
+              htmlFor="grid_size"
+            >
+              Grid Size
+            </label>
+            <input
+              aria-describedby="grid_size"
+              className="form-control"
+              defaultValue="250"
+              id="grid_size"
+              name="grid_size"
+              placeholder="Grid Size"
+              type="number"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              htmlFor="simulation_hrs"
+            >
+              Simulation Hours
+            </label>
+            <input
+              aria-describedby="simulation_hrs"
+              className="form-control"
+              defaultValue="10000"
+              id="simulation_hrs"
+              name="simulation_hrs"
+              placeholder="Simulation Hours"
+              type="number"
+            />
+          </div>
+        </fieldset>
+      </div>
+      <fieldset>
+        <legend>
+          Interventions
+        </legend>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="vaccinate_at"
+          >
+            Vaccinate At
+          </label>
+          <input
+            aria-describedby="vaccinate_at"
+            className="form-control"
+            defaultValue="5000"
+            id="vaccinate_at"
+            name="vaccinate_at"
+            placeholder="Vaccinate At"
+            type="number"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="vaccinate_percentage"
+          >
+            Vaccinate Percentage
+          </label>
+          <input
+            aria-describedby="vaccinate_percentage"
+            className="form-control"
+            defaultValue="0.2"
+            id="vaccinate_percentage"
+            name="vaccinate_percentage"
+            placeholder="Vaccinate Percentage"
+            step="any"
+            type="number"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="lockdown_at_number_of_infections"
+          >
+            Vaccinate Percentage
+          </label>
+          <input
+            aria-describedby="lockdown_at_number_of_infections"
+            className="form-control"
+            defaultValue="100"
+            id="lockdown_at_number_of_infections"
+            name="lockdown_at_number_of_infections"
+            placeholder="Lockdown At(number of infections)"
+            step="any"
+            type="number"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="emergency_workers_population"
+          >
+            Emergency Workers Population
+          </label>
+          <input
+            aria-describedby="emergency_workers_population"
+            className="form-control"
+            defaultValue="0.1"
+            id="emergency_workers_population"
+            name="emergency_workers_population"
+            placeholder="Emergency Workers Population"
+            step="any"
+            type="number"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="hospital_spread_rate_threshold"
+          >
+            Hospital Spread Rate Threshold
+          </label>
+          <input
+            aria-describedby="hospital_spread_rate_threshold"
+            className="form-control"
+            defaultValue="100"
+            id="hospital_spread_rate_threshold"
+            name="hospital_spread_rate_threshold"
+            placeholder="Hospital Spread Rate Threshold"
+            step="any"
+            type="number"
+          />
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>
+          Disease Dynamics
+        </legend>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="disease_name"
+          >
+            Disease Name
+          </label>
+          <select
+            aria-describedby="disease_name"
+            className="form-control"
+            data-testid="select-disease"
+            defaultValue="small_pox"
+            id="disease_name"
+            name="disease_name"
+            onChange={[Function]}
+            placeholder="Disease Name"
+          >
+            <option
+              value="small_pox"
+            >
+              Small Pox
+            </option>
+            <option
+              value="sars"
+            >
+              SARS
+            </option>
+            <option
+              value="covid_19"
+            >
+              COVID-19
+            </option>
+          </select>
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="regular_transmission_start_day"
+          >
+            Regular Transmission Start Day
+          </label>
+          <input
+            aria-describedby="regular_transmission_start_day"
+            className="form-control"
+            defaultValue={10}
+            id="regular_transmission_start_day"
+            name="regular_transmission_start_day"
+            placeholder="Regular Transmission Start Day"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="high_transmission_start_day"
+          >
+            High Transmission Start Day
+          </label>
+          <input
+            aria-describedby="high_transmission_start_day"
+            className="form-control"
+            defaultValue={16}
+            id="high_transmission_start_day"
+            name="high_transmission_start_day"
+            placeholder="High Transmission Start Day"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="last_day"
+          >
+            Last Day
+          </label>
+          <input
+            aria-describedby="last_day"
+            className="form-control"
+            defaultValue={22}
+            id="last_day"
+            name="last_day"
+            placeholder="Last Day"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="regular_transmission_rate"
+          >
+            Regular Transmission Rate
+          </label>
+          <input
+            aria-describedby="regular_transmission_rate"
+            className="form-control"
+            defaultValue={0.05}
+            id="regular_transmission_rate"
+            name="regular_transmission_rate"
+            placeholder="Regular Transmission Rate"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="high_transmission_rate"
+          >
+            High Transmission Rate
+          </label>
+          <input
+            aria-describedby="high_transmission_rate"
+            className="form-control"
+            defaultValue={0.5}
+            id="high_transmission_rate"
+            name="high_transmission_rate"
+            placeholder="High Transmission Rate"
+            type="text"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            htmlFor="death_rate"
+          >
+            Death Rate
+          </label>
+          <input
+            aria-describedby="death_rate"
+            className="form-control"
+            defaultValue={0.2}
+            id="death_rate"
+            name="death_rate"
+            placeholder="Death Rate"
+            type="text"
+          />
+        </div>
+      </fieldset>
+    </div>
+    <div
+      className="col actions"
+    >
+      <button
+        className="btn btn-primary"
+        id="submitBtn"
+        type="submit"
+      >
+        Start
+      </button>
+    </div>
+  </div>
+</form>
+`;

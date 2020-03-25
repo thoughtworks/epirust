@@ -1,0 +1,10 @@
+div[class^="grid-cell"] {
+  padding: 0 1px 1px 0;
+  display: table-cell;
+}
+
+.cell-body {
+  vertical-align: middle;
+  height: 100%;
+  width: 100%;
+}

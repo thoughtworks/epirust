@@ -19,7 +19,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import os
 
-path = "/Users/in-akshaydewan/projects/e4r/results" #Change to wherever CSV are stored
+path = "." #Change to wherever CSV are stored
 folder = os.fsencode(path)
 
 for file in os.listdir(folder):
@@ -28,7 +28,7 @@ for file in os.listdir(folder):
         df = pd.read_csv(path + "/" + filename)
         df.head()
         fig = go.Figure()
-        fig.update_layout(title=filename)
+        fig.update_layout(title=filename, xaxis_title="hours", yaxis_title="no. of individuals")
         fig.add_trace(go.Scatter(x=df['hour'], y=df['susceptible'], mode='lines', name='Susceptible'))
         fig.add_trace(go.Scatter(x=df['hour'], y=df['infected'], mode='lines', name='Infected'))
         fig.add_trace(go.Scatter(x=df['hour'], y=df['quarantined'], mode='lines', name='Quarantined'))

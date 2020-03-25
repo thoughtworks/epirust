@@ -110,9 +110,8 @@ impl Grid {
     }
 
     pub fn increase_hospital_size(&mut self, grid_size: i32) {
-        let bound = grid_size - 1;
         let start_offset = self.hospital_area.start_offset;
-        let end_offset = Point::new(bound, bound);
+        let end_offset = Point::new(grid_size, grid_size);
 
         self.hospital_area = Area::new(start_offset, end_offset)
     }
@@ -124,7 +123,7 @@ mod tests {
     use crate::geography::define_geography;
 
     #[test]
-    fn generate_population() {
+    fn should_generate_population() {
         let mut rng = RandomWrapper::new();
 
         let grid = define_geography(100);
@@ -149,5 +148,15 @@ mod tests {
             assert!(transport_area.contains(&agent.transport_location)
                 || housing_area.contains(&agent.transport_location)) //for citizens that aren't using public transport
         }
+    }
+
+    #[test]
+    fn should_increase_hospital_size() {
+        let mut grid = define_geography(100);
+
+        grid.increase_hospital_size(120);
+
+        assert_eq!(grid.hospital_area.start_offset, Point::new(70, 0));
+        assert_eq!(grid.hospital_area.end_offset, Point::new(120, 120));
     }
 }

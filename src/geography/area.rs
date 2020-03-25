@@ -154,9 +154,13 @@ impl Iterator for AreaPointIterator<'_> {
 mod tests {
     use super::*;
 
+    fn get_area() -> Area {
+        Area::new(Point { x: 0, y: 0 }, Point { x: 5, y: 5 })
+    }
+
     #[test]
     fn generate_points() {
-        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 5, y: 5 });
+        let area = get_area();
         let points: Vec<Point> = area.random_points(10, &mut RandomWrapper::new());
 
         assert_eq!(points.len(), 10);
@@ -205,5 +209,39 @@ mod tests {
             Point::new(0,0), Point::new(1,0), Point::new(0,1), Point::new(1,1),
             Point::new(2,0), Point::new(3,0), Point::new(2,1), Point::new(3,1),
         ])
+    }
+
+
+    #[test]
+    fn should_get_neighbor_of(){
+        let area = get_area();
+        let neighbors: Vec<Point> = area.get_neighbors_of(Point::new(4,5)).collect();
+        assert_eq!(neighbors.len(), 5);
+        assert_eq!(neighbors.contains(&Point::new(4, 4)), true);
+        assert_eq!(neighbors.contains(&Point::new(4, 6)), false);
+    }
+
+    #[test]
+    fn should_return_true_if_area_has_point(){
+        let area = get_area();
+
+        let is_inside_area = area.contains(&Point::new(2, 3));
+        assert_eq!(is_inside_area, true);
+    }
+
+    #[test]
+    fn should_return_false_if_area_does_not_contain_point(){
+        let area = get_area();
+
+        let is_inside_area = area.contains(&Point::new(20, 3));
+        assert_eq!(is_inside_area, false);
+    }
+
+    #[test]
+    fn should_get_random_point(){
+        let area = get_area();
+
+        let random_point = area.get_random_point(&mut RandomWrapper::new());
+        assert_eq!(area.contains(&random_point), true);
     }
 }

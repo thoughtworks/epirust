@@ -25,7 +25,7 @@ Running:
 Visualization:
 - After the simulation is run, it will generate a CSV file. We can plot this using a simple script included in the `engine/plot` directory
   - Ensure you're in the `engine` directory
-  - Run `python plot/plot.py` - this will plot all the CSVs in the current directory.
+  - Run `python plot/plot.py --data-path <PATH_TO_CSV_FILE>` - this will plot the csv you provide.
 
 Sample output:
 ![Epicurves plot](https://user-images.githubusercontent.com/6024038/77537273-ce79fa80-6ec3-11ea-99bd-f88e1ea9662d.png)

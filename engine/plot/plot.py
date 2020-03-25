@@ -15,23 +15,33 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 
+import matplotlib.pyplot as plt
+import argparse
 import pandas as pd
-import plotly.graph_objects as go
-import os
 
-path = "." #Change to wherever CSV are stored
-folder = os.fsencode(path)
 
-for file in os.listdir(folder):
-    filename = os.fsdecode(file)
-    if filename.endswith('.csv'):
-        df = pd.read_csv(path + "/" + filename)
-        df.head()
-        fig = go.Figure()
-        fig.update_layout(title=filename, xaxis_title="hours", yaxis_title="no. of individuals")
-        fig.add_trace(go.Scatter(x=df['hour'], y=df['susceptible'], mode='lines', name='Susceptible'))
-        fig.add_trace(go.Scatter(x=df['hour'], y=df['infected'], mode='lines', name='Infected'))
-        fig.add_trace(go.Scatter(x=df['hour'], y=df['quarantined'], mode='lines', name='Quarantined'))
-        fig.add_trace(go.Scatter(x=df['hour'], y=df['recovered'], mode='lines', name='Recovered'))
-        fig.add_trace(go.Scatter(x=df['hour'], y=df['deceased'], mode='lines', name='Deceased'))
-        fig.show()
+def arg_parser():
+    parser = argparse.ArgumentParser(description='plot peaks from csv')
+    parser.add_argument('--data-path', help='path to data csv file', required=True)
+    parser.add_argument('--time-column', help='name of the column representing time', default='hour')
+    return parser.parse_args()
+
+
+def plot(data_frame, time_column):
+    columns = filter(lambda c: c != time_column, data_frame.columns)
+    fig, ax1 = plt.subplots()
+    plot_lines = []
+    for column in columns:
+        plot_line, = ax1.plot(data_frame[time_column], data_frame[column], label=column)
+        plot_lines.append(plot_line)
+
+    fig.legend()
+    plt.grid(True)
+    plt.show()
+
+
+if __name__ == '__main__':
+    args = arg_parser()
+    data_frame = pd.read_csv(args.data_path)
+    plot(data_frame, args.time_column)
+

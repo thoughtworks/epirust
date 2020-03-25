@@ -21,7 +21,7 @@ import React from 'react';
 import DataInputs from './DataInputs';
 import { useState } from 'react';
 import io from 'socket.io-client'
-import './app.scss';
+import './App.scss';
 import SocketAwareGraph from './SocketAwareGraph'
 import Graph from './LineGraph';
 

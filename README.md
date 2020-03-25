@@ -1,5 +1,5 @@
 # EpiRust
-## An Epidemiology simulation framework built in Rust
+## An agent-based epidemiology simulation framework built in Rust
 
 This is a monorepo containing code for the EpiRust framework -
 

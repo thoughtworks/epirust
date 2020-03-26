@@ -18,8 +18,8 @@
  */
 
 import React from 'react'
-import { render, fireEvent, getByTestId } from '@testing-library/react'
-import DataInputs from '../DataInputs'
+import { render, fireEvent } from '@testing-library/react'
+import DataInputs from '../../time-series/DataInputs'
 
 jest.useFakeTimers();
 

@@ -18,7 +18,7 @@
  */
 
 import React from 'react'
-import FileDataInput from '../FileDataInput'
+import FileDataInput from '../../time-series/FileDataInput'
 import renderer from 'react-test-renderer' 
 
 test('should render FileDataInput', () => {

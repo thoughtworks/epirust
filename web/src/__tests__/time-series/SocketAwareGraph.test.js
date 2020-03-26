@@ -18,8 +18,8 @@
  */
 
 import React from 'react'
-import SocketAwareGraph from '../SocketAwareGraph'
-import {render, act, prettyDOM} from '@testing-library/react'
+import SocketAwareGraph from '../../time-series/SocketAwareGraph'
+import {render } from '@testing-library/react'
 import MockSocket from 'socket.io-mock'
 import Dygraph from 'dygraphs'
 import renderer from 'react-test-renderer'

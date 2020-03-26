@@ -29,13 +29,13 @@ def arg_parser():
 
 def plot(data_frame, time_column):
     columns = filter(lambda c: c != time_column, data_frame.columns)
-    fig, ax1 = plt.subplots()
-    plot_lines = []
-    for column in columns:
-        plot_line, = ax1.plot(data_frame[time_column], data_frame[column], label=column)
-        plot_lines.append(plot_line)
 
-    fig.legend()
+    for column in columns:
+        plt.plot(data_frame[time_column], data_frame[column], label=column)
+
+    plt.legend()
+    plt.xlabel(time_column)
+    plt.ylabel('No. of individuals')
     plt.grid(True)
     plt.show()
 

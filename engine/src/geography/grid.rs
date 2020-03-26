@@ -33,6 +33,8 @@ pub struct Grid {
     pub work_area: Area,
     pub transport_area: Area,
     pub hospital_area: Area,
+    pub houses: Vec<Area>,
+    pub offices: Vec<Area>
 }
 
 impl Grid {
@@ -46,14 +48,11 @@ impl Grid {
 
         let home_locations = self.housing_area.random_points(number_of_agents as i32, rng);
 
-        let homes = area::area_factory(self.housing_area.start_offset, self.housing_area.end_offset, constants::HOME_SIZE);
-        let offices = area::area_factory(self.work_area.start_offset, self.work_area.end_offset, constants::OFFICE_SIZE);
-
         let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32, rng);
 
-        let agent_list = agent::citizen_factory(number_of_agents, &homes, &offices, &transport_locations, public_transport_percentage, working_percentage, rng);
+        let agent_list = agent::citizen_factory(number_of_agents, &self.houses, &self.offices, &transport_locations, public_transport_percentage, working_percentage, rng);
 
-        self.draw(&home_locations, &homes, &offices);
+        self.draw(&home_locations, &self.houses, &self.offices);
         (home_locations, agent_list)
     }
 

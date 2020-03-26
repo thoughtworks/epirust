@@ -40,7 +40,11 @@ pub fn define_geography(grid_size: i32) -> Grid {
     let transport_area = Area::new(Point::new(transport_start, 0), Point::new(transport_end, grid_size));
     let work_area = Area::new(Point::new(work_area_start, 0), Point::new(work_area_end, grid_size));
     let hospital_area = Area::new(Point::new(hospital_start, 0), Point::new(hospital_end, grid_size));
-    Grid { grid_size, housing_area, transport_area, hospital_area, work_area }
+
+    let houses = area::area_factory(housing_area.start_offset, housing_area.end_offset, constants::HOME_SIZE);
+    let offices = area::area_factory(work_area.start_offset, work_area.end_offset, constants::OFFICE_SIZE);
+
+    Grid { grid_size, housing_area, transport_area, hospital_area, work_area, houses, offices }
 }
 
 #[cfg(test)]

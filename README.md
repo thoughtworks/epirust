@@ -28,7 +28,7 @@ Visualization:
   - Run `python plot/plot.py --data-path <PATH_TO_CSV_FILE>` - this will plot the csv you provide.
 
 Sample output:
-![Epicurves plot](https://user-images.githubusercontent.com/6024038/77537273-ce79fa80-6ec3-11ea-99bd-f88e1ea9662d.png)
+![Epicurves plot](https://user-images.githubusercontent.com/16804955/77611863-789d6500-6f4c-11ea-9a8d-5cc130f54abd.png)
 
 
 ### License

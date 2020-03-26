@@ -20,7 +20,6 @@
 import React from 'react';
 import FileDataInput from './FileDataInput';
 import ParametersForm from './ParamtersForm';
-import './DataInputs.scss'
 import PropTypes from 'prop-types'
 
 export default function DataInputs({ onSubmit, onFileDataInput }) {

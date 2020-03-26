@@ -20,7 +20,6 @@
 import React from 'react';
 import Dygraph from 'dygraphs';
 import { useState, useEffect } from 'react';
-import './LineGraph.scss'
 import PropTypes from 'prop-types'
 
 export default function Graph({ dataBuffer , enableExport = false}) {

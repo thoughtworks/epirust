@@ -14,8 +14,8 @@ The quickest way to run the application is using the CLI interface on the engine
 Prerequisites: 
 - Install Rust and Cargo (version 1.40.0 or above). Refer to https://rustup.rs/ for rust installation
 - Install `cmake` (version 3.16.4 or later). Installation instructions will depend on your platform. On MacOS you can install it using `brew install cmake`. Refer to https://cmake.org/download/
-- Python 3 (for visualization and charting). We also need the `pandas` and `plotly` libraries which can be installed using `pip` or `conda`.
-    - `pip install pandas plotly`
+- Python 3 (for visualization and charting). We also need the `pandas` and `matplotlib` libraries which can be installed using `pip` or `conda`.
+    - `pip install pandas matplotlib`
 
 Running:
 - Go to the `engine` directory: `cd engine/`

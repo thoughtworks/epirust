@@ -21,7 +21,7 @@ use std::error::Error;
 use std::fs::File;
 
 use crate::disease::{Disease, DiseaseOverride};
-use crate::interventions::{Intervention, Vaccinate};
+use crate::interventions::{Intervention};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Config {
@@ -114,6 +114,7 @@ pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::interventions::Vaccinate;
 
     #[test]
     fn should_read_config_with_csv_population() {

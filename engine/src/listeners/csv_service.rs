@@ -23,9 +23,10 @@ use std::error::Error;
 
 use csv::Writer;
 
-use crate::events::{Counts, Listener};
 use crate::geography::Point;
 use std::any::Any;
+use crate::listeners::events::counts::Counts;
+use crate::listeners::listener::Listener;
 
 pub struct CsvListener {
     output_file_name: String,

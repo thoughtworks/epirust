@@ -27,11 +27,12 @@ use rdkafka::message::BorrowedMessage;
 use rdkafka::producer::{FutureProducer, FutureRecord};
 
 use crate::epidemiology_simulation::Epidemiology;
-use crate::events::{Counts, Listener};
-use crate::geography::Point;
 use std::any::Any;
 use crate::config::Config;
 use crate::agent::{Citizen, State};
+use crate::listeners::listener::Listener;
+use crate::listeners::events::counts::Counts;
+use crate::geography::Point;
 
 pub struct KafkaProducer {
     producer: FutureProducer,

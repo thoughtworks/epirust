@@ -19,7 +19,6 @@
 
 use core::borrow::Borrow;
 use core::borrow::BorrowMut;
-use std::any::Any;
 use std::collections::HashMap;
 use std::time::{Instant, SystemTime};
 
@@ -27,19 +26,20 @@ use chrono::{DateTime, Local};
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
-use crate::{allocation_map, events};
+use crate::{allocation_map};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population};
-use crate::csv_service::CsvListener;
 use crate::disease::Disease;
-use crate::disease_tracker::Hotspot;
-use crate::events::{Counts, Listener};
 use crate::geography;
-use crate::geography::{Grid, Point};
-use crate::kafka_service::KafkaProducer;
+use crate::geography::{Grid};
 use crate::random_wrapper::RandomWrapper;
-use crate::agent::Citizen;
 use crate::interventions::{Intervention, Lockdown};
+use crate::listeners::kafka_service::KafkaProducer;
+use crate::listeners::events::counts::Counts;
+use crate::listeners::csv_service::CsvListener;
+use crate::listeners::disease_tracker::Hotspot;
+use crate::listeners::listener::Listeners;
+use crate::listeners::listener::Listener;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -177,7 +177,7 @@ impl Epidemiology {
         }
     }
 
-    fn simulate(mut csv_record: &mut events::Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
+    fn simulate(mut csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease) {
         write_buffer.agent_cell.clear();
@@ -223,40 +223,6 @@ impl Epidemiology {
     }
 }
 
-struct Listeners {
-    listeners: Vec<Box<dyn Listener>>,
-}
-
-impl Listeners {
-    fn from(listeners: Vec<Box<dyn Listener>>) -> Listeners {
-        Listeners { listeners }
-    }
-}
-
-impl Listener for Listeners {
-    fn counts_updated(&mut self, counts: Counts) {
-        self.listeners.iter_mut().for_each(|listener| { listener.counts_updated(counts) });
-    }
-
-    fn simulation_ended(&mut self) {
-        self.listeners.iter_mut().for_each(|listener| { listener.simulation_ended() });
-    }
-
-    fn citizen_got_infected(&mut self, cell: &Point) {
-        self.listeners.iter_mut().for_each(|listener| { listener.citizen_got_infected(cell) });
-    }
-
-    fn citizen_state_updated(&mut self, hr: i32, citizen: &Citizen, location: &Point) {
-        self.listeners.iter_mut().for_each(|listener| {
-            listener.citizen_state_updated(hr, citizen, location);
-        })
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::config::AutoPopulation;
@@ -294,61 +260,5 @@ mod tests {
         assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.agent_location_map.agent_cell.len(), 10);
-    }
-
-    struct MockListener {
-        calls_counts_updated: u32,
-        calls_simulation_ended: u32,
-        calls_citizen_got_infected: u32,
-    }
-
-    impl MockListener {
-        fn new() -> MockListener {
-            MockListener {
-                calls_counts_updated: 0,
-                calls_simulation_ended: 0,
-                calls_citizen_got_infected: 0,
-            }
-        }
-    }
-
-    impl Listener for MockListener {
-        fn counts_updated(&mut self, _counts: Counts) {
-            self.calls_counts_updated += 1;
-        }
-
-        fn simulation_ended(&mut self) {
-            self.calls_simulation_ended += 1;
-        }
-
-        fn citizen_got_infected(&mut self, _cell: &Point) {
-            self.calls_citizen_got_infected += 1;
-        }
-
-        fn as_any(&self) -> &dyn Any {
-            self
-        }
-    }
-
-    #[test]
-    fn should_notify_all_listeners() {
-        let mock1 = Box::new(MockListener::new());
-        let mock2 = Box::new(MockListener::new());
-
-        let mocks: Vec<Box<dyn Listener>> = vec![mock1, mock2];
-        let mut listeners = Listeners::from(mocks);
-
-
-        listeners.counts_updated(Counts::new(10, 1));
-        listeners.citizen_got_infected(&Point::new(1, 1));
-        listeners.simulation_ended();
-
-        for i in 0..=1 {
-            //ownership has moved. We need to read the value from the struct, and downcast to MockListener to assert
-            let mock = listeners.listeners.get(i).unwrap().as_any().downcast_ref::<MockListener>().unwrap();
-            assert_eq!(mock.calls_counts_updated, 1);
-            assert_eq!(mock.calls_citizen_got_infected, 1);
-            assert_eq!(mock.calls_simulation_ended, 1);
-        }
     }
 }

@@ -25,10 +25,10 @@ use crate::allocation_map::AgentLocationMap;
 use crate::constants;
 use crate::geography::{Area, Grid, Point};
 use crate::random_wrapper::RandomWrapper;
-use crate::events::Counts;
 use crate::disease::Disease;
 use serde::{Deserializer, Deserialize, de};
 use serde::de::{Unexpected};
+use crate::listeners::events::counts::Counts;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum State {

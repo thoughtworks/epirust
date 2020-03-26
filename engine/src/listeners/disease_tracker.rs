@@ -17,10 +17,11 @@
  *
  */
 
-use crate::geography::Point;
 use fxhash::FxHashMap;
-use crate::events::{Listener, Counts};
 use std::any::Any;
+use crate::listeners::listener::Listener;
+use crate::geography::Point;
+use crate::listeners::events::counts::Counts;
 
 pub struct Hotspot {
     disease_hotspot_tracker: FxHashMap<Point, i32>
@@ -52,9 +53,9 @@ impl Listener for Hotspot {
 
 #[cfg(test)]
 mod tests{
-    use crate::disease_tracker::Hotspot;
+    use crate::listeners::disease_tracker::Hotspot;
     use crate::geography::Point;
-    use crate::events::Listener;
+    use crate::listeners::listener::Listener;
 
     #[test]
     fn should_initialize(){

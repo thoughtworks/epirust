@@ -17,10 +17,6 @@
  *
  */
 
-use crate::geography::Point;
-use std::any::Any;
-use crate::agent::Citizen;
-
 #[derive(Serialize, Copy, Clone)]
 pub struct Counts {
     hour: i32,
@@ -73,17 +69,10 @@ impl Counts {
     }
 }
 
-pub trait Listener {
-    fn counts_updated(&mut self, counts: Counts);
-    fn simulation_ended(&mut self);
-    fn citizen_got_infected(&mut self, _cell: &Point) {}
-    fn citizen_state_updated(&mut self, _hr: i32, _citizen: &Citizen, _location: &Point) {}
-    fn as_any(&self) -> &dyn Any;
-}
 
 #[cfg(test)]
 mod tests {
-    use crate::events::Counts;
+    use crate::listeners::events::counts::Counts;
 
     #[test]
     fn should_create_counts() {

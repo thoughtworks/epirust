@@ -23,7 +23,7 @@ extern crate serde_derive;
 
 use clap::{App, Arg};
 
-use crate::kafka_service::KafkaConsumer;
+use crate::listeners::kafka_service::KafkaConsumer;
 
 mod constants;
 
@@ -32,11 +32,8 @@ mod epidemiology_simulation;
 mod allocation_map;
 mod geography;
 mod disease;
-mod csv_service;
 mod random_wrapper;
-mod disease_tracker;
-mod events;
-mod kafka_service;
+mod listeners;
 mod population;
 mod geojson_service;
 mod models;

@@ -41,12 +41,13 @@ impl Vaccinate {
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct Lockdown {
     pub at_number_of_infections: i32,
-    pub emergency_workers_population: f64
+    pub essential_workers_population: f64,
+    pub lock_down_period: i32
 }
 
 impl Lockdown {
-    pub fn new(at_number_of_infections: i32, emergency_workers_population: f64) -> Lockdown {
-        Lockdown { at_number_of_infections, emergency_workers_population }
+    pub fn new(at_number_of_infections: i32, essential_workers_population: f64, lock_down_period: i32) -> Lockdown {
+        Lockdown { at_number_of_infections, essential_workers_population, lock_down_period}
     }
 }
 
@@ -60,6 +61,15 @@ impl Intervention {
         return config.get_interventions().iter().filter_map(|i| {
             match i {
                 Intervention::BuildNewHospital(x) => Some(x),
+                _ => None
+            }
+        }).next().copied();
+    }
+
+    pub fn get_lock_down_intervention(config: &Config) -> Option<Lockdown> {
+        return config.get_interventions().iter().filter_map(|i| {
+            match i {
+                Intervention::Lockdown(x) => Some(x),
                 _ => None
             }
         }).next().copied();

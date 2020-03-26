@@ -29,6 +29,10 @@ jest.mock('../../services/epirust');
 
 describe('simulation controller', () => {
 
+    afterAll( async () => {
+        await app.close()
+    });
+
     test('should post request to get per tick stats', async done => {
 
         const response = await request.post('/simulation/');

@@ -31,15 +31,15 @@ use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population};
 use crate::disease::Disease;
 use crate::geography;
-use crate::geography::{Grid};
-use crate::random_wrapper::RandomWrapper;
+use crate::geography::Grid;
 use crate::interventions::{Intervention, Lockdown};
-use crate::listeners::kafka_service::KafkaProducer;
-use crate::listeners::events::counts::Counts;
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
-use crate::listeners::listener::Listeners;
+use crate::listeners::events::counts::Counts;
+use crate::listeners::kafka_producer::KafkaProducer;
 use crate::listeners::listener::Listener;
+use crate::listeners::listener::Listeners;
+use crate::random_wrapper::RandomWrapper;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -231,9 +231,9 @@ impl Epidemiology {
 #[cfg(test)]
 mod tests {
     use crate::config::AutoPopulation;
-    use crate::interventions::Vaccinate;
     use crate::geography::Area;
     use crate::geography::Point;
+    use crate::interventions::Vaccinate;
 
     use super::*;
 

@@ -17,7 +17,7 @@
  *
  */
 
-pub mod kafka_service;
+pub mod kafka_producer;
 pub mod csv_service;
 pub mod disease_tracker;
 pub mod listener;

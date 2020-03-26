@@ -23,7 +23,7 @@ extern crate serde_derive;
 
 use clap::{App, Arg};
 
-use crate::listeners::kafka_service::KafkaConsumer;
+use crate::kafka_consumer::KafkaConsumer;
 
 mod constants;
 
@@ -39,6 +39,7 @@ mod geojson_service;
 mod models;
 mod config;
 mod interventions;
+mod kafka_consumer;
 
 #[tokio::main]
 async fn main() {

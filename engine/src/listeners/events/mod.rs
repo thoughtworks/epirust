@@ -18,3 +18,4 @@
  */
 
 pub mod counts;
+pub mod citizen_state;

@@ -17,9 +17,10 @@
  *
  */
 
-use crate::geography::{Point};
-use crate::agent::Citizen;
 use std::any::Any;
+
+use crate::agent::Citizen;
+use crate::geography::Point;
 use crate::listeners::events::counts::Counts;
 
 pub trait Listener {
@@ -66,10 +67,11 @@ impl Listener for Listeners {
 
 #[cfg(test)]
 mod tests {
-    use crate::listeners::listener::{Listener, Listeners};
-    use crate::geography::Point;
     use std::any::Any;
+
+    use crate::geography::Point;
     use crate::listeners::events::counts::Counts;
+    use crate::listeners::listener::{Listener, Listeners};
 
     struct MockListener {
         calls_counts_updated: u32,

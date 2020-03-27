@@ -42,11 +42,11 @@ if __name__ == '__main__':
 
     if len(args.data_path):
         data_frames = open_data_frames(args.data_path)
-        curves = EpiCurves(data_frames)
-        curves.plot()
+        epi_curves = EpiCurves(data_frames)
+        epi_curves.plot()
 
         if args.output_path is not None:
-            curves.to_csv(args.output_path)
+            epi_curves.to_csv(args.output_path)
 
     if args.collated_csv is not None:
         EpiCurves(pd.read_csv(args.collated_csv)).plot()

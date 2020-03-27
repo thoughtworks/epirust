@@ -10,7 +10,7 @@
 ## Plot one particular simulation
 
 To visualise one particular simulation:
-```python
+```bash
 python plot.py --data-path <PATH_TO_CSV_FILE>
 ```
 
@@ -20,18 +20,18 @@ Sample output:
 # Plot the average of all simulations
 
 To calculate the average of all the simulations and visualise it:
-```python
+```bash
 python collate_all_simulations.py --data-path <PATTERN_TO_CSVS>
 ```
 
 Example:
-```python
+```bash
 python collate_all_simulations.py --data-path ./simulation*.csv
 ```
 
 Or you can pass particular files as well
 Example:
-```python
+```bash
 python collate_all_simulations.py --data-path ./simulation1.csv ./simulation2.csv
 ```
 
@@ -41,12 +41,12 @@ Sample output:
 The shaded region represents the standard deviation around the mean of the curve at one particular time
 
 To save the calculated mean and standard deviation to csv file:
-```python
+```bash
 python collate_all_simulations.py --data-path <PATTERN_TO_CSVS> --output-path <PATH_TO_OUTPUT_CSV>
 ```
 
 Example:
-```python
+```bash
 python collate_all_simulations.py --data-path ./simulation*.csv --output-path ./mean_simulation.csv
 ```
 
@@ -55,11 +55,11 @@ Note: if `--output-path` is a directory e.g `./` then the file saved would be `.
 ### Plot already calculated csv file
 
 To visualise already generated average and standard deviation calculated csv:
-```python
+```bash
 python collate_all_simulations.py --collated-csv <PATH_TO_COLLATED_CSV>
 ```
 
 Example:
-```python
+```bash
 python collate_all_simulations.py --collated-csv ./mean_simulation.csv
 ```

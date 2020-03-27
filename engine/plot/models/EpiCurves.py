@@ -46,13 +46,16 @@ def load_collated_csv(data_frame):
 
 
 class EpiCurves:
-    def __init__(self, data_frames):
-        if isinstance(data_frames, list):
-            self.curves = calculate_mean_and_standard_dev(data_frames)
-        elif isinstance(data_frames, pd.DataFrame):
-            self.curves = load_collated_csv(data_frames)
-        else:
+    strategies = {
+        list: calculate_mean_and_standard_dev,
+        pd.DataFrame: load_collated_csv
+    }
+
+    def __init__(self, epi_curve_input):
+        _class = next(filter(lambda c: isinstance(epi_curve_input, c), self.strategies), None)
+        if _class is None:
             raise Exception("Input has to be list of DataFrames or DataFrames")
+        self.curves = self.strategies[_class](epi_curve_input)
 
     def plot(self):
         fig, axes = plt.subplots()

@@ -54,7 +54,7 @@ class EpiCurves:
     def to_csv(self, output_path):
         if os.path.isdir(output_path):
             output_path = f'{output_path}/collated_simulation.csv'
-            
+
         data = {}
         for curve in self.curves:
             data.update(curve.to_dictionary())

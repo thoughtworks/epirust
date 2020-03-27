@@ -18,7 +18,7 @@
 
 import argparse
 import pandas as pd
-from models import Curves
+from models import EpiCurves
 
 
 def arg_parser():
@@ -35,7 +35,7 @@ def open_data_frames(path_to_csvs):
 if __name__ == '__main__':
     args = arg_parser()
     data_frames = open_data_frames(args.data_path)
-    curves = Curves(data_frames)
+    curves = EpiCurves(data_frames)
     curves.plot()
 
     if args.output_path is not None:

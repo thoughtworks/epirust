@@ -24,6 +24,7 @@ from models import Curves
 def arg_parser():
     parser = argparse.ArgumentParser(description='plot peaks from csv')
     parser.add_argument('--data-path', nargs='+', help='pattern to the path of simulation csvs', required=True)
+    parser.add_argument('--output-path', help='path to saving the collated csvs', default=None)
     return parser.parse_args()
 
 
@@ -33,7 +34,10 @@ def open_data_frames(path_to_csvs):
 
 if __name__ == '__main__':
     args = arg_parser()
-    print(args.data_path)
     data_frames = open_data_frames(args.data_path)
-    Curves(data_frames).plot()
+    curves = Curves(data_frames)
+    curves.plot()
+
+    if args.output_path is not None:
+        curves.to_csv(args.output_path)
 

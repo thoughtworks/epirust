@@ -16,6 +16,7 @@
 #
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from .Curve import Curve
 
@@ -48,4 +49,13 @@ class Curves:
             curve.plot(axes)
         plt.legend()
         plt.show()
+
+    def to_csv(self, output_path):
+        data = {}
+        for curve in self.curves:
+            data.update(curve.to_dictionary())
+
+        data_frame = pd.DataFrame(data)
+        data_frame['hour'] = data_frame.index + 1
+        data_frame.to_csv(output_path, index=None)
 

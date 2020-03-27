@@ -27,6 +27,7 @@ use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
 use crate::geography::area::AreaPointIterator;
 
+#[derive(Serialize)]
 pub struct Grid {
     pub grid_size: i32,
     pub housing_area: Area,

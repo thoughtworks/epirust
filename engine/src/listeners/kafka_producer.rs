@@ -24,10 +24,12 @@ use rdkafka::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
 
 use crate::agent::Citizen;
-use crate::geography::Point;
+use crate::geography::{Grid, Point};
 use crate::listeners::events::citizen_state::CitizenStatesAtHr;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
+use serde_json::Error;
+use serde::Serialize;
 
 pub struct KafkaProducer {
     sim_id: String,
@@ -85,8 +87,23 @@ impl Listener for KafkaProducer {
         }
     }
 
+    fn grid_updated(&self, grid: &Grid) {
+        if self.enable_citizen_state_messages {
+
+            let message = serde_json::to_string(grid);
+            match message {
+                Ok(m) => {
+                    let topic_name = "citizen_status_updated";
+                    let record: FutureRecord<String, String> = FutureRecord::to(topic_name).payload(&m);
+
+                    self.producer.send(record, 0);
+                }
+                Err(e) => println!("Failed to parse the grid, cannot publish to kafka!")
+            }
+        }
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
 }
-

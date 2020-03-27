@@ -23,7 +23,7 @@ use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
 use std::slice::IterMut;
 
-#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize)]
 pub struct Area {
     pub start_offset: Point,
     pub end_offset: Point,

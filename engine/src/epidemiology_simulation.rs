@@ -94,6 +94,8 @@ impl Epidemiology {
         let mut city_to_be_locked_till: i32 = 0;
         let mut is_city_locked_down = false;
 
+        listeners.grid_updated(&self.grid);
+
         for simulation_hour in 1..config.get_hours() {
             counts_at_hr.increment_hour();
             let start_of_day = simulation_hour % 24 == 0;
@@ -112,6 +114,8 @@ impl Epidemiology {
                     Some(x) if rate_of_spread >= x.spread_rate_threshold => {
                         println!("Increasing the hospital size");
                         self.grid.increase_hospital_size(config.get_grid_size());
+
+                        listeners.grid_updated(&self.grid);
                     }
                     _ => {}
                 }

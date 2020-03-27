@@ -40,9 +40,19 @@ def calculate_mean_and_standard_dev(data_frames):
     return curves
 
 
+def load_collated_csv(data_frame):
+    columns = list(filter(lambda c: c != 'hour' and '_std' not in c, data_frame.columns))
+    return list(map(lambda c: Curve(c, data_frame[c], data_frame[f'{c}_std']), columns))
+
+
 class EpiCurves:
     def __init__(self, data_frames):
-        self.curves = calculate_mean_and_standard_dev(data_frames)
+        if isinstance(data_frames, list):
+            self.curves = calculate_mean_and_standard_dev(data_frames)
+        elif isinstance(data_frames, pd.DataFrame):
+            self.curves = load_collated_csv(data_frames)
+        else:
+            raise Exception("Input has to be list of DataFrames or DataFrames")
 
     def plot(self):
         fig, axes = plt.subplots()

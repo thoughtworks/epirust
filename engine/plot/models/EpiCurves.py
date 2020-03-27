@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from .Curve import Curve
+import os
 
 
 def make_number_of_rows_equal(data_frames):
@@ -51,6 +52,9 @@ class EpiCurves:
         plt.show()
 
     def to_csv(self, output_path):
+        if os.path.isdir(output_path):
+            output_path = f'{output_path}/collated_simulation.csv'
+            
         data = {}
         for curve in self.curves:
             data.update(curve.to_dictionary())

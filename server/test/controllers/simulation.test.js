@@ -95,7 +95,7 @@ describe('simulation controller', () => {
                         percent: 0.2
                     },
                 },
-                {
+                    {
                     Lockdown: {
                         at_number_of_infections: 100,
                         essential_workers_population: 0.1,

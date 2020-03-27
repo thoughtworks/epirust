@@ -16,4 +16,4 @@
 #
 
 from .Curve import Curve
-from .Curves import Curves
+from .EpiCurves import EpiCurves

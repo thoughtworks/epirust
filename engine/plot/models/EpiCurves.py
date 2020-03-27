@@ -39,7 +39,7 @@ def calculate_mean_and_standard_dev(data_frames):
     return curves
 
 
-class Curves:
+class EpiCurves:
     def __init__(self, data_frames):
         self.curves = calculate_mean_and_standard_dev(data_frames)
 

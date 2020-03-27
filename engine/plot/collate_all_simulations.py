@@ -23,8 +23,9 @@ from models import EpiCurves
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='plot peaks from csv')
-    parser.add_argument('--data-path', nargs='+', help='pattern to the path of simulation csvs', required=True)
+    parser.add_argument('--data-path', nargs='+', help='pattern to the path of simulation csvs', default=[])
     parser.add_argument('--output-path', help='path to saving the collated csvs', default=None)
+    parser.add_argument('--collated-csv', help='path to the collated csvs', default=None)
     return parser.parse_args()
 
 
@@ -34,10 +35,18 @@ def open_data_frames(path_to_csvs):
 
 if __name__ == '__main__':
     args = arg_parser()
-    data_frames = open_data_frames(args.data_path)
-    curves = EpiCurves(data_frames)
-    curves.plot()
+    if len(args.data_path) == 0 and args.collated_csv is None:
+        raise Exception('Either enter the simulation csvs or the collated csv file')
+    if len(args.data_path) != 0 and args.collated_csv is not None:
+        raise Exception('Either enter the simulation csvs or the collated csv file. Can not do both')
 
-    if args.output_path is not None:
-        curves.to_csv(args.output_path)
+    if len(args.data_path):
+        data_frames = open_data_frames(args.data_path)
+        curves = EpiCurves(data_frames)
+        curves.plot()
 
+        if args.output_path is not None:
+            curves.to_csv(args.output_path)
+
+    if args.collated_csv is not None:
+        EpiCurves(pd.read_csv(args.collated_csv)).plot()

@@ -29,7 +29,7 @@ jest.mock('../../services/epirust');
 
 describe('simulation controller', () => {
 
-    afterAll( async () => {
+    afterAll(async () => {
         await app.close()
     });
 
@@ -93,14 +93,14 @@ describe('simulation controller', () => {
                     Vaccinate: {
                         at_hour: 5000,
                         percent: 0.2
-                      },
-                      Lockdown: {
+                    },
+                },
+                {
+                    Lockdown: {
                         at_number_of_infections: 100,
-                        emergency_workers_population: 0.1
-                      },
-                      BuildNewHospital: {
-                        spread_rate_threshold: 100
-                      }
+                        essential_workers_population: 0.1,
+                        lock_down_period: 21
+                    }
                 }]
         }
 

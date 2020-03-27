@@ -45,11 +45,12 @@ pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
     pub write_agent_location_map: allocation_map::AgentLocationMap,
     pub grid: Grid,
-    pub disease: Disease
+    pub disease: Disease,
+    pub sim_id: String,
 }
 
 impl Epidemiology {
-    pub fn new(config: &Config) -> Epidemiology {
+    pub fn new(config: &Config, sim_id: String) -> Epidemiology {
         let start = Instant::now();
         let disease = config.get_disease();
         let grid = geography::define_geography(config.get_grid_size());
@@ -63,7 +64,7 @@ impl Epidemiology {
         let write_agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
 
         println!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
-        Epidemiology { agent_location_map, write_agent_location_map, grid, disease }
+        Epidemiology { agent_location_map, write_agent_location_map, grid, disease, sim_id }
     }
 
     fn stop_simulation(row: Counts) -> bool {
@@ -251,7 +252,7 @@ mod tests {
         };
         let config = Config::new(Population::Auto(pop), disease, vec![], 100, 10000,
                                  vec![Intervention::Vaccinate(vac)], None);
-        let epidemiology: Epidemiology = Epidemiology::new(&config);
+        let epidemiology: Epidemiology = Epidemiology::new(&config, "id".to_string());
         let expected_housing_area = Area::new(Point::new(0, 0), Point::new(40, 100));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);
 

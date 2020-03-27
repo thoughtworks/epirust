@@ -39,17 +39,25 @@ impl KafkaConsumer {
                     println!("Received a message, but could not parse it.\n\
                         Error Details: {}", e)
                 }
-                Ok(config) => {
-                    let mut epidemiology = Epidemiology::new(&config);
-                    epidemiology.run(&config);
+                Ok(request) => {
+                    let mut epidemiology = Epidemiology::new(&request.config, request.sim_id);
+                    epidemiology.run(&request.config);
                 }
             };
         }
     }
 
-    fn parse_message(&self, message: Result<BorrowedMessage, KafkaError>) -> Result<Config, Box<dyn Error>> {
+    fn parse_message(&self, message: Result<BorrowedMessage, KafkaError>) -> Result<SimulationRequest, Box<dyn Error>> {
         let borrowed_message = message?;
         let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
+        println!("{:?}", parsed_message);
         serde_json::from_str(parsed_message).map_err(|e| e.into())
     }
+}
+
+#[derive(Deserialize)]
+struct SimulationRequest {
+    sim_id: String,
+    #[serde(flatten)]
+    config: Config,
 }

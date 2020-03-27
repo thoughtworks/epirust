@@ -41,6 +41,8 @@ mod config;
 mod interventions;
 mod kafka_consumer;
 
+const STANDALONE_SIM_ID: &str = "0";
+
 #[tokio::main]
 async fn main() {
     let matches = App::new("EpiRust")
@@ -81,7 +83,7 @@ async fn main() {
 
         let config = config::read(config_file.to_string()).expect("Failed to read config file");
 
-        let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config);
+        let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, STANDALONE_SIM_ID.to_string());
         epidemiology.run(&config);
         println!("Done");
     }

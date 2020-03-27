@@ -49,6 +49,7 @@ router.post('/', (req, res, next) => {
 router.post('/init', (req, res, next) => {
   const message = req.body; // { disease_name, grid_size, number_of_agents, simulation_hrs, public_transport_percentage, working_percentage, vaccinate_at, vaccinate_percentage }
   const simulation_config = {
+    "sim_id": `${Date.now()}`,
     "population": {
       "Auto": {
         "number_of_agents": message.number_of_agents,

@@ -76,7 +76,7 @@ impl Epidemiology {
         let output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
         let output_file_name = format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"));
         let csv_listener = CsvListener::new(output_file_name);
-        let kafka_listener = KafkaProducer::new(self.agent_location_map.agent_cell.len(),
+        let kafka_listener = KafkaProducer::new(self.sim_id.clone(), self.agent_location_map.agent_cell.len(),
                                                 config.enable_citizen_state_messages());
         let hotspot_tracker = Hotspot::new();
         let mut listeners = Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)]);

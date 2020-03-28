@@ -107,7 +107,11 @@ describe('simulation controller', () => {
         expect(kafkaService.KafkaProducerService).toHaveBeenCalled();
 
         const producerService = kafkaService.KafkaProducerService.mock.instances[0];
-        expect(producerService.send).toHaveBeenCalledWith("simulation_requests", kafkaPayload)
+
+        expect(producerService.send.mock.calls[0][0]).toBe("simulation_requests");
+        const payload = producerService.send.mock.calls[0][1];
+        delete payload["sim_id"]; //it is a timestamp, cannot test
+        expect(payload).toEqual(kafkaPayload);
 
         expect(response.status).toBe(200);
         done();

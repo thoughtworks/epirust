@@ -9,7 +9,31 @@ This is a monorepo containing code for the EpiRust framework -
 
 ### Quickstart
 
-The quickest way to run the application is using the CLI interface on the engine.
+The quickest way to run the application is using the CLI interface on the engine. Follow the docker or local setup to get the engine up and running.
+
+#### Docker  
+
+Prerequisites: 
+- [Install Docker](https://docs.docker.com/install/) on your local host machine
+
+##### Build EpiRust engine docker image 
+```
+cd engine
+docker build -t epirust-engine .
+```
+
+##### Running EpiRust engine docker container
+```
+docker run --rm --name epirust-engine epirust-engine /bin/bash -c 'cargo run --release -- -c config/default.json && ls *.csv'
+```
+- Copy the listed CSV produced from the container to the host machine
+```
+docker cp epirust-engine:/engine/<CSV_FILE> .
+```
+- Go to the visualization section to plot the copied CSV file
+
+
+#### Local setup
 
 Prerequisites: 
 - Install Rust and Cargo (version 1.40.0 or above). Refer to https://rustup.rs/ for rust installation
@@ -22,7 +46,7 @@ Running:
 - Run `cargo run --release`
 - To modify the settings, or run with custom settings, use `cargo run --release -- -c config/[your-config].json`. Refer to `default.json` for the available settings.
 
-Visualization:
+#### Visualization:
 - After the simulation is run, it will generate a CSV file. We can plot this using a simple script included in the `engine/plot` directory
   - Ensure you're in the `engine` directory
   - Run `python plot/plot.py --data-path <PATH_TO_CSV_FILE>` - this will plot the csv you provide.

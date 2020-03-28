@@ -28,18 +28,20 @@ use crate::geography::{Grid, Point};
 use crate::listeners::events::citizen_state::CitizenStatesAtHr;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
-use serde_json::Error;
-use serde::Serialize;
 
 pub struct KafkaProducer {
     sim_id: String,
     producer: FutureProducer,
     citizen_states_buffer: CitizenStatesAtHr,
     enable_citizen_state_messages: bool,
+    count_updated_topic: String,
+    citizen_states_topic: String,
 }
 
 impl KafkaProducer {
     pub fn new(sim_id: String, population_size: usize, enable_citizen_state_messages: bool) -> KafkaProducer {
+        let count_updated_topic = "counts_updated".to_string();
+        let citizen_states_topic = "citizen_states_updated".to_string();
         KafkaProducer {
             sim_id,
             producer: ClientConfig::new()
@@ -48,6 +50,8 @@ impl KafkaProducer {
                 .expect("Could not create Kafka Producer"),
             citizen_states_buffer: CitizenStatesAtHr::init(population_size),
             enable_citizen_state_messages,
+            count_updated_topic,
+            citizen_states_topic,
         }
     }
 }
@@ -55,7 +59,7 @@ impl KafkaProducer {
 impl Listener for KafkaProducer {
     fn counts_updated(&mut self, counts: Counts) {
         let message = serde_json::to_string(&counts).expect("Failed to serialize counts");
-        let record: FutureRecord<String, String> = FutureRecord::to("counts_updated")
+        let record: FutureRecord<String, String> = FutureRecord::to(&self.count_updated_topic)
             .key(&self.sim_id)
             .payload(&message);
         self.producer.send(record, 0);
@@ -63,7 +67,7 @@ impl Listener for KafkaProducer {
 
     fn simulation_ended(&mut self) {
         let message = r#"{"simulation_ended": true}"#.to_string();
-        let record: FutureRecord<String, String> = FutureRecord::to("counts_updated")
+        let record: FutureRecord<String, String> = FutureRecord::to(&self.count_updated_topic)
             .key(&self.sim_id)
             .payload(&message);
         self.producer.send(record, 0);
@@ -77,7 +81,7 @@ impl Listener for KafkaProducer {
             //hour incremented, push out all states to kafka
             let message = serde_json::to_string(&self.citizen_states_buffer)
                 .expect("Failed to serialize citizen states");
-            let record: FutureRecord<String, String> = FutureRecord::to("citizen_states_updated")
+            let record: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
                 .key(&self.sim_id)
                 .payload(&message);
             self.producer.send(record, 0);
@@ -89,16 +93,16 @@ impl Listener for KafkaProducer {
 
     fn grid_updated(&self, grid: &Grid) {
         if self.enable_citizen_state_messages {
-
             let message = serde_json::to_string(grid);
             match message {
                 Ok(m) => {
-                    let topic_name = "citizen_states_updated";
-                    let record: FutureRecord<String, String> = FutureRecord::to(topic_name).payload(&m);
+                    let record: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
+                        .key(&self.sim_id)
+                        .payload(&m);
 
                     self.producer.send(record, 0);
                 }
-                Err(e) => println!("Failed to parse the grid, cannot publish to kafka!")
+                Err(e) => println!("Failed to parse the grid, cannot publish to kafka! Error: {}", e)
             }
         }
     }

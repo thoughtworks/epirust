@@ -37,7 +37,6 @@ use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::kafka_producer::KafkaProducer;
-use crate::listeners::listener::Listener;
 use crate::listeners::listener::Listeners;
 use crate::random_wrapper::RandomWrapper;
 

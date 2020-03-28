@@ -42,27 +42,27 @@ impl Listeners {
     }
 }
 
-impl Listener for Listeners {
-    fn counts_updated(&mut self, counts: Counts) {
+impl Listeners {
+    pub fn counts_updated(&mut self, counts: Counts) {
         self.listeners.iter_mut().for_each(|listener| { listener.counts_updated(counts) });
     }
 
-    fn simulation_ended(&mut self) {
+    pub fn simulation_ended(&mut self) {
         self.listeners.iter_mut().for_each(|listener| { listener.simulation_ended() });
     }
 
-    fn citizen_got_infected(&mut self, cell: &Point) {
+    pub fn citizen_got_infected(&mut self, cell: &Point) {
         self.listeners.iter_mut().for_each(|listener| { listener.citizen_got_infected(cell) });
     }
 
-    fn citizen_state_updated(&mut self, hr: i32, citizen: &Citizen, location: &Point) {
+    pub fn citizen_state_updated(&mut self, hr: i32, citizen: &Citizen, location: &Point) {
         self.listeners.iter_mut().for_each(|listener| {
             listener.citizen_state_updated(hr, citizen, location);
         })
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
+    pub fn grid_updated(&self, grid: &Grid) {
+        self.listeners.iter().for_each(|l| { l.grid_updated(grid) })
     }
 }
 

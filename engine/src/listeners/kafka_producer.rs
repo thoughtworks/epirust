@@ -93,7 +93,7 @@ impl Listener for KafkaProducer {
             let message = serde_json::to_string(grid);
             match message {
                 Ok(m) => {
-                    let topic_name = "citizen_status_updated";
+                    let topic_name = "citizen_states_updated";
                     let record: FutureRecord<String, String> = FutureRecord::to(topic_name).payload(&m);
 
                     self.producer.send(record, 0);

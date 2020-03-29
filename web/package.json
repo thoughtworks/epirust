@@ -41,6 +41,10 @@
     "@testing-library/user-event": "^7.1.2",
     "socket.io-mock": "^1.2.4"
   },
+  "resolutions": {
+    "**/**/acorn": "6.4.1",
+    "minimist": "1.2.3"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "react-scripts test --watchAll=false",

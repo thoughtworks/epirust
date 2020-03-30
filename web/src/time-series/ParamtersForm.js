@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types'
 import DiseaseDynamics from './DiseaseDynamics'
-import Interventions from './InterventionsInput'
+import Interventions from './Interventions'
 
 export default function ParametersForm({ onDataSubmit }) {
 

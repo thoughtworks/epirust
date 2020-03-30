@@ -122,110 +122,6 @@ exports[`should render ParametersForm with defaults 1`] = `
       </div>
       <fieldset>
         <legend>
-          Interventions
-        </legend>
-        <div
-          className="input-control"
-        >
-          <label
-            className="col-form-label-sm"
-            htmlFor="vaccinate_at"
-          >
-            Vaccinate At
-          </label>
-          <input
-            aria-describedby="vaccinate_at"
-            className="form-control form-control-sm"
-            defaultValue="5000"
-            id="vaccinate_at"
-            name="vaccinate_at"
-            placeholder="Vaccinate At"
-            type="number"
-          />
-        </div>
-        <div
-          className="input-control"
-        >
-          <label
-            className="col-form-label-sm"
-            htmlFor="vaccinate_percentage"
-          >
-            Vaccinate Percentage
-          </label>
-          <input
-            aria-describedby="vaccinate_percentage"
-            className="form-control form-control-sm"
-            defaultValue="0.2"
-            id="vaccinate_percentage"
-            name="vaccinate_percentage"
-            placeholder="Vaccinate Percentage"
-            step="any"
-            type="number"
-          />
-        </div>
-        <div
-          className="input-control"
-        >
-          <label
-            className="col-form-label-sm"
-            htmlFor="lockdown_at_number_of_infections"
-          >
-            Vaccinate Percentage
-          </label>
-          <input
-            aria-describedby="lockdown_at_number_of_infections"
-            className="form-control form-control-sm"
-            defaultValue="100"
-            id="lockdown_at_number_of_infections"
-            name="lockdown_at_number_of_infections"
-            placeholder="Lockdown At(number of infections)"
-            step="any"
-            type="number"
-          />
-        </div>
-        <div
-          className="input-control"
-        >
-          <label
-            className="col-form-label-sm"
-            htmlFor="emergency_workers_population"
-          >
-            Emergency Workers Population
-          </label>
-          <input
-            aria-describedby="emergency_workers_population"
-            className="form-control form-control-sm"
-            defaultValue="0.1"
-            id="emergency_workers_population"
-            name="emergency_workers_population"
-            placeholder="Emergency Workers Population"
-            step="any"
-            type="number"
-          />
-        </div>
-        <div
-          className="input-control"
-        >
-          <label
-            className="col-form-label-sm"
-            htmlFor="hospital_spread_rate_threshold"
-          >
-            Hospital Spread Rate Threshold
-          </label>
-          <input
-            aria-describedby="hospital_spread_rate_threshold"
-            className="form-control form-control-sm"
-            defaultValue="100"
-            id="hospital_spread_rate_threshold"
-            name="hospital_spread_rate_threshold"
-            placeholder="Hospital Spread Rate Threshold"
-            step="any"
-            type="number"
-          />
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend>
           Disease Dynamics
         </legend>
         <div
@@ -376,6 +272,166 @@ exports[`should render ParametersForm with defaults 1`] = `
             name="death_rate"
             placeholder="Death Rate"
             type="text"
+          />
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>
+          Interventions
+        </legend>
+        <small
+          className="form-text text-muted"
+        >
+          Only the active interventions will be taken into consideration
+        </small>
+        <div
+          className="custom-control custom-switch switch-right"
+        >
+          <input
+            checked={true}
+            className="custom-control-input"
+            id="vaccine-switch"
+            onChange={[Function]}
+            type="checkbox"
+          />
+          <label
+            className="custom-control-label col-form-label-sm"
+            htmlFor="vaccine-switch"
+          >
+            Vaccination
+          </label>
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            className="col-form-label-sm"
+            htmlFor="vaccinate_at"
+          >
+            Vaccinate At
+          </label>
+          <input
+            aria-describedby="vaccinate_at"
+            className="form-control form-control-sm"
+            defaultValue="5000"
+            id="vaccinate_at"
+            name="vaccinate_at"
+            placeholder="Vaccinate At"
+            type="number"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            className="col-form-label-sm"
+            htmlFor="vaccinate_percentage"
+          >
+            Vaccinate Percentage
+          </label>
+          <input
+            aria-describedby="vaccinate_percentage"
+            className="form-control form-control-sm"
+            defaultValue="0.2"
+            id="vaccinate_percentage"
+            name="vaccinate_percentage"
+            placeholder="Vaccinate Percentage"
+            step="any"
+            type="number"
+          />
+        </div>
+        <div
+          className="custom-control custom-switch switch-right"
+        >
+          <input
+            checked={true}
+            className="custom-control-input"
+            id="lockdown-switch"
+            onChange={[Function]}
+            type="checkbox"
+          />
+          <label
+            className="custom-control-label col-form-label-sm"
+            htmlFor="lockdown-switch"
+          >
+            Lockdown
+          </label>
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            className="col-form-label-sm"
+            htmlFor="lockdown_at_number_of_infections"
+          >
+            Lockdown at number of infections
+          </label>
+          <input
+            aria-describedby="lockdown_at_number_of_infections"
+            className="form-control form-control-sm"
+            defaultValue="100"
+            id="lockdown_at_number_of_infections"
+            name="lockdown_at_number_of_infections"
+            placeholder="Lockdown At(number of infections)"
+            step="any"
+            type="number"
+          />
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            className="col-form-label-sm"
+            htmlFor="emergency_workers_population"
+          >
+            Emergency Workers Population
+          </label>
+          <input
+            aria-describedby="emergency_workers_population"
+            className="form-control form-control-sm"
+            defaultValue="0.1"
+            id="emergency_workers_population"
+            name="emergency_workers_population"
+            placeholder="Emergency Workers Population"
+            step="any"
+            type="number"
+          />
+        </div>
+        <div
+          className="custom-control custom-switch switch-right"
+        >
+          <input
+            checked={true}
+            className="custom-control-input"
+            id="hospital-switch"
+            onChange={[Function]}
+            type="checkbox"
+          />
+          <label
+            className="custom-control-label col-form-label-sm"
+            htmlFor="hospital-switch"
+          >
+            Hospital Spread
+          </label>
+        </div>
+        <div
+          className="input-control"
+        >
+          <label
+            className="col-form-label-sm"
+            htmlFor="hospital_spread_rate_threshold"
+          >
+            Hospital Spread Rate Threshold
+          </label>
+          <input
+            aria-describedby="hospital_spread_rate_threshold"
+            className="form-control form-control-sm"
+            defaultValue="100"
+            id="hospital_spread_rate_threshold"
+            name="hospital_spread_rate_threshold"
+            placeholder="Hospital Spread Rate Threshold"
+            step="any"
+            type="number"
           />
         </div>
       </fieldset>

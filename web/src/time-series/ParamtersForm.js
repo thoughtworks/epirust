@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types'
 import DiseaseDynamics from './DiseaseDynamics'
+import Interventions from './InterventionsInput'
 
 export default function ParametersForm({ onDataSubmit }) {
 
@@ -30,33 +31,6 @@ export default function ParametersForm({ onDataSubmit }) {
         });
 
         onDataSubmit(paramsData)
-    }
-
-    function renderInterventions() {
-        return (
-            <fieldset>
-                <legend>Interventions</legend>
-                <div className="input-control">
-                    <label className="col-form-label-sm" htmlFor="vaccinate_at">Vaccinate At</label>
-                    <input type="number" name="vaccinate_at" className="form-control form-control-sm" id="vaccinate_at" aria-describedby="vaccinate_at" placeholder="Vaccinate At" defaultValue="5000" />
-                </div>
-                <div className="input-control">
-                    <label className="col-form-label-sm" htmlFor="vaccinate_percentage">Vaccinate Percentage</label>
-                    <input type="number" name="vaccinate_percentage" className="form-control form-control-sm" id="vaccinate_percentage" aria-describedby="vaccinate_percentage" placeholder="Vaccinate Percentage" defaultValue="0.2" step="any" />
-                </div>
-                <div className="input-control">
-                    <label className="col-form-label-sm" htmlFor="lockdown_at_number_of_infections">Vaccinate Percentage</label>
-                    <input type="number" name="lockdown_at_number_of_infections" className="form-control form-control-sm" id="lockdown_at_number_of_infections" aria-describedby="lockdown_at_number_of_infections" placeholder="Lockdown At(number of infections)" defaultValue="100" step="any" />
-                </div>
-                <div className="input-control">
-                    <label className="col-form-label-sm" htmlFor="emergency_workers_population">Emergency Workers Population</label>
-                    <input type="number" name="emergency_workers_population" className="form-control form-control-sm" id="emergency_workers_population" aria-describedby="emergency_workers_population" placeholder="Emergency Workers Population" defaultValue="0.1" step="any" />
-                </div>
-                <div className="input-control">
-                    <label className="col-form-label-sm" htmlFor="hospital_spread_rate_threshold">Hospital Spread Rate Threshold</label>
-                    <input type="number" name="hospital_spread_rate_threshold" className="form-control form-control-sm" id="hospital_spread_rate_threshold" aria-describedby="hospital_spread_rate_threshold" placeholder="Hospital Spread Rate Threshold" defaultValue="100" step="any" />
-                </div>
-            </fieldset>)
     }
 
     function renderPopulation() {
@@ -108,8 +82,8 @@ export default function ParametersForm({ onDataSubmit }) {
                         {renderPopulation()}
                         {renderMiscellaneousConfig()}
                     </div>
-                    {renderInterventions()}
                     <DiseaseDynamics />
+                    <Interventions />
                 </div>
                 <div className="col actions">
                     <button type="submit" className="btn btn-primary" id="submitBtn">Start</button>

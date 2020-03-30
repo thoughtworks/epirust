@@ -46,4 +46,31 @@
     margin-bottom: 0.5rem;
     padding: 2px;
   }
+
+  .custom-control.switch-right {
+    padding-left: 0;
+
+    input.custom-control-input {
+      right: 0;
+      left: unset;
+    }
+
+    label.custom-control-label {
+      width: 100%;
+      position: relative;
+      padding-right: 1.6rem;
+      font-weight: 650;
+      color: var(--gray-dark);
+    }
+    
+    label.custom-control-label::before {
+      right: 0;
+      left: auto;
+    }
+    
+    label.custom-control-label::after {
+      left: unset;
+      right: calc(0.75rem + 2px);
+    }
+  }
   

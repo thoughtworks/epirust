@@ -12,9 +12,10 @@
     "execa": "^4.0.0",
     "express": "~4.16.1",
     "http": "0.0.0",
+    "kafka-node": "^5.0.0",
+    "mongoose": "^5.9.7",
     "morgan": "^1.9.1",
-    "socket.io": "^2.3.0",
-    "kafka-node": "^5.0.0"
+    "socket.io": "^2.3.0"
   },
   "devDependencies": {
     "jest": "^25.1.0",

@@ -65,3 +65,37 @@ test('invoke handler on form submit', () => {
     expect(handleSubmitData).toHaveBeenCalledWith(expectedData)
 })
 
+test('invoke handler on form submit with only active interventions', () => {
+    const handleSubmitData = jest.fn()
+    const { getByTestId, getByLabelText } = render(<ParametersForm onDataSubmit={handleSubmitData} />)
+
+    //click the lockdown intervention
+    expect(getByLabelText('Lockdown').checked).toBe(true)
+    fireEvent.click(getByLabelText('Lockdown'))
+    expect(getByLabelText('Lockdown').checked).toBe(false)
+
+    const expectedData = {
+        "death_rate": 0.2,
+        "disease_name": "small_pox",
+        // "essential_workers_population": 0.1,
+        // "lockdown_at_number_of_infections": 100,
+        "grid_size": 250,
+        "high_transmission_rate": 0.5,
+        "high_transmission_start_day": 16,
+        "hospital_spread_rate_threshold": 100,
+        "last_day": 22,
+
+        "number_of_agents": 10000,
+        "public_transport_percentage": 0.2,
+        "regular_transmission_rate": 0.05,
+        "regular_transmission_start_day": 10,
+        "simulation_hrs": 10000,
+        "vaccinate_at": 5000,
+        "vaccinate_percentage": 0.2,
+        "working_percentage": 0.7,
+    }
+
+    fireEvent.submit(getByTestId('simulationForm'))
+    expect(handleSubmitData).toHaveBeenCalledWith(expectedData)
+})
+

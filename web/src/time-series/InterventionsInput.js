@@ -63,8 +63,8 @@ function LockdownInputs() {
                         <input type="number" name="lockdown_at_number_of_infections" className="form-control form-control-sm" id="lockdown_at_number_of_infections" aria-describedby="lockdown_at_number_of_infections" placeholder="Lockdown At(number of infections)" defaultValue="100" step="any" />
                     </div>
                     <div className="input-control">
-                        <label className="col-form-label-sm" htmlFor="emergency_workers_population">Emergency Workers Population</label>
-                        <input type="number" name="emergency_workers_population" className="form-control form-control-sm" id="emergency_workers_population" aria-describedby="emergency_workers_population" placeholder="Emergency Workers Population" defaultValue="0.1" step="any" />
+                        <label className="col-form-label-sm" htmlFor="essential_workers_population">Essentials Workers Population</label>
+                        <input type="number" name="essential_workers_population" className="form-control form-control-sm" id="essential_workers_population" aria-describedby="essential_workers_population" placeholder="Emergency Workers Population" defaultValue="0.1" step="any" />
                     </div>
                 </>
             )}

@@ -23,7 +23,7 @@ export default function ParametersForm({ onDataSubmit }) {
                 "regular_transmission_rate",
                 "regular_transmission_start_day",
                 "lockdown_at_number_of_infections",
-                "emergency_workers_population",
+                "essential_workers_population",
                 "hospital_spread_rate_threshold"].includes(key)) {
                 value = Number(value);
             }

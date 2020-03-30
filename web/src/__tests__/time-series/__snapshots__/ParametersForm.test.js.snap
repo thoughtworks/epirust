@@ -382,16 +382,16 @@ exports[`should render ParametersForm with defaults 1`] = `
         >
           <label
             className="col-form-label-sm"
-            htmlFor="emergency_workers_population"
+            htmlFor="essential_workers_population"
           >
-            Emergency Workers Population
+            Essentials Workers Population
           </label>
           <input
-            aria-describedby="emergency_workers_population"
+            aria-describedby="essential_workers_population"
             className="form-control form-control-sm"
             defaultValue="0.1"
-            id="emergency_workers_population"
-            name="emergency_workers_population"
+            id="essential_workers_population"
+            name="essential_workers_population"
             placeholder="Emergency Workers Population"
             step="any"
             type="number"

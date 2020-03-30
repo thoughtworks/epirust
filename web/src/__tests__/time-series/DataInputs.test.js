@@ -30,7 +30,7 @@ test('make API call form data to server on submit', () => {
     const expectedBody = {
         "death_rate": 0.2,
         "disease_name": "small_pox",
-        "emergency_workers_population": 0.1,
+        "essential_workers_population": 0.1,
         "grid_size": 250,
         "high_transmission_rate": 0.5,
         "high_transmission_start_day": 16,

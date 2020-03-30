@@ -25,7 +25,8 @@ export default function FileDataInput({ onFileDataSubmit }) {
     return (
         <form className="file-input">
             <label htmlFor="import-input">Choose a file to import data from:</label>
-            < input type="file"
+            < input
+                type="file"
                 id="import-input"
                 data-testid="import-input"
                 name="import"
@@ -33,7 +34,7 @@ export default function FileDataInput({ onFileDataSubmit }) {
                 accept="application/json" >
             </input >
             <br />
-            <small>You can export a data file when a graph is plotted, for importing later.</small>
+            <small className="form-text text-muted">You can export a data file when a graph is plotted, for importing later.</small>
         </form>
     )
 }

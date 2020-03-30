@@ -28,18 +28,22 @@
   .col.inputs {
     display: flex;
     flex-direction: row;
-    // height: 555px;
-    flex-wrap: wrap;
     flex-basis: 100%;
-    justify-content: space-between;
-    align-content: space-around;
+    justify-content: space-around;
   }
   
   label {
     margin-bottom: 0.1rem;
   }
+
+  // OVERRIDING BOOTSTRAP
+  // if too many overrides, change the bootstrap source files
+  .col-form-label-sm {
+    padding-bottom: 0.1rem;
+  }
   
   input {
     margin-bottom: 0.5rem;
+    padding: 2px;
   }
   

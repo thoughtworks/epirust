@@ -21,13 +21,14 @@ exports[`should render ParametersForm with defaults 1`] = `
             className="input-control"
           >
             <label
+              className="col-form-label-sm"
               htmlFor="number_of_agents"
             >
               Number of Agents
             </label>
             <input
               aria-describedby="number_of_agents"
-              className="form-control"
+              className="form-control form-control-sm"
               defaultValue="10000"
               id="number_of_agents"
               name="number_of_agents"
@@ -39,13 +40,14 @@ exports[`should render ParametersForm with defaults 1`] = `
             className="input-control"
           >
             <label
+              className="col-form-label-sm"
               htmlFor="public_transport_percentage"
             >
               Public Transport Percentage
             </label>
             <input
               aria-describedby="public_transport_percentage"
-              className="form-control"
+              className="form-control form-control-sm"
               defaultValue="0.2"
               id="public_transport_percentage"
               name="public_transport_percentage"
@@ -58,13 +60,14 @@ exports[`should render ParametersForm with defaults 1`] = `
             className="input-control"
           >
             <label
+              className="col-form-label-sm"
               htmlFor="working_percentage"
             >
               Working Percentage
             </label>
             <input
               aria-describedby="working_percentage"
-              className="form-control"
+              className="form-control form-control-sm"
               defaultValue="0.7"
               id="working_percentage"
               max="1"
@@ -81,13 +84,14 @@ exports[`should render ParametersForm with defaults 1`] = `
             className="input-control"
           >
             <label
+              className="col-form-label-sm"
               htmlFor="grid_size"
             >
               Grid Size
             </label>
             <input
               aria-describedby="grid_size"
-              className="form-control"
+              className="form-control form-control-sm"
               defaultValue="250"
               id="grid_size"
               name="grid_size"
@@ -99,13 +103,14 @@ exports[`should render ParametersForm with defaults 1`] = `
             className="input-control"
           >
             <label
+              className="col-form-label-sm"
               htmlFor="simulation_hrs"
             >
               Simulation Hours
             </label>
             <input
               aria-describedby="simulation_hrs"
-              className="form-control"
+              className="form-control form-control-sm"
               defaultValue="10000"
               id="simulation_hrs"
               name="simulation_hrs"
@@ -123,13 +128,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="vaccinate_at"
           >
             Vaccinate At
           </label>
           <input
             aria-describedby="vaccinate_at"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue="5000"
             id="vaccinate_at"
             name="vaccinate_at"
@@ -141,13 +147,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="vaccinate_percentage"
           >
             Vaccinate Percentage
           </label>
           <input
             aria-describedby="vaccinate_percentage"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue="0.2"
             id="vaccinate_percentage"
             name="vaccinate_percentage"
@@ -160,13 +167,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="lockdown_at_number_of_infections"
           >
             Vaccinate Percentage
           </label>
           <input
             aria-describedby="lockdown_at_number_of_infections"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue="100"
             id="lockdown_at_number_of_infections"
             name="lockdown_at_number_of_infections"
@@ -179,13 +187,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="emergency_workers_population"
           >
             Emergency Workers Population
           </label>
           <input
             aria-describedby="emergency_workers_population"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue="0.1"
             id="emergency_workers_population"
             name="emergency_workers_population"
@@ -198,13 +207,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="hospital_spread_rate_threshold"
           >
             Hospital Spread Rate Threshold
           </label>
           <input
             aria-describedby="hospital_spread_rate_threshold"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue="100"
             id="hospital_spread_rate_threshold"
             name="hospital_spread_rate_threshold"
@@ -222,13 +232,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="disease_name"
           >
             Disease Name
           </label>
           <select
             aria-describedby="disease_name"
-            className="form-control"
+            className="form-control form-control-sm"
             data-testid="select-disease"
             defaultValue="small_pox"
             id="disease_name"
@@ -257,13 +268,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="regular_transmission_start_day"
           >
             Regular Transmission Start Day
           </label>
           <input
             aria-describedby="regular_transmission_start_day"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue={10}
             id="regular_transmission_start_day"
             name="regular_transmission_start_day"
@@ -275,13 +287,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="high_transmission_start_day"
           >
             High Transmission Start Day
           </label>
           <input
             aria-describedby="high_transmission_start_day"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue={16}
             id="high_transmission_start_day"
             name="high_transmission_start_day"
@@ -293,13 +306,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="last_day"
           >
             Last Day
           </label>
           <input
             aria-describedby="last_day"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue={22}
             id="last_day"
             name="last_day"
@@ -311,13 +325,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="regular_transmission_rate"
           >
             Regular Transmission Rate
           </label>
           <input
             aria-describedby="regular_transmission_rate"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue={0.05}
             id="regular_transmission_rate"
             name="regular_transmission_rate"
@@ -329,13 +344,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="high_transmission_rate"
           >
             High Transmission Rate
           </label>
           <input
             aria-describedby="high_transmission_rate"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue={0.5}
             id="high_transmission_rate"
             name="high_transmission_rate"
@@ -347,13 +363,14 @@ exports[`should render ParametersForm with defaults 1`] = `
           className="input-control"
         >
           <label
+            className="col-form-label-sm"
             htmlFor="death_rate"
           >
             Death Rate
           </label>
           <input
             aria-describedby="death_rate"
-            className="form-control"
+            className="form-control form-control-sm"
             defaultValue={0.2}
             id="death_rate"
             name="death_rate"

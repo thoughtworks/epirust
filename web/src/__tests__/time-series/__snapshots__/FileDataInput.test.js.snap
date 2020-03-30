@@ -18,7 +18,9 @@ exports[`should render FileDataInput 1`] = `
     type="file"
   />
   <br />
-  <small>
+  <small
+    className="form-text text-muted"
+  >
     You can export a data file when a graph is plotted, for importing later.
   </small>
 </form>

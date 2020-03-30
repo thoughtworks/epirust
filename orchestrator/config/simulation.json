@@ -1,0 +1,78 @@
+[
+  {
+    "engine_id": "engine1",
+    "config": {
+      "sim_id": "sim-timestamp",
+      "population": {
+        "Auto": {
+          "number_of_agents": 10000,
+          "public_transport_percentage": 0.2,
+          "working_percentage": 0.7
+        }
+      },
+      "disease": {
+        "regular_transmission_start_day": 5,
+        "high_transmission_start_day": 20,
+        "last_day": 40,
+        "regular_transmission_rate": 0.025,
+        "high_transmission_rate": 0.25,
+        "death_rate": 0.035
+      },
+      "grid_size": 250,
+      "hours": 10000,
+      "interventions": [
+        {
+          "Vaccinate": {
+            "at_hour": 5000,
+            "percent": 0.2
+          }
+        },
+        {
+          "Lockdown": {
+            "at_number_of_infections": 100,
+            "essential_workers_population": 0.1,
+            "lock_down_period": 21
+          }
+        }
+      ]
+    }
+  },
+  {
+    "engine_id": "engine2",
+    "config": {
+      "sim_id": "sim-timestamp",
+      "population": {
+        "Auto": {
+          "number_of_agents": 10000,
+          "public_transport_percentage": 0.2,
+          "working_percentage": 0.7
+        }
+      },
+      "disease": {
+        "regular_transmission_start_day": 5,
+        "high_transmission_start_day": 20,
+        "last_day": 40,
+        "regular_transmission_rate": 0.025,
+        "high_transmission_rate": 0.25,
+        "death_rate": 0.035
+      },
+      "grid_size": 250,
+      "hours": 10000,
+      "interventions": [
+        {
+          "Vaccinate": {
+            "at_hour": 5000,
+            "percent": 0.2
+          }
+        },
+        {
+          "Lockdown": {
+            "at_number_of_infections": 100,
+            "essential_workers_population": 0.1,
+            "lock_down_period": 21
+          }
+        }
+      ]
+    }
+  }
+]

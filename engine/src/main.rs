@@ -59,13 +59,20 @@ async fn main() {
             .help("Start the engine in daemon mode. It will wait for messages from Kafka. \
             Specifying this flag will cause other arguments to be ignored")
             .takes_value(false))
+        .arg(Arg::with_name("id")
+            .long("id")
+            .short("i")
+            .help("An identifier for the engine. Needed in daemon mode when running a larger simulation \
+            distributed across multiple engines.")
+            .takes_value(true))
         .get_matches();
 
     let daemon = matches.is_present("daemon");
 
     if daemon {
         println!("Started in daemon mode");
-        let consumer = KafkaConsumer::new();
+        let engine_id = matches.value_of("id").unwrap_or("default_engine");
+        let consumer = KafkaConsumer::new(engine_id);
         consumer.listen_loop().await;
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");

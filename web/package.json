@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"cd server && npm start\" \"cd react-spa && PORT=3001 npm start\"",
+    "dev": "concurrently \"cd server && npm start\" \"cd react-spa && PORT=3001 npm start\"",
+    "build": "cd react-spa && npm run build && cp -r build/ ../server/public/ ",
+    "start": "npm run build && cd server && npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

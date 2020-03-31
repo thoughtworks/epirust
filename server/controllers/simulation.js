@@ -63,7 +63,7 @@ router.post('/init', (req, res, next) => {
     // vaccinate_at,
     // vaccinate_percentage,
     // lockdown_at_number_of_infections,
-    // emergency_workers_population,
+    // essential_workers_population,
     // hospital_spread_rate_threshold
   } = message;
 
@@ -99,7 +99,7 @@ router.post('/init', (req, res, next) => {
 module.exports = router;
 
 function modelInterventions(message) {
-  const { vaccinate_at, vaccinate_percentage, lockdown_at_number_of_infections, emergency_workers_population, hospital_spread_rate_threshold } = message;
+  const { vaccinate_at, vaccinate_percentage, lockdown_at_number_of_infections, essential_workers_population, hospital_spread_rate_threshold } = message;
 
   const areVaccinationParamsPresent = vaccinate_at && vaccinate_percentage,
     vaccinationIntervention = {
@@ -108,11 +108,11 @@ function modelInterventions(message) {
         "percent": vaccinate_percentage
       },
     };
-  const areLockdownParamsPresent = lockdown_at_number_of_infections && emergency_workers_population,
+  const areLockdownParamsPresent = lockdown_at_number_of_infections && essential_workers_population,
     lockdownIntervention = {
       "Lockdown": {
         "at_number_of_infections": lockdown_at_number_of_infections,
-        "essential_workers_population": emergency_workers_population,
+        "essential_workers_population": essential_workers_population,
         "lock_down_period": 21
       }
     };

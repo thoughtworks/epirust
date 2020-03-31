@@ -34,7 +34,7 @@ describe('simulation controller', () => {
         "vaccinate_at": 5000,
         "vaccinate_percentage": 0.2,
         "lockdown_at_number_of_infections": 100,
-        "emergency_workers_population": 0.1,
+        "essential_workers_population": 0.1,
         "hospital_spread_rate_threshold": 100,
         "disease_name": "small_pox",
         "regular_transmission_start_day": 10,

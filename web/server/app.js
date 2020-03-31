@@ -29,10 +29,13 @@ const config = require("./config");
 
 const app = express();
 
-mongoose.connect(config.DATABASE_URL, { useNewUrlParser: true });
-mongoose.Promise = global.Promise;
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+if(process.env.NODE_ENV !== "test") {
+  mongoose.connect(config.DATABASE_URL, {useNewUrlParser: true});
+  mongoose.Promise = global.Promise;
+  const db = mongoose.connection;
+  db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+}
+
 
 var server = http.createServer(app);
 server.listen(3000);

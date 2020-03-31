@@ -1,9 +1,7 @@
 import React from 'react';
-import FileDataInput from './FileDataInput';
 import ParametersForm from './ParamtersForm';
-import PropTypes from 'prop-types'
 
-export default function DataInputs({ onSubmit, onFileDataInput }) {
+export default function DataInputs() {
 
     function pushData(paramsData) {
         return fetch("http://localhost:3000/simulation/init", {
@@ -16,24 +14,15 @@ export default function DataInputs({ onSubmit, onFileDataInput }) {
     }
 
     function handleSubmittedData(data) {
-        pushData(data).then(
-            onSubmit()
-        );
-    }
-
-    function handleFileData(data) {
-        onFileDataInput(data)
+        pushData(data);
     }
 
     return (
         <div className="graph-input">
             <ParametersForm onDataSubmit={handleSubmittedData} />
-            <FileDataInput onFileDataSubmit={handleFileData} />
         </div>
     )
 }
 
 DataInputs.propTypes = {
-    onSubmit: PropTypes.func.isRequired,
-    onFileDataInput: PropTypes.func.isRequired
-}
+};

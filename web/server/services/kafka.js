@@ -28,7 +28,11 @@ class KafkaConsumerService {
         const client = new kafka.KafkaClient(consumerOptions);
         this.consumer = new kafka.Consumer(client, [{ topic: topic }], {});
     }
-};
+
+    close() {
+        this.consumer.close(() => {});
+    }
+}
 
 class KafkaProducerService {
     constructor() {
@@ -45,8 +49,8 @@ class KafkaProducerService {
             console.log("Message sent to topic");
         });
     }
-};
+}
 
 module.exports = {
     KafkaConsumerService, KafkaProducerService
-}
+};

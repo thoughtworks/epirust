@@ -48,7 +48,7 @@ test('should recieve data sent on socket and parse & set graph to empty', () => 
     }
 
     const {getByTestId} = render(<SocketAwareGraph socket={socket.socketClient}/>)
-    socket.emit("epidemicStats", JSON.stringify(hourStatistics))
+    socket.emit("epidemicStats", hourStatistics)
 
     expect(mockDygraphfn).toHaveBeenCalledTimes(0)
     jest.clearAllMocks()
@@ -68,7 +68,7 @@ test('should set dataBuffer and render graph and plot graph', () => {
 
     // act(() => { TODO: warning for act
         render(<SocketAwareGraph socket={socket.socketClient}/>)
-        socket.emit("epidemicStats", JSON.stringify(hourStatistics))
+        socket.emit("epidemicStats", hourStatistics)
     // })
     jest.runAllTimers();
     expect(mockDygraphfn).toHaveBeenCalledWith(expect.anything(), Array.of(Object.values(hourStatistics)), expect.anything())
@@ -92,9 +92,9 @@ test('should set residue also into data buffer when simulation ended flag is tru
     }
     const hourStatistics101 = {...hourStatistics, hour: 101}
     render(<SocketAwareGraph socket={socket.socketClient}/>)
-    socket.emit("epidemicStats", JSON.stringify(hourStatistics))
-    socket.emit("epidemicStats", JSON.stringify(hourStatistics101))
-    socket.emit("epidemicStats", JSON.stringify({"simulation_ended": true}))
+    socket.emit("epidemicStats", hourStatistics)
+    socket.emit("epidemicStats", hourStatistics101)
+    socket.emit("epidemicStats", {"simulation_ended": true})
     jest.runAllTimers();
    
     expect(mockDygraphfn).toHaveBeenCalledTimes(1) 
@@ -106,7 +106,7 @@ test("should enable export in graph if simulation has ended", () => {
     const {container} = render(<SocketAwareGraph socket={socket.socketClient}/>)
     expect(container.querySelector(".graph-actions .btn-secondary")).toBeDisabled()
 
-    socket.emit("epidemicStats", JSON.stringify({"simulation_ended": true}))
+    socket.emit("epidemicStats", {"simulation_ended": true})
     jest.runAllTimers();
    
     expect(container.querySelector(".graph-actions .btn-secondary")).toBeEnabled()

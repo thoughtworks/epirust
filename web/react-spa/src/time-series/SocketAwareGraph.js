@@ -15,7 +15,7 @@ export default function SocketAwareGraph({ socket }) {
         let buff = [];
 
         socket.on('epidemicStats', function (messageRaw) {
-            const message = JSON.parse(messageRaw);
+            const message = messageRaw;
 
             let simulationEndedTemp = false
             if ("simulation_ended" in message) {

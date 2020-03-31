@@ -21,30 +21,7 @@
 const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
-var ioInstance = require('../io');
-
-
-router.post('/', (req, res, next) => {
-  const kafkaConsumer = new KafkaServices.KafkaConsumerService('localhost:9092', 'counts_updated', 1);
-  const io = ioInstance();
-
-  io.once('connect', function (socket) {
-
-    kafkaConsumer.consumer.resumeTopics(['counts_updated']);
-
-    kafkaConsumer.consumer.on('message', function (message) {
-      socket.emit('epidemicStats', message.value);
-    });
-
-    socket.on('disconnecting', reason => {
-      kafkaConsumer.consumer.pauseTopics(['counts_updated']);
-    });
-
-    socket.on('disconnect', reason => console.log("Disconnect", reason));
-  });
-
-  res.sendStatus(200);
-})
+const countsConsumer = require("../services/SimulationCountsConsumer");
 
 router.post('/init', (req, res, next) => {
   const message = req.body;
@@ -60,15 +37,11 @@ router.post('/init', (req, res, next) => {
     death_rate,
     grid_size,
     simulation_hrs,
-    // vaccinate_at,
-    // vaccinate_percentage,
-    // lockdown_at_number_of_infections,
-    // essential_workers_population,
-    // hospital_spread_rate_threshold
   } = message;
 
+  let simulationId = Date.now();
   const simulation_config = {
-    "sim_id": `${Date.now()}`,
+    "sim_id": `${simulationId}`,
     "population": {
       "Auto": {
         "number_of_agents": number_of_agents,
@@ -89,8 +62,10 @@ router.post('/init', (req, res, next) => {
     "interventions": modelInterventions(message)
   };
   const kafkaProducer = new KafkaServices.KafkaProducerService();
-
   kafkaProducer.send('simulation_requests', simulation_config);
+
+  const simulationCountsConsumer = new countsConsumer.SimulationCountsConsumer(simulationId);
+  simulationCountsConsumer.start();
 
   res.status(200);
   res.send({ status: "Simulation started" });

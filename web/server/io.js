@@ -17,11 +17,26 @@
  *
  */
 
-const io = require('socket.io')
-let ioInstance = null;
-module.exports = function getSocketIOInstance(server) {
-    if(server) {
-        ioInstance = io(server);
-    }
-    return ioInstance;
-}
+const Simulation = require("./db/models/Simulation").Simulation;
+
+module.exports = function setupIO(ioInstance) {
+  const countIO = ioInstance
+    .of('/counts')
+    .on('connection', (socket) => {
+      const findLastRecordQuery = Simulation.findOne({}, {counts: 1}, {sort: {'created_at': -1}});
+      const promise = findLastRecordQuery.exec();
+
+      promise.then((doc) => {
+        doc.counts.sort((a, b) => {
+          if (a.hour < b.hour) return -1;
+          else return 1;
+        }).forEach(count => {
+          socket.emit('epidemicStats', count);
+        });
+
+        socket.emit('epidemicStats', {"simulation_ended": true});
+
+        socket.on('disconnect', reason => console.log("Disconnect", reason));
+      });
+    })
+};

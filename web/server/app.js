@@ -23,20 +23,32 @@ const path = require('path');
 const logger = require('morgan');
 const debug = require('debug')('epirust-server');
 const router = require('./routes/router');
-const ioInstance = require('./io');
-const app = express();
 const cors = require('cors');
+const mongoose = require('mongoose');
+const config = require("./config");
+
+const app = express();
+
+mongoose.connect(config.DATABASE_URL, { useNewUrlParser: true });
+mongoose.Promise = global.Promise;
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 var server = http.createServer(app);
 server.listen(3000);
 server.on('error', onError);
 server.on('listening', onListening);
-ioInstance(server);
-app.use(cors({ origin: 'http://localhost:3001' }));
+
+const setupIO = require("./io");
+const io = require("socket.io")(server);
+setupIO(io);
+
+
+app.use(cors({origin: 'http://localhost:3001'}));
 app.use(logger('dev'));
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', router);
 
@@ -44,10 +56,10 @@ function onError(error) {
   if (error.syscall !== 'listen') {
     throw error;
   }
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -72,4 +84,4 @@ function onListening() {
   debug('Listening on ' + bind);
 }
 
-module.exports = server
+module.exports = server;

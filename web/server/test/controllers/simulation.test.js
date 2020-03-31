@@ -22,6 +22,7 @@ const supertest = require('supertest');
 const request = supertest(app);
 
 jest.mock('../../services/kafka');
+jest.mock('../../services/SimulationCountsConsumer');
 
 describe('simulation controller', () => {
 
@@ -46,6 +47,7 @@ describe('simulation controller', () => {
     }
 
     let kafkaService;
+    let SimulationCountsConsumer;
 
     afterAll(async () => {
         await app.close()
@@ -59,18 +61,10 @@ describe('simulation controller', () => {
         jest.clearAllMocks()
     });
 
-    test('should post request to get per tick stats', async done => {
-        kafkaService = require('../../services/kafka')
-
-        const response = await request.post('/simulation/');
-        //TODO: Add matcher for order of execution - Jayanta
-        expect(kafkaService.KafkaConsumerService).toHaveBeenCalledWith('localhost:9092', 'counts_updated', 1);
-        expect(response.status).toBe(200);
-        done();
-    });
 
     test('should put init POST request params to kafka topic', async done => {
         kafkaService = require('../../services/kafka')
+        SimulationCountsConsumer = require('../../services/SimulationCountsConsumer').SimulationCountsConsumer;
 
         const response = await request
             .post('/simulation/init')
@@ -127,12 +121,18 @@ describe('simulation controller', () => {
         delete payload["sim_id"]; //it is a timestamp, cannot test
         expect(payload).toEqual(kafkaPayload);
 
+        expect(SimulationCountsConsumer).toHaveBeenCalled();
+        const countsConsumer = SimulationCountsConsumer.mock.instances[0];
+        expect(countsConsumer.start).toHaveBeenCalled();
+
         expect(response.status).toBe(200);
         done();
     })
 
     test('should not put vaccination intervention in kafka topic if params not available in /init POST request', async done => {
         kafkaService = require('../../services/kafka')
+        SimulationCountsConsumer = require('../../services/SimulationCountsConsumer').SimulationCountsConsumer;
+
 
         const { vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention } = { ...postData };
 

@@ -1,0 +1,65 @@
+/*
+object-assign
+(c) Sindre Sorhus
+@license MIT
+*/
+
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <http://feross.org>
+ * @license  MIT
+ */
+
+/*! https://mths.be/utf8js v2.1.2 by @mathias */
+
+/**
+ * @license
+ * Copyright 2011 Dan Vanderkam (danvdk@gmail.com)
+ * MIT-licensed (http://opensource.org/licenses/MIT)
+ */
+
+/**
+ * @license
+ * Copyright 2011 Robert Konigsberg (konigsberg@google.com)
+ * MIT-licensed (http://opensource.org/licenses/MIT)
+ */
+
+/**
+ * @license
+ * Copyright 2012 Dan Vanderkam (danvdk@gmail.com)
+ * MIT-licensed (http://opensource.org/licenses/MIT)
+ */
+
+/**
+ * @license
+ * Copyright 2013 David Eberlein (david.eberlein@ch.sauter-bc.com)
+ * MIT-licensed (http://opensource.org/licenses/MIT)
+ */
+
+/** @license React v0.18.0
+ * scheduler.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/** @license React v16.12.0
+ * react-dom.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/** @license React v16.12.0
+ * react.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */

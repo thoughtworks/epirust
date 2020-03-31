@@ -1,6 +1,8 @@
 # EpiRust
 ## An agent-based epidemiology simulation framework built in Rust
 
+[![Build Status](https://travis-ci.org/thoughtworks/epirust.svg?branch=master)](https://travis-ci.org/thoughtworks/epirust)
+
 This is a monorepo containing code for the EpiRust framework -
 
 1. engine - The main EpiRust engine, which can be run as a CLI app

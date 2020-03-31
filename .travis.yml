@@ -32,7 +32,8 @@ matrix:
       branches:
         only:
           - master
-      before_script: 
+      before_script:
+        - cd $TRAVIS_BUILD_DIR/web && npm install
         - cd $TRAVIS_BUILD_DIR/web/react-spa && npm install
         - cd $TRAVIS_BUILD_DIR/web/server && npm install
       script:

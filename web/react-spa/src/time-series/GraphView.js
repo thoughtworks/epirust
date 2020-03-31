@@ -50,7 +50,7 @@ function GraphView() {
     <>
       <FileDataInput onFileDataSubmit={handleFileData} />
       {fileData.length > 1 ? <Graph dataBuffer={fileData}/> : <SocketAwareGraph socket={socket}/>}
-      <button onClick={startSocket}>Show Time Series</button>
+      <button className="btn btn-primary" onClick={startSocket}>Show Time Series</button>
     </>
   )
 }

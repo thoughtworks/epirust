@@ -1,34 +1,16 @@
 {
-  "name": "epirust-server",
-  "version": "0.0.0",
-  "private": true,
+  "name": "web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "start": "nodemon ./app",
-    "test": "NODE_ENV=test jest"
+    "start": "concurrently \"cd server && npm start\" \"cd react-spa && PORT=3001 npm start\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "debug": "~2.6.9",
-    "execa": "^4.0.0",
-    "express": "~4.16.1",
-    "http": "0.0.0",
-    "morgan": "^1.9.1",
-    "socket.io": "^2.3.0",
-    "kafka-node": "^5.0.0"
-  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "husky": "^4.2.3",
-    "jest": "^25.1.0",
-    "kafka-node": "^5.0.0",
-    "morgan": "^1.9.1",
-    "nodemon": "^2.0.2",
-    "socket.io": "^2.3.0",
-    "supertest": "^4.0.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run test",
-      "pre-push": "npm run test"
-    }
+    "concurrently": "^5.1.0"
   }
 }

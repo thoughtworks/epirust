@@ -20,4 +20,11 @@ impl KafkaProducer {
             .payload(&request);
         self.producer.send(record, 0)
     }
+
+    pub fn send_tick(&mut self, hour: i32) -> DeliveryFuture {
+        let h = &hour.to_string();
+        let record: FutureRecord<String, String> = FutureRecord::to("ticks")
+            .payload(h);
+        self.producer.send(record, 0)
+    }
 }

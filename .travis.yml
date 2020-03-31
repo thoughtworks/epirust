@@ -33,7 +33,7 @@ matrix:
         only:
           - master
       before_script: 
-        - npm install yarn    
+        - cd $TRAVIS_BUILD_DIR/web/react-spa && npm install
+        - cd $TRAVIS_BUILD_DIR/web/server && npm install
       script:
-        - cd $TRAVIS_BUILD_DIR/web && yarn install && yarn test --watchAll=false
-        - cd $TRAVIS_BUILD_DIR/server && npm install && npm run test
+        - cd $TRAVIS_BUILD_DIR/web && npm run test

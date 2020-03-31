@@ -1,0 +1,39 @@
+language: rust
+
+sudo: required
+
+matrix:
+  include:
+    - language: rust
+      rust: 1.42.0
+      branches:
+        only:
+          - master
+      addons:
+        apt:
+          packages:
+            - ca-certificates
+            - file
+            - build-essential
+            - autoconf
+            - automake
+            - autotools-dev
+            - libtool
+            - xutils-dev
+            - cmake
+            - pkg-config
+            - libfreetype6-dev
+            - libfontconfig1-dev
+            - xclip
+      script:
+        - cd $TRAVIS_BUILD_DIR/engine && cargo build --verbose --all && cargo test --verbose --all
+    - language: node_js
+      node_js: 12.16
+      branches:
+        only:
+          - master
+      before_script: 
+        - npm install yarn    
+      script:
+        - cd $TRAVIS_BUILD_DIR/web && yarn install && yarn test --watchAll=false
+        - cd $TRAVIS_BUILD_DIR/server && npm install && npm run test

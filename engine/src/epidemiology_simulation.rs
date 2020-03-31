@@ -39,6 +39,7 @@ use crate::listeners::events::counts::Counts;
 use crate::listeners::kafka_producer::KafkaProducer;
 use crate::listeners::listener::Listeners;
 use crate::random_wrapper::RandomWrapper;
+use crate::kafka_consumer::KafkaConsumer;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -70,7 +71,7 @@ impl Epidemiology {
         row.get_infected() == 0 && row.get_quarantined() == 0
     }
 
-    pub fn run(&mut self, config: &Config) {
+    pub async fn run(&mut self, config: &Config, is_daemon: bool, engine_id: &str) {
         let now: DateTime<Local> = SystemTime::now().into();
         let output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
         let output_file_name = format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"));
@@ -94,8 +95,17 @@ impl Epidemiology {
         let mut is_city_locked_down = false;
 
         listeners.grid_updated(&self.grid);
+        let consumer = KafkaConsumer::new(engine_id, &["tick"]);
 
         for simulation_hour in 1..config.get_hours() {
+            if is_daemon{
+                let clock_tick = consumer.get_tick().await;
+                println!("{}", clock_tick);
+                if clock_tick == config.get_hours(){
+                    break;
+                }
+            }
+
             counts_at_hr.increment_hour();
             let start_of_day = simulation_hour % 24 == 0;
 

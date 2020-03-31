@@ -72,8 +72,8 @@ async fn main() {
     if daemon {
         println!("Started in daemon mode");
         let engine_id = matches.value_of("id").unwrap_or("default_engine");
-        let consumer = KafkaConsumer::new(engine_id);
-        consumer.listen_loop().await;
+        let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
+        consumer.listen_loop(daemon, engine_id).await;
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
 
@@ -91,7 +91,7 @@ async fn main() {
         let config = config::read(config_file.to_string()).expect("Failed to read config file");
 
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, STANDALONE_SIM_ID.to_string());
-        epidemiology.run(&config);
+        epidemiology.run(&config, daemon, STANDALONE_SIM_ID).await;
         println!("Done");
     }
 }

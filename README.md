@@ -6,7 +6,7 @@
 This is a monorepo containing code for the EpiRust framework -
 
 1. engine - The main EpiRust engine, which can be run as a CLI app
-2. server - The API server that talks to the engine and serves the frontend
+2. orchestrator - WIP - Coordinator for multiple engines to run large scale simulations
 3. web - The Web UI for EpiRust
 
 ### Quickstart
@@ -40,6 +40,7 @@ docker cp epirust-engine:/engine/<CSV_FILE> .
 Prerequisites: 
 - Install Rust and Cargo (version 1.40.0 or above). Refer to https://rustup.rs/ for rust installation
 - Install `cmake` (version 3.16.4 or later). Installation instructions will depend on your platform. On MacOS you can install it using `brew install cmake`. Refer to https://cmake.org/download/
+- The following dependencies are needed on Debian: `ca-certificates curl file build-essential autoconf automake autotools-dev libtool xutils-dev cmake pkg-config libfreetype6-dev libfontconfig1-dev xclip`
 - Python 3 (for visualization and charting). We also need the `pandas` and `matplotlib` libraries which can be installed using `pip` or `conda`.
     - `pip install pandas matplotlib`
 

@@ -34,7 +34,6 @@
     ]
   },
   "devDependencies": {
-    "husky": "^4.2.3",
     "react-test-renderer": "^16.13.1",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
@@ -44,11 +43,5 @@
   "resolutions": {
     "**/**/acorn": "6.4.1",
     "minimist": "1.2.3"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "react-scripts test --watchAll=false",
-      "pre-push": "react-scripts test --watchAll=false"
-    }
   }
 }

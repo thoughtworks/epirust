@@ -1,54 +1,34 @@
 {
-  "name": "epirust",
-  "version": "0.1.0",
+  "name": "epirust-server",
+  "version": "0.0.0",
   "private": true,
-  "dependencies": {
-    "@babel/runtime": "^7.8.7",
-    "dygraphs": "^2.1.0",
-    "node-sass": "^4.13.1",
-    "prop-types": "^15.7.2",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
-    "react-scripts": "3.4.0",
-    "socket.io-client": "^2.3.0"
-  },
   "scripts": {
-    "start": "PORT=3001 react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "nodemon ./app",
+    "test": "NODE_ENV=test jest"
   },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "cors": "^2.8.5",
+    "debug": "~2.6.9",
+    "execa": "^4.0.0",
+    "express": "~4.16.1",
+    "http": "0.0.0",
+    "morgan": "^1.9.1",
+    "socket.io": "^2.3.0",
+    "kafka-node": "^5.0.0"
   },
   "devDependencies": {
     "husky": "^4.2.3",
-    "react-test-renderer": "^16.13.1",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.3.2",
-    "@testing-library/user-event": "^7.1.2",
-    "socket.io-mock": "^1.2.4"
-  },
-  "resolutions": {
-    "**/**/acorn": "6.4.1",
-    "minimist": "1.2.3"
+    "jest": "^25.1.0",
+    "kafka-node": "^5.0.0",
+    "morgan": "^1.9.1",
+    "nodemon": "^2.0.2",
+    "socket.io": "^2.3.0",
+    "supertest": "^4.0.2"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "react-scripts test --watchAll=false",
-      "pre-push": "react-scripts test --watchAll=false"
+      "pre-commit": "npm run test",
+      "pre-push": "npm run test"
     }
   }
 }

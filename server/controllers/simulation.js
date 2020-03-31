@@ -47,45 +47,46 @@ router.post('/', (req, res, next) => {
 })
 
 router.post('/init', (req, res, next) => {
-  const message = req.body; // { disease_name, grid_size, number_of_agents, simulation_hrs, public_transport_percentage, working_percentage, vaccinate_at, vaccinate_percentage }
+  const message = req.body;
+  const {
+    number_of_agents,
+    public_transport_percentage,
+    working_percentage,
+    regular_transmission_start_day,
+    high_transmission_start_day,
+    last_day,
+    regular_transmission_rate,
+    high_transmission_rate,
+    death_rate,
+    grid_size,
+    simulation_hrs,
+    // vaccinate_at,
+    // vaccinate_percentage,
+    // lockdown_at_number_of_infections,
+    // emergency_workers_population,
+    // hospital_spread_rate_threshold
+  } = message;
+
   const simulation_config = {
     "sim_id": `${Date.now()}`,
     "population": {
       "Auto": {
-        "number_of_agents": message.number_of_agents,
-        "public_transport_percentage": message.public_transport_percentage,
-        "working_percentage": message.working_percentage
+        "number_of_agents": number_of_agents,
+        "public_transport_percentage": public_transport_percentage,
+        "working_percentage": working_percentage
       }
     },
     "disease": {
-      "regular_transmission_start_day": message.regular_transmission_start_day,
-      "high_transmission_start_day": message.high_transmission_start_day,
-      "last_day": message.last_day,
-      "regular_transmission_rate": message.regular_transmission_rate,
-      "high_transmission_rate": message.high_transmission_rate,
-      "death_rate": message.death_rate
+      "regular_transmission_start_day": regular_transmission_start_day,
+      "high_transmission_start_day": high_transmission_start_day,
+      "last_day": last_day,
+      "regular_transmission_rate": regular_transmission_rate,
+      "high_transmission_rate": high_transmission_rate,
+      "death_rate": death_rate
     },
-    "grid_size": message.grid_size,
-    "hours": message.simulation_hrs,
-    "interventions": [
-      {
-        "Vaccinate": {
-          "at_hour": message.vaccinate_at,
-          "percent": message.vaccinate_percentage
-        },
-      },
-      {
-        "Lockdown": {
-          "at_number_of_infections": message.lockdown_at_number_of_infections,
-          "essential_workers_population": message.emergency_workers_population,
-          "lock_down_period": 21
-        }
-        // ,
-        // "BuildNewHospital": {
-        // "spread_rate_threshold": message.hospital_spread_rate_threshold
-        // }
-      }
-    ]
+    "grid_size": grid_size,
+    "hours": simulation_hrs,
+    "interventions": modelInterventions(message)
   };
   const kafkaProducer = new KafkaServices.KafkaProducerService();
 
@@ -96,3 +97,37 @@ router.post('/init', (req, res, next) => {
 });
 
 module.exports = router;
+
+function modelInterventions(message) {
+  const { vaccinate_at, vaccinate_percentage, lockdown_at_number_of_infections, emergency_workers_population, hospital_spread_rate_threshold } = message;
+
+  const areVaccinationParamsPresent = vaccinate_at && vaccinate_percentage,
+    vaccinationIntervention = {
+      "Vaccinate": {
+        "at_hour": vaccinate_at,
+        "percent": vaccinate_percentage
+      },
+    };
+  const areLockdownParamsPresent = lockdown_at_number_of_infections && emergency_workers_population,
+    lockdownIntervention = {
+      "Lockdown": {
+        "at_number_of_infections": lockdown_at_number_of_infections,
+        "essential_workers_population": emergency_workers_population,
+        "lock_down_period": 21
+      }
+    };
+
+  const areHospitalSpreadParamsPresent = !!hospital_spread_rate_threshold,
+    hospitalSpreadIntervention = {
+      "BuildNewHospital": {
+        "spread_rate_threshold": hospital_spread_rate_threshold
+      }
+    };
+
+  return [
+    ...(areVaccinationParamsPresent ? [vaccinationIntervention] : []),
+    ...(areLockdownParamsPresent ? [lockdownIntervention] : []),
+    ...(areHospitalSpreadParamsPresent ? [hospitalSpreadIntervention] : [])
+  ];
+}
+

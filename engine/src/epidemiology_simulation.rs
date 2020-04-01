@@ -36,10 +36,11 @@ use crate::interventions::{Intervention, Lockdown};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events::counts::Counts;
-use crate::listeners::kafka_producer::KafkaProducer;
+use crate::listeners::events_kafka_producer::EventsKafkaProducer;
 use crate::listeners::listener::Listeners;
 use crate::random_wrapper::RandomWrapper;
 use crate::kafka_consumer::KafkaConsumer;
+use crate::kafka_producer::{KafkaProducer, TickAck};
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -76,8 +77,8 @@ impl Epidemiology {
         let output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
         let output_file_name = format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"));
         let csv_listener = CsvListener::new(output_file_name);
-        let kafka_listener = KafkaProducer::new(self.sim_id.clone(), self.agent_location_map.agent_cell.len(),
-                                                config.enable_citizen_state_messages());
+        let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), self.agent_location_map.agent_cell.len(),
+                                                      config.enable_citizen_state_messages());
         let hotspot_tracker = Hotspot::new();
         let mut listeners = Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)]);
 
@@ -95,14 +96,20 @@ impl Epidemiology {
         let mut is_city_locked_down = false;
 
         listeners.grid_updated(&self.grid);
-        let consumer = KafkaConsumer::new(engine_id, &["tick"]);
+        let mut producer = KafkaProducer::new();
 
         for simulation_hour in 1..config.get_hours() {
             if is_daemon{
+                let consumer = KafkaConsumer::new(engine_id, &["ticks"]);
                 let clock_tick = consumer.get_tick().await;
                 println!("{}", clock_tick);
-                if clock_tick == config.get_hours(){
-                    break;
+                match producer.send_ack(TickAck{engine_id: engine_id.to_string(), hour: clock_tick}).await.unwrap(){
+                      Ok(_) =>{
+                          if clock_tick == config.get_hours(){
+                              break;
+                          }
+                      }
+                      Err(_) => panic!("Failed while sending acknowledgement")
                 }
             }
 

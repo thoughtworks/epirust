@@ -29,7 +29,7 @@ use crate::listeners::events::citizen_state::CitizenStatesAtHr;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
 
-pub struct KafkaProducer {
+pub struct EventsKafkaProducer {
     sim_id: String,
     producer: FutureProducer,
     citizen_states_buffer: CitizenStatesAtHr,
@@ -38,11 +38,11 @@ pub struct KafkaProducer {
     citizen_states_topic: String,
 }
 
-impl KafkaProducer {
-    pub fn new(sim_id: String, population_size: usize, enable_citizen_state_messages: bool) -> KafkaProducer {
+impl EventsKafkaProducer {
+    pub fn new(sim_id: String, population_size: usize, enable_citizen_state_messages: bool) -> EventsKafkaProducer {
         let count_updated_topic = "counts_updated".to_string();
         let citizen_states_topic = "citizen_states_updated".to_string();
-        KafkaProducer {
+        EventsKafkaProducer {
             sim_id,
             producer: ClientConfig::new()
                 .set("bootstrap.servers", "localhost:9092")
@@ -56,7 +56,7 @@ impl KafkaProducer {
     }
 }
 
-impl Listener for KafkaProducer {
+impl Listener for EventsKafkaProducer {
     fn counts_updated(&mut self, counts: Counts) {
         let message = serde_json::to_string(&counts).expect("Failed to serialize counts");
         let record: FutureRecord<String, String> = FutureRecord::to(&self.count_updated_topic)

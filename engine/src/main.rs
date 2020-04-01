@@ -40,6 +40,7 @@ mod models;
 mod config;
 mod interventions;
 mod kafka_consumer;
+mod kafka_producer;
 
 const STANDALONE_SIM_ID: &str = "0";
 

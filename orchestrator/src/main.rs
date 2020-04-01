@@ -52,33 +52,40 @@ async fn start(engines: Vec<&str>, hours: Range<i32>) {
 
     let sim_conf = read("config/simulation.json").expect("Unable to read configuration file");
     match producer.start_request(sim_conf).await.unwrap() {
-        Ok(_) => { start_ticking(engines, hours, &mut producer).await; }
+        Ok(_) => { start_ticking(engines, hours).await; }
         Err(_) => { panic!("Failed to send simulation request to engines"); }
     }
 }
 
-async fn start_ticking(engines: Vec<&str>, hours: Range<i32>, producer: &mut KafkaProducer) {
-    let consumer = KafkaConsumer::new();
-    let mut message_stream = consumer.start_message_stream();
+async fn start_ticking(engines: Vec<&str>, hours: Range<i32>) {
     let mut acks: TickAcks = TickAcks::new(engines);
+    let mut producer = KafkaProducer::new();
     for h in hours {
         acks.reset(h);
-        producer.send_tick(h);
-        while let Some(message) = message_stream.next().await {
-            let tick_ack = parse_message(message);
-            match tick_ack {
-                Err(e) => {
-                    println!("Received a message, but could not parse it.\n\
-                        Error Details: {}", e)
+
+        match producer.send_tick(h).await.unwrap() {
+            Ok(_) => {
+                let consumer = KafkaConsumer::new();
+                let mut message_stream = consumer.start_message_stream();
+                while let Some(message) = message_stream.next().await {
+                    let tick_ack = parse_message(message);
+                    match tick_ack {
+                        Err(e) => {
+                            println!("Received a message, but could not parse it.\n\
+                                Error Details: {}", e)
+                        }
+                        Ok(ack) => {
+                            acks.push(ack);
+                            if acks.all_received() {
+                                break;
+                            }
+                        }
+                    };
                 }
-                Ok(ack) => {
-                    acks.push(ack);
-                    if acks.all_received() {
-                        break;
-                    }
-                }
-            };
+            }
+            Err(_) => { panic!("Failed to send simulation request to engines"); }
         }
+
     }
 }
 

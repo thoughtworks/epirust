@@ -9,7 +9,6 @@
   "dependencies": {
     "cors": "^2.8.5",
     "debug": "~2.6.9",
-    "execa": "^4.0.0",
     "express": "~4.16.1",
     "http": "0.0.0",
     "kafka-node": "^5.0.0",

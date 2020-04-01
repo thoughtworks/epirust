@@ -19,7 +19,7 @@
 
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react'
-import ParametersForm from '../../time-series/ParamtersForm'
+import ParametersForm from '../../simulation-configuration/ParamtersForm'
 import renderer from 'react-test-renderer'
 
 test('should render ParametersForm with defaults', () => {

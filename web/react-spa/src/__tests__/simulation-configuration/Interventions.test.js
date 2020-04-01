@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, fireEvent, prettyDOM } from '@testing-library/react'
-import Interventions from '../../time-series/Interventions'
+import Interventions from '../../simulation-configuration/Interventions'
 
 test('should toggle displaying the inputs on clicking the switch for vaccination intervention', () => {
     const { getByLabelText, container } = render(<Interventions />);

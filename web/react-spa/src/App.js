@@ -18,9 +18,9 @@
  */
 
 import React, {useState} from 'react';
-import TimeSeries from './time-series';
 import Grid from "./grid/Grid";
-import GraphView from "./time-series/GraphView";
+import TimeSeries from "./time-series";
+import SimulationConfiguration from "./simulation-configuration";
 
 function NavItem({name, isActive, onClickHandle}) {
   const activeClassName = isActive ? "active" : "";
@@ -52,10 +52,14 @@ function App() {
 
   function getComponent() {
     switch (viewState.currentView) {
-      case views.HOME: return <TimeSeries/>;
-      case views.GRID: return <Grid size={50}/>;
-      case views.TIME_SERIES: return <GraphView/>;
-      default: return <TimeSeries/>;
+      case views.HOME:
+        return <SimulationConfiguration/>;
+      case views.GRID:
+        return <Grid size={50}/>;
+      case views.TIME_SERIES:
+        return <TimeSeries/>;
+      default:
+        return <SimulationConfiguration/>;
     }
   }
 

@@ -19,7 +19,7 @@
 
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react'
-import DataInputs from '../../time-series/DataInputs'
+import SimulationConfiguration from '../../simulation-configuration'
 
 jest.useFakeTimers();
 
@@ -47,7 +47,7 @@ test('make API call form data to server on submit', () => {
         "working_percentage": 0.7,
     }
 
-    const { getByTestId } = render(<DataInputs />)
+    const { getByTestId } = render(<SimulationConfiguration />)
 
     fireEvent.submit(getByTestId('simulationForm'))
 

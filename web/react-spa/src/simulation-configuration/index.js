@@ -1,7 +1,7 @@
 import React from 'react';
 import ParametersForm from './ParamtersForm';
 
-export default function DataInputs() {
+export default function SimulationConfiguration() {
 
     function pushData(paramsData) {
         return fetch("http://localhost:3000/simulation/init", {
@@ -24,5 +24,5 @@ export default function DataInputs() {
     )
 }
 
-DataInputs.propTypes = {
+SimulationConfiguration.propTypes = {
 };

@@ -21,7 +21,6 @@
 const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
-const countsConsumer = require("../services/SimulationCountsConsumer");
 
 router.post('/init', (req, res, next) => {
   const message = req.body;
@@ -63,9 +62,6 @@ router.post('/init', (req, res, next) => {
   };
   const kafkaProducer = new KafkaServices.KafkaProducerService();
   kafkaProducer.send('simulation_requests', simulation_config);
-
-  const simulationCountsConsumer = new countsConsumer.SimulationCountsConsumer(simulationId);
-  simulationCountsConsumer.start();
 
   res.status(200);
   res.send({ status: "Simulation started" });

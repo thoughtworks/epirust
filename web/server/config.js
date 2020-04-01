@@ -5,5 +5,6 @@ module.exports = {
     // Kafka Config
     KAFKA_URL: process.env.KAFKA_URL || 'localhost:9092',
     COUNTS_TOPIC: 'counts_updated',
+    KAFKA_GROUP: process.env.KAFKA_GROUP || 'dev_server_consumer'
 
 };

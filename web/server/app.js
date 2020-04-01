@@ -29,7 +29,7 @@ const config = require("./config");
 
 const app = express();
 
-if(process.env.NODE_ENV !== "test") {
+if (process.env.NODE_ENV !== "test") {
   mongoose.connect(config.DATABASE_URL, {useNewUrlParser: true});
   mongoose.Promise = global.Promise;
   const db = mongoose.connection;
@@ -85,6 +85,12 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+}
+
+if (process.env.NODE_ENV !== "test") {
+  const countsConsumer = require("./services/SimulationCountsConsumer");
+  const simulationCountsConsumer = new countsConsumer.SimulationCountsConsumer();
+  simulationCountsConsumer.start();
 }
 
 module.exports = server;

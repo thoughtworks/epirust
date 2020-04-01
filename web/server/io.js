@@ -27,10 +27,7 @@ module.exports = function setupIO(ioInstance) {
       const promise = findLastRecordQuery.exec();
 
       promise.then((doc) => {
-        doc.counts.sort((a, b) => {
-          if (a.hour < b.hour) return -1;
-          else return 1;
-        }).forEach(count => {
+        doc.counts.forEach(count => {
           socket.emit('epidemicStats', count);
         });
 

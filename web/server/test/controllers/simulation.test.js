@@ -22,7 +22,6 @@ const supertest = require('supertest');
 const request = supertest(app);
 
 jest.mock('../../services/kafka');
-jest.mock('../../services/SimulationCountsConsumer');
 
 describe('simulation controller', () => {
 
@@ -64,7 +63,6 @@ describe('simulation controller', () => {
 
     test('should put init POST request params to kafka topic', async done => {
         kafkaService = require('../../services/kafka')
-        SimulationCountsConsumer = require('../../services/SimulationCountsConsumer').SimulationCountsConsumer;
 
         const response = await request
             .post('/simulation/init')
@@ -121,17 +119,12 @@ describe('simulation controller', () => {
         delete payload["sim_id"]; //it is a timestamp, cannot test
         expect(payload).toEqual(kafkaPayload);
 
-        expect(SimulationCountsConsumer).toHaveBeenCalled();
-        const countsConsumer = SimulationCountsConsumer.mock.instances[0];
-        expect(countsConsumer.start).toHaveBeenCalled();
-
         expect(response.status).toBe(200);
         done();
     })
 
     test('should not put vaccination intervention in kafka topic if params not available in /init POST request', async done => {
         kafkaService = require('../../services/kafka')
-        SimulationCountsConsumer = require('../../services/SimulationCountsConsumer').SimulationCountsConsumer;
 
 
         const { vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention } = { ...postData };

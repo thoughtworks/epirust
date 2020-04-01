@@ -19,6 +19,17 @@
 
 const kafka = require('kafka-node');
 
+class KafkaGroupConsumer {
+    constructor(host, topic, id, groupId) {
+        const consumerOptions = {
+            kafkaHost: host,
+            id: id,
+            groupId: groupId
+        };
+        this.consumerStream = new kafka.ConsumerGroupStream(consumerOptions, [topic]);
+    }
+}
+
 class KafkaConsumerService {
     constructor(host, topic, id) {
         const consumerOptions = {
@@ -52,5 +63,5 @@ class KafkaProducerService {
 }
 
 module.exports = {
-    KafkaConsumerService, KafkaProducerService
+    KafkaConsumerService, KafkaProducerService, KafkaGroupConsumer
 };

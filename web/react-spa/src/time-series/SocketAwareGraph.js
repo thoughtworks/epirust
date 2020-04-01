@@ -20,6 +20,7 @@ export default function SocketAwareGraph({ socket }) {
             let simulationEndedTemp = false
             if ("simulation_ended" in message) {
                 simulationEndedTemp = true;
+                socket.close();
             }
             else {
                 const { hour, susceptible, infected, quarantined, recovered, deceased } = message;

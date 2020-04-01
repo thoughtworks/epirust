@@ -82,6 +82,7 @@ test('should set residue also into data buffer when simulation ended flag is tru
         updateOptions : updateSpyFn
     }))
     let socket = new MockSocket()
+    socket.socketClient.close = () => {}
     const hourStatistics = {
         hour: 100,
         susceptible: 9,
@@ -96,18 +97,31 @@ test('should set residue also into data buffer when simulation ended flag is tru
     socket.emit("epidemicStats", hourStatistics101)
     socket.emit("epidemicStats", {"simulation_ended": true})
     jest.runAllTimers();
-   
-    expect(mockDygraphfn).toHaveBeenCalledTimes(1) 
+
+    expect(mockDygraphfn).toHaveBeenCalledTimes(1)
     expect(updateSpyFn).toHaveBeenCalledWith({file: [Object.values(hourStatistics), Object.values(hourStatistics101)]})
 })
 
 test("should enable export in graph if simulation has ended", () => {
     let socket = new MockSocket()
+    socket.socketClient.close = () => {};
     const {container} = render(<SocketAwareGraph socket={socket.socketClient}/>)
     expect(container.querySelector(".graph-actions .btn-secondary")).toBeDisabled()
 
     socket.emit("epidemicStats", {"simulation_ended": true})
     jest.runAllTimers();
-   
+
     expect(container.querySelector(".graph-actions .btn-secondary")).toBeEnabled()
 })
+
+test("should close the socket on receiving simulation ended message", () => {
+    let socket = new MockSocket();
+    let closeCall = 0;
+    socket.socketClient.close = () => {closeCall += 1};
+    render(<SocketAwareGraph socket={socket.socketClient}/>);
+
+    socket.emit("epidemicStats", {"simulation_ended": true});
+    jest.runAllTimers();
+
+    expect(closeCall).toBe(1);
+});

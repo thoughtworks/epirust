@@ -23,7 +23,7 @@ module.exports = function setupIO(ioInstance) {
   const countIO = ioInstance
     .of('/counts')
     .on('connection', (socket) => {
-      const findLastRecordQuery = Simulation.findOne({}, {counts: 1}, {sort: {'created_at': -1}});
+      const findLastRecordQuery = Simulation.findOne({}, {counts: 1}, {sort: {'_id': -1}});
       const promise = findLastRecordQuery.exec();
 
       promise.then((doc) => {

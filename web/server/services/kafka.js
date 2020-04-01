@@ -20,10 +20,9 @@
 const kafka = require('kafka-node');
 
 class KafkaGroupConsumer {
-    constructor(host, topic, id, groupId) {
+    constructor(host, topic, groupId) {
         const consumerOptions = {
             kafkaHost: host,
-            id: id,
             groupId: groupId
         };
         this.consumerStream = new kafka.ConsumerGroupStream(consumerOptions, [topic]);

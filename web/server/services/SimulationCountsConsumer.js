@@ -5,7 +5,7 @@ const {Simulation, SimulationStatus} = require("../db/models/Simulation");
 class SimulationCountsConsumer {
   constructor() {
     this.kafkaConsumer =
-      new KafkaServices.KafkaGroupConsumer(config.KAFKA_URL, config.COUNTS_TOPIC, 1, config.KAFKA_GROUP);
+      new KafkaServices.KafkaGroupConsumer(config.KAFKA_URL, config.COUNTS_TOPIC, config.KAFKA_GROUP);
   }
 
   async start() {
@@ -18,6 +18,7 @@ class SimulationCountsConsumer {
         const update = {simulation_id: simulationId, status: SimulationStatus.FINISHED};
         const simulation = Simulation.update(query, update, {upsert: true});
 
+        console.log("Consumed all counts for simulation id", simulationId);
         await simulation.exec()
 
       } else {

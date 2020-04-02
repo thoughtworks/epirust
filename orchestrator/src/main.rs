@@ -74,13 +74,13 @@ async fn start(engines: Vec<&str>, hours: Range<i32>) {
 async fn start_ticking(engines: Vec<&str>, hours: Range<i32>) {
     let mut acks: TickAcks = TickAcks::new(engines);
     let mut producer = KafkaProducer::new();
+    let consumer = KafkaConsumer::new();
+    let mut message_stream = consumer.start_message_stream();
     for h in hours {
         acks.reset(h);
 
         match producer.send_tick(h).await.unwrap() {
             Ok(_) => {
-                let consumer = KafkaConsumer::new();
-                let mut message_stream = consumer.start_message_stream();
                 while let Some(message) = message_stream.next().await {
                     let tick_ack = parse_message(message);
                     match tick_ack {

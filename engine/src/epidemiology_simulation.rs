@@ -20,7 +20,7 @@
 use core::borrow::Borrow;
 use core::borrow::BorrowMut;
 use std::collections::HashMap;
-use std::time::{Instant, SystemTime};
+use std::time::{Instant, SystemTime, Duration};
 
 use chrono::{DateTime, Local};
 use fxhash::{FxBuildHasher, FxHashMap};
@@ -105,7 +105,7 @@ impl Epidemiology {
             "n_a"
         };
         let consumer = ticks_consumer::start(engine_id);
-        let mut message_stream = consumer.start();
+        let mut message_stream = consumer.start_with(Duration::from_millis(10), false);
 
         for simulation_hour in 1..config.get_hours() {
             if let RunMode::MultiEngine { engine_id } = run_mode {

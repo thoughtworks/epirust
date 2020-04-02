@@ -1,5 +1,6 @@
 use rdkafka::ClientConfig;
 use rdkafka::consumer::{DefaultConsumerContext, MessageStream, StreamConsumer, Consumer};
+use std::time::Duration;
 
 pub struct KafkaConsumer {
     consumer: StreamConsumer,
@@ -22,6 +23,6 @@ impl KafkaConsumer {
     }
 
     pub fn start_message_stream(&self) -> MessageStream<DefaultConsumerContext> {
-        self.consumer.start()
+        self.consumer.start_with(Duration::from_millis(10), false)
     }
 }

@@ -18,7 +18,6 @@
  */
 
 import React from 'react';
-// import Grid from "./grid/Grid";
 import GridPage from "./grid";
 import TimeSeries from "./time-series";
 import SimulationConfiguration from "./simulation-configuration";
@@ -43,7 +42,6 @@ function App() {
       <div className="container-fluid mt-4">
         <Switch>
           <Route exact path={Routes.HOME}><SimulationConfiguration /></Route>
-          {/* <Route path={Routes.GRID}><Grid size={50} /></Route> */}
           <Route path={Routes.GRID}><GridPage/></Route>
           <Route path={Routes.TIME_SERIES}><TimeSeries /></Route>
         </Switch>

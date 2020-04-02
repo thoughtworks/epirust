@@ -17,9 +17,10 @@
  *
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 
 import gridLayout from '../resources/grid-layout';
+import GridLandmarks from './GridLandmarks';
 
 export default function GridPage() {
     const { housing_area, work_area, transport_area, hospital_area } = gridLayout
@@ -47,10 +48,7 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
         CANVAS_DIMENSION = (size * CELL_DIMENSION) + LINE_WIDTH;
 
     const gridCanvasAreas = useRef(null);
-    const gridCanvasLandmarks = useRef(null);
-
     const [areasCanvasContext, setAreasCanvasContext] = useState(null);
-    const [landmarksCanvasContext, setLandmarksCanvasContext] = useState(null);
 
     useEffect(() => {
         if (!gridCanvasAreas)
@@ -59,46 +57,6 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
         setAreasCanvasContext(gridCanvasAreas.current.getContext("2d"));
 
     }, [gridCanvasAreas])
-
-    useEffect(() => {
-        if (!gridCanvasLandmarks)
-            return
-
-        setLandmarksCanvasContext(gridCanvasLandmarks.current.getContext("2d"));
-
-    }, [gridCanvasLandmarks])
-
-
-    useEffect(() => {
-        if (!landmarksCanvasContext)
-            return
-
-        landmarksCanvasContext.lineWidth = LINE_WIDTH;
-
-        landmarksCanvasContext.strokeStyle = "#f1f1f1";
-        landmarksDimensions.housesDimensions.forEach(element => {
-            const startX = element.start_offset.x;
-            const startY = element.start_offset.y;
-
-            const width = element.end_offset.x - startX
-            const height = element.end_offset.y - startY
-
-            landmarksCanvasContext.strokeRect((startX * CELL_DIMENSION) + LINE_WIDTH / 2, (startY * CELL_DIMENSION) + LINE_WIDTH / 2, width * CELL_DIMENSION, height * CELL_DIMENSION);
-        });
-
-
-        landmarksCanvasContext.strokeStyle = "#e83e8c";
-        landmarksDimensions.officesDimensions.forEach(element => {
-            const startX = element.start_offset.x;
-            const startY = element.start_offset.y;
-
-            const width = element.end_offset.x - startX
-            const height = element.end_offset.y - startY
-
-            landmarksCanvasContext.strokeRect((startX * CELL_DIMENSION) + LINE_WIDTH / 2, (startY * CELL_DIMENSION) + LINE_WIDTH / 2, width * CELL_DIMENSION, height * CELL_DIMENSION);
-        });
-
-    }, [landmarksCanvasContext, CELL_DIMENSION, LINE_WIDTH, landmarksDimensions])
 
     useEffect(() => {
         if (!areasCanvasContext)
@@ -138,7 +96,7 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
             }}>
                 <canvas ref={gridCanvasAreas} id="grid-canvas" width={CANVAS_DIMENSION} height={CANVAS_DIMENSION} style={{ position: "absolute", zIndex: 1 }} />
                 {/* <GridLines /> */}
-                <canvas ref={gridCanvasLandmarks} id="grid-canvas-landmarks" width={CANVAS_DIMENSION} height={CANVAS_DIMENSION} style={{ position: "absolute", zIndex: 3 }} />
+                <GridLandmarks landmarksDimensions={landmarksDimensions} />
             </GridContext.Provider>
         </div>
     )

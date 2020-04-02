@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { diseases } from './diseases'
 
 export default function DiseaseDynamics() {
@@ -8,7 +8,7 @@ export default function DiseaseDynamics() {
         const diseaseSelected = diseases[event.target.value]
         const diseaseDynamics = ["regular_transmission_start_day", "high_transmission_start_day", "last_day", "regular_transmission_rate", "high_transmission_rate", "death_rate"]
 
-        diseaseDynamics.map(field => {
+        diseaseDynamics.forEach(field => {
             document.getElementById(field).value = diseaseSelected[field]
         })
     }

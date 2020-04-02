@@ -10,6 +10,7 @@ use rdkafka::message::Message;
 
 use crate::config::Config;
 use crate::epidemiology_simulation::Epidemiology;
+use crate::RunMode;
 
 pub struct KafkaConsumer<'a> {
     engine_id: &'a str,
@@ -30,7 +31,7 @@ impl KafkaConsumer<'_> {
         return KafkaConsumer { engine_id, consumer };
     }
 
-    pub async fn listen_loop(&self, is_daemon: bool, engine_id: &str) {
+    pub async fn listen_loop(&self, run_mode: &RunMode) {
         let mut message_stream: MessageStream<DefaultConsumerContext> = self.consumer.start();
         while let Some(message) = message_stream.next().await {
             let simulation_config = self.parse_message(message);
@@ -40,17 +41,17 @@ impl KafkaConsumer<'_> {
                         Error Details: {}", e);
                 }
                 Ok(request) => {
-                    self.run_sim(request, is_daemon, engine_id).await;
+                    self.run_sim(request, run_mode).await;
                 }
             };
         }
     }
 
-    async fn run_sim(&self, request: Request, is_daemon: bool, engine_id: &str) {
+    async fn run_sim(&self, request: Request, run_mode: &RunMode) {
         match request {
             Request::SimulationRequest(req) => {
                 let mut epidemiology = Epidemiology::new(&req.config, req.sim_id);
-                epidemiology.run(&req.config, is_daemon, engine_id).await;
+                epidemiology.run(&req.config, run_mode).await;
             }
             Request::MultiSimRequest(req) => {
                 let sim_req = req.iter().find(|c| c.engine_id == self.engine_id);
@@ -59,7 +60,7 @@ impl KafkaConsumer<'_> {
                     Some(req) => {
                         let sim_id = req.config.sim_id.clone();
                         let mut epidemiology = Epidemiology::new(&req.config.config, sim_id);
-                        epidemiology.run(&req.config.config, is_daemon, engine_id).await;
+                        epidemiology.run(&req.config.config, run_mode).await;
                     }
                 }
             }

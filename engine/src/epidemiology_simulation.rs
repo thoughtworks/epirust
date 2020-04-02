@@ -26,7 +26,7 @@ use chrono::{DateTime, Local};
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
-use crate::{allocation_map, constants, ticks_consumer};
+use crate::{allocation_map, constants, ticks_consumer, RunMode};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population};
 use crate::disease::Disease;
@@ -72,7 +72,7 @@ impl Epidemiology {
         row.get_infected() == 0 && row.get_quarantined() == 0
     }
 
-    pub async fn run(&mut self, config: &Config, is_daemon: bool, engine_id: &str) {
+    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
         let now: DateTime<Local> = SystemTime::now().into();
         let output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
         let output_file_name = format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"));
@@ -99,11 +99,16 @@ impl Epidemiology {
         let mut producer = KafkaProducer::new();
 
         //todo stream should be started only in case of multi-sim mode
+        let engine_id = if let RunMode::MultiEngine {engine_id} = run_mode {
+            engine_id
+        } else {
+            "n_a"
+        };
         let consumer = ticks_consumer::start(engine_id);
         let mut message_stream = consumer.start();
 
         for simulation_hour in 1..config.get_hours() {
-            if is_daemon {
+            if let RunMode::MultiEngine { engine_id } = run_mode {
                 let msg = message_stream.next().await;
                 let clock_tick = ticks_consumer::read(msg);
                 println!("{:?}", clock_tick);

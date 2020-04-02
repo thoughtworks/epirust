@@ -10,10 +10,6 @@ use rdkafka::message::Message;
 
 use crate::config::Config;
 use crate::epidemiology_simulation::Epidemiology;
-use std::collections::HashMap;
-use rand::Rng;
-use crate::kafka_consumer::Request::Tick;
-use std::fs::read_to_string;
 
 pub struct KafkaConsumer<'a> {
     engine_id: &'a str,
@@ -50,30 +46,6 @@ impl KafkaConsumer<'_> {
         }
     }
 
-    pub async fn get_tick(&self) -> i32{
-        let mut message_stream: MessageStream<DefaultConsumerContext> = self.consumer.start();
-        while let Some(message) = message_stream.next().await {
-            let tick_config = self.parse_message(message);
-            match tick_config {
-                Err(e) => {
-                    println!("Received a message, but could not parse it.\n\
-                        Error Details: {}", e);
-                }
-                Ok(request) => {
-                    return match request {
-                        Request::Tick(x) => {
-                            x.parse().unwrap()
-                        }
-                        _ => {
-                            0
-                        }
-                    }
-                }
-            };
-        }
-        return 0;
-    }
-
     async fn run_sim(&self, request: Request, is_daemon: bool, engine_id: &str) {
         match request {
             Request::SimulationRequest(req) => {
@@ -91,18 +63,13 @@ impl KafkaConsumer<'_> {
                     }
                 }
             }
-            Request::Tick(parsed_message) => {
-                println!("Received Tick: {}", parsed_message);
-            }
         }
     }
 
     fn parse_message(&self, message: Result<BorrowedMessage, KafkaError>) -> Result<Request, Box<dyn Error>> {
         let borrowed_message = message?;
         let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
-        if borrowed_message.topic() == "ticks"{
-            return Result::Ok(Request::Tick(parsed_message.to_string()))
-        }
+        println!("Received: {}", parsed_message);
         serde_json::from_str(parsed_message).map_err(|e| e.into())
     }
 }
@@ -125,5 +92,4 @@ struct SimRequestByEngine {
 enum Request {
     SimulationRequest(SimulationRequest),
     MultiSimRequest(Vec<SimRequestByEngine>),
-    Tick(String),
 }

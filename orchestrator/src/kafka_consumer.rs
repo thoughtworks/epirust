@@ -10,6 +10,7 @@ impl KafkaConsumer {
         let consumer: StreamConsumer = ClientConfig::new()
             .set("bootstrap.servers", "localhost:9092")
             .set("group.id", "orchestrator")
+            .set("auto.offset.reset", "earliest")
             .create()
             .expect("Consumer creation failed");
 

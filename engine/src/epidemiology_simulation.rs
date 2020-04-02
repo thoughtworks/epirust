@@ -26,7 +26,7 @@ use chrono::{DateTime, Local};
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
-use crate::{allocation_map, constants};
+use crate::{allocation_map, constants, ticks_consumer};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population};
 use crate::disease::Disease;
@@ -39,8 +39,8 @@ use crate::listeners::events::counts::Counts;
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
 use crate::listeners::listener::Listeners;
 use crate::random_wrapper::RandomWrapper;
-use crate::kafka_consumer::KafkaConsumer;
 use crate::kafka_producer::{KafkaProducer, TickAck};
+use futures::StreamExt;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -98,18 +98,26 @@ impl Epidemiology {
         listeners.grid_updated(&self.grid);
         let mut producer = KafkaProducer::new();
 
+        //todo stream should be started only in case of multi-sim mode
+        let consumer = ticks_consumer::start(engine_id);
+        let mut message_stream = consumer.start();
+
         for simulation_hour in 1..config.get_hours() {
-            if is_daemon{
-                let consumer = KafkaConsumer::new(engine_id, &["ticks"]);
-                let clock_tick = consumer.get_tick().await;
-                println!("{}", clock_tick);
-                match producer.send_ack(TickAck{engine_id: engine_id.to_string(), hour: clock_tick}).await.unwrap(){
-                      Ok(_) =>{
-                          if clock_tick == config.get_hours(){
-                              break;
-                          }
-                      }
-                      Err(_) => panic!("Failed while sending acknowledgement")
+            if is_daemon {
+                let msg = message_stream.next().await;
+                let clock_tick = ticks_consumer::read(msg);
+                println!("{:?}", clock_tick);
+                if clock_tick.is_none() {
+                    break;
+                }
+                let clock_tick = clock_tick.unwrap();
+                match producer.send_ack(TickAck { engine_id: engine_id.to_string(), hour: clock_tick }).await.unwrap() {
+                    Ok(_) => {
+                        if clock_tick == config.get_hours() {
+                            break;
+                        }
+                    }
+                    Err(_) => panic!("Failed while sending acknowledgement")
                 }
             }
 
@@ -141,8 +149,8 @@ impl Epidemiology {
                                    &self.grid, &mut listeners, &mut rng, &self.disease);
             listeners.counts_updated(counts_at_hr);
 
-            match lock_down_details{
-                Some(x) if Epidemiology::should_lock_city(&counts_at_hr, is_city_locked_down, x) =>{
+            match lock_down_details {
+                Some(x) if Epidemiology::should_lock_city(&counts_at_hr, is_city_locked_down, x) => {
                     Epidemiology::lock_city(&mut write_buffer_reference, &mut rng, &x);
                     is_city_locked_down = true;
                     city_to_be_locked_till = simulation_hour + x.lock_down_period * constants::NUMBER_OF_HOURS;
@@ -150,7 +158,7 @@ impl Epidemiology {
                 _ => {}
             }
 
-            if is_city_locked_down && city_to_be_locked_till == simulation_hour{
+            if is_city_locked_down && city_to_be_locked_till == simulation_hour {
                 Epidemiology::unlock_city(&mut write_buffer_reference);
             }
 

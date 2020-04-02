@@ -28,7 +28,7 @@ pub trait Listener {
     fn simulation_ended(&mut self);
     fn citizen_got_infected(&mut self, _cell: &Point) {}
     fn citizen_state_updated(&mut self, _hr: i32, _citizen: &Citizen, _location: &Point) {}
-    fn grid_updated(&self, grid: &Grid) {}
+    fn grid_updated(&self, _grid: &Grid) {}
     fn as_any(&self) -> &dyn Any;
 }
 

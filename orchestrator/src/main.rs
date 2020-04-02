@@ -28,12 +28,14 @@ use std::ops::Range;
 
 use futures::StreamExt;
 use rdkafka::error::KafkaError;
-use rdkafka::Message;
+use rdkafka::{Message, ClientConfig};
 use rdkafka::message::BorrowedMessage;
 
 use crate::kafka_consumer::KafkaConsumer;
 use crate::kafka_producer::KafkaProducer;
 use crate::ticks::{TickAck, TickAcks};
+use rdkafka::admin::{AdminClient, AdminOptions};
+use rdkafka::client::DefaultClientContext;
 
 mod kafka_producer;
 mod kafka_consumer;
@@ -44,7 +46,19 @@ async fn main() {
     let engines = vec!["engine1", "engine2"];
     let hours = 0..10000;
 
+    cleanup().await;
     start(engines, hours).await;
+}
+
+async fn cleanup() {
+    let kafka_admin: AdminClient<DefaultClientContext> = ClientConfig::new()
+        .set("bootstrap.servers", "localhost:9092")
+        .create()
+        .expect("Admin client creation failed");
+    match kafka_admin.delete_topics(&["ticks", "ticks_ack"], &AdminOptions::new()).await {
+        Ok(_) => {}
+        Err(_) => { println!("Warning: Failed to cleanup ticks and ticks_ack topics") }
+    }
 }
 
 async fn start(engines: Vec<&str>, hours: Range<i32>) {
@@ -85,7 +99,6 @@ async fn start_ticking(engines: Vec<&str>, hours: Range<i32>) {
             }
             Err(_) => { panic!("Failed to send simulation request to engines"); }
         }
-
     }
 }
 

@@ -1,6 +1,6 @@
 export default {
     "grid_size": 100,
-    "housing_area": {   
+    "housing_area": {
         "start_offset": {
             "x": 0,
             "y": 0

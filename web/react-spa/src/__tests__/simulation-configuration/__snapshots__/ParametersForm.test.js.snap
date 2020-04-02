@@ -92,9 +92,10 @@ exports[`should render ParametersForm with defaults 1`] = `
             <input
               aria-describedby="grid_size"
               className="form-control form-control-sm"
-              defaultValue="250"
+              defaultValue={250}
               id="grid_size"
               name="grid_size"
+              onChange={[Function]}
               placeholder="Grid Size"
               type="number"
             />
@@ -118,6 +119,30 @@ exports[`should render ParametersForm with defaults 1`] = `
               type="number"
             />
           </div>
+          <div
+            className="custom-control custom-switch switch-right"
+          >
+            <input
+              checked={false}
+              className="custom-control-input"
+              disabled={true}
+              id="generate_grid_vis"
+              name="generate_grid_vis"
+              onChange={[Function]}
+              type="checkbox"
+            />
+            <label
+              className="custom-control-label col-form-label-sm"
+              htmlFor="generate_grid_vis"
+            >
+              Grid Visualization
+            </label>
+          </div>
+          <small
+            className="form-text text-muted"
+          >
+            Allowed when grid size less than 101 
+          </small>
         </fieldset>
       </div>
       <fieldset>

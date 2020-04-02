@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types'
 import DiseaseDynamics from './DiseaseDynamics'
 import Interventions from './Interventions'
+import MiscellaneousConfig from "./MiscellaneousConfig";
 
 export default function ParametersForm({ onDataSubmit }) {
 
@@ -55,23 +56,6 @@ export default function ParametersForm({ onDataSubmit }) {
         )
     }
 
-    function renderMiscellaneousConfig() {
-        return (
-            <fieldset>
-                <div className="input-control">
-                    <label className="col-form-label-sm" htmlFor="grid_size">Grid Size</label>
-                    <input type="number" name="grid_size" className="form-control form-control-sm" id="grid_size" aria-describedby="grid_size" placeholder="Grid Size" defaultValue="250" />
-                </div>
-
-
-                <div className="input-control">
-                    <label className="col-form-label-sm" htmlFor="simulation_hrs">Simulation Hours</label>
-                    <input type="number" name="simulation_hrs" className="form-control form-control-sm" id="simulation_hrs" aria-describedby="simulation_hrs" placeholder="Simulation Hours" defaultValue="10000" />
-                </div>
-            </fieldset>
-        )
-    }
-
     return (
         <form className="user-inputs" onSubmit={handleSubmit} data-testid='simulationForm'>
 
@@ -80,7 +64,7 @@ export default function ParametersForm({ onDataSubmit }) {
                 <div className="col inputs">
                     <div>
                         {renderPopulation()}
-                        {renderMiscellaneousConfig()}
+                        <MiscellaneousConfig />
                     </div>
                     <DiseaseDynamics />
                     <Interventions />

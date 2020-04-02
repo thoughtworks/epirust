@@ -45,6 +45,7 @@ test('make API call form data to server on submit', () => {
         "vaccinate_at": 5000,
         "vaccinate_percentage": 0.2,
         "working_percentage": 0.7,
+        "enable_citizen_state_messages": false
     }
 
     const { getByTestId } = render(<SimulationConfiguration />)

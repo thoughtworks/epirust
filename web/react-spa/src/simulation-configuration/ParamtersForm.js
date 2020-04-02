@@ -31,6 +31,14 @@ export default function ParametersForm({ onDataSubmit }) {
             paramsData[key] = value;
         });
 
+        if("generate_grid_vis" in paramsData) {
+            const value = paramsData["generate_grid_vis"];
+            delete paramsData.generate_grid_vis;
+            paramsData["enable_citizen_state_messages"] = value === "on";
+        } else {
+            paramsData["enable_citizen_state_messages"] = false;
+        }
+
         onDataSubmit(paramsData)
     }
 

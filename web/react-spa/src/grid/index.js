@@ -22,14 +22,15 @@ import React from 'react';
 import gridLayout from '../resources/grid-layout';
 import GridLandmarks from './GridLandmarks';
 import GridAreas from './GridAreas';
+import { AreaColors } from './constants';
 
 export default function GridPage() {
     const { housing_area, work_area, transport_area, hospital_area } = gridLayout
     const areaDimensions = [
-        { ...housing_area, color: "#fcce44" },
-        { ...work_area, color: "#3498db" },
-        { ...transport_area, color: "#9b59b6" },
-        { ...hospital_area, color: "#e74c3c" }
+        { ...housing_area, color: AreaColors.HOUSING },
+        { ...work_area, color: AreaColors.WORK },
+        { ...transport_area, color: AreaColors.TRANSPORT },
+        { ...hospital_area, color: AreaColors.HOSPITAL }
     ]
 
     const housesDimensions = gridLayout.houses,

@@ -1,3 +1,22 @@
+/*
+ * EpiRust
+ * Copyright (c) 2020  ThoughtWorks, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 
 import gridLayout from '../resources/grid-layout';
@@ -19,6 +38,8 @@ export default function GridPage() {
     )
 }
 
+export const GridContext = React.createContext(null);
+
 export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
 
     const CELL_DIMENSION = Math.floor((window.innerHeight - 20) / size),
@@ -26,11 +47,9 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
         CANVAS_DIMENSION = (size * CELL_DIMENSION) + LINE_WIDTH;
 
     const gridCanvasAreas = useRef(null);
-    // const gridCanvasLines = useRef(null);
     const gridCanvasLandmarks = useRef(null);
 
     const [areasCanvasContext, setAreasCanvasContext] = useState(null);
-    // const [lineCanvasContext, setLineCanvasContext] = useState(null);
     const [landmarksCanvasContext, setLandmarksCanvasContext] = useState(null);
 
     useEffect(() => {
@@ -40,14 +59,6 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
         setAreasCanvasContext(gridCanvasAreas.current.getContext("2d"));
 
     }, [gridCanvasAreas])
-
-    // useEffect(() => {
-    //     if (!gridCanvasLines)
-    //         return
-
-    //     setLineCanvasContext(gridCanvasLines.current.getContext("2d"));
-
-    // }, [gridCanvasLines])
 
     useEffect(() => {
         if (!gridCanvasLandmarks)
@@ -117,26 +128,18 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
         }
     }, [areasCanvasContext, size, CELL_DIMENSION, LINE_WIDTH, areaDimensions])
 
-    // useEffect(() => {
-    //     if (!lineCanvasContext || LINE_WIDTH === 0)
-    //         return
-
-    //     lineCanvasContext.strokeStyle = "#f1f1f1";
-    //     lineCanvasContext.lineWidth = LINE_WIDTH;
-
-    //     for (let x = 0; x < size; x++) {
-    //         for (let y = 0; y < size; y++) {
-    //             lineCanvasContext.strokeRect((x * CELL_DIMENSION) + LINE_WIDTH / 2, (y * CELL_DIMENSION) + LINE_WIDTH / 2, CELL_DIMENSION, CELL_DIMENSION);
-    //         }
-    //     }
-
-    // }, [lineCanvasContext, size, CELL_DIMENSION, LINE_WIDTH])
-
     return (
         <div style={{ position: "relative" }}>
-            <canvas ref={gridCanvasAreas} id="grid-canvas" width={CANVAS_DIMENSION} height={CANVAS_DIMENSION} style={{ position: "absolute", zIndex: 1 }} />
-            {/* <canvas ref={gridCanvasLines} id="grid-canvas-bg" width={CANVAS_DIMENSION} height={CANVAS_DIMENSION} style={{ border: "1px solid #000000", position: "absolute", zIndex: 2 }} /> */}
-            <canvas ref={gridCanvasLandmarks} id="grid-canvas-landmarks" width={CANVAS_DIMENSION} height={CANVAS_DIMENSION} style={{ position: "absolute", zIndex: 3 }} />
+            <GridContext.Provider value={{
+                cellDimension: CELL_DIMENSION,
+                lineWidth: LINE_WIDTH,
+                canvasDimension: CANVAS_DIMENSION,
+                size: size
+            }}>
+                <canvas ref={gridCanvasAreas} id="grid-canvas" width={CANVAS_DIMENSION} height={CANVAS_DIMENSION} style={{ position: "absolute", zIndex: 1 }} />
+                {/* <GridLines /> */}
+                <canvas ref={gridCanvasLandmarks} id="grid-canvas-landmarks" width={CANVAS_DIMENSION} height={CANVAS_DIMENSION} style={{ position: "absolute", zIndex: 3 }} />
+            </GridContext.Provider>
         </div>
     )
 }

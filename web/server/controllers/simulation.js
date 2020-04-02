@@ -36,11 +36,13 @@ router.post('/init', (req, res, next) => {
     death_rate,
     grid_size,
     simulation_hrs,
+    enable_citizen_state_messages
   } = message;
 
   let simulationId = Date.now();
   const simulation_config = {
     "sim_id": `${simulationId}`,
+    "enable_citizen_state_messages": enable_citizen_state_messages,
     "population": {
       "Auto": {
         "number_of_agents": number_of_agents,

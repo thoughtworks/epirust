@@ -42,11 +42,11 @@ describe('simulation controller', () => {
         "last_day": 22,
         "regular_transmission_rate": 0.05,
         "high_transmission_rate": 0.5,
-        "death_rate": 0.2
-    }
+        "death_rate": 0.2,
+        "enable_citizen_state_messages": false
+    };
 
     let kafkaService;
-    let SimulationCountsConsumer;
 
     afterAll(async () => {
         await app.close()
@@ -69,6 +69,7 @@ describe('simulation controller', () => {
             .send({ ...postData });
 
         const kafkaPayload = {
+            enable_citizen_state_messages: false,
             population:
             {
                 Auto:
@@ -134,6 +135,7 @@ describe('simulation controller', () => {
             .send(postDataWithoutVaccinationIntervention);
 
         const kafkaPayload = {
+            enable_citizen_state_messages: false,
             population:
             {
                 Auto:

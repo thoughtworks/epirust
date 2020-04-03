@@ -24,6 +24,7 @@ use std::collections::HashMap;
 pub struct TickAck {
     engine_id: String,
     hour: i32,
+    terminate: bool
 }
 
 /// stores a record of all the acks received for a tick
@@ -48,6 +49,12 @@ impl TickAcks {
     }
 
     pub fn push(&mut self, ack: TickAck) {
+        if ack.terminate{
+            self.engines.retain(|e| !(e.to_string() == ack.engine_id));
+            info!("stopping engine {}", ack.engine_id);
+            return;
+        }
+
         if ack.hour != self.current_hour {
             error!("Received ack for another hour. Current hour: {}, received: {}", self.current_hour, ack.hour);
             return;
@@ -77,7 +84,7 @@ mod tests {
         let engines = vec!["engine1".to_string(), "engine2".to_string()];
         let mut acks = TickAcks::new(engines);
         acks.reset(22);
-        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22 };
+        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, terminate: false };
         acks.push(ack);
 
         assert_eq!(*acks.acks.get("engine1").unwrap(), 22 as i32);

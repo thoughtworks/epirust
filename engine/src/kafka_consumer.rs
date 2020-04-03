@@ -43,6 +43,7 @@ impl KafkaConsumer<'_> {
                 }
                 Ok(request) => {
                     self.run_sim(request, run_mode).await;
+                    return
                 }
             };
         }

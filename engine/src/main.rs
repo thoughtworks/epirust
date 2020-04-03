@@ -88,6 +88,7 @@ async fn main() {
         info!("Started in daemon mode");
         let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
         consumer.listen_loop(&run_mode).await;
+        info!("Done");
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
 

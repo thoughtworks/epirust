@@ -36,7 +36,7 @@ impl KafkaProducer {
         }
     }
 
-    pub fn send_ack(&mut self, tick: TickAck) -> DeliveryFuture {
+    pub fn send_ack(&mut self, tick: &TickAck) -> DeliveryFuture {
         let tick_string = serde_json::to_string(&tick).unwrap();
         let record: FutureRecord<String, String> = FutureRecord::to("ticks_ack")
             .payload(&tick_string);
@@ -48,4 +48,5 @@ impl KafkaProducer {
 pub struct TickAck {
     pub engine_id: String,
     pub hour: i32,
+    pub terminate: bool
 }

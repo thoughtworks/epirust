@@ -114,6 +114,7 @@ impl Epidemiology {
         };
         let consumer = ticks_consumer::start(engine_id);
         let mut message_stream = consumer.start_with(Duration::from_millis(10), false);
+        let mut terminate_engine = false;
 
         for simulation_hour in 1..config.get_hours() {
             if let RunMode::MultiEngine { engine_id } = run_mode {
@@ -124,13 +125,17 @@ impl Epidemiology {
                 }
                 let clock_tick = clock_tick.unwrap();
                 debug!("tick {}", clock_tick);
-                match producer.send_ack(TickAck { engine_id: engine_id.to_string(), hour: clock_tick }).await.unwrap() {
+                let ack = TickAck { engine_id: engine_id.to_string(), hour: clock_tick, terminate: terminate_engine };
+                match producer.send_ack(&ack).await.unwrap() {
                     Ok(_) => {
                         if clock_tick == config.get_hours() {
                             break;
                         }
                     }
                     Err(_) => panic!("Failed while sending acknowledgement")
+                }
+                if terminate_engine{
+                    break;
                 }
             }
 
@@ -184,7 +189,7 @@ impl Epidemiology {
             };
 
             if Epidemiology::stop_simulation(counts_at_hr) {
-                break;
+                terminate_engine = true;
             }
 
             if simulation_hour % 100 == 0 {

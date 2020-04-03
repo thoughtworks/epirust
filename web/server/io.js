@@ -17,24 +17,38 @@
  *
  */
 
-const Simulation = require("./db/models/Simulation").Simulation;
+const {Simulation, SimulationStatus} = require("./db/models/Simulation");
 const Count = require("./db/models/Count");
 
 module.exports = function setupIO(ioInstance) {
+  function sendCountsData(socket, lastConsumedHour) {
+    const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
+    const promise = findLastRecordQuery.exec();
+
+    promise.then(async (doc) => {
+      let cursor = Count.find({simulation_id: doc.simulation_id, hour: {$gt: lastConsumedHour}}, {}, {sort: {'hour': 1}}).cursor();
+
+      let currentHour;
+      for await(const data of cursor) {
+        currentHour = data.hour;
+        socket.emit('epidemicStats', data);
+      }
+      const findLastRecordQuery = Simulation.findOne({}, {status: 1}, {sort: {'_id': -1}});
+      const promise = findLastRecordQuery.exec();
+
+      await promise.then((doc) => {
+        if(doc.status === SimulationStatus.FINISHED) {
+          socket.emit('epidemicStats', {"simulation_ended": true});
+        }
+        else sendCountsData(socket, currentHour);
+      })
+    });
+  }
+
   const countIO = ioInstance
     .of('/counts')
     .on('connection', (socket) => {
-      const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
-      const promise = findLastRecordQuery.exec();
-
-      promise.then(async (doc) => {
-        let cursor = Count.find({simulation_id: doc.simulation_id}, {}, {sort: {'hour': 1}}).cursor();
-
-        for await(const data of cursor) {
-          socket.emit('epidemicStats', data);
-        }
-        socket.emit('epidemicStats', {"simulation_ended": true});
-      });
+      sendCountsData(socket, 0);
       socket.on('disconnect', reason => console.log("Disconnect", reason));
     });
 };

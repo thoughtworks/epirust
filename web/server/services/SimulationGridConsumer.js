@@ -4,9 +4,11 @@ const {Grid} = require("../db/models/Grid");
 
 class SimulationGridConsumer {
     constructor() {
-        this.kafkaConsumer =
-            new KafkaServices.KafkaGroupConsumer(config.KAFKA_URL, config.CITIZEN_STATES_UPDATED, config.KAFKA_GROUP);
-        ``
+        this.kafkaConsumer = new KafkaServices.KafkaGroupConsumer(
+            config.KAFKA_URL,
+            config.CITIZEN_STATES_UPDATED,
+            config.KAFKA_GROUP
+        );
     }
 
     async start() {

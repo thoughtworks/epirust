@@ -20,18 +20,35 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const gridSchema = new Schema({
-    simulation_id: {type: Number, required: true},
-    hr: {type: Number, required: true},
-    citizen_states: [{
-        citizen_id: Number,
-        state: String,
-        location: {
-            x: Number,
-            y: Number
-        }
-    }]
+const AreaSchema = new Schema({
+  start_offset: {x: Number, y: Number},
+  end_offset: {x: Number, y: Number},
+  iter_index: {x: Number, y: Number}
 });
 
+const gridSchema = new Schema({
+  simulation_id: {type: Number, required: true},
+
+  hr: {type: Number},
+  citizen_states: [{
+    citizen_id: Number,
+    state: String,
+    location: {
+      x: Number,
+      y: Number
+    }
+  }],
+
+  grid_size: Number,
+  housing_area: AreaSchema,
+  work_area: AreaSchema,
+  transport_area: AreaSchema,
+  hospital_area: AreaSchema,
+  houses: [AreaSchema],
+  offices: [AreaSchema]
+});
+
+
 const Grid = mongoose.model('Grid', gridSchema);
-module.exports = {Grid: Grid};
+
+module.exports = {Grid};

@@ -54,7 +54,7 @@ describe('simulation controller', () => {
 
     beforeEach(() => {
         jest.mock('../../services/kafka');
-    })
+    });
 
     afterEach(() => {
         jest.clearAllMocks()

@@ -91,6 +91,10 @@ if (process.env.NODE_ENV !== "test") {
   const countsConsumer = require("./services/SimulationCountsConsumer");
   const simulationCountsConsumer = new countsConsumer.SimulationCountsConsumer();
   simulationCountsConsumer.start();
+
+  const citizenStateConsumer = require("./services/SimulationGridConsumer");
+  const simulationGridConsumer = new citizenStateConsumer.SimulationGridConsumer();
+  simulationGridConsumer.start();
 }
 
 module.exports = server;

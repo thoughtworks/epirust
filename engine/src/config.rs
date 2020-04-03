@@ -81,7 +81,7 @@ impl Config {
             hours,
             interventions,
             output_file,
-            enable_citizen_state_messages: false,
+            enable_citizen_state_messages: true,
         }
     }
 }

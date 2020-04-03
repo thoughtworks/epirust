@@ -26,7 +26,7 @@ const AreaSchema = new Schema({
   iter_index: {x: Number, y: Number}
 });
 
-const gridSchema = new Schema({
+const citizenStateSchema = new Schema({
   simulation_id: {type: Number, required: true},
 
   hr: {type: Number},
@@ -37,8 +37,11 @@ const gridSchema = new Schema({
       x: Number,
       y: Number
     }
-  }],
+  }]
+});
 
+const gridSchema = new Schema({
+  simulation_id: {type: Number, required: true},
   grid_size: Number,
   housing_area: AreaSchema,
   work_area: AreaSchema,
@@ -49,6 +52,7 @@ const gridSchema = new Schema({
 });
 
 
-const Grid = mongoose.model('Grid', gridSchema);
+const Grid = mongoose.model('Grid', gridSchema, 'Grid');
+const CitizenState = mongoose.model('CitizenState', citizenStateSchema, 'Grid');
 
-module.exports = Grid;
+module.exports = {Grid, CitizenState};

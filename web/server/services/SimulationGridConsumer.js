@@ -20,7 +20,7 @@
 
 const KafkaServices = require('../services/kafka');
 const config = require("../config");
-const Grid = require("../db/models/Grid");
+const {Grid, CitizenState} = require("../db/models/Grid");
 const Simulation = require("../db/models/Simulation").Simulation;
 
 
@@ -49,13 +49,9 @@ class SimulationGridConsumer {
       }
       else if('grid_size' in parsedMessage) {
         const grid = new Grid(parsedMessage);
-        grid.citizen_states = undefined;
-
         await grid.save();
       } else {
-        const citizenState = new Grid(parsedMessage);
-        citizenState.houses = undefined;
-        citizenState.offices = undefined;
+        const citizenState = new CitizenState(parsedMessage);
         await citizenState.save();
       }
     }

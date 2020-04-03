@@ -42,6 +42,7 @@ use crate::ticks::{TickAck, TickAcks};
 mod kafka_producer;
 mod kafka_consumer;
 mod ticks;
+mod environment;
 
 #[tokio::main]
 async fn main() {
@@ -55,8 +56,9 @@ async fn main() {
 }
 
 async fn cleanup() {
+    let kafka_url = environment::kafka_url();
     let kafka_admin: AdminClient<DefaultClientContext> = ClientConfig::new()
-        .set("bootstrap.servers", "localhost:9092")
+        .set("bootstrap.servers", kafka_url.as_str())
         .create()
         .expect("Admin client creation failed");
     match kafka_admin.delete_topics(&["ticks", "ticks_ack"], &AdminOptions::new()).await {

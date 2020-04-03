@@ -1,6 +1,7 @@
 use rdkafka::ClientConfig;
 use rdkafka::consumer::{DefaultConsumerContext, MessageStream, StreamConsumer, Consumer};
 use std::time::Duration;
+use crate::environment;
 
 pub struct KafkaConsumer {
     consumer: StreamConsumer,
@@ -8,8 +9,9 @@ pub struct KafkaConsumer {
 
 impl KafkaConsumer {
     pub fn new() -> KafkaConsumer {
+        let kafka_url = environment::kafka_url();
         let consumer: StreamConsumer = ClientConfig::new()
-            .set("bootstrap.servers", "localhost:9092")
+            .set("bootstrap.servers", kafka_url.as_str())
             .set("group.id", "orchestrator")
             .set("auto.offset.reset", "earliest")
             .create()

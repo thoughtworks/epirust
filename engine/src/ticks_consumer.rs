@@ -22,12 +22,14 @@ use rdkafka::{ClientConfig, Message};
 
 use rdkafka::error::{KafkaResult};
 use rdkafka::message::BorrowedMessage;
+use crate::environment;
 
 const TICKS_TOPIC: &str = "ticks";
 
 pub fn start(engine_id: &str) -> StreamConsumer {
+    let kafka_url = environment::kafka_url();
     let consumer: StreamConsumer = ClientConfig::new()
-        .set("bootstrap.servers", "localhost:9092")
+        .set("bootstrap.servers", kafka_url.as_str())
         .set("group.id", engine_id)
         .set("auto.offset.reset", "earliest")
         .create()

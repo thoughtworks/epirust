@@ -28,6 +28,7 @@ use crate::geography::{Grid, Point};
 use crate::listeners::events::citizen_state::CitizenStatesAtHr;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
+use crate::environment;
 
 pub struct EventsKafkaProducer {
     sim_id: String,
@@ -42,10 +43,11 @@ impl EventsKafkaProducer {
     pub fn new(sim_id: String, population_size: usize, enable_citizen_state_messages: bool) -> EventsKafkaProducer {
         let count_updated_topic = "counts_updated".to_string();
         let citizen_states_topic = "citizen_states_updated".to_string();
+        let kafka_url = environment::kafka_url();
         EventsKafkaProducer {
             sim_id,
             producer: ClientConfig::new()
-                .set("bootstrap.servers", "localhost:9092")
+                .set("bootstrap.servers", kafka_url.as_str())
                 .create()
                 .expect("Could not create Kafka Producer"),
             citizen_states_buffer: CitizenStatesAtHr::init(population_size),

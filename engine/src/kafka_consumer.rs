@@ -10,7 +10,7 @@ use rdkafka::message::Message;
 
 use crate::config::Config;
 use crate::epidemiology_simulation::Epidemiology;
-use crate::RunMode;
+use crate::{RunMode, environment};
 
 pub struct KafkaConsumer<'a> {
     engine_id: &'a str,
@@ -19,8 +19,9 @@ pub struct KafkaConsumer<'a> {
 
 impl KafkaConsumer<'_> {
     pub fn new<'a>(engine_id: &'a str, topics: &[&str]) -> KafkaConsumer<'a> {
+        let kafka_url = environment::kafka_url();
         let consumer: StreamConsumer = ClientConfig::new()
-            .set("bootstrap.servers", "localhost:9092")
+            .set("bootstrap.servers", kafka_url.as_str())
             .set("group.id", engine_id)
             .create()
             .expect("Consumer creation failed");

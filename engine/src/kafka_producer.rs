@@ -19,6 +19,7 @@
 
 use rdkafka::producer::{FutureProducer, FutureRecord, DeliveryFuture};
 use rdkafka::ClientConfig;
+use crate::environment;
 
 pub struct KafkaProducer {
     producer: FutureProducer,
@@ -26,9 +27,10 @@ pub struct KafkaProducer {
 
 impl KafkaProducer {
     pub fn new() -> KafkaProducer {
+        let kafka_url = environment::kafka_url();
         KafkaProducer {
             producer: ClientConfig::new()
-                .set("bootstrap.servers", "localhost:9092")
+                .set("bootstrap.servers", kafka_url.as_str())
                 .create()
                 .expect("Could not create Kafka Producer")
         }

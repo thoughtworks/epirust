@@ -42,6 +42,7 @@ mod interventions;
 mod kafka_consumer;
 mod kafka_producer;
 mod ticks_consumer;
+mod environment;
 
 const STANDALONE_SIM_ID: &str = "0";
 

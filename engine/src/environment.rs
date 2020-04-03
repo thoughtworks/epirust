@@ -18,10 +18,18 @@
  */
 
 use std::env;
+use std::path::PathBuf;
 
 pub fn kafka_url() -> String {
     match env::var("KAFKA_URL") {
         Ok(val) => val,
         Err(_) => "localhost:9092".to_string(),
+    }
+}
+
+pub fn output_dir() -> PathBuf {
+    match env::var("OUTPUT_DIR") {
+        Ok(val) => PathBuf::from(val),
+        Err(_) => PathBuf::from("."),
     }
 }

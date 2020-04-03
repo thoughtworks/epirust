@@ -63,7 +63,7 @@ async fn main() {
             .long("daemon")
             .short("d")
             .help("Start the engine in daemon mode. It will wait for messages from Kafka. \
-            Specifying this flag will cause other arguments to be ignored")
+            Specifying this flag will cause the config argument to be ignored")
             .takes_value(false))
         .arg(Arg::with_name("id")
             .long("id")

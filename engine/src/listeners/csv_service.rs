@@ -27,6 +27,8 @@ use crate::geography::Point;
 use std::any::Any;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
+use crate::environment;
+use std::path::PathBuf;
 
 pub struct CsvListener {
     output_file_name: String,
@@ -38,7 +40,7 @@ impl CsvListener {
         CsvListener { output_file_name, counts: Vec::new() }
     }
 
-    pub fn write(file_path: &String, data: &Vec<Counts>) -> Result<(), Box<dyn Error>> {
+    pub fn write(file_path: &PathBuf, data: &Vec<Counts>) -> Result<(), Box<dyn Error>> {
         let mut wtr = Writer::from_path(file_path)?;
 
         for row in data {
@@ -62,7 +64,10 @@ impl Listener for CsvListener {
     }
 
     fn simulation_ended(&mut self) {
-        CsvListener::write(&self.output_file_name, &self.counts)
+        let mut output_path = environment::output_dir();
+        output_path.push(&self.output_file_name);
+
+        CsvListener::write(&output_path, &self.counts)
             .expect("Failed to write to file");
     }
 

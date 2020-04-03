@@ -72,10 +72,18 @@ impl Epidemiology {
         row.get_infected() == 0 && row.get_quarantined() == 0
     }
 
-    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
+    fn output_file_name(config: &Config, run_mode: &RunMode) -> String {
         let now: DateTime<Local> = SystemTime::now().into();
-        let output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
-        let output_file_name = format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"));
+        let mut output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
+        if let RunMode::MultiEngine {engine_id} = run_mode  {
+            output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
+        }
+        format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"))
+    }
+
+    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
+        let output_file_name = Epidemiology::output_file_name(config, run_mode);
+
         let csv_listener = CsvListener::new(output_file_name);
         let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), self.agent_location_map.agent_cell.len(),
                                                       config.enable_citizen_state_messages());

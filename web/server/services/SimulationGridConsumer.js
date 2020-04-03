@@ -21,6 +21,8 @@
 const KafkaServices = require('../services/kafka');
 const config = require("../config");
 const {Grid} = require("../db/models/Grid");
+const Simulation = require("../db/models/Simulation").Simulation;
+
 
 class SimulationGridConsumer {
   constructor() {
@@ -34,9 +36,18 @@ class SimulationGridConsumer {
   async start() {
     for await (const data of this.kafkaConsumer.consumerStream) {
       const parsedMessage = JSON.parse(data.value);
-      parsedMessage["simulation_id"] = parseInt(data.key.toString());
+      const simulationId = data.key.toString();
+      parsedMessage["simulation_id"] = parseInt(simulationId);
 
-      if('grid_size' in parsedMessage) {
+      if('simulation_ended' in parsedMessage) {
+        const query = {simulation_id: simulationId};
+        const update = {simulation_id: simulationId, grid_consumption_finished: true};
+        const simulationUpdate = Simulation.updateOne(query, update, {upsert: true});
+
+        console.log("Grid messages consumption finished for simulation id", simulationId);
+        await simulationUpdate.exec()
+      }
+      else if('grid_size' in parsedMessage) {
         const grid = new Grid(parsedMessage);
         grid.citizen_states = undefined;
 

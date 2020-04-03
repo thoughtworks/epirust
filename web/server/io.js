@@ -18,22 +18,23 @@
  */
 
 const Simulation = require("./db/models/Simulation").Simulation;
+const Count = require("./db/models/Count");
 
 module.exports = function setupIO(ioInstance) {
   const countIO = ioInstance
     .of('/counts')
     .on('connection', (socket) => {
-      const findLastRecordQuery = Simulation.findOne({}, {counts: 1}, {sort: {'_id': -1}});
+      const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
       const promise = findLastRecordQuery.exec();
 
-      promise.then((doc) => {
-        doc.counts.forEach(count => {
-          socket.emit('epidemicStats', count);
-        });
+      promise.then(async (doc) => {
+        let cursor = Count.find({simulation_id: doc.simulation_id}, {}, {sort: {'hour': 1}}).cursor();
 
+        for await(const data of cursor) {
+          socket.emit('epidemicStats', data);
+        }
         socket.emit('epidemicStats', {"simulation_ended": true});
-
-        socket.on('disconnect', reason => console.log("Disconnect", reason));
       });
-    })
+      socket.on('disconnect', reason => console.log("Disconnect", reason));
+    });
 };

@@ -21,6 +21,7 @@
 const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
+const Simulation = require("../db/models/Simulation").Simulation;
 
 router.post('/init', (req, res, next) => {
   const message = req.body;
@@ -64,6 +65,11 @@ router.post('/init', (req, res, next) => {
   };
   const kafkaProducer = new KafkaServices.KafkaProducerService();
   kafkaProducer.send('simulation_requests', simulation_config);
+
+  const query = {simulation_id: simulationId};
+  const simulation = Simulation.update(query, query, {upsert: true});
+  simulation.exec()
+    .catch((err) => console.error("Failed to create Simulation entry ", err));
 
   res.status(200);
   res.send({ status: "Simulation started" });

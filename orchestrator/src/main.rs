@@ -41,6 +41,7 @@ use rdkafka::message::BorrowedMessage;
 use crate::kafka_consumer::KafkaConsumer;
 use crate::kafka_producer::KafkaProducer;
 use crate::ticks::{TickAck, TickAcks};
+use clap::{App, Arg};
 
 mod kafka_producer;
 mod kafka_consumer;
@@ -50,7 +51,20 @@ mod environment;
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    let sim_conf = read("config/simulation.json")
+
+    let matches = App::new("EpiRust Orchestrator")
+        .version("0.1")
+        .about("Epidemiology Simulations in Rust")
+        .arg(Arg::with_name("config")
+            .long("config")
+            .short("c")
+            .value_name("FILE")
+            .help("Use a config file to run the simulation. If not specified, config/simulation.json will be used"))
+        .get_matches();
+
+    let config_path = matches.value_of("config").unwrap_or("config/simulation.json");
+
+    let sim_conf = read(config_path)
         .expect("Unable to read configuration file");
     let engines = parse_engine_names(&sim_conf);
     let hours = 0..10000;

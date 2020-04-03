@@ -18,38 +18,37 @@
  */
 
 const {Simulation, SimulationStatus} = require("../db/models/Simulation");
-const Count = require("../db/models/Count");
+const Grid = require("../db/models/Grid");
 
-function sendCountsData(socket, lastConsumedHour) {
+function sendGridData(socket, lastConsumedId) {
   const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
   const promise = findLastRecordQuery.exec();
 
   promise.then(async (doc) => {
-    let cursor = Count.find({
-      simulation_id: doc.simulation_id,
-      hour: {$gt: lastConsumedHour}
-    }, {}, {sort: {'hour': 1}}).cursor();
+    let query = {simulation_id: doc.simulation_id, _id: {$gt: lastConsumedId}};
+    if(lastConsumedId === null) delete query._id;
+    let cursor = Grid.find(query, {}, {sort: {'_id': 1}}).cursor();
 
-    let currentHour;
+    let id;
     for await(const data of cursor) {
-      currentHour = data.hour;
-      socket.emit('epidemicStats', data);
+      id = data._id;
+      socket.emit('gridData', data);
     }
     const findLastRecordQuery = Simulation.findOne({}, {status: 1}, {sort: {'_id': -1}});
     const promise = findLastRecordQuery.exec();
 
     await promise.then((doc) => {
       if (doc.status === SimulationStatus.FINISHED) {
-        socket.emit('epidemicStats', {"simulation_ended": true});
-      } else sendCountsData(socket, currentHour);
+        socket.emit('gridData', {"simulation_ended": true});
+      } else sendGridData(socket, id);
     })
   });
 }
 
-const handleRequest = (socket) => {
-  sendCountsData(socket, 0);
+function handleRequest(socket) {
+  sendGridData(socket, null);
   socket.on('disconnect', reason => console.log("Disconnect", reason));
-};
+}
 
 module.exports = {
   handleRequest

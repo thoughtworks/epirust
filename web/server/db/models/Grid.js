@@ -51,4 +51,4 @@ const gridSchema = new Schema({
 
 const Grid = mongoose.model('Grid', gridSchema);
 
-module.exports = {Grid};
+module.exports = Grid;

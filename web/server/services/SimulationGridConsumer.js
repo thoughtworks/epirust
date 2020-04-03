@@ -20,7 +20,7 @@
 
 const KafkaServices = require('../services/kafka');
 const config = require("../config");
-const {Grid} = require("../db/models/Grid");
+const Grid = require("../db/models/Grid");
 const Simulation = require("../db/models/Simulation").Simulation;
 
 

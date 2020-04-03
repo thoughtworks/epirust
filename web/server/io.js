@@ -18,9 +18,14 @@
  */
 
 const CountsIoController = require("./controllers/counts-io-controller");
+const GridIoController = require("./controllers/grid-io-controller");
 
 module.exports = function setupIO(ioInstance) {
   ioInstance
     .of('/counts')
-    .on('connection', CountsIoController.handleCountsRequest);
+    .on('connection', CountsIoController.handleRequest);
+
+  ioInstance
+    .of('/grid-updates')
+    .on('connection', GridIoController.handleRequest)
 };

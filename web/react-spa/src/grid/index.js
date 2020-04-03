@@ -20,8 +20,8 @@
 import React from 'react';
 
 import gridLayout from '../resources/grid-layout';
-import GridLandmarks from './GridLandmarks';
-import GridAreas from './GridAreas';
+import LandmarksLayer from './LandmarksLayer';
+import AreasLayer from './AreasLayer';
 import { AreaColors } from './constants';
 
 export default function GridPage() {
@@ -57,9 +57,9 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
                 canvasDimension: canvasDimension,
                 size: size
             }}>
-                <GridAreas areaDimensions={areaDimensions} />
-                {/* <GridLines /> */}
-                < GridLandmarks landmarksDimensions={landmarksDimensions} />
+                <AreasLayer areaDimensions={areaDimensions} />
+                {/* <LinesLayer /> */}
+                < LandmarksLayer landmarksDimensions={landmarksDimensions} />
             </GridContext.Provider>
         </div>
     )

@@ -19,19 +19,19 @@
 import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
 
-export default function GridLandmarks({ landmarksDimensions }) {
+export default function LandmarksLayer({ landmarksDimensions }) {
     const { cellDimension, lineWidth, canvasDimension } = useContext(GridContext);
 
-    const gridCanvasLandmarks = useRef(null);
+    const landmarksLayerCanvas = useRef(null);
     const [landmarksCanvasContext, setLandmarksCanvasContext] = useState(null);
 
     useEffect(() => {
-        if (!gridCanvasLandmarks)
+        if (!landmarksLayerCanvas)
             return
 
-        setLandmarksCanvasContext(gridCanvasLandmarks.current.getContext("2d"));
+        setLandmarksCanvasContext(landmarksLayerCanvas.current.getContext("2d"));
 
-    }, [gridCanvasLandmarks])
+    }, [landmarksLayerCanvas])
 
     useEffect(() => {
         if (!landmarksCanvasContext)
@@ -65,6 +65,6 @@ export default function GridLandmarks({ landmarksDimensions }) {
     }, [landmarksCanvasContext, cellDimension, lineWidth, landmarksDimensions])
 
     return (
-        <canvas ref={gridCanvasLandmarks} id="grid-canvas-landmarks" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 3 }} />
+        <canvas ref={landmarksLayerCanvas} id="grid-canvas-landmarks" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 3 }} />
     )
 }

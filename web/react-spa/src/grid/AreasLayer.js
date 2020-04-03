@@ -19,20 +19,20 @@
 import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
 
-export default function GridAreas({ areaDimensions }) {
+export default function AreasLayer({ areaDimensions }) {
 
     const { cellDimension, lineWidth, canvasDimension, size } = useContext(GridContext);
 
-    const gridCanvasAreas = useRef(null);
+    const areasLayerCanvas = useRef(null);
     const [areasCanvasContext, setAreasCanvasContext] = useState(null);
 
     useEffect(() => {
-        if (!gridCanvasAreas)
+        if (!areasLayerCanvas)
             return
 
-        setAreasCanvasContext(gridCanvasAreas.current.getContext("2d"));
+        setAreasCanvasContext(areasLayerCanvas.current.getContext("2d"));
 
-    }, [gridCanvasAreas])
+    }, [areasLayerCanvas])
 
     useEffect(() => {
         if (!areasCanvasContext)
@@ -63,7 +63,7 @@ export default function GridAreas({ areaDimensions }) {
     }, [areasCanvasContext, size, cellDimension, lineWidth, areaDimensions])
 
     return (
-        <canvas ref={gridCanvasAreas} id="grid-canvas" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 1 }} />
+        <canvas ref={areasLayerCanvas} id="grid-canvas" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 1 }} />
     )
 }
 

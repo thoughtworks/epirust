@@ -19,20 +19,20 @@
 
  import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
-export default function GridLines() {
+export default function LinesLayer() {
 
     const { cellDimension, lineWidth, canvasDimension, size } = useContext(GridContext);
 
-    const gridCanvasLines = useRef(null);
+    const linesLayerCanvas = useRef(null);
     const [lineCanvasContext, setLineCanvasContext] = useState(null);
 
     useEffect(() => {
-        if (!gridCanvasLines)
+        if (!linesLayerCanvas)
             return
 
-        setLineCanvasContext(gridCanvasLines.current.getContext("2d"));
+        setLineCanvasContext(linesLayerCanvas.current.getContext("2d"));
 
-    }, [gridCanvasLines])
+    }, [linesLayerCanvas])
 
     useEffect(() => {
         if (!lineCanvasContext || lineWidth === 0)
@@ -50,6 +50,6 @@ export default function GridLines() {
     }, [lineCanvasContext, size, cellDimension, lineWidth])
 
     return (
-        <canvas ref={gridCanvasLines} id="grid-canvas-bg" width={canvasDimension} height={canvasDimension} style={{ border: "1px solid #000000", position: "absolute", zIndex: 2 }} />
+        <canvas ref={linesLayerCanvas} id="grid-canvas-bg" width={canvasDimension} height={canvasDimension} style={{ border: "1px solid #000000", position: "absolute", zIndex: 2 }} />
     )
 }

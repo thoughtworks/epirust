@@ -122,6 +122,10 @@ async fn start_ticking(engines: Vec<String>, hours: Range<i32>) {
             }
             Err(_) => { panic!("Failed to send simulation request to engines"); }
         }
+
+        if acks.get_number_of_engines() == 0{
+            break;
+        }
     }
 }
 

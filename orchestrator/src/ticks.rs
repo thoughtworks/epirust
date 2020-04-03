@@ -70,6 +70,10 @@ impl TickAcks {
         self.acks.insert(ack.engine_id, ack.hour);
     }
 
+    pub fn get_number_of_engines(&self) -> usize{
+        self.engines.len()
+    }
+
     pub fn all_received(&self) -> bool {
         self.acks.keys().count() == self.engines.len()
     }

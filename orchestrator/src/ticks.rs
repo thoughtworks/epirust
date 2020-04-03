@@ -49,15 +49,15 @@ impl TickAcks {
 
     pub fn push(&mut self, ack: TickAck) {
         if ack.hour != self.current_hour {
-            println!("Received ack for another hour. Current hour: {}, received: {}", self.current_hour, ack.hour);
+            error!("Received ack for another hour. Current hour: {}, received: {}", self.current_hour, ack.hour);
             return;
         }
         if self.acks.contains_key(&ack.engine_id) {
-            println!("Received a duplicate ack for engine: {}", ack.engine_id);
+            error!("Received a duplicate ack for engine: {}", ack.engine_id);
             return;
         }
         if !self.engines.contains(&ack.engine_id) {
-            println!("Received an ack from an unknown engine: {}", ack.engine_id);
+            error!("Received an ack from an unknown engine: {}", ack.engine_id);
             return;
         }
         self.acks.insert(ack.engine_id, ack.hour);

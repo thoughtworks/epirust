@@ -38,7 +38,7 @@ impl KafkaConsumer<'_> {
             let simulation_config = self.parse_message(message);
             match simulation_config {
                 Err(e) => {
-                    println!("Received a message, but could not parse it.\n\
+                    error!("Received a message, but could not parse it.\n\
                         Error Details: {}", e);
                 }
                 Ok(request) => {
@@ -57,7 +57,7 @@ impl KafkaConsumer<'_> {
             Request::MultiSimRequest(req) => {
                 let sim_req = req.iter().find(|c| c.engine_id == self.engine_id);
                 match sim_req {
-                    None => { println!("Couldn't find any work for engine_id: {}", self.engine_id) }
+                    None => { error!("Couldn't find any work for engine_id: {}", self.engine_id) }
                     Some(req) => {
                         let sim_id = req.config.sim_id.clone();
                         let mut epidemiology = Epidemiology::new(&req.config.config, sim_id);
@@ -71,7 +71,7 @@ impl KafkaConsumer<'_> {
     fn parse_message(&self, message: Result<BorrowedMessage, KafkaError>) -> Result<Request, Box<dyn Error>> {
         let borrowed_message = message?;
         let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
-        println!("Received: {}", parsed_message);
+        debug!("Received: {}", parsed_message);
         serde_json::from_str(parsed_message).map_err(|e| e.into())
     }
 }

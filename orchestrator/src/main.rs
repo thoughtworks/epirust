@@ -21,6 +21,9 @@
 #[macro_use]
 extern crate serde_derive;
 
+#[macro_use]
+extern crate log;
+
 use std::error::Error;
 use std::fs::File;
 use std::io::Read;
@@ -46,6 +49,7 @@ mod environment;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let sim_conf = read("config/simulation.json")
         .expect("Unable to read configuration file");
     let engines = parse_engine_names(&sim_conf);
@@ -63,7 +67,7 @@ async fn cleanup() {
         .expect("Admin client creation failed");
     match kafka_admin.delete_topics(&["ticks", "ticks_ack"], &AdminOptions::new()).await {
         Ok(_) => {}
-        Err(_) => { println!("Warning: Failed to cleanup ticks and ticks_ack topics") }
+        Err(_) => { error!("Warning: Failed to cleanup ticks and ticks_ack topics") }
     }
 }
 
@@ -90,7 +94,7 @@ async fn start_ticking(engines: Vec<String>, hours: Range<i32>) {
                     let tick_ack = parse_message(message);
                     match tick_ack {
                         Err(e) => {
-                            println!("Received a message, but could not parse it.\n\
+                            error!("Received a message, but could not parse it.\n\
                                 Error Details: {}", e)
                         }
                         Ok(ack) => {
@@ -117,7 +121,7 @@ fn read(filename: &str) -> Result<String, Box<dyn Error>> {
 fn parse_message(message: Result<BorrowedMessage, KafkaError>) -> Result<TickAck, Box<dyn Error>> {
     let borrowed_message = message?;
     let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
-    println!("Received: {}", parsed_message);
+    debug!("Received: {}", parsed_message);
     serde_json::from_str(parsed_message).map_err(|e| e.into())
 }
 

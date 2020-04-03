@@ -46,7 +46,7 @@ impl CsvListener {
             match result {
                 Ok(_) => {}
                 Err(e) => {
-                    println!("Error occurred while serializing! {:?}", e);
+                    error!("Error occurred while serializing! {:?}", e);
                 }
             }
         }

@@ -104,7 +104,7 @@ impl Listener for EventsKafkaProducer {
 
                     self.producer.send(record, 0);
                 }
-                Err(e) => println!("Failed to parse the grid, cannot publish to kafka! Error: {}", e)
+                Err(e) => error!("Failed to parse the grid, cannot publish to kafka! Error: {}", e)
             }
         }
     }

@@ -64,7 +64,7 @@ impl Epidemiology {
         let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
         let write_agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
 
-        println!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
+        info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         Epidemiology { agent_location_map, write_agent_location_map, grid, disease, sim_id }
     }
 
@@ -111,11 +111,11 @@ impl Epidemiology {
             if let RunMode::MultiEngine { engine_id } = run_mode {
                 let msg = message_stream.next().await;
                 let clock_tick = ticks_consumer::read(msg);
-                println!("{:?}", clock_tick);
                 if clock_tick.is_none() {
                     break;
                 }
                 let clock_tick = clock_tick.unwrap();
+                debug!("tick {}", clock_tick);
                 match producer.send_ack(TickAck { engine_id: engine_id.to_string(), hour: clock_tick }).await.unwrap() {
                     Ok(_) => {
                         if clock_tick == config.get_hours() {
@@ -141,7 +141,7 @@ impl Epidemiology {
                 let rate_of_spread = counts_at_hr.get_infected() - infection_count_for_yesterday;
                 match hospital_intervention {
                     Some(x) if rate_of_spread >= x.spread_rate_threshold => {
-                        println!("Increasing the hospital size");
+                        info!("Increasing the hospital size");
                         self.grid.increase_hospital_size(config.get_grid_size());
 
                         listeners.grid_updated(&self.grid);
@@ -169,7 +169,7 @@ impl Epidemiology {
 
             match vaccinations.get(&simulation_hour) {
                 Some(vac_percent) => {
-                    println!("Vaccination");
+                    info!("Vaccination");
                     Epidemiology::vaccinate(*vac_percent, &mut write_buffer_reference, &mut rng);
                 }
                 _ => {}
@@ -180,7 +180,7 @@ impl Epidemiology {
             }
 
             if simulation_hour % 100 == 0 {
-                println!("Throughput: {} iterations/sec; simulation hour {} of {}",
+                info!("Throughput: {} iterations/sec; simulation hour {} of {}",
                          simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
                          simulation_hour, config.get_hours());
             }
@@ -190,8 +190,8 @@ impl Epidemiology {
             }
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();
-        println!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
-        println!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
+        info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
+        info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         listeners.simulation_ended();
     }
 
@@ -244,7 +244,7 @@ impl Epidemiology {
     }
 
     fn lock_city(write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper, lockdown_details: &Lockdown) {
-        println!("Locking the city");
+        info!("Locking the city");
         for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
             if rng.get().gen_bool(1.0 - lockdown_details.essential_workers_population) {
                 agent.set_isolation(true);
@@ -253,7 +253,7 @@ impl Epidemiology {
     }
 
     fn unlock_city(write_buffer_reference: &mut AgentLocationMap) {
-        println!("unlocking city");
+        info!("unlocking city");
         for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
             if agent.is_isolated() {
                 agent.set_isolation(false);

@@ -25,6 +25,8 @@ geo-types = "0.4.3"
 geo = "0.12.2"
 geojson = "0.17.0"
 plotters = "^0.2.12"
+log = "0.4"
+env_logger = "0.7"
 
 [profile.release]
 opt-level = 3

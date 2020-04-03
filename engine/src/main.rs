@@ -20,6 +20,8 @@
 extern crate clap;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate log;
 
 use clap::{App, Arg};
 
@@ -48,6 +50,7 @@ const STANDALONE_SIM_ID: &str = "0";
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let matches = App::new("EpiRust")
         .version("0.1")
         .about("Epidemiology Simulations in Rust")
@@ -82,7 +85,7 @@ async fn main() {
     };
 
     if daemon {
-        println!("Started in daemon mode");
+        info!("Started in daemon mode");
         let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
         consumer.listen_loop(&run_mode).await;
     } else {
@@ -103,7 +106,7 @@ async fn main() {
 
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, STANDALONE_SIM_ID.to_string());
         epidemiology.run(&config, &run_mode).await;
-        println!("Done");
+        info!("Done");
     }
 }
 

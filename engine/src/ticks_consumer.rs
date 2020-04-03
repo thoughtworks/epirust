@@ -44,7 +44,7 @@ pub fn start(engine_id: &str) -> StreamConsumer {
 pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Option<i32> {
     match msg {
         None => {
-            println!("End of tick stream");
+            debug!("End of tick stream");
             None
         },
         Some(m) => {

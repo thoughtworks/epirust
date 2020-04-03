@@ -5,7 +5,8 @@ export const BaseColors = {
     RED: "#e74c3c",
     GRAY_LIGHTER: "#f1f1f1",
     PINK: "#e83e8c",
-    GRAY: "#ccc"
+    GRAY: "#ccc",
+    BLACK: "black"
 }
 
 export const AreaColors = {

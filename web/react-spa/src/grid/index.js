@@ -22,7 +22,10 @@ import React from 'react';
 import gridLayout from '../resources/grid-layout';
 import LandmarksLayer from './LandmarksLayer';
 import AreasLayer from './AreasLayer';
+import AgentsLayer from './AgentsLayer';
 import { AreaColors } from './constants';
+import agentMovement from '../resources/agent-movement';
+
 
 export default function GridPage() {
     const { housing_area, work_area, transport_area, hospital_area } = gridLayout
@@ -60,6 +63,7 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
                 <AreasLayer areaDimensions={areaDimensions} />
                 {/* <LinesLayer /> */}
                 < LandmarksLayer landmarksDimensions={landmarksDimensions} />
+                < AgentsLayer agentPositions={agentMovement.agentsPerTick} />
             </GridContext.Provider>
         </div>
     )

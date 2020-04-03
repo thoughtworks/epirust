@@ -27,14 +27,14 @@ pub struct TickAck {
 }
 
 /// stores a record of all the acks received for a tick
-pub struct TickAcks<'a> {
+pub struct TickAcks {
     acks: HashMap<String, i32>,
     current_hour: i32,
-    engines: Vec<&'a str>,
+    engines: Vec<String>,
 }
 
-impl TickAcks<'_> {
-    pub fn new(engines: Vec<&str>) -> TickAcks {
+impl TickAcks {
+    pub fn new(engines: Vec<String>) -> TickAcks {
         TickAcks {
             acks: HashMap::new(),
             current_hour: 0,
@@ -56,7 +56,7 @@ impl TickAcks<'_> {
             println!("Received a duplicate ack for engine: {}", ack.engine_id);
             return;
         }
-        if !self.engines.contains(&ack.engine_id.as_str()) {
+        if !self.engines.contains(&ack.engine_id) {
             println!("Received an ack from an unknown engine: {}", ack.engine_id);
             return;
         }
@@ -74,7 +74,7 @@ mod tests {
 
     #[test]
     fn should_push_ack() {
-        let engines = vec!["engine1", "engine2"];
+        let engines = vec!["engine1".to_string(), "engine2".to_string()];
         let mut acks = TickAcks::new(engines);
         acks.reset(22);
         let ack = TickAck { engine_id: "engine1".to_string(), hour: 22 };
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn should_reset_current_hr() {
-        let engines = vec!["engine1", "engine2"];
+        let engines = vec!["engine1".to_string(), "engine2".to_string()];
         let mut acks = TickAcks::new(engines);
         assert_eq!(acks.current_hour, 0);
         acks.reset(22);

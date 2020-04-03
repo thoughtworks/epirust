@@ -15,9 +15,9 @@ impl KafkaProducer {
         }
     }
 
-    pub fn start_request(&mut self, request: String) -> DeliveryFuture {
+    pub fn start_request(&mut self, request: &String) -> DeliveryFuture {
         let record: FutureRecord<String, String> = FutureRecord::to("simulation_requests")
-            .payload(&request);
+            .payload(request);
         println!("Sent simulation request");
         self.producer.send(record, 0)
     }

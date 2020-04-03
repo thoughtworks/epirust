@@ -27,15 +27,17 @@ use std::io::Read;
 use std::ops::Range;
 
 use futures::StreamExt;
+use rdkafka::{ClientConfig, Message};
+use rdkafka::admin::{AdminClient, AdminOptions};
+use rdkafka::client::DefaultClientContext;
 use rdkafka::error::KafkaError;
-use rdkafka::{Message, ClientConfig};
 use rdkafka::message::BorrowedMessage;
+
+
 
 use crate::kafka_consumer::KafkaConsumer;
 use crate::kafka_producer::KafkaProducer;
 use crate::ticks::{TickAck, TickAcks};
-use rdkafka::admin::{AdminClient, AdminOptions};
-use rdkafka::client::DefaultClientContext;
 
 mod kafka_producer;
 mod kafka_consumer;
@@ -43,11 +45,13 @@ mod ticks;
 
 #[tokio::main]
 async fn main() {
-    let engines = vec!["engine1", "engine2"];
+    let sim_conf = read("config/simulation.json")
+        .expect("Unable to read configuration file");
+    let engines = parse_engine_names(&sim_conf);
     let hours = 0..10000;
 
     cleanup().await;
-    start(engines, hours).await;
+    start(engines, hours, &sim_conf).await;
 }
 
 async fn cleanup() {
@@ -61,17 +65,16 @@ async fn cleanup() {
     }
 }
 
-async fn start(engines: Vec<&str>, hours: Range<i32>) {
+async fn start(engines: Vec<String>, hours: Range<i32>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();
 
-    let sim_conf = read("config/simulation.json").expect("Unable to read configuration file");
     match producer.start_request(sim_conf).await.unwrap() {
         Ok(_) => { start_ticking(engines, hours).await; }
         Err(_) => { panic!("Failed to send simulation request to engines"); }
     }
 }
 
-async fn start_ticking(engines: Vec<&str>, hours: Range<i32>) {
+async fn start_ticking(engines: Vec<String>, hours: Range<i32>) {
     let mut acks: TickAcks = TickAcks::new(engines);
     let mut producer = KafkaProducer::new();
     let consumer = KafkaConsumer::new();
@@ -114,4 +117,15 @@ fn parse_message(message: Result<BorrowedMessage, KafkaError>) -> Result<TickAck
     let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
     println!("Received: {}", parsed_message);
     serde_json::from_str(parsed_message).map_err(|e| e.into())
+}
+
+fn parse_engine_names(sim_conf: &String) -> Vec<String> {
+    let engine_ids: Vec<EngineId> = serde_json::from_str(sim_conf).expect("Failed to parse simulation config");
+    engine_ids.iter().map(|e| e.engine_id.clone()).collect()
+}
+
+// just a struct for easier parsing
+#[derive(Deserialize)]
+struct EngineId {
+    engine_id: String,
 }

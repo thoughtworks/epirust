@@ -18,6 +18,7 @@
  */
 import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
+import { LandmarkColors } from './constants';
 
 export default function LandmarksLayer({ landmarksDimensions }) {
     const { cellDimension, lineWidth, canvasDimension } = useContext(GridContext);
@@ -40,8 +41,8 @@ export default function LandmarksLayer({ landmarksDimensions }) {
         landmarksCanvasContext.lineWidth = lineWidth;
 
         [
-            { landmark: landmarksDimensions.housesDimensions, color: "#f1f1f1" },
-            { landmark: landmarksDimensions.officesDimensions, color: "#e83e8c" }
+            { landmark: landmarksDimensions.housesDimensions, color: LandmarkColors.HOUSES },
+            { landmark: landmarksDimensions.officesDimensions, color: LandmarkColors.OFFICES }
         ].forEach((landmarkObject) => {
             landmarksCanvasContext.strokeStyle = landmarkObject.color
 

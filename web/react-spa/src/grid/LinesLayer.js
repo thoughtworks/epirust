@@ -19,6 +19,7 @@
 
  import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
+import { BaseColors } from './constants';
 export default function LinesLayer() {
 
     const { cellDimension, lineWidth, canvasDimension, size } = useContext(GridContext);
@@ -38,7 +39,7 @@ export default function LinesLayer() {
         if (!lineCanvasContext || lineWidth === 0)
             return
 
-        lineCanvasContext.strokeStyle = "#f1f1f1";
+        lineCanvasContext.strokeStyle = BaseColors.GRAY_LIGHTER;
         lineCanvasContext.lineWidth = lineWidth;
 
         for (let x = 0; x < size; x++) {

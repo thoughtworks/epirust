@@ -18,6 +18,7 @@
  */
 import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
+import { AreaColors } from './constants';
 
 export default function AreasLayer({ areaDimensions }) {
 
@@ -47,7 +48,7 @@ export default function AreasLayer({ areaDimensions }) {
                 }
             }
 
-            const color = area ? area.color : "#ccc";
+            const color = area ? area.color : AreaColors.OTHER;
 
             if (areasCanvasContext.fillStyle !== color) {
                 areasCanvasContext.fillStyle = color;

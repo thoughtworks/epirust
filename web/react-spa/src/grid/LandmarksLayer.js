@@ -39,29 +39,23 @@ export default function LandmarksLayer({ landmarksDimensions }) {
 
         landmarksCanvasContext.lineWidth = lineWidth;
 
-        landmarksCanvasContext.strokeStyle = "#f1f1f1";
-        landmarksDimensions.housesDimensions.forEach(element => {
-            const startX = element.start_offset.x;
-            const startY = element.start_offset.y;
+        [
+            { landmark: landmarksDimensions.housesDimensions, color: "#f1f1f1" },
+            { landmark: landmarksDimensions.officesDimensions, color: "#e83e8c" }
+        ].forEach((landmarkObject) => {
+            landmarksCanvasContext.strokeStyle = landmarkObject.color
 
-            const width = element.end_offset.x - startX
-            const height = element.end_offset.y - startY
+            landmarkObject.landmark.forEach((element) => {
 
-            landmarksCanvasContext.strokeRect((startX * cellDimension) + lineWidth / 2, (startY * cellDimension) + lineWidth / 2, width * cellDimension, height * cellDimension);
+                const startX = element.start_offset.x;
+                const startY = element.start_offset.y;
+
+                const width = element.end_offset.x - startX
+                const height = element.end_offset.y - startY
+
+                landmarksCanvasContext.strokeRect((startX * cellDimension) + lineWidth / 2, (startY * cellDimension) + lineWidth / 2, width * cellDimension, height * cellDimension);
+            });
         });
-
-
-        landmarksCanvasContext.strokeStyle = "#e83e8c";
-        landmarksDimensions.officesDimensions.forEach(element => {
-            const startX = element.start_offset.x;
-            const startY = element.start_offset.y;
-
-            const width = element.end_offset.x - startX
-            const height = element.end_offset.y - startY
-
-            landmarksCanvasContext.strokeRect((startX * cellDimension) + lineWidth / 2, (startY * cellDimension) + lineWidth / 2, width * cellDimension, height * cellDimension);
-        });
-
     }, [landmarksCanvasContext, cellDimension, lineWidth, landmarksDimensions])
 
     return (

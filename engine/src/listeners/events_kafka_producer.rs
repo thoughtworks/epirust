@@ -74,10 +74,12 @@ impl Listener for EventsKafkaProducer {
             .payload(&message);
         self.producer.send(record, 0);
 
-        let record2: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
-            .key(&self.sim_id)
-            .payload(&message);
-        self.producer.send(record2, 0);
+        if self.enable_citizen_state_messages {
+            let record2: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
+                .key(&self.sim_id)
+                .payload(&message);
+            self.producer.send(record2, 0);
+        }
     }
 
     fn citizen_state_updated(&mut self, hr: i32, citizen: &Citizen, location: &Point) {

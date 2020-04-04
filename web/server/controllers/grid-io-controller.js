@@ -17,7 +17,7 @@
  *
  */
 
-const {Simulation, SimulationStatus} = require("../db/models/Simulation");
+const {Simulation} = require("../db/models/Simulation");
 const Grid = require("../db/models/Grid");
 
 function sendGridData(socket, lastConsumedId) {
@@ -38,7 +38,7 @@ function sendGridData(socket, lastConsumedId) {
     const promise = findLastRecordQuery.exec();
 
     await promise.then((simulation) => {
-      if (simulation.status === SimulationStatus.FINISHED) {
+      if (simulation.grid_consumption_finished) {
         socket.emit('gridData', {"simulation_ended": true});
       } else sendGridData(socket, id);
     })

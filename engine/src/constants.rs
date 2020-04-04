@@ -34,6 +34,5 @@ pub const ROUTINE_END_TIME: i32 = 23;
 
 pub const IMMUNITY_RANGE: [i32; 5] = [-2, -1, 0, 1, 2];
 
-pub const BUILDING:&str = &"building";
 pub const HOME_SIZE: i32 = 2;
 pub const OFFICE_SIZE: i32 = 10;

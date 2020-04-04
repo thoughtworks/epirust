@@ -33,6 +33,7 @@ pub struct Vaccinate {
 }
 
 impl Vaccinate {
+    #[cfg(test)]
     pub fn new(at_hour: i32, percent: f64) -> Vaccinate {
         Vaccinate { at_hour, percent }
     }
@@ -46,6 +47,7 @@ pub struct Lockdown {
 }
 
 impl Lockdown {
+    #[cfg(test)]
     pub fn new(at_number_of_infections: i32, essential_workers_population: f64, lock_down_period: i32) -> Lockdown {
         Lockdown { at_number_of_infections, essential_workers_population, lock_down_period}
     }

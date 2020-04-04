@@ -17,9 +17,6 @@
  *
  */
 
-use std::collections::HashMap;
-use std::fs::File;
-
 use rand::Rng;
 use serde::Deserialize;
 
@@ -36,13 +33,18 @@ pub struct Disease {
 }
 
 impl Disease {
+    #[cfg(test)]
     pub fn init(config_file_path: &str, disease_name: &String) -> Disease {
+        use std::collections::HashMap;
+        use std::fs::File;
+
         let reader = File::open(config_file_path).expect("Failed to open disease config file");
         let yaml: HashMap<String, Disease> = serde_yaml::from_reader(reader).expect("Failed to parse disease config file");
         let disease = yaml.get(disease_name).expect("Failed to find disease");
         *disease
     }
 
+    #[cfg(test)]
     pub fn new(regular_transmission_start_day: i32, high_transmission_start_day: i32, last_day: i32,
                regular_transmission_rate: f64, high_transmission_rate: f64, death_rate: f64) -> Disease {
         Disease {
@@ -93,6 +95,7 @@ pub struct DiseaseOverride {
 }
 
 impl DiseaseOverride {
+    #[cfg(test)]
     pub fn new(population_param: String, values: Vec<String>, disease: Disease) -> DiseaseOverride {
         DiseaseOverride {
             population_param, values, disease

@@ -18,8 +18,9 @@
  */
 
 use geojson::{Feature, GeoJson};
-use crate::constants::BUILDING;
 use std::collections::HashMap;
+
+pub const BUILDING:&str = &"building";
 
 struct Buildings {
     building_type: String,

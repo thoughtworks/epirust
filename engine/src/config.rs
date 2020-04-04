@@ -46,9 +46,9 @@ impl Config {
         self.population.clone()
     }
 
-    pub fn get_disease_overrides(&self) -> Vec<DiseaseOverride> {
-        self.disease_overrides.clone()
-    }
+    // pub fn get_disease_overrides(&self) -> Vec<DiseaseOverride> {
+    //     self.disease_overrides.clone()
+    // }
 
     pub fn get_grid_size(&self) -> i32 {
         self.grid_size
@@ -70,6 +70,7 @@ impl Config {
         self.enable_citizen_state_messages
     }
 
+    #[cfg(test)]
     pub fn new(population: Population, disease: Disease, disease_overrides: Vec<DiseaseOverride>,
                grid: i32, hours: i32, interventions: Vec<Intervention>, output_file: Option<String>)
                -> Config {

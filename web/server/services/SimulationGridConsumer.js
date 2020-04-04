@@ -36,8 +36,8 @@ class SimulationGridConsumer {
   async start() {
     for await (const data of this.kafkaConsumer.consumerStream) {
       const parsedMessage = JSON.parse(data.value);
-      const simulationId = data.key.toString();
-      parsedMessage["simulation_id"] = parseInt(simulationId);
+      const simulationId = parseInt(data.key.toString());
+      parsedMessage["simulation_id"] = simulationId;
 
       if('simulation_ended' in parsedMessage) {
         const query = {simulation_id: simulationId};

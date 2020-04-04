@@ -17,7 +17,7 @@
  *
  */
 
-const {Simulation} = require("../db/models/Simulation");
+const {Simulation, SimulationStatus} = require("../db/models/Simulation");
 const Count = require("../db/models/Count");
 
 function sendCountsData(socket, lastConsumedHour) {
@@ -35,11 +35,11 @@ function sendCountsData(socket, lastConsumedHour) {
       currentHour = data.hour;
       socket.emit('epidemicStats', data);
     }
-    const findLastRecordQuery = Simulation.findOne({}, {grid_consumption_finished: 1}, {sort: {'_id': -1}});
+    const findLastRecordQuery = Simulation.findOne({}, {status: 1}, {sort: {'_id': -1}});
     const promise = findLastRecordQuery.exec();
 
     await promise.then((simulation) => {
-      if (simulation.grid_consumption_finished) {
+      if (simulation.status === SimulationStatus.FINISHED) {
         socket.emit('epidemicStats', {"simulation_ended": true});
       } else sendCountsData(socket, currentHour);
     })

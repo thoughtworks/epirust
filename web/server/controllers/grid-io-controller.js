@@ -18,7 +18,7 @@
  */
 
 const {Simulation} = require("../db/models/Simulation");
-const Grid = require("../db/models/Grid");
+const {Grid} = require("../db/models/Grid");
 
 function sendGridData(socket, lastConsumedId) {
   const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
@@ -34,7 +34,7 @@ function sendGridData(socket, lastConsumedId) {
       id = data._id;
       socket.emit('gridData', data);
     }
-    const findLastRecordQuery = Simulation.findOne({}, {status: 1}, {sort: {'_id': -1}});
+    const findLastRecordQuery = Simulation.findOne({}, {grid_consumption_finished: 1}, {sort: {'_id': -1}});
     const promise = findLastRecordQuery.exec();
 
     await promise.then((simulation) => {

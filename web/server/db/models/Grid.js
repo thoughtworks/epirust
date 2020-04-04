@@ -42,6 +42,7 @@ const citizenStateSchema = new Schema({
 
 const gridSchema = new Schema({
   simulation_id: {type: Number, required: true},
+
   grid_size: Number,
   housing_area: AreaSchema,
   work_area: AreaSchema,

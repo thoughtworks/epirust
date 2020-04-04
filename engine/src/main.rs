@@ -111,7 +111,7 @@ async fn main() {
     }
 }
 
-enum RunMode {
+pub enum RunMode {
     //run once and exit
     Standalone,
 

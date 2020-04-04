@@ -43,7 +43,9 @@ impl KafkaConsumer<'_> {
                 }
                 Ok(request) => {
                     self.run_sim(request, run_mode).await;
-                    return
+                    if let RunMode::MultiEngine { engine_id } = run_mode {
+                        return;
+                    }
                 }
             };
         }

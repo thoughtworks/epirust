@@ -20,18 +20,20 @@
 const {Simulation} = require("../db/models/Simulation");
 const {Grid} = require("../db/models/Grid");
 
-function sendGridData(socket, lastConsumedId) {
+function sendGridData(socket, totalConsumerRecords) {
   const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
   const promise = findLastRecordQuery.exec();
 
   promise.then(async (simulation) => {
-    let query = {simulation_id: simulation.simulation_id, _id: {$gt: lastConsumedId}};
-    if(lastConsumedId === null) delete query._id;
-    let cursor = Grid.find(query, {}, {sort: {'_id': 1}}).cursor();
+    let query = {simulation_id: simulation.simulation_id};
+    let cursor = Grid
+      .find(query, {}, {sort: {'_id': 1}})
+      .skip(totalConsumerRecords)
+      .cursor();
 
-    let id;
+    let countOfMessagesConsumed = 0;
     for await(const data of cursor) {
-      id = data._id;
+      countOfMessagesConsumed += 1;
       socket.emit('gridData', data);
     }
     const findLastRecordQuery = Simulation.findOne({}, {grid_consumption_finished: 1}, {sort: {'_id': -1}});
@@ -40,13 +42,13 @@ function sendGridData(socket, lastConsumedId) {
     await promise.then((simulation) => {
       if (simulation.grid_consumption_finished) {
         socket.emit('gridData', {"simulation_ended": true});
-      } else sendGridData(socket, id);
+      } else sendGridData(socket, totalConsumerRecords + countOfMessagesConsumed);
     })
   });
 }
 
 function handleRequest(socket) {
-  sendGridData(socket, null);
+  sendGridData(socket, 0);
   socket.on('disconnect', reason => console.log("Disconnect", reason));
 }
 

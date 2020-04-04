@@ -46,8 +46,9 @@ describe("Count controller", () => {
         const mockPromise = mockSimulationPromise(true);
         const mockExec = jest.fn().mockReturnValue(mockPromise);
         Simulation.findOne.mockReturnValue({'exec': mockExec});
-        let mockCursor = jest.fn().mockReturnValueOnce([{dummyKey: 'dummyValue', hour:1}]);
-        Grid.find.mockReturnValueOnce({cursor: mockCursor});
+        const mockCursor = jest.fn().mockReturnValueOnce([{dummyKey: 'dummyValue', hour:1}]);
+        const mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
+        Grid.find.mockReturnValueOnce({skip: mockSkip});
 
         handleGridRequest(mockSocket);
 
@@ -70,6 +71,9 @@ describe("Count controller", () => {
                 {},
                 {sort: {_id: 1}}
             ]);
+            expect(mockSkip).toHaveBeenCalledTimes(1);
+            expect(mockSkip).toHaveBeenCalledWith(0);
+
             done();
         })
     });
@@ -85,7 +89,8 @@ describe("Count controller", () => {
         const mockExec = jest.fn(() => docPromises.shift());
         Simulation.findOne.mockReturnValue({'exec': mockExec});
         const mockCursor = jest.fn(() => cursors.shift());
-        Grid.find.mockReturnValue({cursor: mockCursor});
+        const mockSkip = jest.fn().mockReturnValue({cursor: mockCursor});
+        Grid.find.mockReturnValue({skip: mockSkip});
 
         handleGridRequest(mockSocket);
 
@@ -115,10 +120,13 @@ describe("Count controller", () => {
                 {sort: {'_id': 1}}
             ]);
             expect(Grid.find.mock.calls[1]).toEqual([
-                {simulation_id: 'dummyId', _id: {$gt: 1}},
+                {simulation_id: 'dummyId'},
                 {},
                 {sort: {'_id': 1}}
             ]);
+            expect(mockSkip).toHaveBeenCalledTimes(2);
+            expect(mockSkip).toHaveBeenNthCalledWith(1, 0);
+            expect(mockSkip).toHaveBeenNthCalledWith(2, 1);
             done();
         });
     });
@@ -128,7 +136,8 @@ describe("Count controller", () => {
         const mockExec = jest.fn().mockReturnValue(mockPromise);
         Simulation.findOne.mockReturnValue({'exec': mockExec});
         let mockCursor = jest.fn().mockReturnValueOnce([]);
-        Grid.find.mockReturnValueOnce({cursor: mockCursor});
+        const mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
+        Grid.find.mockReturnValueOnce({skip: mockSkip});
         global.console = {
             log: jest.fn()
         };

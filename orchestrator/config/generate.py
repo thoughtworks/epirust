@@ -65,12 +65,12 @@ if __name__ == "__main__":
         print("Usage: generate.py [n_engines] [population]")
         sys.exit(1)
     engines = int(sys.argv[1])
-    population = sys.argv[2]
+    population = int(sys.argv[2])
     json_sample = json.loads(sample)
     grid_size = 250
-    if population == "100000":
+    if population == 100000:
         grid_size = 800
-    elif population == "1000000":
+    elif population == 1000000:
         grid_size = 2500
     json_sample["config"]["population"]["Auto"]["number_of_agents"] = population
     json_sample["config"]["grid_size"] = grid_size

@@ -47,7 +47,8 @@ describe("Count controller", () => {
         const mockExec = jest.fn().mockReturnValue(mockPromise);
         Simulation.findOne.mockReturnValue({'exec': mockExec});
         let mockCursor = jest.fn().mockReturnValueOnce([{dummyKey: 'dummyValue', hour:1}]);
-        Count.find.mockReturnValueOnce({cursor: mockCursor});
+        let mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
+        Count.find.mockReturnValueOnce({skip: mockSkip});
 
         handleCountsRequest(mockSocket);
 
@@ -65,8 +66,10 @@ describe("Count controller", () => {
             expect(Simulation.findOne.mock.calls[0]).toEqual([{}, {simulation_id: 1}, {sort: {'_id': -1}}]);
             expect(Simulation.findOne.mock.calls[1]).toEqual([{}, {status: 1}, {sort: {'_id': -1}}]);
             expect(Count.find).toHaveBeenCalledTimes(1);
+            expect(mockSkip).toHaveBeenCalledTimes(1);
+            expect(mockSkip).toBeCalledWith(0);
             expect(Count.find.mock.calls[0]).toEqual([
-                {simulation_id: 'dummyId', hour: {$gt: 0}},
+                {simulation_id: 'dummyId'},
                 {},
                 {sort: {'hour': 1}}
             ]);
@@ -74,7 +77,7 @@ describe("Count controller", () => {
         })
     });
 
-    it('should keep emit all counts until simulation has ended', (done) => {
+    it('should keep emitting all counts until simulation has ended', (done) => {
         const docPromises = [
             mockSimulationPromise('unfinished'),
             mockSimulationPromise('unfinished'),
@@ -85,7 +88,8 @@ describe("Count controller", () => {
         const mockExec = jest.fn(() => docPromises.shift());
         Simulation.findOne.mockReturnValue({'exec': mockExec});
         const mockCursor = jest.fn(() => cursors.shift());
-        Count.find.mockReturnValue({cursor: mockCursor});
+        const mockSkip = jest.fn().mockReturnValue({cursor: mockCursor});
+        Count.find.mockReturnValue({skip: mockSkip});
 
         handleCountsRequest(mockSocket);
 
@@ -110,15 +114,18 @@ describe("Count controller", () => {
             expect(Simulation.findOne.mock.calls[3]).toEqual([{}, {status: 1}, {sort: {'_id': -1}}]);
             expect(Count.find).toHaveBeenCalledTimes(2);
             expect(Count.find.mock.calls[0]).toEqual([
-                {simulation_id: 'dummyId', hour: {$gt: 0}},
+                {simulation_id: 'dummyId'},
                 {},
                 {sort: {'hour': 1}}
             ]);
             expect(Count.find.mock.calls[1]).toEqual([
-                {simulation_id: 'dummyId', hour: {$gt: 1}},
+                {simulation_id: 'dummyId'},
                 {},
                 {sort: {'hour': 1}}
             ]);
+            expect(mockSkip).toHaveBeenCalledTimes(2);
+            expect(mockSkip).toHaveBeenNthCalledWith(1, 0);
+            expect(mockSkip).toHaveBeenNthCalledWith(2, 1);
             done();
         });
     });

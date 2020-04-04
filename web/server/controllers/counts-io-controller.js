@@ -20,19 +20,19 @@
 const {Simulation, SimulationStatus} = require("../db/models/Simulation");
 const Count = require("../db/models/Count");
 
-function sendCountsData(socket, lastConsumedHour) {
+function sendCountsData(socket, totalConsumedRecords) {
   const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
   const promise = findLastRecordQuery.exec();
 
   promise.then(async (simulation) => {
-    let cursor = Count.find({
-      simulation_id: simulation.simulation_id,
-      hour: {$gt: lastConsumedHour}
-    }, {}, {sort: {'hour': 1}}).cursor();
+    let cursor = Count
+      .find({simulation_id: simulation.simulation_id}, {}, {sort: {'hour': 1}})
+      .skip(totalConsumedRecords)
+      .cursor();
 
-    let currentHour;
+    let recordsConsumedInThisGo = 0;
     for await(const data of cursor) {
-      currentHour = data.hour;
+      recordsConsumedInThisGo += 1;
       socket.emit('epidemicStats', data);
     }
     const findLastRecordQuery = Simulation.findOne({}, {status: 1}, {sort: {'_id': -1}});
@@ -41,7 +41,7 @@ function sendCountsData(socket, lastConsumedHour) {
     await promise.then((simulation) => {
       if (simulation.status === SimulationStatus.FINISHED) {
         socket.emit('epidemicStats', {"simulation_ended": true});
-      } else sendCountsData(socket, currentHour);
+      } else sendCountsData(socket, totalConsumedRecords + recordsConsumedInThisGo);
     })
   });
 }

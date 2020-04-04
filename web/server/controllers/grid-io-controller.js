@@ -24,8 +24,8 @@ function sendGridData(socket, lastConsumedId) {
   const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
   const promise = findLastRecordQuery.exec();
 
-  promise.then(async (doc) => {
-    let query = {simulation_id: doc.simulation_id, _id: {$gt: lastConsumedId}};
+  promise.then(async (simulation) => {
+    let query = {simulation_id: simulation.simulation_id, _id: {$gt: lastConsumedId}};
     if(lastConsumedId === null) delete query._id;
     let cursor = Grid.find(query, {}, {sort: {'_id': 1}}).cursor();
 
@@ -37,8 +37,8 @@ function sendGridData(socket, lastConsumedId) {
     const findLastRecordQuery = Simulation.findOne({}, {status: 1}, {sort: {'_id': -1}});
     const promise = findLastRecordQuery.exec();
 
-    await promise.then((doc) => {
-      if (doc.status === SimulationStatus.FINISHED) {
+    await promise.then((simulation) => {
+      if (simulation.status === SimulationStatus.FINISHED) {
         socket.emit('gridData', {"simulation_ended": true});
       } else sendGridData(socket, id);
     })

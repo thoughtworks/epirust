@@ -24,9 +24,9 @@ function sendCountsData(socket, lastConsumedHour) {
   const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
   const promise = findLastRecordQuery.exec();
 
-  promise.then(async (doc) => {
+  promise.then(async (simulation) => {
     let cursor = Count.find({
-      simulation_id: doc.simulation_id,
+      simulation_id: simulation.simulation_id,
       hour: {$gt: lastConsumedHour}
     }, {}, {sort: {'hour': 1}}).cursor();
 
@@ -38,8 +38,8 @@ function sendCountsData(socket, lastConsumedHour) {
     const findLastRecordQuery = Simulation.findOne({}, {status: 1}, {sort: {'_id': -1}});
     const promise = findLastRecordQuery.exec();
 
-    await promise.then((doc) => {
-      if (doc.status === SimulationStatus.FINISHED) {
+    await promise.then((simulation) => {
+      if (simulation.status === SimulationStatus.FINISHED) {
         socket.emit('epidemicStats', {"simulation_ended": true});
       } else sendCountsData(socket, currentHour);
     })

@@ -52,6 +52,29 @@ test('should get all simulations from database', async () => {
     }
     await Simulation.create(simulation).then(async () => {
         const simulations = await request.get('/simulation')
-        expect(simulations.text).toEqual(JSON.stringify([simulation]))
+        expect(simulations.body).toEqual([simulation])
+    })
+});
+
+test('should get a specific simulation from database using simulation id', async () => {
+    Simulation.deleteOne({}, () => { })
+    const simulation1 = {
+        "_id": "5e883fc4a2f0353799b71671",
+        "simulation_id": 1585987524000,
+        "__v": 0,
+        "grid_consumption_finished": true
+    }
+    const simulation2 = {
+        "_id": "5e883fc4a2f0353799b79987",
+        "simulation_id": 15859875242267,
+        "__v": 0,
+        "grid_consumption_finished": true
+    }
+    await Simulation.create(simulation1, simulation2).then(async () => {
+        await request.get('/simulation')
+            .query({ "simulation_id": 1585987524000 })
+            .then(response => {
+                expect(response.body).toEqual([simulation1])
+            })
     })
 });

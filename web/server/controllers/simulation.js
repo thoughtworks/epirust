@@ -66,8 +66,8 @@ router.post('/init', (req, res, next) => {
   const kafkaProducer = new KafkaServices.KafkaProducerService();
   kafkaProducer.send('simulation_requests', simulation_config);
 
-  const query = {simulation_id: simulationId};
-  const simulation = Simulation.update(query, query, {upsert: true});
+  const query = { simulation_id: simulationId };
+  const simulation = Simulation.update(query, query, { upsert: true });
   simulation.exec()
     .catch((err) => console.error("Failed to create Simulation entry ", err));
 
@@ -76,9 +76,15 @@ router.post('/init', (req, res, next) => {
 });
 
 router.get('/', async (req, res, next) => {
-  Simulation.find({}, function (err, simulations) {
-    res.json(simulations)
-  })
+  if (req.query.simulation_id) {
+    Simulation.find({ "simulation_id": req.query.simulation_id }, function (err, simulation) {
+      res.json(simulation)
+    })
+  } else {
+    Simulation.find({}, function (err, simulations) {
+      res.json(simulations)
+    })
+  }
 });
 
 module.exports = router;

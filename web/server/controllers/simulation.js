@@ -75,6 +75,12 @@ router.post('/init', (req, res, next) => {
   res.send({ status: "Simulation started" });
 });
 
+router.get('/', async (req, res, next) => {
+  Simulation.find({}, function (err, simulations) {
+    res.json(simulations)
+  })
+});
+
 module.exports = router;
 
 function modelInterventions(message) {

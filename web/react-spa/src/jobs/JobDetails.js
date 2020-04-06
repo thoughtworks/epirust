@@ -42,8 +42,12 @@ export const JobDetails = ({simulationId, details}) => {
       </ul>
       <Switch>
         <Route exact path={"/jobs/:id/time-series"}><TimeSeries simulationId={simulationId}/></Route>
-        {isGridEnabled ? <Route exact path={"/jobs/:id/grid"}><GridPage/></Route> : <Redirect to={`/jobs/${simulationId}/time-series`}/>}
-        <Route exact path={"/jobs/:id/config"}>Config</Route>
+        <Route exact path={"/jobs/:id/grid"}>
+            {isGridEnabled ? <GridPage/> : <Redirect to={`/jobs/${simulationId}/time-series`}/>}
+        </Route>}
+        <Route exact path={"/jobs/:id/config"}>
+            {details && <pre>{JSON.stringify(details.config, undefined, 4)}</pre>}
+        </Route>
       </Switch>
     </div>
   )

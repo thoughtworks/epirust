@@ -28,11 +28,13 @@ import {
   Switch,
   Route
 } from "react-router-dom";
+import {JobsList} from "./Jobs/JobsList";
 
 export const Routes = {
   HOME: "/",
   TIME_SERIES: "/time-series",
-  GRID: "/grid"
+  GRID: "/grid",
+  JOBS: "/jobs"
 };
 
 function App() {
@@ -44,6 +46,7 @@ function App() {
           <Route exact path={Routes.HOME}><SimulationConfiguration /></Route>
           <Route path={Routes.GRID}><GridPage/></Route>
           <Route path={Routes.TIME_SERIES}><TimeSeries /></Route>
+          <Route path={Routes.JOBS}><JobsList/></Route>
         </Switch>
       </div >
     </Router >

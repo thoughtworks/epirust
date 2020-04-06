@@ -30,6 +30,7 @@ export default function Header() {
                     <NavItem name={"Home"} linksTo={Routes.HOME} activeOnExactMatch={true} />
                     <NavItem name={"Time Series"} linksTo={Routes.TIME_SERIES} />
                     <NavItem name={"Grid Visualization"} linksTo={Routes.GRID} />
+                    <NavItem name={"Jobs"} linksTo={Routes.JOBS} />
 
                 </ul>
             </div>

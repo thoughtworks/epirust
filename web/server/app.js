@@ -30,7 +30,7 @@ const config = require("./config");
 const app = express();
 
 if (process.env.NODE_ENV !== "test") {
-  mongoose.connect(config.DATABASE_URL, {useNewUrlParser: true});
+  mongoose.connect(config.DATABASE_URL, { useNewUrlParser: true });
   mongoose.Promise = global.Promise;
   const db = mongoose.connection;
   db.on('error', console.error.bind(console, 'MongoDB connection error:'));
@@ -47,11 +47,11 @@ const io = require("socket.io")(server);
 setupIO(io);
 
 
-app.use(cors({origin: 'http://localhost:3001'}));
+app.use(cors({ origin: 'http://localhost:3001' }));
 app.use(logger('dev'));
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', router);
 
@@ -60,9 +60,10 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {

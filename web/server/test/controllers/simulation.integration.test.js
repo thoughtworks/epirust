@@ -30,20 +30,22 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 600000;
 
 let mongoServer;
 
-beforeAll(async () => {
+beforeAll(async done => {
     mongoServer = new MongoMemoryServer();
     const mongoUri = await mongoServer.getUri();
     await mongoose.connect(mongoUri, (err) => {
         if (err) console.error(err);
     });
+    done()
 });
 
-afterAll(async () => {
+afterAll(async done => {
     await mongoose.disconnect();
     await mongoServer.stop();
+    done()
 });
 
-test('should get all simulations from database', async () => {
+test('should get all simulations from database', async done => {
     const simulation = {
         "_id": "5e883fc4a2f0353799b71671",
         "simulation_id": 1585987524000.0,
@@ -53,10 +55,11 @@ test('should get all simulations from database', async () => {
     await Simulation.create(simulation).then(async () => {
         const simulations = await request.get('/simulation')
         expect(simulations.body).toEqual([simulation])
+        done()
     })
 });
 
-test('should get a specific simulation from database using simulation id', async () => {
+test('should get a specific simulation from database using simulation id', async done => {
     Simulation.deleteOne({}, () => { })
     const simulation1 = {
         "_id": "5e883fc4a2f0353799b71671",
@@ -75,6 +78,7 @@ test('should get a specific simulation from database using simulation id', async
             .query({ "simulation_id": 1585987524000 })
             .then(response => {
                 expect(response.body).toEqual([simulation1])
+                done()
             })
     })
 });

@@ -68,10 +68,19 @@ if __name__ == "__main__":
     population = int(sys.argv[2])
     json_sample = json.loads(sample)
     grid_size = 250
-    if population == 100000:
+    if population == 10000:
+        grid_size = 250
+    elif population == 100000:
         grid_size = 800
     elif population == 1000000:
         grid_size = 2500
+    elif population == 2000000:
+        grid_size = 3550
+    elif population == 5000000:
+        grid_size = 5660
+    else:
+        print("Unsupported population size")
+        sys.exit(1)
     json_sample["config"]["population"]["Auto"]["number_of_agents"] = population
     json_sample["config"]["grid_size"] = grid_size
     final = []

@@ -48,9 +48,9 @@ function TimeSeries() {
 
   return (
     <>
-      <FileDataInput onFileDataSubmit={handleFileData} />
       {fileData.length > 1 ? <Graph dataBuffer={fileData}/> : <SocketAwareGraph socket={socket}/>}
       <button className="btn btn-primary" onClick={startSocket}>Show Time Series</button>
+      <FileDataInput onFileDataSubmit={handleFileData} />
     </>
   )
 }

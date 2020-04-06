@@ -17,25 +17,18 @@
  *
  */
 
-
-import {Job} from "../../jobs/Job";
+import {Link, useRouteMatch} from "react-router-dom";
 import React from "react";
-import {render} from '@testing-library/react'
-import {BrowserRouter} from "react-router-dom";
 
-describe('Job', function () {
-  function getComponent(simulationId) {
-    return (
-      <BrowserRouter>
-        <Job status="running" simulationId={simulationId}/>
-      </BrowserRouter>
-
-    );
-  }
-
-  it('should render job lists', function () {
-    const component = render(getComponent(1234));
-
-    expect(component).toMatchSnapshot()
+export function NavItem({ name, linksTo, activeOnExactMatch = false }) {
+  let match = useRouteMatch({
+    path: linksTo,
+    exact: activeOnExactMatch
   });
-});
+
+  return (
+    <li className={`nav-item`}>
+      <Link className={`nav-link ${match ? "active" : ""}`} to={linksTo}>{name}</Link>
+    </li>
+  );
+}

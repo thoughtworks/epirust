@@ -17,25 +17,15 @@
  *
  */
 
-
-import {Job} from "../../jobs/Job";
+import {NavItem} from "../../common/NavItem";
 import React from "react";
-import {render} from '@testing-library/react'
+import {render} from "@testing-library/react";
 import {BrowserRouter} from "react-router-dom";
 
-describe('Job', function () {
-  function getComponent(simulationId) {
-    return (
-      <BrowserRouter>
-        <Job status="running" simulationId={simulationId}/>
-      </BrowserRouter>
+describe('NavItem', function () {
+  it('should render', function () {
+    const component = render(<BrowserRouter><NavItem name="Test" linksTo="/test"/></BrowserRouter>);
 
-    );
-  }
-
-  it('should render job lists', function () {
-    const component = render(getComponent(1234));
-
-    expect(component).toMatchSnapshot()
+    expect(component).toMatchSnapshot();
   });
 });

@@ -47,7 +47,7 @@ export const JobsList = () => {
         </ul>
       </div>
       <div className="col-9">
-        {id && <JobDetails simulationId={id}/>}
+        {id && <JobDetails simulationId={parseInt(id)} details={simulations.find(s => s.simulation_id === parseInt(id))}/>}
       </div>
     </div>);
   }

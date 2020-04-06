@@ -21,25 +21,35 @@ import React from "react";
 import TimeSeries from "../time-series";
 import "./job-details.scss"
 import {NavItem} from "../common/NavItem";
-import {Route, Switch} from "react-router-dom";
+import {Redirect, Route, Switch} from "react-router-dom";
 import GridPage from "../grid";
+import PropTypes from 'prop-types'
 
-export const JobDetails = ({simulationId}) => {
+export const JobDetails = ({simulationId, details}) => {
   const linkPrefix = `/jobs/${simulationId}`;
+
+  const isGridEnabled = details && details.config.enable_citizen_state_messages;
+
+  console.log(isGridEnabled);
 
   return (
     <div className="job-details" style={{paddingTop:4}}>
       <h4>Simulation: {simulationId}</h4>
       <ul className="nav nav-tabs">
         <NavItem name="Time Series" linksTo={`${linkPrefix}/time-series`} activeOnExactMatch={true}/>
-        <NavItem name="Grid" linksTo={`${linkPrefix}/grid`}/>
+        {isGridEnabled && <NavItem name="Grid" linksTo={`${linkPrefix}/grid`}/>}
         <NavItem name="Config" linksTo={`${linkPrefix}/config`}/>
       </ul>
       <Switch>
         <Route exact path={"/jobs/:id/time-series"}><TimeSeries simulationId={simulationId}/></Route>
-        <Route exact path={"/jobs/:id/grid"}><GridPage/></Route>
+        {isGridEnabled ? <Route exact path={"/jobs/:id/grid"}><GridPage/></Route> : <Redirect to={`/jobs/${simulationId}/time-series`}/>}
         <Route exact path={"/jobs/:id/config"}>Config</Route>
       </Switch>
     </div>
   )
+};
+
+JobDetails.propTypes = {
+    simulationId: PropTypes.number.isRequired,
+    details: PropTypes.object.isRequired
 };

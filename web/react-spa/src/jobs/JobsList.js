@@ -17,7 +17,7 @@
  *
  */
 
-import React from "react";
+import React, {useEffect, useState} from "react";
 import './jobs-list.scss'
 import {Job} from "./Job";
 import {JobDetails} from "./JobDetails";
@@ -25,23 +25,17 @@ import {Redirect, useParams} from 'react-router-dom';
 
 export const JobsList = () => {
   const {id, view} = useParams();
-  const simulations = [
-    {simulation_id: 123, status: "running"},
-    {simulation_id: 143, status: "finished"},
-    {simulation_id: 163, status: "failed"},
-    {simulation_id: 173, status: "finished"},
-    {simulation_id: 15453, status: "finished"},
-    {simulation_id: 1233, status: "finished"},
-    {simulation_id: 12343, status: "finished"},
-    {simulation_id: 172343, status: "finished"},
-    {simulation_id: 17133, status: "finished"},
-    {simulation_id: 1723433, status: "finished"},
-    {simulation_id: 17233, status: "finished"},
-    {simulation_id: 178233, status: "finished"},
-    {simulation_id: 17453, status: "finished"},
-    {simulation_id: 17553, status: "finished"},
-    {simulation_id: 1752353, status: "finished"},
-  ];
+  const [simulations, updateSimulations] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:3000/simulation/",
+      {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'}
+      })
+      .then(value => value.json())
+      .then(value => updateSimulations(value.reverse()))
+  }, []);
 
   if (id && !view) {
     return (<Redirect to={`/jobs/${id}/time-series`}/>);

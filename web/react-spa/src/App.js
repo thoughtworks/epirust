@@ -45,7 +45,6 @@ function App() {
         <Switch>
           <Route exact path={Routes.HOME}><SimulationConfiguration /></Route>
           <Route path={Routes.GRID}><GridPage/></Route>
-          <Route path={Routes.TIME_SERIES}><TimeSeries /></Route>
           <Route path={`${Routes.JOBS}/:id?/:view?`}><JobsList/></Route>
         </Switch>
       </div >

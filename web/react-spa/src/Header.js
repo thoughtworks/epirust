@@ -31,10 +31,9 @@ export default function Header() {
             <div className="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul className="navbar-nav mr-auto">
 
-                    <NavItem name={"Home"} linksTo={Routes.HOME} activeOnExactMatch={true} />
-                    <NavItem name={"Time Series"} linksTo={Routes.TIME_SERIES} />
+                    <NavItem name={"New Job"} linksTo={Routes.HOME} activeOnExactMatch={true} />
+                    <NavItem name={"Jobs"} linksTo={Routes.JOBS} />
                     <NavItem name={"Grid Visualization"} linksTo={Routes.GRID} />
-                    <NavItem name={"jobs"} linksTo={Routes.JOBS} />
 
                 </ul>
             </div>

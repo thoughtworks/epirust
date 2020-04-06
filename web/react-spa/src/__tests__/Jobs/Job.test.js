@@ -17,33 +17,25 @@
  *
  */
 
-.borderless {
-  border: none;
-}
 
-.card-body-less-padding {
-  padding: 0.5rem;
-}
+import {Job} from "../../Jobs/Job";
+import React from "react";
+import {render} from '@testing-library/react'
+import {BrowserRouter} from "react-router-dom";
 
-.item-less-padding {
-  padding: 0.25rem 1.25rem
-}
+describe('Job', function () {
+  function getComponent(simulationId) {
+    return (
+      <BrowserRouter>
+        <Job status="running" simulationId={simulationId}/>
+      </BrowserRouter>
 
-.job-status {
-  font-size: 22px;
-  font-weight: bold;
-  line-height: 26px;
-}
-
-.minor-details {
-  font-size: 16px;
-}
-
-.no-link-formatting {
-  color: white;
-  text-decoration: none;
-  &:focus, &:hover, &:visited, &:link, &:active {
-    text-decoration: none;
-    color: white;
+    );
   }
-}
+
+  it('should render job lists', function () {
+    const component = render(getComponent(1234));
+
+    expect(component).toMatchSnapshot()
+  });
+});

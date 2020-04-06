@@ -19,6 +19,8 @@
 
 import React from "react";
 import './job.scss'
+import PropTypes from "prop-types";
+import {Link} from "react-router-dom";
 
 export const Job = ({simulationId, status}) => {
   const statusText = {
@@ -28,13 +30,20 @@ export const Job = ({simulationId, status}) => {
   };
 
   return (
-      <li className="list-group-item borderless item-less-padding">
-      <div className={`card ${status} clickable`}>
-        <div className="card-body card-body-less-padding">
-          <div className="job-status">{statusText[status]}</div>
-          <div className="minor-details">Simulation Id: {simulationId} </div>
+    <li className="list-group-item borderless item-less-padding">
+      <Link to={`/jobs/${simulationId}`} className={'no-link-formatting'}>
+        <div className={`card ${status}`}>
+          <div className="card-body card-body-less-padding">
+            <div className="job-status">{statusText[status]}</div>
+            <div className="minor-details">Simulation Id: {simulationId} </div>
+          </div>
         </div>
-      </div>
+      </Link>
     </li>
   );
+};
+
+Job.propTypes = {
+  simulationId: PropTypes.number.isRequired,
+  status: PropTypes.oneOf(["running", "finished", "failed"]).isRequired
 };

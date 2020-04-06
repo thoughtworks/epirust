@@ -46,7 +46,7 @@ Prerequisites:
 
 Running:
 - Go to the `engine` directory: `cd engine/`
-- Run `cargo run --release`
+- Run `RUST_LOG=info cargo run --release`
 - To modify the settings, or run with custom settings, use `cargo run --release -- -c config/[your-config].json`. Refer to `default.json` for the available settings.
 
 #### Visualization:

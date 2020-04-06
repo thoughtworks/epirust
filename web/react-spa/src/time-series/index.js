@@ -18,41 +18,27 @@
  */
 
 
-import Graph from "./LineGraph";
 import SocketAwareGraph from "./SocketAwareGraph";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import io from "socket.io-client";
-import FileDataInput from "./FileDataInput";
+import PropTypes from 'prop-types'
 
-function TimeSeries() {
+function TimeSeries({simulationId}) {
   const [socket, setSocket] = useState(null);
-  const [fileData, setFileData] = useState([]);
 
-  function startSocket() {
-    if (socket) {
-      socket.close();
-      setSocket(null);
-    }
-
+  useEffect(() => {
     setSocket(io('http://localhost:3000/counts'));
-
-  }
-
-  function handleFileData(data) {
-    if (socket) {
-      socket.close();
-      setSocket(null);
-    }
-    setFileData(data)
-  }
+  }, []);
 
   return (
     <>
-      {fileData.length > 1 ? <Graph dataBuffer={fileData}/> : <SocketAwareGraph socket={socket}/>}
-      <button className="btn btn-primary" onClick={startSocket}>Show Time Series</button>
-      <FileDataInput onFileDataSubmit={handleFileData} />
+      <SocketAwareGraph socket={socket} simulationId={simulationId}/>
     </>
   )
 }
+
+TimeSeries.propTypes = {
+  simulationId: PropTypes.number.isRequired
+};
 
 export default TimeSeries;

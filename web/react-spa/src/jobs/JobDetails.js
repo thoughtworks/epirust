@@ -36,7 +36,7 @@ export const JobDetails = ({simulationId}) => {
         <NavItem name="Config" linksTo={`${linkPrefix}/config`}/>
       </ul>
       <Switch>
-        <Route exact path={"/jobs/:id/time-series"}><TimeSeries/></Route>
+        <Route exact path={"/jobs/:id/time-series"}><TimeSeries simulationId={simulationId}/></Route>
         <Route exact path={"/jobs/:id/grid"}><GridPage/></Route>
         <Route exact path={"/jobs/:id/config"}>Config</Route>
       </Switch>

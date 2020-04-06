@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Graph from './LineGraph';
 import PropTypes from 'prop-types'
 
-export default function SocketAwareGraph({ socket }) {
+export default function SocketAwareGraph({ socket, simulationId }) {
     const [dataBuffer, setDataBuffer] = useState([]);
     const [simulationEnded, setSimulationEnded] = useState(false);
     useEffect(() => {
@@ -13,6 +13,7 @@ export default function SocketAwareGraph({ socket }) {
         }
 
         let buff = [];
+        socket.emit('simulation_id', simulationId);
 
         socket.on('epidemicStats', function (messageRaw) {
             const message = messageRaw;
@@ -37,11 +38,12 @@ export default function SocketAwareGraph({ socket }) {
                 setSimulationEnded(true)
             }
         });
-    }, [socket])
+    }, [socket, simulationId]);
 
     return <Graph dataBuffer={dataBuffer} enableExport={simulationEnded}/>
 }
 
 SocketAwareGraph.propTypes = {
-    socket: PropTypes.object
-}
+    socket: PropTypes.object,
+    simulationId: PropTypes.number.isRequired
+};

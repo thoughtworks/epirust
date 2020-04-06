@@ -20,34 +20,32 @@
 const {Simulation, SimulationStatus} = require("../db/models/Simulation");
 const Count = require("../db/models/Count");
 
-function sendCountsData(socket, totalConsumedRecords) {
-  const findLastRecordQuery = Simulation.findOne({}, {simulation_id: 1}, {sort: {'_id': -1}});
+async function sendCountsData(simulationId, socket, totalConsumedRecords) {
+  let cursor = Count
+    .find({simulation_id: simulationId}, {}, {sort: {'hour': 1}})
+    .skip(totalConsumedRecords)
+    .cursor();
+
+  let recordsConsumedInThisGo = 0;
+  for await(const data of cursor) {
+    recordsConsumedInThisGo += 1;
+    socket.emit('epidemicStats', data);
+  }
+  const findLastRecordQuery = Simulation.findOne({simulation_id: simulationId}, {status: 1});
   const promise = findLastRecordQuery.exec();
 
-  promise.then(async (simulation) => {
-    let cursor = Count
-      .find({simulation_id: simulation.simulation_id}, {}, {sort: {'hour': 1}})
-      .skip(totalConsumedRecords)
-      .cursor();
-
-    let recordsConsumedInThisGo = 0;
-    for await(const data of cursor) {
-      recordsConsumedInThisGo += 1;
-      socket.emit('epidemicStats', data);
-    }
-    const findLastRecordQuery = Simulation.findOne({}, {status: 1}, {sort: {'_id': -1}});
-    const promise = findLastRecordQuery.exec();
-
-    await promise.then((simulation) => {
-      if (simulation.status === SimulationStatus.FINISHED) {
-        socket.emit('epidemicStats', {"simulation_ended": true});
-      } else sendCountsData(socket, totalConsumedRecords + recordsConsumedInThisGo);
-    })
-  });
+  await promise.then((simulation) => {
+    if (simulation.status === SimulationStatus.FINISHED) {
+      socket.emit('epidemicStats', {"simulation_ended": true});
+    } else sendCountsData(simulationId, socket, totalConsumedRecords + recordsConsumedInThisGo);
+  })
 }
 
 const handleRequest = (socket) => {
-  sendCountsData(socket, 0);
+  socket.on('simulation_id', (message) => {
+    sendCountsData(parseInt(message), socket, 0);
+  });
+
   socket.on('disconnect', reason => console.log("Disconnect", reason));
 };
 

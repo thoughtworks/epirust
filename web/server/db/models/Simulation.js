@@ -30,6 +30,7 @@ Object.freeze(SimulationStatus);
 const simulationSchema = new Schema({
   simulation_id: {type: Number, required: true, unique: true},
   status: String,
+  config: Object,
   grid_consumption_finished: Boolean
 });
 

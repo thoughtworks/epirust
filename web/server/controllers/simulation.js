@@ -21,7 +21,7 @@
 const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
-const Simulation = require("../db/models/Simulation").Simulation;
+const {Simulation, SimulationStatus} = require("../db/models/Simulation");
 
 router.post('/init', (req, res, next) => {
   const message = req.body;
@@ -65,9 +65,17 @@ router.post('/init', (req, res, next) => {
   };
   const kafkaProducer = new KafkaServices.KafkaProducerService();
   kafkaProducer.send('simulation_requests', simulation_config);
-
-  const query = { simulation_id: simulationId };
-  const simulation = Simulation.update(query, query, { upsert: true });
+  const {sim_id, ...configToStore} = simulation_config;
+  const query = {simulation_id: simulationId};
+  const updateQuery = {
+    simulation_id: simulationId,
+    status: SimulationStatus.RUNNING,
+    config: configToStore
+  };
+  if (simulation_config.enable_citizen_state_messages) {
+    updateQuery["grid_consumption_finished"] = false;
+  }
+  const simulation = Simulation.update(query, updateQuery, {upsert: true});
   simulation.exec()
     .catch((err) => console.error("Failed to create Simulation entry ", err));
 

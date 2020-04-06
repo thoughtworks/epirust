@@ -32,12 +32,24 @@ impl Counts {
         Counts { hour: 0, susceptible: population, infected, quarantined: 0, recovered: 0, deceased: 0 }
     }
 
+    pub fn get_susceptible(&self) -> i32 {
+        self.susceptible
+    }
+
     pub fn get_infected(&self) -> i32 {
         self.infected
     }
 
     pub fn get_quarantined(&self) -> i32 {
         self.quarantined
+    }
+
+    pub fn get_recovered(&self) -> i32 {
+        self.recovered
+    }
+
+    pub fn get_deceased(&self) -> i32 {
+        self.deceased
     }
 
     pub fn get_hour(&self) -> i32 {

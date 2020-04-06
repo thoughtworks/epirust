@@ -75,7 +75,7 @@ impl Epidemiology {
     fn output_file_name(config: &Config, run_mode: &RunMode) -> String {
         let now: DateTime<Local> = SystemTime::now().into();
         let mut output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
-        if let RunMode::MultiEngine {engine_id} = run_mode  {
+        if let RunMode::MultiEngine { engine_id } = run_mode {
             output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
         }
         format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"))
@@ -107,7 +107,7 @@ impl Epidemiology {
         let mut producer = KafkaProducer::new();
 
         //todo stream should be started only in case of multi-sim mode
-        let engine_id = if let RunMode::MultiEngine {engine_id} = run_mode {
+        let engine_id = if let RunMode::MultiEngine { engine_id } = run_mode {
             engine_id
         } else {
             "n_a"
@@ -134,7 +134,7 @@ impl Epidemiology {
                     }
                     Err(_) => panic!("Failed while sending acknowledgement")
                 }
-                if terminate_engine{
+                if terminate_engine {
                     break;
                 }
             }
@@ -194,8 +194,10 @@ impl Epidemiology {
 
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
-                         simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
-                         simulation_hour, config.get_hours());
+                      simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
+                      simulation_hour, config.get_hours());
+                info!("S: {}, I: {}, Q: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_infected(),
+                      counts_at_hr.get_quarantined(), counts_at_hr.get_recovered(), counts_at_hr.get_deceased());
             }
 
             if start_of_day {

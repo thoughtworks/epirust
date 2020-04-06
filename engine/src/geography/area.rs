@@ -22,6 +22,7 @@ use rand::Rng;
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
 use std::slice::IterMut;
+use std::collections::HashSet;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize)]
 pub struct Area {
@@ -44,19 +45,15 @@ impl Area {
     //TODO improve randomness
     pub fn random_points(&self, number_of_points: i32, rng: &mut RandomWrapper) -> Vec<Point> {
         let mut points: Vec<Point> = Vec::with_capacity(number_of_points as usize);
+        let mut points_collision_checker: HashSet<Point> = HashSet::with_capacity(number_of_points as usize);
         let rng = rng.get();
         while points.len() != (number_of_points as usize) {
             let rand_x = rng.gen_range(self.start_offset.x, self.end_offset.x);
             let rand_y = rng.gen_range(self.start_offset.y, self.end_offset.y);
-            let mut is_duplicate = false;
-            for point in points.iter_mut() {
-                if *point == (Point::new(rand_x, rand_y)) {
-//                println!("Duplicate");
-                    is_duplicate = true;
-                }
-            }
-            if !is_duplicate {
-                points.push(Point { x: rand_x, y: rand_y });
+            let new_point = Point::new(rand_x, rand_y);
+            if !points_collision_checker.contains(&new_point) {
+                points.push(new_point);
+                points_collision_checker.insert(new_point);
             }
         }
         points

@@ -40,6 +40,7 @@ pub struct Grid {
 
 impl Grid {
     pub fn generate_population(&self, auto_pop: &AutoPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
+        debug!("Generating Population");
         let number_of_agents = auto_pop.number_of_agents;
         let working_percentage = auto_pop.working_percentage;
         let public_transport_percentage = auto_pop.public_transport_percentage;
@@ -48,10 +49,13 @@ impl Grid {
         let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
 
         let home_locations = self.housing_area.random_points(number_of_agents as i32, rng);
+        debug!("Finished generating home locations");
 
         let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32, rng);
+        debug!("Finished generating transport locations");
 
         let agent_list = agent::citizen_factory(number_of_agents, &self.houses, &self.offices, &transport_locations, public_transport_percentage, working_percentage, rng);
+        debug!("Finished creating agent list");
 
         self.draw(&home_locations, &self.houses, &self.offices);
         (home_locations, agent_list)

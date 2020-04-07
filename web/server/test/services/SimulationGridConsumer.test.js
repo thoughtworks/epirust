@@ -71,17 +71,21 @@ describe('Simulation Grid Consumer', () => {
     });
 
     it('should store citizen state when citizen state message is sent', async () => {
-        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummy_key":1}', key: "123"}]});
-        let saveMock = jest.fn();
-        CitizenState.mockReturnValueOnce({save: saveMock});
+        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummy_key":1, "hr":1}', key: "123"}]});
+        const execMock = jest.fn();
+        CitizenState.updateOne.mockReturnValueOnce({exec: execMock});
         const simulationConsumerGrid = new SimulationGridConsumer();
 
         await simulationConsumerGrid.start();
 
-        expect(CitizenState).toHaveBeenCalledTimes(1);
-        expect(CitizenState.mock.calls[0]).toEqual([{"dummy_key":1, "simulation_id": 123}]);
-        expect(saveMock).toHaveBeenCalledTimes(1);
-        expect(saveMock.mock.calls[0]).toEqual([])
+        expect(CitizenState.updateOne).toHaveBeenCalledTimes(1);
+        expect(CitizenState.updateOne).toHaveBeenCalledWith(
+            {hr:1, simulation_id: 123},
+            {dummy_key:1, hr:1, simulation_id: 123},
+            {upsert: true}
+        );
+        expect(execMock).toHaveBeenCalledTimes(1);
+        expect(execMock.mock.calls[0]).toEqual([])
     });
 });
 

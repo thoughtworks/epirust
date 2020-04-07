@@ -51,8 +51,8 @@ class SimulationGridConsumer {
         const grid = new Grid(parsedMessage);
         await grid.save();
       } else {
-        const citizenState = new CitizenState(parsedMessage);
-        await citizenState.save();
+        const updateQuery = CitizenState.updateOne({simulation_id: simulationId, hr: parsedMessage.hr}, parsedMessage, {upsert: true});
+        await updateQuery.exec()
       }
     }
   }

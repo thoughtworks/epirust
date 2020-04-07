@@ -64,7 +64,7 @@ export default function AreasLayer({ areaDimensions }) {
     }, [areasCanvasContext, size, cellDimension, lineWidth, areaDimensions])
 
     return (
-        <canvas ref={areasLayerCanvas} id="grid-canvas" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 1 }} />
+        <canvas ref={areasLayerCanvas} data-testid="grid-canvas" id="grid-canvas" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 1 }} />
     )
 }
 

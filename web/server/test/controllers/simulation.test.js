@@ -23,6 +23,9 @@ const request = supertest(app);
 
 jest.mock('../../services/kafka');
 jest.mock('../../db/models/Simulation');
+jest.mock("../../services/kafka");
+
+const KafkaServices = require("../../services/kafka");
 
 const {Simulation} = require('../../db/models/Simulation');
 
@@ -55,10 +58,6 @@ describe('simulation controller', () => {
         await app.close()
     });
 
-    beforeEach(() => {
-        jest.mock('../../services/kafka');
-    });
-
     afterEach(() => {
         jest.clearAllMocks()
     });
@@ -77,6 +76,30 @@ describe('simulation controller', () => {
         expect(simulationDocument.simulation_id).toBeTruthy();
         expect(simulationDocument.config).toMatchSnapshot();
         expect(simulationDocument.status).toEqual('in-queue');
+    });
+
+    it('should update simulation has failed when sending message on kafka has failed', async () => {
+        const mockSave = jest.fn().mockReturnValueOnce(Promise.resolve());
+        Simulation.mockReturnValueOnce({save: mockSave});
+        let mockFailingSend = jest.fn().mockRejectedValue(new Error("because we want to"));
+        KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockFailingSend});
+        const mockExec = jest.fn();
+        Simulation.updateOne.mockReturnValueOnce({exec: mockExec});
+
+        await request
+            .post('/simulation/init')
+            .send({ ...postData });
+
+        const simulationDocument = Simulation.mock.calls[0][0];
+        expect(Simulation).toHaveBeenCalledTimes(1);
+        expect(simulationDocument.simulation_id).toBeTruthy();
+        expect(simulationDocument.config).toMatchSnapshot();
+        expect(simulationDocument.status).toEqual('in-queue');
+        expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
+        expect(Simulation.updateOne.mock.calls[0][1]).toEqual({status: "failed"});
+        expect(Simulation.updateOne.mock.calls[0][0]).toHaveProperty('simulation_id')
+        expect(mockExec).toHaveBeenCalledTimes(1);
+        expect(mockExec.mock.calls[0]).toEqual([]);
     });
 
     it('should write simulation start request on kafka topic after simulation db insert', async done => {

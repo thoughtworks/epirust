@@ -73,9 +73,12 @@ router.post('/init', (req, res, next) => {
   simulation.save()
       .then(() => {
         const kafkaProducer = new KafkaServices.KafkaProducerService();
-        kafkaProducer.send('simulation_requests', simulation_config);
+        return kafkaProducer.send('simulation_requests', simulation_config).catch(err => {
+          console.error("Error occurred while sending kafka message", err);
+          return Simulation.updateOne({simulation_id: simulationId}, {status: SimulationStatus.FAILED}).exec()
+        });
       })
-    .catch((err) => console.error("Failed to create Simulation entry ", err));
+      .catch((err) => console.error("Failed to create Simulation entry ", err));
 
   res.status(200);
   res.send({ status: "Simulation started" });

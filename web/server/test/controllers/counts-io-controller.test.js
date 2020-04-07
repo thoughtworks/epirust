@@ -125,6 +125,38 @@ describe("Count controller", () => {
     });
   });
 
+  it('should send simulation ended if simulation has failed', (done) => {
+    const mockPromise = mockSimulationPromise('failed');
+    const mockExec = jest.fn().mockReturnValue(mockPromise);
+    Simulation.findOne.mockReturnValue({'exec': mockExec});
+    let mockCursor = jest.fn().mockReturnValueOnce([{dummyKey: 'dummyValue', hour: 1}]);
+    let mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
+    Count.find.mockReturnValueOnce({skip: mockSkip});
+
+    handleCountsRequest(mockSocket);
+    expect(mockSocket.on).toHaveBeenCalledTimes(2);
+    expect(mockSocket.on.mock.calls[0]).toHaveLength(2);
+    expect(mockSocket.on.mock.calls[0][0]).toBe('simulation_id');
+    let testSimId = "1234";
+    mockSocket.on.mock.calls[0][1](testSimId);
+
+    process.nextTick(() => {
+      expect(mockSocket.emit).toHaveBeenCalledTimes(2);
+      expect(mockSocket.emit.mock.calls[0]).toEqual([
+        'epidemicStats',
+        {dummyKey: 'dummyValue', hour: 1}
+      ]);
+      expect(mockSocket.emit.mock.calls[1]).toEqual(['epidemicStats', {"simulation_ended": true}]);
+      expect(Simulation.findOne).toHaveBeenCalledTimes(1);
+      expect(Simulation.findOne.mock.calls[0]).toEqual([{simulation_id: 1234}, {status: 1}]);
+      expect(Count.find).toHaveBeenCalledTimes(1);
+      expect(mockSkip).toHaveBeenCalledTimes(1);
+      expect(mockSkip).toBeCalledWith(0);
+      expect(Count.find.mock.calls[0]).toEqual([{simulation_id: 1234}, {}, {sort: {'hour': 1}}]);
+      done();
+    })
+  });
+
   it('should console on connection closed', () => {
     const mockPromise = mockSimulationPromise('finished');
     const mockExec = jest.fn().mockReturnValue(mockPromise);

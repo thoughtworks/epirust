@@ -23,7 +23,7 @@ jest.mock("../../db/models/Grid");
 const {Simulation} = require("../../db/models/Simulation");
 const {Grid} = require("../../db/models/Grid");
 
-describe("Count controller", () => {
+describe("Grid controller", () => {
     let mockSocket;
     beforeEach(() => {
         jest.clearAllMocks();
@@ -34,10 +34,10 @@ describe("Count controller", () => {
         };
     });
 
-    function mockSimulationPromise(grid_consumption_finished) {
+    function mockSimulationPromise(grid_consumption_finished, status) {
         return {
             then: async function (fn) {
-                await fn({grid_consumption_finished, simulation_id: 'dummyId'})
+                await fn({grid_consumption_finished, simulation_id: 'dummyId', status: status})
             }
         }
     }
@@ -64,7 +64,7 @@ describe("Count controller", () => {
             expect(mockSocket.emit.mock.calls[1]).toEqual(['gridData',  {"simulation_ended": true}]);
             expect(Simulation.findOne).toHaveBeenCalledTimes(2);
             expect(Simulation.findOne.mock.calls[0]).toEqual([{}, {simulation_id: 1}, {sort: {'_id': -1}}]);
-            expect(Simulation.findOne.mock.calls[1]).toEqual([{}, {grid_consumption_finished: 1}, {sort: {'_id': -1}}]);
+            expect(Simulation.findOne.mock.calls[1]).toEqual([{}, {status:1, grid_consumption_finished: 1}, {sort: {'_id': -1}}]);
             expect(Grid.find).toHaveBeenCalledTimes(1);
             expect(Grid.find.mock.calls[0]).toEqual([
                 {simulation_id: 'dummyId'},
@@ -110,9 +110,9 @@ describe("Count controller", () => {
             expect(mockSocket.emit.mock.calls[2]).toEqual(['gridData',  {"simulation_ended": true}]);
             expect(Simulation.findOne).toHaveBeenCalledTimes(4);
             expect(Simulation.findOne.mock.calls[0]).toEqual([{}, {simulation_id: 1}, {sort: {'_id': -1}}]);
-            expect(Simulation.findOne.mock.calls[1]).toEqual([{}, {grid_consumption_finished: 1}, {sort: {'_id': -1}}]);
+            expect(Simulation.findOne.mock.calls[1]).toEqual([{}, {status:1, grid_consumption_finished: 1}, {sort: {'_id': -1}}]);
             expect(Simulation.findOne.mock.calls[2]).toEqual([{}, {simulation_id: 1}, {sort: {'_id': -1}}]);
-            expect(Simulation.findOne.mock.calls[3]).toEqual([{}, {grid_consumption_finished: 1}, {sort: {'_id': -1}}]);
+            expect(Simulation.findOne.mock.calls[3]).toEqual([{}, {status: 1, grid_consumption_finished: 1}, {sort: {'_id': -1}}]);
             expect(Grid.find).toHaveBeenCalledTimes(2);
             expect(Grid.find.mock.calls[0]).toEqual([
                 {simulation_id: 'dummyId'},
@@ -129,6 +129,42 @@ describe("Count controller", () => {
             expect(mockSkip).toHaveBeenNthCalledWith(2, 1);
             done();
         });
+    });
+
+    it('should not send simulation ended if simulation status is failed', (done) => {
+        const mockPromise = mockSimulationPromise(false, 'failed');
+        const mockExec = jest.fn().mockReturnValue(mockPromise);
+        Simulation.findOne.mockReturnValue({'exec': mockExec});
+        const mockCursor = jest.fn().mockReturnValueOnce([{dummyKey: 'dummyValue', hour:1}]);
+        const mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
+        Grid.find.mockReturnValueOnce({skip: mockSkip});
+
+        handleGridRequest(mockSocket);
+
+        expect(Simulation.findOne).toHaveBeenCalledTimes(1);
+        expect(Simulation.findOne.mock.calls[0]).toEqual([{}, {simulation_id: 1}, {sort: {'_id': -1}}]);
+
+        process.nextTick(() => {
+            expect(mockSocket.emit).toHaveBeenCalledTimes(2);
+            expect(mockSocket.emit.mock.calls[0]).toEqual([
+                'gridData',
+                {dummyKey: 'dummyValue', hour:1}
+            ]);
+            expect(mockSocket.emit.mock.calls[1]).toEqual(['gridData',  {"simulation_ended": true}]);
+            expect(Simulation.findOne).toHaveBeenCalledTimes(2);
+            expect(Simulation.findOne.mock.calls[0]).toEqual([{}, {simulation_id: 1}, {sort: {'_id': -1}}]);
+            expect(Simulation.findOne.mock.calls[1]).toEqual([{}, {status:1, grid_consumption_finished: 1}, {sort: {'_id': -1}}]);
+            expect(Grid.find).toHaveBeenCalledTimes(1);
+            expect(Grid.find.mock.calls[0]).toEqual([
+                {simulation_id: 'dummyId'},
+                {},
+                {sort: {_id: 1}}
+            ]);
+            expect(mockSkip).toHaveBeenCalledTimes(1);
+            expect(mockSkip).toHaveBeenCalledWith(0);
+
+            done();
+        })
     });
 
     it('should console on connection closed', () => {

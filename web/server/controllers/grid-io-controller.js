@@ -37,11 +37,11 @@ function sendGridData(socket, totalConsumerRecords) {
       countOfMessagesConsumed += 1;
       socket.emit('gridData', data);
     }
-    const findLastRecordQuery = Simulation.findOne({}, { grid_consumption_finished: 1 }, { sort: { '_id': -1 } });
+    const findLastRecordQuery = Simulation.findOne({}, { status:1, grid_consumption_finished: 1 }, { sort: { '_id': -1 } });
     const promise = findLastRecordQuery.exec();
 
     await promise.then((simulation) => {
-      if (simulation.grid_consumption_finished) {
+      if (simulation.grid_consumption_finished || simulation.status === SimulationStatus.FAILED) {
         socket.emit('gridData', { "simulation_ended": true });
       } else sendGridData(socket, totalConsumerRecords + countOfMessagesConsumed);
     })

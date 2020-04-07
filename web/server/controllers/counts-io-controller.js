@@ -35,7 +35,7 @@ async function sendCountsData(simulationId, socket, totalConsumedRecords) {
   const promise = findLastRecordQuery.exec();
 
   await promise.then((simulation) => {
-    if (simulation.status === SimulationStatus.FINISHED) {
+    if (simulation.status === SimulationStatus.FINISHED || simulation.status === SimulationStatus.FAILED) {
       socket.emit('epidemicStats', {"simulation_ended": true});
     } else sendCountsData(simulationId, socket, totalConsumedRecords + recordsConsumedInThisGo);
   })

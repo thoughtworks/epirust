@@ -17,7 +17,7 @@
  *
  */
 
- import React, { useContext, useRef, useState, useEffect } from 'react';
+import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
 import { BaseColors } from './constants';
 export default function LinesLayer() {
@@ -51,6 +51,6 @@ export default function LinesLayer() {
     }, [lineCanvasContext, size, cellDimension, lineWidth])
 
     return (
-        <canvas ref={linesLayerCanvas} id="grid-canvas-bg" width={canvasDimension} height={canvasDimension} style={{ border: "1px solid #000000", position: "absolute", zIndex: 2 }} />
+        <canvas ref={linesLayerCanvas} data-testid="grid-canvas-bg" id="grid-canvas-bg" width={canvasDimension} height={canvasDimension} style={{ border: "1px solid #000000", position: "absolute", zIndex: 2 }} />
     )
 }

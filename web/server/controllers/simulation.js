@@ -75,13 +75,19 @@ router.post('/init', (req, res, next) => {
         const kafkaProducer = new KafkaServices.KafkaProducerService();
         return kafkaProducer.send('simulation_requests', simulation_config).catch(err => {
           console.error("Error occurred while sending kafka message", err);
-          return Simulation.updateOne({simulation_id: simulationId}, {status: SimulationStatus.FAILED}).exec()
-        });
+          return Simulation.updateOne({simulation_id: simulationId}, {status: SimulationStatus.FAILED})
+              .exec().then(() => {throw new Error(err.message)});
+        })
       })
-      .catch((err) => console.error("Failed to create Simulation entry ", err));
-
-  res.status(200);
-  res.send({ status: "Simulation started" });
+      .then(() => {
+        res.status(201);
+        res.send({ status: "Simulation started", simulationId });
+      })
+      .catch((err) => {
+        res.status(500);
+        res.send({ message: err.message });
+        console.error("Failed to create Simulation entry ", err);
+      });
 });
 
 router.get('/', async (req, res, next) => {

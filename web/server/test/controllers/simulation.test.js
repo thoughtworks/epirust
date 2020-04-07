@@ -66,8 +66,10 @@ describe('simulation controller', () => {
     it('should insert simulation in db', async () => {
         const mockSave = jest.fn().mockReturnValueOnce(Promise.resolve());
         Simulation.mockReturnValueOnce({save: mockSave});
+        const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
+        KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
 
-        await request
+        const response = await request
             .post('/simulation/init')
             .send({ ...postData });
 
@@ -76,6 +78,8 @@ describe('simulation controller', () => {
         expect(simulationDocument.simulation_id).toBeTruthy();
         expect(simulationDocument.config).toMatchSnapshot();
         expect(simulationDocument.status).toEqual('in-queue');
+        expect(response.status).toBe(201);
+        expect(JSON.parse(response.text)).toHaveProperty('simulationId')
     });
 
     it('should update simulation has failed when sending message on kafka has failed', async () => {
@@ -83,10 +87,10 @@ describe('simulation controller', () => {
         Simulation.mockReturnValueOnce({save: mockSave});
         let mockFailingSend = jest.fn().mockRejectedValue(new Error("because we want to"));
         KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockFailingSend});
-        const mockExec = jest.fn();
+        const mockExec = jest.fn().mockResolvedValue();
         Simulation.updateOne.mockReturnValueOnce({exec: mockExec});
 
-        await request
+        const response = await request
             .post('/simulation/init')
             .send({ ...postData });
 
@@ -97,14 +101,17 @@ describe('simulation controller', () => {
         expect(simulationDocument.status).toEqual('in-queue');
         expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
         expect(Simulation.updateOne.mock.calls[0][1]).toEqual({status: "failed"});
-        expect(Simulation.updateOne.mock.calls[0][0]).toHaveProperty('simulation_id')
+        expect(Simulation.updateOne.mock.calls[0][0]).toHaveProperty('simulation_id');
         expect(mockExec).toHaveBeenCalledTimes(1);
         expect(mockExec.mock.calls[0]).toEqual([]);
+        expect(response.status).toBe(500);
     });
 
     it('should write simulation start request on kafka topic after simulation db insert', async done => {
         kafkaService = require('../../services/kafka');
         Simulation.mockReturnValueOnce({save: jest.fn().mockReturnValueOnce(Promise.resolve())});
+        const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
+        kafkaService.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
 
         const response = await request
             .post('/simulation/init')
@@ -155,20 +162,21 @@ describe('simulation controller', () => {
 
         expect(kafkaService.KafkaProducerService).toHaveBeenCalled();
 
-        const producerService = kafkaService.KafkaProducerService.mock.instances[0];
-
-        expect(producerService.send.mock.calls[0][0]).toBe("simulation_requests");
-        const payload = producerService.send.mock.calls[0][1];
+        expect(mockKafkaSend).toHaveBeenCalled();
+        expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
+        const payload = mockKafkaSend.mock.calls[0][1];
         delete payload["sim_id"]; //it is a timestamp, cannot test
         expect(payload).toEqual(kafkaPayload);
 
-        expect(response.status).toBe(200);
+        expect(response.status).toBe(201);
         done();
     });
 
     it('should not put vaccination intervention in kafka topic if params not available in /init POST request', async done => {
         kafkaService = require('../../services/kafka');
         Simulation.mockReturnValueOnce({save: jest.fn().mockReturnValueOnce(Promise.resolve())});
+        const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
+        kafkaService.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
 
 
         const { vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention } = { ...postData };
@@ -215,15 +223,12 @@ describe('simulation controller', () => {
         };
 
         expect(kafkaService.KafkaProducerService).toHaveBeenCalledTimes(1);
-
-        const producerService = kafkaService.KafkaProducerService.mock.instances[0];
-
-        expect(producerService.send.mock.calls[0][0]).toBe("simulation_requests");
-        const payload = producerService.send.mock.calls[0][1];
+        expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
+        const payload = mockKafkaSend.mock.calls[0][1];
         delete payload["sim_id"]; //it is a timestamp, cannot test
         expect(payload).toEqual(kafkaPayload);
 
-        expect(response.status).toBe(200);
+        expect(response.status).toBe(201);
         done();
     });
 });

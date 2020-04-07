@@ -47,6 +47,7 @@ mod kafka_producer;
 mod kafka_consumer;
 mod ticks;
 mod environment;
+mod travel_plan;
 
 #[tokio::main]
 async fn main() {

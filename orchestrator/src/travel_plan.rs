@@ -17,21 +17,34 @@
  *
  */
 
+use std::fs::File;
+
 #[derive(Deserialize)]
-struct TravelPlan {
+pub struct TravelPlan {
     regions: Vec<String>,
     matrix: Vec<Vec<i32>>,
+}
+
+impl TravelPlan {
+    pub fn read(file_path: &str) -> TravelPlan {
+        let file = File::open(file_path).unwrap();
+        serde_json::from_reader(file).unwrap()
+    }
+
+    pub fn validate_regions(&self, regions: &Vec<String>) -> bool {
+        regions.len() == self.regions.len() &&
+            regions.iter().map(|region| self.regions.contains(region))
+                .fold(true, |acc, x| acc && x)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::File;
 
     #[test]
-    fn should_deserialize() {
-        let file = File::open("config/test/travel_plan.json").unwrap();
-        let travel_plan: TravelPlan = serde_json::from_reader(file).unwrap();
+    fn should_read() {
+        let travel_plan: TravelPlan = TravelPlan::read("config/test/travel_plan.json");
 
         assert_eq!(travel_plan.regions, vec!["engine1".to_string(), "engine2".to_string(),
                                              "engine3".to_string()]);
@@ -42,4 +55,15 @@ mod tests {
         ]);
     }
 
+    #[test]
+    fn should_validate_regions() {
+        let travel_plan: TravelPlan = TravelPlan::read("config/test/travel_plan.json");
+        assert!(travel_plan.validate_regions(&vec!["engine1".to_string(), "engine2".to_string(),
+                                                  "engine3".to_string()]));
+        assert!(travel_plan.validate_regions(&vec!["engine3".to_string(), "engine2".to_string(),
+                                                  "engine1".to_string()]));
+        assert!(!travel_plan.validate_regions(&vec!["engine3".to_string()]));
+        assert!(!travel_plan.validate_regions(&vec!["engine1".to_string(), "engine2".to_string(),
+                                                  "engine3".to_string(), "engine4".to_string()]));
+    }
 }

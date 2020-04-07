@@ -19,29 +19,22 @@
 
 
 #[macro_use]
-extern crate serde_derive;
-
-#[macro_use]
 extern crate log;
+#[macro_use]
+extern crate serde_derive;
 
 use std::error::Error;
 use std::fs::File;
 use std::io::Read;
 use std::ops::Range;
 
-use futures::StreamExt;
-use rdkafka::{ClientConfig, Message};
+use clap::{App, Arg};
+use rdkafka::ClientConfig;
 use rdkafka::admin::{AdminClient, AdminOptions};
 use rdkafka::client::DefaultClientContext;
-use rdkafka::error::KafkaError;
-use rdkafka::message::BorrowedMessage;
 
-
-
-use crate::kafka_consumer::KafkaConsumer;
 use crate::kafka_producer::KafkaProducer;
-use crate::ticks::{TickAck, TickAcks};
-use clap::{App, Arg};
+use crate::travel_plan::TravelPlan;
 
 mod kafka_producer;
 mod kafka_consumer;
@@ -60,14 +53,27 @@ async fn main() {
             .long("config")
             .short("c")
             .value_name("FILE")
-            .help("Use a config file to run the simulation. If not specified, config/simulation.json will be used"))
+            .default_value("config/simulation.json")
+            .help("Use a config file to run the simulation"))
+        .arg(Arg::with_name("travel")
+            .long("travel")
+            .short("t")
+            .default_value("config/travel_plan.json")
+            .help("The travel plan for agents to move between regions"))
         .get_matches();
 
     let config_path = matches.value_of("config").unwrap_or("config/simulation.json");
+    let travel_plan_config = matches.value_of("travel").unwrap_or("config/travel_plan.json");
 
     let sim_conf = read(config_path)
         .expect("Unable to read configuration file");
     let engines = parse_engine_names(&sim_conf);
+
+    let travel_plan = TravelPlan::read(travel_plan_config);
+    if !travel_plan.validate_regions(&engines) {
+        panic!("Engine names should match regions in travel plan");
+    }
+
     let hours = 0..10000;
 
     cleanup().await;

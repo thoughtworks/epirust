@@ -1,0 +1,116 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should render LandmarksLayer component 1`] = `
+Array [
+  Object {
+    "props": Object {
+      "value": 1,
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "lineWidth",
+  },
+  Object {
+    "props": Object {
+      "value": "#f1f1f1",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "strokeStyle",
+  },
+  Object {
+    "props": Object {
+      "height": 4,
+      "width": 4,
+      "x": 0.5,
+      "y": 0.5,
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "strokeRect",
+  },
+  Object {
+    "props": Object {
+      "height": 4,
+      "width": 4,
+      "x": 4.5,
+      "y": 0.5,
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "strokeRect",
+  },
+  Object {
+    "props": Object {
+      "value": "#e83e8c",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "strokeStyle",
+  },
+  Object {
+    "props": Object {
+      "height": 2,
+      "width": 2,
+      "x": 10.5,
+      "y": 0.5,
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "strokeRect",
+  },
+  Object {
+    "props": Object {
+      "height": 2,
+      "width": 2,
+      "x": 12.5,
+      "y": 0.5,
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "strokeRect",
+  },
+]
+`;

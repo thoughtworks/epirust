@@ -60,6 +60,6 @@ export default function LandmarksLayer({ landmarksDimensions }) {
     }, [landmarksCanvasContext, cellDimension, lineWidth, landmarksDimensions])
 
     return (
-        <canvas ref={landmarksLayerCanvas} id="grid-canvas-landmarks" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 3 }} />
+        <canvas ref={landmarksLayerCanvas} data-testid="grid-canvas-landmarks" id="grid-canvas-landmarks" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 3 }} />
     )
 }

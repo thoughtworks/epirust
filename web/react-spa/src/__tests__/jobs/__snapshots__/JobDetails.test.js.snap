@@ -93,6 +93,7 @@ exports[`Job Details should render grid if grid is enabled in config 1`] = `
         width="701"
       />
       <canvas
+        data-testid="grid-canvas-landmarks"
         height="701"
         id="grid-canvas-landmarks"
         style="position: absolute; z-index: 3;"

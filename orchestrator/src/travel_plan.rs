@@ -19,7 +19,7 @@
 
 use std::fs::File;
 
-#[derive(Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TravelPlan {
     regions: Vec<String>,
     matrix: Vec<Vec<i32>>,
@@ -35,6 +35,10 @@ impl TravelPlan {
         regions.len() == self.regions.len() &&
             regions.iter().map(|region| self.regions.contains(region))
                 .fold(true, |acc, x| acc && x)
+    }
+
+    pub fn get_regions(&self) -> &Vec<String> {
+        &self.regions
     }
 }
 

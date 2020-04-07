@@ -1,5 +1,5 @@
 {
-  "regions": ["engine1", "engine2", "engine3"],
+  "regions": ["engine1", "engine2"],
   "matrix": [
     [0, 156, 10],
     [108, 0, 290],

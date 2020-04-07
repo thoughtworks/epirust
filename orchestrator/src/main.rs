@@ -77,7 +77,7 @@ async fn main() {
     let hours = 0..10000;
 
     cleanup().await;
-    start(engines, hours, &sim_conf).await;
+    start(&travel_plan, hours, &sim_conf).await;
 }
 
 async fn cleanup() {
@@ -92,11 +92,11 @@ async fn cleanup() {
     }
 }
 
-async fn start(engines: Vec<String>, hours: Range<i32>, sim_conf: &String) {
+async fn start(travel_plan: &TravelPlan, hours: Range<i32>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();
 
     match producer.start_request(sim_conf).await.unwrap() {
-        Ok(_) => { ticks::start_ticking(engines, hours).await; }
+        Ok(_) => { ticks::start_ticking(travel_plan, hours).await; }
         Err(_) => { panic!("Failed to send simulation request to engines"); }
     }
 }

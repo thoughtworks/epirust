@@ -17,14 +17,89 @@
  *
  */
 use std::collections::HashMap;
+use std::ops::Range;
+use crate::kafka_producer::KafkaProducer;
+use crate::kafka_consumer::KafkaConsumer;
+use rdkafka::message::BorrowedMessage;
+use rdkafka::error::KafkaError;
+use std::error::Error;
+use rdkafka::Message;
+use futures::StreamExt;
+use crate::travel_plan::TravelPlan;
 
 //Note: these ticks are safe, they don't cause Lyme disease
+
+pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i32>) {
+    let mut acks: TickAcks = TickAcks::new(travel_plan.get_regions());
+    let mut producer = KafkaProducer::new();
+    let consumer = KafkaConsumer::new();
+    let mut message_stream = consumer.start_message_stream();
+    for h in hours {
+        acks.reset(h);
+        let tick = Tick::new(h, travel_plan);
+
+        match producer.send_tick(&tick).await.unwrap() {
+            Ok(_) => {
+                while let Some(message) = message_stream.next().await {
+                    let tick_ack = TickAck::parse_message(message);
+                    match tick_ack {
+                        Err(e) => {
+                            error!("Received a message, but could not parse it.\n\
+                                Error Details: {}", e)
+                        }
+                        Ok(ack) => {
+                            acks.push(ack);
+                            if acks.all_received() {
+                                break;
+                            }
+                        }
+                    };
+                }
+            }
+            Err(_) => { panic!("Failed to send simulation request to engines"); }
+        }
+
+        if acks.get_number_of_engines() == 0 {
+            break;
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct Tick<'a> {
+    hour: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    travel_plan: Option<&'a TravelPlan>,
+}
+
+impl Tick<'_> {
+    pub fn new(hour: i32, travel_plan: &TravelPlan) -> Tick {
+        let travel = if hour == 0 {
+            Some(travel_plan)
+        } else {
+            None
+        };
+        return Tick {
+            hour,
+            travel_plan: travel,
+        };
+    }
+}
 
 #[derive(Debug, Deserialize)]
 pub struct TickAck {
     engine_id: String,
     hour: i32,
-    terminate: bool
+    terminate: bool,
+}
+
+impl TickAck {
+    pub fn parse_message(message: Result<BorrowedMessage, KafkaError>) -> Result<TickAck, Box<dyn Error>> {
+        let borrowed_message = message?;
+        let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
+        debug!("Received: {}", parsed_message);
+        serde_json::from_str(parsed_message).map_err(|e| e.into())
+    }
 }
 
 /// stores a record of all the acks received for a tick
@@ -35,11 +110,11 @@ pub struct TickAcks {
 }
 
 impl TickAcks {
-    pub fn new(engines: Vec<String>) -> TickAcks {
+    pub fn new(engines: &Vec<String>) -> TickAcks {
         TickAcks {
             acks: HashMap::new(),
             current_hour: 0,
-            engines,
+            engines: engines.clone(),
         }
     }
 
@@ -49,7 +124,7 @@ impl TickAcks {
     }
 
     pub fn push(&mut self, ack: TickAck) {
-        if ack.terminate{
+        if ack.terminate {
             self.engines.retain(|e| !(e.to_string() == ack.engine_id));
             info!("stopping engine {}", ack.engine_id);
             return;
@@ -70,7 +145,7 @@ impl TickAcks {
         self.acks.insert(ack.engine_id, ack.hour);
     }
 
-    pub fn get_number_of_engines(&self) -> usize{
+    pub fn get_number_of_engines(&self) -> usize {
         self.engines.len()
     }
 
@@ -86,7 +161,7 @@ mod tests {
     #[test]
     fn should_push_ack() {
         let engines = vec!["engine1".to_string(), "engine2".to_string()];
-        let mut acks = TickAcks::new(engines);
+        let mut acks = TickAcks::new(&engines);
         acks.reset(22);
         let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, terminate: false };
         acks.push(ack);
@@ -97,10 +172,20 @@ mod tests {
     #[test]
     fn should_reset_current_hr() {
         let engines = vec!["engine1".to_string(), "engine2".to_string()];
-        let mut acks = TickAcks::new(engines);
+        let mut acks = TickAcks::new(&engines);
         assert_eq!(acks.current_hour, 0);
         acks.reset(22);
         assert_eq!(acks.current_hour, 22);
+    }
+
+    #[test]
+    fn should_add_travel_payload_at_zero() {
+        let travel_plan = TravelPlan::read("config/test/travel_plan.json");
+        let tick = Tick::new(0, &travel_plan);
+        assert!(tick.travel_plan.is_some());
+
+        let tick = Tick::new(1, &travel_plan);
+        assert!(tick.travel_plan.is_none());
     }
 
     // #[test]
@@ -132,5 +217,4 @@ mod tests {
     //     let ack = TickAck { engine_id: "engine_x".to_string(), hour: 0 };
     //     acks.push(ack);
     // }
-
 }

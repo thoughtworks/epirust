@@ -1,6 +1,7 @@
 use rdkafka::producer::{FutureProducer, FutureRecord, DeliveryFuture};
 use rdkafka::ClientConfig;
 use crate::environment;
+use crate::ticks::Tick;
 
 pub struct KafkaProducer {
     producer: FutureProducer,
@@ -24,11 +25,11 @@ impl KafkaProducer {
         self.producer.send(record, 0)
     }
 
-    pub fn send_tick(&mut self, hour: i32) -> DeliveryFuture {
-        let h = &hour.to_string();
+    pub fn send_tick(&mut self, tick: &Tick) -> DeliveryFuture {
+        let payload = serde_json::to_string(tick).unwrap();
         let record: FutureRecord<String, String> = FutureRecord::to("ticks")
-            .payload(h);
-        debug!("Send tick: {}", h);
+            .payload(&payload);
+        debug!("Send tick: {}", payload);
         self.producer.send(record, 0)
     }
 }

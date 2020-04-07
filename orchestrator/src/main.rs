@@ -19,34 +19,28 @@
 
 
 #[macro_use]
-extern crate serde_derive;
-
-#[macro_use]
 extern crate log;
+#[macro_use]
+extern crate serde_derive;
 
 use std::error::Error;
 use std::fs::File;
 use std::io::Read;
 use std::ops::Range;
 
-use futures::StreamExt;
-use rdkafka::{ClientConfig, Message};
+use clap::{App, Arg};
+use rdkafka::ClientConfig;
 use rdkafka::admin::{AdminClient, AdminOptions};
 use rdkafka::client::DefaultClientContext;
-use rdkafka::error::KafkaError;
-use rdkafka::message::BorrowedMessage;
 
-
-
-use crate::kafka_consumer::KafkaConsumer;
 use crate::kafka_producer::KafkaProducer;
-use crate::ticks::{TickAck, TickAcks};
-use clap::{App, Arg};
+use crate::travel_plan::TravelPlan;
 
 mod kafka_producer;
 mod kafka_consumer;
 mod ticks;
 mod environment;
+mod travel_plan;
 
 #[tokio::main]
 async fn main() {
@@ -59,18 +53,31 @@ async fn main() {
             .long("config")
             .short("c")
             .value_name("FILE")
-            .help("Use a config file to run the simulation. If not specified, config/simulation.json will be used"))
+            .default_value("config/simulation.json")
+            .help("Use a config file to run the simulation"))
+        .arg(Arg::with_name("travel")
+            .long("travel")
+            .short("t")
+            .default_value("config/travel_plan.json")
+            .help("The travel plan for agents to move between regions"))
         .get_matches();
 
     let config_path = matches.value_of("config").unwrap_or("config/simulation.json");
+    let travel_plan_config = matches.value_of("travel").unwrap_or("config/travel_plan.json");
 
     let sim_conf = read(config_path)
         .expect("Unable to read configuration file");
     let engines = parse_engine_names(&sim_conf);
+
+    let travel_plan = TravelPlan::read(travel_plan_config);
+    if !travel_plan.validate_regions(&engines) {
+        panic!("Engine names should match regions in travel plan");
+    }
+
     let hours = 0..10000;
 
     cleanup().await;
-    start(engines, hours, &sim_conf).await;
+    start(&travel_plan, hours, &sim_conf).await;
 }
 
 async fn cleanup() {
@@ -85,47 +92,12 @@ async fn cleanup() {
     }
 }
 
-async fn start(engines: Vec<String>, hours: Range<i32>, sim_conf: &String) {
+async fn start(travel_plan: &TravelPlan, hours: Range<i32>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();
 
     match producer.start_request(sim_conf).await.unwrap() {
-        Ok(_) => { start_ticking(engines, hours).await; }
+        Ok(_) => { ticks::start_ticking(travel_plan, hours).await; }
         Err(_) => { panic!("Failed to send simulation request to engines"); }
-    }
-}
-
-async fn start_ticking(engines: Vec<String>, hours: Range<i32>) {
-    let mut acks: TickAcks = TickAcks::new(engines);
-    let mut producer = KafkaProducer::new();
-    let consumer = KafkaConsumer::new();
-    let mut message_stream = consumer.start_message_stream();
-    for h in hours {
-        acks.reset(h);
-
-        match producer.send_tick(h).await.unwrap() {
-            Ok(_) => {
-                while let Some(message) = message_stream.next().await {
-                    let tick_ack = parse_message(message);
-                    match tick_ack {
-                        Err(e) => {
-                            error!("Received a message, but could not parse it.\n\
-                                Error Details: {}", e)
-                        }
-                        Ok(ack) => {
-                            acks.push(ack);
-                            if acks.all_received() {
-                                break;
-                            }
-                        }
-                    };
-                }
-            }
-            Err(_) => { panic!("Failed to send simulation request to engines"); }
-        }
-
-        if acks.get_number_of_engines() == 0{
-            break;
-        }
     }
 }
 
@@ -134,13 +106,6 @@ fn read(filename: &str) -> Result<String, Box<dyn Error>> {
     let mut contents: String = "".to_string();
     reader.read_to_string(&mut contents)?;
     Ok(contents)
-}
-
-fn parse_message(message: Result<BorrowedMessage, KafkaError>) -> Result<TickAck, Box<dyn Error>> {
-    let borrowed_message = message?;
-    let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
-    debug!("Received: {}", parsed_message);
-    serde_json::from_str(parsed_message).map_err(|e| e.into())
 }
 
 fn parse_engine_names(sim_conf: &String) -> Vec<String> {

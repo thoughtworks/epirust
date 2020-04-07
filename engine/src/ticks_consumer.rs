@@ -20,9 +20,10 @@
 use rdkafka::consumer::{StreamConsumer, Consumer};
 use rdkafka::{ClientConfig, Message};
 
-use rdkafka::error::{KafkaResult};
+use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
 use crate::environment;
+use serde_json::Value;
 
 const TICKS_TOPIC: &str = "ticks";
 
@@ -46,12 +47,37 @@ pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Option<i32> {
         None => {
             debug!("End of tick stream");
             None
-        },
+        }
         Some(m) => {
             let borrowed_message = m.unwrap();
             let parsed_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-            let tick: i32 = parsed_message.parse().expect("Could not parse tick message into an i32");
+            debug!("Tick Data: {}", parsed_message);
+            let tick = parse_tick_hour(parsed_message);
             Some(tick)
-        },
+        }
+    }
+}
+
+fn parse_tick_hour(message: &str) -> i32 {
+    let tick_json: Value = serde_json::from_str(message).unwrap();
+    tick_json.get("hour").unwrap().as_i64().expect("Could not get tick as an i64") as i32
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_parse_tick_hour() {
+        let json = r#"
+        {
+            "hour": 1
+        }"#;
+        assert_eq!(1, parse_tick_hour(json));
+
+        let json = r#"
+        {"hour":0,"travel_plan":{"regions":["engine1","engine2"],"matrix":[[0,156],[108,0]]}}
+        "#;
+        assert_eq!(0, parse_tick_hour(json));
     }
 }

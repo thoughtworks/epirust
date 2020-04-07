@@ -20,8 +20,10 @@ import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
 import { BaseColors } from './constants';
 import io from "socket.io-client";
+import {useParams} from "react-router-dom"
 
 export default function AgentPositionsWrapper() {
+    const {id} = useParams();
     const [socket, setSocket] = useState(null);
     const [agentPositions, setAgentPositions] = useState(null);
 
@@ -48,6 +50,8 @@ export default function AgentPositionsWrapper() {
     useEffect(() => {
         if (!socket)
             return
+
+        socket.emit('simulation_id', id);
 
         socket.on('gridData', function (messageRaw) {
             const message = messageRaw;

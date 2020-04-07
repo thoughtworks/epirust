@@ -63,7 +63,7 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
                 <AreasLayer areaDimensions={areaDimensions} />
                 {/* <LinesLayer /> */}
                 < LandmarksLayer landmarksDimensions={landmarksDimensions} />
-                < AgentsLayer agentPositions={agentMovement.agentsPerTick} />
+                < AgentsLayer />
             </GridContext.Provider>
         </div>
     )

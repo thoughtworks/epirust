@@ -21,35 +21,40 @@
 const { Simulation, SimulationStatus } = require("../db/models/Simulation");
 const Grid = require("../db/models/Grid").Grid;
 
-function sendGridData(socket, totalConsumerRecords) {
-  const findLastRecordQuery = Simulation.findOne({}, { simulation_id: 1 }, { sort: { '_id': -1 } });
-  const promise = findLastRecordQuery.exec();
-
-  promise.then(async (simulation) => {
-    let query = { simulation_id: simulation.simulation_id };
-    let cursor = Grid
+async function sendGridData(simulationId, socket, totalConsumerRecords) {
+  let query = { simulation_id: simulationId };
+  let cursor = Grid
       .find(query, {}, { sort: { '_id': 1 } })
       .skip(totalConsumerRecords)
       .cursor();
 
-    let countOfMessagesConsumed = 0;
-    for await (const data of cursor) {
-      countOfMessagesConsumed += 1;
-      socket.emit('gridData', data);
-    }
-    const findLastRecordQuery = Simulation.findOne({}, { status:1, grid_consumption_finished: 1 }, { sort: { '_id': -1 } });
-    const promise = findLastRecordQuery.exec();
+  let countOfMessagesConsumed = 0;
+  for await (const data of cursor) {
+    countOfMessagesConsumed += 1;
+    socket.emit('gridData', data);
+  }
 
-    await promise.then((simulation) => {
-      if (simulation.grid_consumption_finished || simulation.status === SimulationStatus.FAILED) {
-        socket.emit('gridData', { "simulation_ended": true });
-      } else sendGridData(socket, totalConsumerRecords + countOfMessagesConsumed);
-    })
+  const findSimulation = Simulation.findOne(
+      {simulation_id: simulationId},
+      { status:1, grid_consumption_finished: 1 , "config.enable_citizen_state_messages": 1}
+  );
+  const promise = findSimulation.exec();
+
+  await promise.then((simulation) => {
+    if (simulation.grid_consumption_finished || simulation.status === SimulationStatus.FAILED) {
+      socket.emit('gridData', { "simulation_ended": true });
+    }
+    else if(!simulation.config.enable_citizen_state_messages) {
+      socket.emit('gridData', { message: "no grid data" });
+    }
+    else sendGridData(simulationId, socket, totalConsumerRecords + countOfMessagesConsumed);
   });
 }
 
 function handleRequest(socket) {
-  sendGridData(socket, 0);
+  socket.on('simulation_id', (message) => {
+    sendGridData(parseInt(message), socket, 0);
+  });
   socket.on('disconnect', reason => console.log("Disconnect", reason));
 }
 

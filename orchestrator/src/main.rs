@@ -90,43 +90,8 @@ async fn start(engines: Vec<String>, hours: Range<i32>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();
 
     match producer.start_request(sim_conf).await.unwrap() {
-        Ok(_) => { start_ticking(engines, hours).await; }
+        Ok(_) => { ticks::start_ticking(engines, hours).await; }
         Err(_) => { panic!("Failed to send simulation request to engines"); }
-    }
-}
-
-async fn start_ticking(engines: Vec<String>, hours: Range<i32>) {
-    let mut acks: TickAcks = TickAcks::new(engines);
-    let mut producer = KafkaProducer::new();
-    let consumer = KafkaConsumer::new();
-    let mut message_stream = consumer.start_message_stream();
-    for h in hours {
-        acks.reset(h);
-
-        match producer.send_tick(h).await.unwrap() {
-            Ok(_) => {
-                while let Some(message) = message_stream.next().await {
-                    let tick_ack = parse_message(message);
-                    match tick_ack {
-                        Err(e) => {
-                            error!("Received a message, but could not parse it.\n\
-                                Error Details: {}", e)
-                        }
-                        Ok(ack) => {
-                            acks.push(ack);
-                            if acks.all_received() {
-                                break;
-                            }
-                        }
-                    };
-                }
-            }
-            Err(_) => { panic!("Failed to send simulation request to engines"); }
-        }
-
-        if acks.get_number_of_engines() == 0{
-            break;
-        }
     }
 }
 
@@ -135,13 +100,6 @@ fn read(filename: &str) -> Result<String, Box<dyn Error>> {
     let mut contents: String = "".to_string();
     reader.read_to_string(&mut contents)?;
     Ok(contents)
-}
-
-fn parse_message(message: Result<BorrowedMessage, KafkaError>) -> Result<TickAck, Box<dyn Error>> {
-    let borrowed_message = message?;
-    let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
-    debug!("Received: {}", parsed_message);
-    serde_json::from_str(parsed_message).map_err(|e| e.into())
 }
 
 fn parse_engine_names(sim_conf: &String) -> Vec<String> {

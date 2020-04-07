@@ -17,14 +17,66 @@
  *
  */
 use std::collections::HashMap;
+use std::ops::Range;
+use crate::kafka_producer::KafkaProducer;
+use crate::kafka_consumer::KafkaConsumer;
+use rdkafka::message::BorrowedMessage;
+use rdkafka::error::KafkaError;
+use std::error::Error;
+use rdkafka::Message;
+use futures::StreamExt;
 
 //Note: these ticks are safe, they don't cause Lyme disease
+
+pub async fn start_ticking(engines: Vec<String>, hours: Range<i32>) {
+    let mut acks: TickAcks = TickAcks::new(engines);
+    let mut producer = KafkaProducer::new();
+    let consumer = KafkaConsumer::new();
+    let mut message_stream = consumer.start_message_stream();
+    for h in hours {
+        acks.reset(h);
+
+        match producer.send_tick(h).await.unwrap() {
+            Ok(_) => {
+                while let Some(message) = message_stream.next().await {
+                    let tick_ack = TickAck::parse_message(message);
+                    match tick_ack {
+                        Err(e) => {
+                            error!("Received a message, but could not parse it.\n\
+                                Error Details: {}", e)
+                        }
+                        Ok(ack) => {
+                            acks.push(ack);
+                            if acks.all_received() {
+                                break;
+                            }
+                        }
+                    };
+                }
+            }
+            Err(_) => { panic!("Failed to send simulation request to engines"); }
+        }
+
+        if acks.get_number_of_engines() == 0{
+            break;
+        }
+    }
+}
 
 #[derive(Debug, Deserialize)]
 pub struct TickAck {
     engine_id: String,
     hour: i32,
     terminate: bool
+}
+
+impl TickAck {
+    pub fn parse_message(message: Result<BorrowedMessage, KafkaError>) -> Result<TickAck, Box<dyn Error>> {
+        let borrowed_message = message?;
+        let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
+        debug!("Received: {}", parsed_message);
+        serde_json::from_str(parsed_message).map_err(|e| e.into())
+    }
 }
 
 /// stores a record of all the acks received for a tick

@@ -32,8 +32,6 @@ import {JobsList} from "./jobs/JobsList";
 
 export const Routes = {
   HOME: "/",
-  TIME_SERIES: "/time-series",
-  GRID: "/grid",
   JOBS: "/jobs"
 };
 
@@ -44,7 +42,6 @@ function App() {
       <div className="container-fluid mt-4">
         <Switch>
           <Route exact path={Routes.HOME}><SimulationConfiguration /></Route>
-          <Route path={Routes.GRID}><GridPage/></Route>
           <Route path={`${Routes.JOBS}/:id?/:view?`}><JobsList/></Route>
         </Switch>
       </div >

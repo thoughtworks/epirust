@@ -30,8 +30,6 @@ export const JobDetails = ({simulationId, details}) => {
 
   const isGridEnabled = details && details.config.enable_citizen_state_messages;
 
-  console.log(isGridEnabled);
-
   return (
     <div className="job-details" style={{paddingTop:4}}>
       <h4>Simulation: {simulationId}</h4>

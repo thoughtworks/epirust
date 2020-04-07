@@ -1,0 +1,345 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Job Details should not render the config if the config is not given 1`] = `
+<div>
+  <div
+    class="job-details"
+    style="padding-top: 4px;"
+  >
+    <h4>
+      Simulation: 
+      123
+    </h4>
+    <ul
+      class="nav nav-tabs"
+    >
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link "
+          href="/jobs/123/time-series"
+        >
+          Time Series
+        </a>
+      </li>
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link active"
+          href="/jobs/123/config"
+        >
+          Config
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Job Details should render grid if grid is enabled in config 1`] = `
+<div>
+  <div
+    class="job-details"
+    style="padding-top: 4px;"
+  >
+    <h4>
+      Simulation: 
+      123
+    </h4>
+    <ul
+      class="nav nav-tabs"
+    >
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link "
+          href="/jobs/123/time-series"
+        >
+          Time Series
+        </a>
+      </li>
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link active"
+          href="/jobs/123/grid"
+        >
+          Grid
+        </a>
+      </li>
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link "
+          href="/jobs/123/config"
+        >
+          Config
+        </a>
+      </li>
+    </ul>
+    <div
+      style="position: relative;"
+    >
+      <canvas
+        height="701"
+        id="grid-canvas"
+        style="position: absolute; z-index: 1;"
+        width="701"
+      />
+      <canvas
+        height="701"
+        id="grid-canvas-landmarks"
+        style="position: absolute; z-index: 3;"
+        width="701"
+      />
+      <div
+        style="position: relative;"
+      >
+        <div
+          style="position: absolute; z-index: 5; right: 0px;"
+        >
+          <h4>
+            0/0 hrs
+          </h4>
+          <button
+            class="btn btn-success"
+          >
+            START
+          </button>
+          <button
+            class="btn btn-danger"
+          >
+            STOP
+          </button>
+        </div>
+        <canvas
+          height="701"
+          id="grid-canvas-agents"
+          style="position: absolute; z-index: 4;"
+          width="701"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Job Details should render the config if the config is given 1`] = `
+<div>
+  <div
+    class="job-details"
+    style="padding-top: 4px;"
+  >
+    <h4>
+      Simulation: 
+      123
+    </h4>
+    <ul
+      class="nav nav-tabs"
+    >
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link "
+          href="/jobs/123/time-series"
+        >
+          Time Series
+        </a>
+      </li>
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link active"
+          href="/jobs/123/config"
+        >
+          Config
+        </a>
+      </li>
+    </ul>
+    <pre>
+      {
+    "configKey": "configValue"
+}
+    </pre>
+  </div>
+</div>
+`;
+
+exports[`Job Details should render the time series if the view is time-series 1`] = `
+<div>
+  <div
+    class="job-details"
+    style="padding-top: 4px;"
+  >
+    <h4>
+      Simulation: 
+      123
+    </h4>
+    <ul
+      class="nav nav-tabs"
+    >
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link active"
+          href="/jobs/123/time-series"
+        >
+          Time Series
+        </a>
+      </li>
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link "
+          href="/jobs/123/config"
+        >
+          Config
+        </a>
+      </li>
+    </ul>
+    <div
+      class="graph-wrap"
+    >
+      <div
+        data-testid="visualization"
+        id="vis"
+      />
+      <div
+        class="graph-actions"
+      >
+        <p
+          class="action"
+        >
+          Zoom: 
+          <span
+            class="control"
+          >
+            click-drag
+          </span>
+        </p>
+        <p
+          class="action"
+        >
+          Pan: 
+          <span
+            class="control"
+          >
+            shift-click-drag
+          </span>
+        </p>
+        <p
+          class="action"
+        >
+          Restore: 
+          <span
+            class="control"
+          >
+            double-click
+          </span>
+        </p>
+        <button
+          class="btn btn-secondary"
+          disabled=""
+        >
+          Export graph
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Job Details should render time-series if grid is disabled in config 1`] = `
+<div>
+  <div
+    class="job-details"
+    style="padding-top: 4px;"
+  >
+    <h4>
+      Simulation: 
+      123
+    </h4>
+    <ul
+      class="nav nav-tabs"
+    >
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link active"
+          href="/jobs/123/time-series"
+        >
+          Time Series
+        </a>
+      </li>
+      <li
+        class="nav-item"
+      >
+        <a
+          class="nav-link "
+          href="/jobs/123/config"
+        >
+          Config
+        </a>
+      </li>
+    </ul>
+    <div
+      class="graph-wrap"
+    >
+      <div
+        data-testid="visualization"
+        id="vis"
+      />
+      <div
+        class="graph-actions"
+      >
+        <p
+          class="action"
+        >
+          Zoom: 
+          <span
+            class="control"
+          >
+            click-drag
+          </span>
+        </p>
+        <p
+          class="action"
+        >
+          Pan: 
+          <span
+            class="control"
+          >
+            shift-click-drag
+          </span>
+        </p>
+        <p
+          class="action"
+        >
+          Restore: 
+          <span
+            class="control"
+          >
+            double-click
+          </span>
+        </p>
+        <button
+          class="btn btn-secondary"
+          disabled=""
+        >
+          Export graph
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;

@@ -23,7 +23,8 @@ const Schema = mongoose.Schema;
 const SimulationStatus = {
   RUNNING: "running",
   FAILED: "failed",
-  FINISHED: "finished"
+  FINISHED: "finished",
+  INQUEUE: 'in-queue'
 };
 Object.freeze(SimulationStatus);
 

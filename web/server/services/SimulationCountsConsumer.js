@@ -32,18 +32,22 @@ class SimulationCountsConsumer {
     for await (const data of this.kafkaConsumer.consumerStream) {
       const parsedMessage = JSON.parse(data.value);
       let simulationId = parseInt(data.key.toString());
-
+      const query = {simulation_id: simulationId};
       if ("simulation_ended" in parsedMessage) {
-        const query = {simulation_id: simulationId};
-        const update = {simulation_id: simulationId, status: SimulationStatus.FINISHED};
-        const simulation = Simulation.update(query, update, {upsert: true});
+        const update = {status: SimulationStatus.FINISHED};
+        const simulation = Simulation.updateOne(query, update, {upsert: true});
 
         console.log("Consumed all counts for simulation id", simulationId);
         await simulation.exec()
 
       } else {
         parsedMessage["simulation_id"] = simulationId;
-        let countInsertQuery = new Count(parsedMessage);
+        const countInsertQuery = new Count(parsedMessage);
+
+        if (parsedMessage.hour === 1) {
+          const update = {status: SimulationStatus.RUNNING};
+          Simulation.updateOne(query, update, {upsert: true}).exec();
+        }
 
         await countInsertQuery.save()
       }

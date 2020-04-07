@@ -26,7 +26,8 @@ export const Job = ({simulationId, status}) => {
   const statusText = {
     "running": "In-Progress",
     "finished": "Finished",
-    "failed": "Failed"
+    "failed": "Failed",
+    "in-queue": "In-Queue"
   };
 
   return (
@@ -45,5 +46,5 @@ export const Job = ({simulationId, status}) => {
 
 Job.propTypes = {
   simulationId: PropTypes.number.isRequired,
-  status: PropTypes.oneOf(["running", "finished", "failed"]).isRequired
+  status: PropTypes.oneOf(["running", "finished", "failed", "in-queue"]).isRequired
 };

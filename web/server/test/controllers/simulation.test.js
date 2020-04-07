@@ -22,6 +22,9 @@ const supertest = require('supertest');
 const request = supertest(app);
 
 jest.mock('../../services/kafka');
+jest.mock('../../db/models/Simulation');
+
+const {Simulation} = require('../../db/models/Simulation');
 
 describe('simulation controller', () => {
 
@@ -61,8 +64,24 @@ describe('simulation controller', () => {
     });
 
 
-    test('should put init POST request params to kafka topic', async done => {
-        kafkaService = require('../../services/kafka')
+    it('should insert simulation in db', async () => {
+        const mockSave = jest.fn().mockReturnValueOnce(Promise.resolve());
+        Simulation.mockReturnValueOnce({save: mockSave});
+
+        await request
+            .post('/simulation/init')
+            .send({ ...postData });
+
+        const simulationDocument = Simulation.mock.calls[0][0];
+        expect(Simulation).toHaveBeenCalledTimes(1);
+        expect(simulationDocument.simulation_id).toBeTruthy();
+        expect(simulationDocument.config).toMatchSnapshot();
+        expect(simulationDocument.status).toEqual('in-queue');
+    });
+
+    it('should write simulation start request on kafka topic after simulation db insert', async done => {
+        kafkaService = require('../../services/kafka');
+        Simulation.mockReturnValueOnce({save: jest.fn().mockReturnValueOnce(Promise.resolve())});
 
         const response = await request
             .post('/simulation/init')
@@ -122,10 +141,11 @@ describe('simulation controller', () => {
 
         expect(response.status).toBe(200);
         done();
-    })
+    });
 
-    test('should not put vaccination intervention in kafka topic if params not available in /init POST request', async done => {
-        kafkaService = require('../../services/kafka')
+    it('should not put vaccination intervention in kafka topic if params not available in /init POST request', async done => {
+        kafkaService = require('../../services/kafka');
+        Simulation.mockReturnValueOnce({save: jest.fn().mockReturnValueOnce(Promise.resolve())});
 
 
         const { vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention } = { ...postData };
@@ -169,7 +189,7 @@ describe('simulation controller', () => {
                         spread_rate_threshold: 100
                     }
                 }]
-        }
+        };
 
         expect(kafkaService.KafkaProducerService).toHaveBeenCalledTimes(1);
 
@@ -182,5 +202,5 @@ describe('simulation controller', () => {
 
         expect(response.status).toBe(200);
         done();
-    })
+    });
 });

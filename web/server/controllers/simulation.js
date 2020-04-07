@@ -63,20 +63,18 @@ router.post('/init', (req, res, next) => {
     "hours": simulation_hrs,
     "interventions": modelInterventions(message)
   };
-  const kafkaProducer = new KafkaServices.KafkaProducerService();
-  kafkaProducer.send('simulation_requests', simulation_config);
   const {sim_id, ...configToStore} = simulation_config;
-  const query = {simulation_id: simulationId};
   const updateQuery = {
     simulation_id: simulationId,
-    status: SimulationStatus.RUNNING,
+    status: SimulationStatus.INQUEUE,
     config: configToStore
   };
-  if (simulation_config.enable_citizen_state_messages) {
-    updateQuery["grid_consumption_finished"] = false;
-  }
-  const simulation = Simulation.update(query, updateQuery, {upsert: true});
-  simulation.exec()
+  const simulation = new Simulation(updateQuery);
+  simulation.save()
+      .then(() => {
+        const kafkaProducer = new KafkaServices.KafkaProducerService();
+        kafkaProducer.send('simulation_requests', simulation_config);
+      })
     .catch((err) => console.error("Failed to create Simulation entry ", err));
 
   res.status(200);

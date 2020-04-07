@@ -120,6 +120,7 @@ exports[`Job Details should render grid if grid is enabled in config 1`] = `
           </button>
         </div>
         <canvas
+          data-testid="grid-canvas-agents"
           height="701"
           id="grid-canvas-agents"
           style="position: absolute; z-index: 4;"

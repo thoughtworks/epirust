@@ -29,7 +29,6 @@ export default function AgentPositionsWrapper() {
 
     const [simulationStarted, setSimulationStarted] = useState(false);
 
-    const [hasSocketDataStarted, setHasSocketDataStarted] = useState(false);
     const [socketDataExhausted, setSocketDataExhausted] = useState(false);
 
     const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
@@ -133,7 +132,7 @@ export default function AgentPositionsWrapper() {
     }
 
     const positionsToDisplay = agentPositions
-        ? agentPositions[currentDisplayIndex]
+        ? agentPositions[currentDisplayIndex-1]
         : []
 
     return (
@@ -188,6 +187,6 @@ function AgentsLayer({ agentPositionsPerHour }) {
     }
 
     return (
-        <canvas ref={agentsLayerCanvas} id="grid-canvas-agents" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 4 }} />
+        <canvas ref={agentsLayerCanvas} data-testid="grid-canvas-agents" id="grid-canvas-agents" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 4 }} />
     )
 }

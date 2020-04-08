@@ -21,7 +21,10 @@ Array [
   },
   Object {
     "props": Object {
-      "value": "#000",
+      "height": 20,
+      "width": 20,
+      "x": 0,
+      "y": 0,
     },
     "transform": Array [
       1,
@@ -31,7 +34,7 @@ Array [
       0,
       0,
     ],
-    "type": "fillStyle",
+    "type": "clearRect",
   },
   Object {
     "props": Object {
@@ -52,20 +55,6 @@ Array [
   },
   Object {
     "props": Object {
-      "value": "#000",
-    },
-    "transform": Array [
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
-    ],
-    "type": "fillStyle",
-  },
-  Object {
-    "props": Object {
       "height": 20,
       "width": 20,
       "x": 0,
@@ -83,38 +72,7 @@ Array [
   },
   Object {
     "props": Object {
-      "value": "#000",
-    },
-    "transform": Array [
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
-    ],
-    "type": "fillStyle",
-  },
-  Object {
-    "props": Object {
-      "height": 20,
-      "width": 20,
-      "x": 0,
-      "y": 0,
-    },
-    "transform": Array [
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
-    ],
-    "type": "clearRect",
-  },
-  Object {
-    "props": Object {
-      "value": "#000",
+      "value": "#007bff",
     },
     "transform": Array [
       1,
@@ -142,7 +100,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 2,
       "y": 2,
@@ -177,7 +135,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 2,
             "y": 2,
@@ -205,6 +163,20 @@ Array [
     "type": "fill",
   },
   Object {
+    "props": Object {
+      "value": "#007bff",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "fillStyle",
+  },
+  Object {
     "props": Object {},
     "transform": Array [
       1,
@@ -220,7 +192,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 76,
       "y": 134,
@@ -255,7 +227,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 76,
             "y": 134,
@@ -283,6 +255,20 @@ Array [
     "type": "fill",
   },
   Object {
+    "props": Object {
+      "value": "#007bff",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "fillStyle",
+  },
+  Object {
     "props": Object {},
     "transform": Array [
       1,
@@ -298,7 +284,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 64,
       "y": 4,
@@ -333,7 +319,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 64,
             "y": 4,
@@ -379,7 +365,7 @@ Array [
   },
   Object {
     "props": Object {
-      "value": "#000",
+      "value": "#007bff",
     },
     "transform": Array [
       1,
@@ -407,7 +393,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 2,
       "y": 2,
@@ -442,7 +428,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 2,
             "y": 2,
@@ -470,6 +456,20 @@ Array [
     "type": "fill",
   },
   Object {
+    "props": Object {
+      "value": "#007bff",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "fillStyle",
+  },
+  Object {
     "props": Object {},
     "transform": Array [
       1,
@@ -485,7 +485,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 76,
       "y": 134,
@@ -520,7 +520,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 76,
             "y": 134,
@@ -548,6 +548,20 @@ Array [
     "type": "fill",
   },
   Object {
+    "props": Object {
+      "value": "#007bff",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "fillStyle",
+  },
+  Object {
     "props": Object {},
     "transform": Array [
       1,
@@ -563,7 +577,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 64,
       "y": 4,
@@ -598,7 +612,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 64,
             "y": 4,
@@ -649,7 +663,10 @@ Array [
   },
   Object {
     "props": Object {
-      "value": "#000",
+      "height": 20,
+      "width": 20,
+      "x": 0,
+      "y": 0,
     },
     "transform": Array [
       1,
@@ -659,7 +676,7 @@ Array [
       0,
       0,
     ],
-    "type": "fillStyle",
+    "type": "clearRect",
   },
   Object {
     "props": Object {
@@ -680,20 +697,6 @@ Array [
   },
   Object {
     "props": Object {
-      "value": "#000",
-    },
-    "transform": Array [
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
-    ],
-    "type": "fillStyle",
-  },
-  Object {
-    "props": Object {
       "height": 20,
       "width": 20,
       "x": 0,
@@ -711,38 +714,7 @@ Array [
   },
   Object {
     "props": Object {
-      "value": "#000",
-    },
-    "transform": Array [
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
-    ],
-    "type": "fillStyle",
-  },
-  Object {
-    "props": Object {
-      "height": 20,
-      "width": 20,
-      "x": 0,
-      "y": 0,
-    },
-    "transform": Array [
-      1,
-      0,
-      0,
-      1,
-      0,
-      0,
-    ],
-    "type": "clearRect",
-  },
-  Object {
-    "props": Object {
-      "value": "#000",
+      "value": "#007bff",
     },
     "transform": Array [
       1,
@@ -770,7 +742,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 2,
       "y": 2,
@@ -805,7 +777,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 2,
             "y": 2,
@@ -833,6 +805,20 @@ Array [
     "type": "fill",
   },
   Object {
+    "props": Object {
+      "value": "#007bff",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "fillStyle",
+  },
+  Object {
     "props": Object {},
     "transform": Array [
       1,
@@ -848,7 +834,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 76,
       "y": 134,
@@ -883,7 +869,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 76,
             "y": 134,
@@ -911,6 +897,20 @@ Array [
     "type": "fill",
   },
   Object {
+    "props": Object {
+      "value": "#007bff",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "fillStyle",
+  },
+  Object {
     "props": Object {},
     "transform": Array [
       1,
@@ -926,7 +926,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 64,
       "y": 4,
@@ -961,7 +961,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 64,
             "y": 4,
@@ -1007,7 +1007,7 @@ Array [
   },
   Object {
     "props": Object {
-      "value": "#000",
+      "value": "#007bff",
     },
     "transform": Array [
       1,
@@ -1035,7 +1035,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 2,
       "y": 2,
@@ -1070,7 +1070,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 2,
             "y": 2,
@@ -1098,6 +1098,20 @@ Array [
     "type": "fill",
   },
   Object {
+    "props": Object {
+      "value": "#007bff",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "fillStyle",
+  },
+  Object {
     "props": Object {},
     "transform": Array [
       1,
@@ -1113,7 +1127,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 76,
       "y": 134,
@@ -1148,7 +1162,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 76,
             "y": 134,
@@ -1176,6 +1190,20 @@ Array [
     "type": "fill",
   },
   Object {
+    "props": Object {
+      "value": "#007bff",
+    },
+    "transform": Array [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+    ],
+    "type": "fillStyle",
+  },
+  Object {
     "props": Object {},
     "transform": Array [
       1,
@@ -1191,7 +1219,7 @@ Array [
     "props": Object {
       "anticlockwise": false,
       "endAngle": 6.283185307179586,
-      "radius": 0,
+      "radius": 1,
       "startAngle": 0,
       "x": 64,
       "y": 4,
@@ -1226,7 +1254,7 @@ Array [
           "props": Object {
             "anticlockwise": false,
             "endAngle": 6.283185307179586,
-            "radius": 0,
+            "radius": 1,
             "startAngle": 0,
             "x": 64,
             "y": 4,

@@ -18,17 +18,16 @@
  */
 import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
-import { BaseColors } from './constants';
+import { AgentStateToColor } from './constants';
 import io from "socket.io-client";
-import {useParams} from "react-router-dom"
+import { useParams } from "react-router-dom"
 
 export default function AgentPositionsWrapper() {
-    const {id} = useParams();
+    const { id } = useParams();
     const [socket, setSocket] = useState(null);
     const [agentPositions, setAgentPositions] = useState(null);
 
     const [simulationStarted, setSimulationStarted] = useState(false);
-
     const [socketDataExhausted, setSocketDataExhausted] = useState(false);
 
     const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
@@ -132,7 +131,7 @@ export default function AgentPositionsWrapper() {
     }
 
     const positionsToDisplay = agentPositions
-        ? agentPositions[currentDisplayIndex-1]
+        ? agentPositions[currentDisplayIndex - 1]
         : []
 
     return (
@@ -171,11 +170,14 @@ function AgentsLayer({ agentPositionsPerHour }) {
             return
 
         agentsCanvasContext.clearRect(0, 0, canvasDimension, canvasDimension);
-        agentsCanvasContext.fillStyle = BaseColors.BLACK
+
         agentPositionsPerHour.forEach((agent) => {
             const { x, y } = agent.location
+
+            agentsCanvasContext.fillStyle = AgentStateToColor[agent.state];
+
             agentsCanvasContext.beginPath();
-            const agentCircleRadius = Math.floor(cellDimension / 4)
+            const agentCircleRadius = Math.floor(cellDimension / 2)
             const startAngle = 0, endAngle = 2 * Math.PI
             agentsCanvasContext.arc(calculateCoordinate(x), calculateCoordinate(y), agentCircleRadius, startAngle, endAngle);
             agentsCanvasContext.fill();

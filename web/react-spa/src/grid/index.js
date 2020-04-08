@@ -21,9 +21,10 @@ import React from 'react';
 
 import gridLayout from '../resources/grid-layout';
 import LandmarksLayer from './LandmarksLayer';
+import LinesLayer from './LinesLayer';
 import AreasLayer from './AreasLayer';
 import AgentsLayer from './AgentsLayer';
-import { AreaColors } from './constants';
+import { AreaColors, AgentStateToColor } from './constants';
 import agentMovement from '../resources/agent-movement';
 
 
@@ -40,7 +41,55 @@ export default function GridPage() {
         officesDimensions = gridLayout.offices
 
     return (
-        <CanvasGrid size={gridLayout.grid_size} areaDimensions={areaDimensions} landmarksDimensions={{ housesDimensions, officesDimensions }} />
+        <div className="grid-wrap">
+            <CanvasGrid size={gridLayout.grid_size} areaDimensions={areaDimensions} landmarksDimensions={{ housesDimensions, officesDimensions }} />
+            <GridLegends />
+        </div>
+    )
+}
+
+function GridLegends() {
+
+    const areasLegends = [
+        { backgroundColor: AreaColors.HOUSING, text: "Housing" },
+        { backgroundColor: AreaColors.WORK, text: "Work" },
+        { backgroundColor: AreaColors.TRANSPORT, text: "Transport" },
+        { backgroundColor: AreaColors.HOSPITAL, text: "Hospital" },
+        { backgroundColor: AreaColors.OTHER, text: "Other" }
+    ]
+
+    const agentsLegends = [
+        { backgroundColor: AgentStateToColor.s, text: "Susceptible" },
+        { backgroundColor: AgentStateToColor.i, text: "Infected" },
+        { backgroundColor: AgentStateToColor.r, text: "Recovered" },
+        { backgroundColor: AgentStateToColor.d, text: "Deceased" }
+    ]
+    return (
+        <div className="legends-wrap">
+            <h6>Areas</h6>
+            <ul className="legends areas">{
+                areasLegends.map(({ backgroundColor, text }) => (
+                    <li>
+                        <div className="legend-item">
+                            <span className="swatch" style={{ backgroundColor }}></span>
+                            <span className="text">{text}</span>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+
+            <h6>Agent States</h6>
+            <ul className="legends agents">{
+                agentsLegends.map(({ backgroundColor, text }) => (
+                    <li>
+                        <div className="legend-item">
+                            <span className="swatch" style={{ backgroundColor }}></span>
+                            <span className="text">{text}</span>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+        </div>
     )
 }
 
@@ -48,7 +97,7 @@ export const GridContext = React.createContext(null);
 
 export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
 
-    const cellDimension = Math.floor((window.innerHeight - 20) / size),
+    const cellDimension = Math.floor((window.innerHeight - 165) / size),
         lineWidth = Math.floor(cellDimension / 4) < 1 ? 0 : Math.floor(cellDimension / 4),
         canvasDimension = (size * cellDimension) + lineWidth;
 
@@ -61,9 +110,9 @@ export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
                 size: size
             }}>
                 <AreasLayer areaDimensions={areaDimensions} />
-                {/* <LinesLayer /> */}
-                < LandmarksLayer landmarksDimensions={landmarksDimensions} />
-                < AgentsLayer />
+                <LinesLayer />
+                <LandmarksLayer landmarksDimensions={landmarksDimensions} />
+                <AgentsLayer agentPositions={agentMovement.agentsPerTick} />
             </GridContext.Provider>
         </div>
     )

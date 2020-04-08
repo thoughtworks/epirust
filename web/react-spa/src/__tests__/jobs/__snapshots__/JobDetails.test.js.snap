@@ -111,49 +111,213 @@ exports[`Job Details should render grid if grid is enabled in config 1`] = `
       </div>
     </div>
     <div
-      style="position: relative;"
+      class="grid-wrap"
     >
-      <canvas
-        data-testid="grid-canvas"
-        height="701"
-        id="grid-canvas"
-        style="position: absolute; z-index: 1;"
-        width="701"
-      />
-      <canvas
-        data-testid="grid-canvas-landmarks"
-        height="701"
-        id="grid-canvas-landmarks"
-        style="position: absolute; z-index: 3;"
-        width="701"
-      />
       <div
         style="position: relative;"
       >
-        <div
-          style="position: absolute; z-index: 5; right: 0px;"
-        >
-          <h4>
-            0/0 hrs
-          </h4>
-          <button
-            class="btn btn-success"
-          >
-            START
-          </button>
-          <button
-            class="btn btn-danger"
-          >
-            STOP
-          </button>
-        </div>
         <canvas
-          data-testid="grid-canvas-agents"
-          height="701"
-          id="grid-canvas-agents"
-          style="position: absolute; z-index: 4;"
-          width="701"
+          data-testid="grid-canvas"
+          height="601"
+          id="grid-canvas"
+          style="position: absolute; z-index: 1;"
+          width="601"
         />
+        <canvas
+          data-testid="grid-canvas-bg"
+          height="601"
+          id="grid-canvas-bg"
+          style="position: absolute; z-index: 2;"
+          width="601"
+        />
+        <canvas
+          data-testid="grid-canvas-landmarks"
+          height="601"
+          id="grid-canvas-landmarks"
+          style="position: absolute; z-index: 3;"
+          width="601"
+        />
+        <div
+          style="position: relative;"
+        >
+          <div
+            style="position: absolute; z-index: 5; right: 0px;"
+          >
+            <h4>
+              0/0 hrs
+            </h4>
+            <button
+              class="btn btn-success"
+            >
+              START
+            </button>
+            <button
+              class="btn btn-danger"
+            >
+              STOP
+            </button>
+          </div>
+          <canvas
+            data-testid="grid-canvas-agents"
+            height="601"
+            id="grid-canvas-agents"
+            style="position: absolute; z-index: 4;"
+            width="601"
+          />
+        </div>
+      </div>
+      <div
+        class="legends-wrap"
+      >
+        <h6>
+          Areas
+        </h6>
+        <ul
+          class="legends areas"
+        >
+          <li>
+            <div
+              class="legend-item"
+            >
+              <span
+                class="swatch"
+                style="background-color: rgb(255, 240, 194);"
+              />
+              <span
+                class="text"
+              >
+                Housing
+              </span>
+            </div>
+          </li>
+          <li>
+            <div
+              class="legend-item"
+            >
+              <span
+                class="swatch"
+                style="background-color: rgb(249, 209, 228);"
+              />
+              <span
+                class="text"
+              >
+                Work
+              </span>
+            </div>
+          </li>
+          <li>
+            <div
+              class="legend-item"
+            >
+              <span
+                class="swatch"
+                style="background-color: rgb(250, 213, 181);"
+              />
+              <span
+                class="text"
+              >
+                Transport
+              </span>
+            </div>
+          </li>
+          <li>
+            <div
+              class="legend-item"
+            >
+              <span
+                class="swatch"
+                style="background-color: rgb(185, 218, 253);"
+              />
+              <span
+                class="text"
+              >
+                Hospital
+              </span>
+            </div>
+          </li>
+          <li>
+            <div
+              class="legend-item"
+            >
+              <span
+                class="swatch"
+                style="background-color: rgb(204, 204, 204);"
+              />
+              <span
+                class="text"
+              >
+                Other
+              </span>
+            </div>
+          </li>
+        </ul>
+        <h6>
+          Agent States
+        </h6>
+        <ul
+          class="legends agents"
+        >
+          <li>
+            <div
+              class="legend-item"
+            >
+              <span
+                class="swatch"
+                style="background-color: rgb(0, 123, 255);"
+              />
+              <span
+                class="text"
+              >
+                Susceptible
+              </span>
+            </div>
+          </li>
+          <li>
+            <div
+              class="legend-item"
+            >
+              <span
+                class="swatch"
+                style="background-color: rgb(231, 76, 60);"
+              />
+              <span
+                class="text"
+              >
+                Infected
+              </span>
+            </div>
+          </li>
+          <li>
+            <div
+              class="legend-item"
+            >
+              <span
+                class="swatch"
+                style="background-color: rgb(40, 167, 69);"
+              />
+              <span
+                class="text"
+              >
+                Recovered
+              </span>
+            </div>
+          </li>
+          <li>
+            <div
+              class="legend-item"
+            >
+              <span
+                class="swatch"
+                style="background-color: black;"
+              />
+              <span
+                class="text"
+              >
+                Deceased
+              </span>
+            </div>
+          </li>
+        </ul>
       </div>
     </div>
   </div>

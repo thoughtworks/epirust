@@ -53,6 +53,8 @@ export default function AreasLayer({ areaDimensions }) {
             if (areasCanvasContext.fillStyle !== color) {
                 areasCanvasContext.fillStyle = color;
             }
+
+            // areasCanvasContext.fillStyle = "white";
         }
 
         for (let x = 0; x < size; x++) {

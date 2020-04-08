@@ -32,7 +32,7 @@ use crate::config::{Config, Population};
 use crate::disease::Disease;
 use crate::geography;
 use crate::geography::Grid;
-use crate::interventions::{Intervention, Lockdown};
+use crate::interventions::{Intervention, Lockdown, BuildNewHospital};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events::counts::Counts;
@@ -98,8 +98,7 @@ impl Epidemiology {
 
         let vaccinations = Epidemiology::prepare_vaccinations(config);
         let lock_down_details = Intervention::get_lock_down_intervention(config);
-        let hospital_intervention = Intervention::get_hospital_intervention(config);
-        let mut infection_count_for_yesterday = 0;
+        let mut hospital_intervention = BuildNewHospital::init(config);
         let mut city_to_be_locked_till: i32 = 0;
         let mut is_city_locked_down = false;
 
@@ -143,7 +142,6 @@ impl Epidemiology {
             }
 
             counts_at_hr.increment_hour();
-            let start_of_day = simulation_hour % 24 == 0;
 
             let mut read_buffer_reference = self.agent_location_map.borrow();
             let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
@@ -153,22 +151,16 @@ impl Epidemiology {
                 write_buffer_reference = self.agent_location_map.borrow_mut();
             }
 
-            if start_of_day {
-                let rate_of_spread = counts_at_hr.get_infected() - infection_count_for_yesterday;
-                match hospital_intervention {
-                    Some(x) if rate_of_spread >= x.spread_rate_threshold => {
-                        info!("Increasing the hospital size");
-                        self.grid.increase_hospital_size(config.get_grid_size());
-
-                        listeners.grid_updated(&self.grid);
-                    }
-                    _ => {}
-                }
+            if hospital_intervention.should_apply(&counts_at_hr) {
+                info!("Increasing the hospital size");
+                self.grid.increase_hospital_size(config.get_grid_size());
+                listeners.grid_updated(&self.grid);
             }
 
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                    &self.grid, &mut listeners, &mut rng, &self.disease);
             listeners.counts_updated(counts_at_hr);
+            hospital_intervention.counts_updated(&counts_at_hr);
 
             match lock_down_details {
                 Some(x) if Epidemiology::should_lock_city(&counts_at_hr, is_city_locked_down, x) => {
@@ -195,10 +187,6 @@ impl Epidemiology {
                       simulation_hour, config.get_hours());
                 info!("S: {}, I: {}, Q: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_infected(),
                       counts_at_hr.get_quarantined(), counts_at_hr.get_recovered(), counts_at_hr.get_deceased());
-            }
-
-            if start_of_day {
-                infection_count_for_yesterday = counts_at_hr.get_infected();
             }
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();

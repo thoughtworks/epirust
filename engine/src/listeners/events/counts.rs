@@ -28,6 +28,11 @@ pub struct Counts {
 }
 
 impl Counts {
+    #[cfg(test)]
+    pub fn new_test(hour: i32, susceptible: i32, infected: i32, quarantined: i32, recovered: i32, deceased: i32) -> Counts {
+        Counts { hour, susceptible, infected, quarantined, recovered, deceased }
+    }
+
     pub fn new(population: i32, infected: i32) -> Counts {
         Counts { hour: 0, susceptible: population, infected, quarantined: 0, recovered: 0, deceased: 0 }
     }

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "nodemon ./app",
+    "start-consumers": "node ./kafka-consumer.js",
     "test": "NODE_ENV=test jest"
   },
   "dependencies": {

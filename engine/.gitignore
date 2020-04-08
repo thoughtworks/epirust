@@ -8,3 +8,6 @@
 !.idea/codeStyleSettings.xml
 bin/
 *.iml
+
+grid.svg
+simulation_*.csv

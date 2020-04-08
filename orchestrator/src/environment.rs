@@ -20,7 +20,7 @@
 use std::env;
 
 pub fn kafka_url() -> String {
-    match env::var("KAFKA_URL") {
+    match env::var("EPI_KAFKA_URL") {
         Ok(val) => val,
         Err(_) => "localhost:9092".to_string(),
     }

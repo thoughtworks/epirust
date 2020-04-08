@@ -19,7 +19,6 @@
 
 use core::borrow::Borrow;
 use core::borrow::BorrowMut;
-use std::collections::HashMap;
 use std::time::{Instant, SystemTime, Duration};
 
 use chrono::{DateTime, Local};
@@ -32,7 +31,7 @@ use crate::config::{Config, Population};
 use crate::disease::Disease;
 use crate::geography;
 use crate::geography::Grid;
-use crate::interventions::{Intervention, LockdownConfig, BuildNewHospital, LockdownIntervention};
+use crate::interventions::{LockdownConfig, BuildNewHospital, LockdownIntervention, VaccinateIntervention};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events::counts::Counts;
@@ -96,7 +95,7 @@ impl Epidemiology {
 
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
-        let vaccinations = Epidemiology::prepare_vaccinations(config);
+        let vaccinations = VaccinateIntervention::init(config);
         let mut lock_down_details = LockdownIntervention::init(config);
         let mut hospital_intervention = BuildNewHospital::init(config);
 
@@ -169,7 +168,7 @@ impl Epidemiology {
                 Epidemiology::unlock_city(&mut write_buffer_reference);
             }
 
-            Epidemiology::apply_vaccination_intervention(&vaccinations, simulation_hour, &mut write_buffer_reference, &mut rng);
+            Epidemiology::apply_vaccination_intervention(&vaccinations, &counts_at_hr, &mut write_buffer_reference, &mut rng);
 
             if Epidemiology::stop_simulation(counts_at_hr) {
                 terminate_engine = true;
@@ -189,28 +188,15 @@ impl Epidemiology {
         listeners.simulation_ended();
     }
 
-    fn apply_vaccination_intervention(vaccinations: &HashMap<i32, f64>, simulation_hour: i32,
+    fn apply_vaccination_intervention(vaccinations: &VaccinateIntervention, counts: &Counts,
                                       write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
-        match vaccinations.get(&simulation_hour) {
+        match vaccinations.get_vaccination_percentage(counts) {
             Some(vac_percent) => {
                 info!("Vaccination");
                 Epidemiology::vaccinate(*vac_percent, write_buffer_reference, rng);
             }
             _ => {}
         };
-    }
-
-    fn prepare_vaccinations(config: &Config) -> HashMap<i32, f64> {
-        let mut vaccinations: HashMap<i32, f64> = HashMap::new();
-        config.get_interventions().iter().filter_map(|i| {
-            match i {
-                Intervention::Vaccinate(v) => Some(v),
-                _ => None,
-            }
-        }).for_each(|v| {
-            vaccinations.insert(v.at_hour, v.percent);
-        });
-        vaccinations
     }
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
@@ -282,7 +268,7 @@ mod tests {
     use crate::config::AutoPopulation;
     use crate::geography::Area;
     use crate::geography::Point;
-    use crate::interventions::Vaccinate;
+    use crate::interventions::{VaccinateConfig, Intervention};
 
     use super::*;
 
@@ -294,7 +280,7 @@ mod tests {
             working_percentage: 1.0,
         };
         let disease = Disease::new(0, 0, 0, 0.0, 0.0, 0.0);
-        let vac = Vaccinate {
+        let vac = VaccinateConfig {
             at_hour: 5000,
             percent: 0.2,
         };

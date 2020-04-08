@@ -115,13 +115,13 @@ pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::interventions::Vaccinate;
+    use crate::interventions::VaccinateConfig;
 
     #[test]
     fn should_read_config_with_csv_population() {
         let read_config = read(String::from("config/test/csv_pop.json")).unwrap();
 
-        let vaccinate = Vaccinate::new(5000, 0.2);
+        let vaccinate = VaccinateConfig::new(5000, 0.2);
         let disease_override = DiseaseOverride::new(
             String::from("age"),
             vec!["60-64".to_string(), "65-69".to_string(), "70-74".to_string(), "75-79".to_string(), "80+".to_string()],
@@ -151,7 +151,7 @@ mod tests {
     fn should_read_config_with_auto_population() {
         let read_config = read(String::from("config/test/auto_pop.json")).unwrap();
 
-        let vaccinate = Vaccinate::new(5000, 0.2);
+        let vaccinate = VaccinateConfig::new(5000, 0.2);
 
         let population = Population::Auto(AutoPopulation {
             number_of_agents: 10000,

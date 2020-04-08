@@ -20,24 +20,25 @@
 use crate::config::Config;
 use crate::listeners::events::counts::Counts;
 use crate::constants;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub enum Intervention {
-    Vaccinate(Vaccinate),
+    Vaccinate(VaccinateConfig),
     Lockdown(LockdownConfig),
     BuildNewHospital(BuildNewHospitalConfig),
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
-pub struct Vaccinate {
+pub struct VaccinateConfig {
     pub at_hour: i32,
     pub percent: f64,
 }
 
-impl Vaccinate {
+impl VaccinateConfig {
     #[cfg(test)]
-    pub fn new(at_hour: i32, percent: f64) -> Vaccinate {
-        Vaccinate { at_hour, percent }
+    pub fn new(at_hour: i32, percent: f64) -> VaccinateConfig {
+        VaccinateConfig { at_hour, percent }
     }
 }
 
@@ -144,9 +145,39 @@ impl LockdownIntervention {
     }
 }
 
+pub struct VaccinateIntervention {
+    intervention: HashMap<i32, f64>,
+}
+
+impl VaccinateIntervention {
+    pub fn init(config: &Config) -> VaccinateIntervention {
+        VaccinateIntervention {
+            intervention: VaccinateIntervention::prepare_vaccinations(config)
+        }
+    }
+
+    fn prepare_vaccinations(config: &Config) -> HashMap<i32, f64> {
+        let mut vaccinations: HashMap<i32, f64> = HashMap::new();
+        config.get_interventions().iter().filter_map(|i| {
+            match i {
+                Intervention::Vaccinate(v) => Some(v),
+                _ => None,
+            }
+        }).for_each(|v| {
+            vaccinations.insert(v.at_hour, v.percent);
+        });
+        vaccinations
+    }
+
+    pub fn get_vaccination_percentage(&self, counts: &Counts) -> Option<&f64> {
+        self.intervention.get(&counts.get_hour())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config;
 
     #[test]
     fn should_apply_hospital_intervention_when_threshold_increases_at_start_of_day() {
@@ -254,5 +285,28 @@ mod tests {
         lockdown.apply(&Counts::new_test(28, 79, 21, 0, 0, 0));
         assert!(lockdown.should_unlock(&Counts::new_test(196, 79, 21, 0, 0, 0)));
         assert!(!lockdown.should_apply(&Counts::new_test(200, 70, 30, 0, 0, 0)));
+    }
+
+    #[test]
+    fn should_parse_vaccinations_from_config() {
+        let config = config::read("config/test/auto_pop.json".to_string()).unwrap();
+        let vaccinate_intervention = VaccinateIntervention::init(&config);
+
+        let mut expected: HashMap<i32, f64> = HashMap::new();
+        expected.insert(5000, 0.2);
+
+        assert_eq!(expected, vaccinate_intervention.intervention);
+    }
+
+    #[test]
+    fn should_get_vaccination_at_hour() {
+        let config = config::read("config/test/auto_pop.json".to_string()).unwrap();
+        let vaccinate_intervention = VaccinateIntervention::init(&config);
+
+        let counts = Counts::new_test(5000, 10, 10, 10, 10, 10);
+        assert_eq!(Some(&0.2), vaccinate_intervention.get_vaccination_percentage(&counts));
+
+        let counts = Counts::new_test(5001, 10, 10, 10, 10, 10);
+        assert_eq!(None, vaccinate_intervention.get_vaccination_percentage(&counts));
     }
 }

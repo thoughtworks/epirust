@@ -19,7 +19,6 @@
 
 import React, { useContext, useRef, useState, useEffect } from 'react';
 
-import gridLayout from '../resources/grid-layout';
 import LandmarksLayer from './LandmarksLayer';
 import LinesLayer from './LinesLayer';
 import AreasLayer from './AreasLayer';

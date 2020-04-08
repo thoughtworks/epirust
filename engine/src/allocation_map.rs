@@ -26,14 +26,15 @@ use crate::random_wrapper::RandomWrapper;
 
 pub struct AgentLocationMap {
     pub grid_size: i32,
-    pub agent_cell: FxHashMap<Point, agent::Citizen>,
+    pub agent_cell: FxHashMap<Point, Vec<agent::Citizen>>,
 }
 
 impl AgentLocationMap {
     pub fn new(size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
-        let mut map: FxHashMap<Point, agent::Citizen> = FxHashMap::default();
+        let mut map: FxHashMap<Point, Vec<agent::Citizen>> = FxHashMap::default();
+
         for i in 0..agent_list.len() {
-            map.insert(points[i], agent_list[i]);
+            map.insert(points[i], [agent_list[i]].to_vec());
         }
 
         AgentLocationMap { grid_size: size, agent_cell: map }
@@ -58,10 +59,6 @@ impl AgentLocationMap {
 //            println!("x:{}, y:{} - id:{} infected:{} working:{} Transport:{}", k.x, k.y, v.id, v.is_infected(), v.working, v.uses_public_transport);
 //        }
 //    }
-
-    pub fn get_agent_for(&self, cell: &Point) -> Option<&agent::Citizen> {
-        self.agent_cell.get(cell)
-    }
 
     pub fn is_point_in_grid(&self, point: &Point) -> bool {
         point.x >= 0 && point.y >= 0 && point.x < self.grid_size && point.y < self.grid_size
@@ -97,7 +94,7 @@ mod tests {
         let actual_citizen = map.agent_cell.get(&Point { x: 0, y: 1 }).unwrap();
 
         assert_eq!(map.grid_size, 5);
-        assert_eq!(actual_citizen.id, 1);
+        assert_eq!(actual_citizen.get(0).unwrap().id, 1);
     }
 
     #[test]

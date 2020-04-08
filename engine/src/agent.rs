@@ -287,7 +287,7 @@ impl Citizen {
                 self.update_infection(cell, map, counts, rng, disease);
             }
             constants::ROUTINE_END_TIME => {
-                new_cell = self.deceased(map, cell, counts, rng, disease)
+                new_cell = self.deceased(cell, counts, rng, disease)
             }
             _ => {
                 new_cell = self.move_agent_from(map, cell, rng);
@@ -323,11 +323,9 @@ impl Citizen {
     fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Counts, rng: &mut RandomWrapper,
                         disease: &Disease) {
         if self.is_susceptible() && !self.vaccinated {
-            let neighbours = self.current_area.get_neighbors_of(cell);
-
-            let neighbor_that_spreads_infection = neighbours
-                .filter(|p| map.is_point_in_grid(p))
-                .filter_map(|cell| { map.get_agent_for(&cell) })
+            let neighbors = map.agent_cell.get(&cell).unwrap();
+            //TODO: Validate the logic to follow distribution - Jayanta
+            let neighbor_that_spreads_infection = neighbors.iter()
                 .filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized)
                 .find(|neighbor| rng.get().gen_bool(neighbor.get_infection_transmission_rate(disease)));
 
@@ -344,23 +342,18 @@ impl Citizen {
             return cell;
         }
         if self.working {
-            let mut new_cell: Point = target_area.get_random_point(rng);
-                if !map.is_cell_vacant(&new_cell){
-                    new_cell = cell;
-                }
-
-            return map.move_agent(cell, new_cell);
+            return target_area.get_random_point(rng)
         }
         self.move_agent_from(map, cell, rng)
     }
 
-    fn deceased(&mut self, map: &AgentLocationMap, cell: Point, counts: &mut Counts, rng: &mut RandomWrapper,
+    fn deceased(&mut self, cell: Point, counts: &mut Counts, rng: &mut RandomWrapper,
                 disease: &Disease) -> Point {
         let mut new_cell = cell;
         if self.is_quarantined() {
             let result = self.decease(rng, disease);
             if result.1 == 1 {
-                new_cell = map.move_agent(cell, self.home_location.get_random_point(rng));
+                new_cell = self.home_location.get_random_point(rng);
             }
             counts.update_deceased(result.0);
             counts.update_recovered(result.1);
@@ -370,12 +363,10 @@ impl Citizen {
     }
 
     fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
-        let new_cell = self.current_area.get_neighbors_of(cell)
+        self.current_area.get_neighbors_of(cell)
             .filter(|p| map.is_point_in_grid(p))
-            .filter(|p| map.is_cell_vacant(p))
             .choose(rng.get())
-            .unwrap_or(cell);
-        map.move_agent(cell, new_cell)
+            .unwrap_or(cell)
     }
 }
 

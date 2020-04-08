@@ -228,9 +228,11 @@ impl Epidemiology {
     }
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
-        for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
-            if agent.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
-                agent.set_vaccination(true);
+        for (_v, agent_vector) in write_buffer_reference.agent_cell.iter_mut() {
+            for agent in agent_vector{
+                if agent.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
+                    agent.set_vaccination(true);
+                }
             }
         }
     }
@@ -239,39 +241,51 @@ impl Epidemiology {
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease) {
         write_buffer.agent_cell.clear();
-        for (cell, agent) in read_buffer.agent_cell.iter() {
-            let mut current_agent = *agent;
-            let infection_status = current_agent.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut csv_record, rng, disease);
+        for (cell, agent_vector) in read_buffer.agent_cell.iter() {
+            for agent in agent_vector {
+                let mut current_agent = *agent;
+                let infection_status = current_agent.is_infected();
+                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut csv_record, rng, disease);
 
-            if infection_status == false && current_agent.is_infected() == true {
-                listeners.citizen_got_infected(&cell);
+                if infection_status == false && current_agent.is_infected() == true {
+                    listeners.citizen_got_infected(&cell);
+                }
+
+                let vector_option = write_buffer.agent_cell.get_mut(&point);
+                match vector_option {
+                    Some(x) => {
+                        x.push(current_agent);
+                    }
+                    None => {
+                        let mut vec = Vec::new();
+                        vec.push(current_agent);
+                        write_buffer.agent_cell.insert(*&point, vec);
+                    }
+                }
+
+                listeners.citizen_state_updated(simulation_hour, &current_agent, &point);
             }
-
-            let agent_option = write_buffer.agent_cell.get(&point);
-            let new_location = match agent_option {
-                Some(mut _agent) => cell, //occupied
-                _ => &point
-            };
-            write_buffer.agent_cell.insert(*new_location, current_agent);
-            listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
         }
     }
 
     fn lock_city(write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper, lockdown_details: &Lockdown) {
         info!("Locking the city");
-        for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
-            if rng.get().gen_bool(1.0 - lockdown_details.essential_workers_population) {
-                agent.set_isolation(true);
+        for (_v, agent_vec) in write_buffer_reference.agent_cell.iter_mut() {
+            for agent in agent_vec{
+                if rng.get().gen_bool(1.0 - lockdown_details.essential_workers_population) {
+                    agent.set_isolation(true);
+                }
             }
         }
     }
 
     fn unlock_city(write_buffer_reference: &mut AgentLocationMap) {
         info!("unlocking city");
-        for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
-            if agent.is_isolated() {
-                agent.set_isolation(false);
+        for (_v, agent_vec) in write_buffer_reference.agent_cell.iter_mut() {
+            for agent in agent_vec{
+                if agent.is_isolated() {
+                    agent.set_isolation(false);
+                }
             }
         }
     }

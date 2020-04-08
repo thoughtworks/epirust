@@ -19,27 +19,29 @@
 
 use core::borrow::Borrow;
 use core::borrow::BorrowMut;
-use std::time::{Instant, SystemTime, Duration};
+use std::time::{Duration, Instant, SystemTime};
 
 use chrono::{DateTime, Local};
+use futures::StreamExt;
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
-use crate::{allocation_map, ticks_consumer, RunMode};
+use crate::{allocation_map, RunMode, ticks_consumer};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population};
 use crate::disease::Disease;
 use crate::geography;
 use crate::geography::Grid;
-use crate::interventions::{LockdownConfig, BuildNewHospital, LockdownIntervention, VaccinateIntervention};
+use crate::interventions::hospital::BuildNewHospital;
+use crate::interventions::lockdown::{LockdownConfig, LockdownIntervention};
+use crate::interventions::vaccination::VaccinateIntervention;
+use crate::kafka_producer::{KafkaProducer, TickAck};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
 use crate::listeners::listener::Listeners;
 use crate::random_wrapper::RandomWrapper;
-use crate::kafka_producer::{KafkaProducer, TickAck};
-use futures::StreamExt;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -268,7 +270,8 @@ mod tests {
     use crate::config::AutoPopulation;
     use crate::geography::Area;
     use crate::geography::Point;
-    use crate::interventions::{VaccinateConfig, Intervention};
+    use crate::interventions::Intervention;
+    use crate::interventions::vaccination::VaccinateConfig;
 
     use super::*;
 

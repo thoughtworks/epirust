@@ -115,7 +115,7 @@ pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::interventions::VaccinateConfig;
+    use crate::interventions::vaccination::VaccinateConfig;
 
     #[test]
     fn should_read_config_with_csv_population() {

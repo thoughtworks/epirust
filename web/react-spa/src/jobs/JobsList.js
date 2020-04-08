@@ -41,12 +41,12 @@ export const JobsList = () => {
     return (<Redirect to={`/jobs/${id}/time-series`}/>);
   } else {
     return (<div className="row jobs-list">
-      <div className="col-3 right-border">
-        <ul className="list-group scrollable">
+      <div className="col-3">
+        <ul className="list-group scrollable padded-list">
           {simulations.map(s => <Job key={s.simulation_id} simulationId={s.simulation_id} status={s.status}/>)}
         </ul>
       </div>
-      <div className="col-9">
+      <div className="col-9 left-border scrollable">
         {id && <JobDetails simulationId={parseInt(id)} details={simulations.find(s => s.simulation_id === parseInt(id))}/>}
       </div>
     </div>);

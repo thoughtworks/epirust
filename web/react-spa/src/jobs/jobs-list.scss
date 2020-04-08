@@ -19,6 +19,7 @@
 
 .jobs-list {
   color: white;
+  padding: 0 40px 0 40px;
 }
 
 .scrollable {
@@ -43,7 +44,11 @@
   background-color: #3CAEDA;
 }
 
-.right-border {
+.left-border {
+  border-style: none none none solid;
   border-color: black;
-  border-style: none solid none none;
+}
+
+.padded-list {
+  padding: 0 16px 0 0;
 }

@@ -31,20 +31,26 @@ export const JobDetails = ({simulationId, details}) => {
   const isGridEnabled = details && details.config.enable_citizen_state_messages;
 
   return (
-    <div className="job-details" style={{paddingTop:4}}>
-      <h4>Simulation: {simulationId}</h4>
-      <ul className="nav nav-tabs">
-        <NavItem name="Time Series" linksTo={`${linkPrefix}/time-series`} activeOnExactMatch={true}/>
-        {isGridEnabled && <NavItem name="Grid" linksTo={`${linkPrefix}/grid`}/>}
-        <NavItem name="Config" linksTo={`${linkPrefix}/config`}/>
-      </ul>
+    <div className="job-details" style={{paddingTop: 4}}>
+      <div className="row">
+        <div className="col-8">
+          <ul className="nav nav-tabs nav-fill">
+            <NavItem name="Time Series" linksTo={`${linkPrefix}/time-series`} activeOnExactMatch={true}/>
+            {isGridEnabled && <NavItem name="Grid" linksTo={`${linkPrefix}/grid`}/>}
+            <NavItem name="Config" linksTo={`${linkPrefix}/config`}/>
+          </ul>
+        </div>
+        <div className="col-4">
+          <h4 className="simulation-id">Simulation: {simulationId}</h4>
+        </div>
+      </div>
       <Switch>
         <Route exact path={"/jobs/:id/time-series"}><TimeSeries simulationId={simulationId}/></Route>
         <Route exact path={"/jobs/:id/grid"}>
-            {isGridEnabled ? <GridPage/> : <Redirect to={`/jobs/${simulationId}/time-series`}/>}
+          {isGridEnabled ? <GridPage/> : <Redirect to={`/jobs/${simulationId}/time-series`}/>}
         </Route>}
         <Route exact path={"/jobs/:id/config"}>
-            {details && <pre>{JSON.stringify(details.config, undefined, 4)}</pre>}
+          {details && <pre>{JSON.stringify(details.config, undefined, 4)}</pre>}
         </Route>
       </Switch>
     </div>
@@ -52,6 +58,6 @@ export const JobDetails = ({simulationId, details}) => {
 };
 
 JobDetails.propTypes = {
-    simulationId: PropTypes.number.isRequired,
-    details: PropTypes.object.isRequired
+  simulationId: PropTypes.number.isRequired,
+  details: PropTypes.object
 };

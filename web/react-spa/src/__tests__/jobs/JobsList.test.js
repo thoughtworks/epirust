@@ -25,7 +25,7 @@ describe('JobsList',  function () {
       component = render(<MemoryRouter><JobsList/></MemoryRouter>);
     });
 
-    expect(component).toMatchSnapshot();
+    expect(component.container).toMatchSnapshot();
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(mockJson).toHaveBeenCalledTimes(1);
   });

@@ -38,7 +38,7 @@ if (process.env.NODE_ENV !== "test") {
 
 
 var server = http.createServer(app);
-server.listen(3000);
+server.listen(config.PORT);
 server.on('error', onError);
 server.on('listening', onListening);
 

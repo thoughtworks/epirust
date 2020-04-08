@@ -1,4 +1,6 @@
 module.exports = {
+    //SERVER Config
+    PORT: process.env.PORT || 3000,
     // DB Config
     DATABASE_URL: process.env.DATABASE_URL || 'mongodb://127.0.0.1/local_database',
 

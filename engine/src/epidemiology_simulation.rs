@@ -183,13 +183,7 @@ impl Epidemiology {
                 Epidemiology::unlock_city(&mut write_buffer_reference);
             }
 
-            match vaccinations.get(&simulation_hour) {
-                Some(vac_percent) => {
-                    info!("Vaccination");
-                    Epidemiology::vaccinate(*vac_percent, &mut write_buffer_reference, &mut rng);
-                }
-                _ => {}
-            };
+            Epidemiology::apply_vaccination_intervention(&vaccinations, simulation_hour, &mut write_buffer_reference, &mut rng);
 
             if Epidemiology::stop_simulation(counts_at_hr) {
                 terminate_engine = true;
@@ -211,6 +205,17 @@ impl Epidemiology {
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         listeners.simulation_ended();
+    }
+
+    fn apply_vaccination_intervention(vaccinations: &HashMap<i32, f64>, simulation_hour: i32,
+                                      write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
+        match vaccinations.get(&simulation_hour) {
+            Some(vac_percent) => {
+                info!("Vaccination");
+                Epidemiology::vaccinate(*vac_percent, write_buffer_reference, rng);
+            }
+            _ => {}
+        };
     }
 
     fn should_lock_city(counts_at_hr: &Counts, is_city_locked_down: bool, x: Lockdown) -> bool {

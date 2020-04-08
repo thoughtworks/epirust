@@ -24,8 +24,9 @@ import LandmarksLayer from './LandmarksLayer';
 import LinesLayer from './LinesLayer';
 import AreasLayer from './AreasLayer';
 import AgentsLayer from './AgentsLayer';
-import { AreaColors, AgentStateToColor } from './constants';
+import { AreaColors } from './constants';
 import agentMovement from '../resources/agent-movement';
+import GridLegend from './GridLegend';
 
 
 export default function GridPage() {
@@ -43,52 +44,7 @@ export default function GridPage() {
     return (
         <div className="grid-wrap">
             <CanvasGrid size={gridLayout.grid_size} areaDimensions={areaDimensions} landmarksDimensions={{ housesDimensions, officesDimensions }} />
-            <GridLegends />
-        </div>
-    )
-}
-
-function GridLegends() {
-
-    const areasLegends = [
-        { backgroundColor: AreaColors.HOUSING, text: "Housing" },
-        { backgroundColor: AreaColors.WORK, text: "Work" },
-        { backgroundColor: AreaColors.TRANSPORT, text: "Transport" },
-        { backgroundColor: AreaColors.HOSPITAL, text: "Hospital" },
-        { backgroundColor: AreaColors.OTHER, text: "Other" }
-    ]
-
-    const agentsLegends = [
-        { backgroundColor: AgentStateToColor.s, text: "Susceptible" },
-        { backgroundColor: AgentStateToColor.i, text: "Infected" },
-        { backgroundColor: AgentStateToColor.r, text: "Recovered" },
-        { backgroundColor: AgentStateToColor.d, text: "Deceased" }
-    ]
-    return (
-        <div className="legends-wrap">
-            <h6>Areas</h6>
-            <ul className="legends areas">{
-                areasLegends.map(({ backgroundColor, text }) => (
-                    <li>
-                        <div className="legend-item">
-                            <span className="swatch" style={{ backgroundColor }}></span>
-                            <span className="text">{text}</span>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-
-            <h6>Agent States</h6>
-            <ul className="legends agents">{
-                agentsLegends.map(({ backgroundColor, text }) => (
-                    <li>
-                        <div className="legend-item">
-                            <span className="swatch" style={{ backgroundColor }}></span>
-                            <span className="text">{text}</span>
-                        </div>
-                    </li>
-                ))}
-            </ul>
+            <GridLegend />
         </div>
     )
 }

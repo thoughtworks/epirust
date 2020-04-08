@@ -21,20 +21,26 @@ import { GridContext } from './index'
 import { LandmarkColors } from './constants';
 
 export default function LandmarksLayer({ landmarksDimensions }) {
-    const { cellDimension, lineWidth, canvasDimension } = useContext(GridContext);
+    const { cellDimension, lineWidth, canvasDimension, size } = useContext(GridContext);
 
     const landmarksLayerCanvas = useRef(null);
     const [landmarksCanvasContext, setLandmarksCanvasContext] = useState(null);
 
     useEffect(() => {
+        if (!landmarksDimensions)
+            return
+
         if (!landmarksLayerCanvas)
             return
 
         setLandmarksCanvasContext(landmarksLayerCanvas.current.getContext("2d"));
 
-    }, [landmarksLayerCanvas])
+    }, [landmarksLayerCanvas, landmarksDimensions])
 
     useEffect(() => {
+        if (!landmarksDimensions)
+            return
+
         if (!landmarksCanvasContext)
             return
 

@@ -17,7 +17,7 @@
  *
  */
 
-import React from 'react';
+import React, { useContext, useRef, useState, useEffect } from 'react';
 
 import gridLayout from '../resources/grid-layout';
 import LandmarksLayer from './LandmarksLayer';
@@ -25,51 +25,106 @@ import LinesLayer from './LinesLayer';
 import AreasLayer from './AreasLayer';
 import AgentsLayer from './AgentsLayer';
 import { AreaColors } from './constants';
-import agentMovement from '../resources/agent-movement';
 import GridLegend from './GridLegend';
+import { useParams } from "react-router-dom"
+import io from 'socket.io-client'
 
-
-export default function GridPage() {
-    const { housing_area, work_area, transport_area, hospital_area } = gridLayout
-    const areaDimensions = [
-        { ...housing_area, color: AreaColors.HOUSING },
-        { ...work_area, color: AreaColors.WORK },
-        { ...transport_area, color: AreaColors.TRANSPORT },
-        { ...hospital_area, color: AreaColors.HOSPITAL }
-    ]
-
-    const housesDimensions = gridLayout.houses,
-        officesDimensions = gridLayout.offices
-
-    return (
-        <div className="grid-wrap">
-            <CanvasGrid size={gridLayout.grid_size} areaDimensions={areaDimensions} landmarksDimensions={{ housesDimensions, officesDimensions }} />
-            <GridLegend />
-        </div>
-    )
-}
 
 export const GridContext = React.createContext(null);
 
-export function CanvasGrid({ size, areaDimensions, landmarksDimensions }) {
+export default function GridPage() {
+    const { id } = useParams();
 
-    const cellDimension = Math.floor((window.innerHeight - 165) / size),
-        lineWidth = Math.floor(cellDimension / 4) < 1 ? 0 : Math.floor(cellDimension / 4),
-        canvasDimension = (size * cellDimension) + lineWidth;
+    const [socket, setSocket] = useState(null);
+    const [socketDataExhausted, setSocketDataExhausted] = useState(false);
+
+    //default values?
+    const [areaDimensions, setAreaDimensions] = useState(null);
+    const [landmarksDimensions, setLandmarksDimensions] = useState(null);
+    const [agentPositions, setAgentPositions] = useState(null);
+
+    const [gridContextData, setGridContextData] = useState(null)
+
+    useEffect(() => {
+        console.log("started socket")
+        setSocket(io('http://localhost:3000/grid-updates'));
+    }, [])
+
+    //reading socket data
+    useEffect(() => {
+        if (!socket)
+            return
+
+        socket.emit('simulation_id', id);
+
+        socket.on('gridData', function (messageRaw) {
+            const message = messageRaw;
+
+            console.log(message)
+
+            if ("simulation_ended" in message) {
+                socket.close();
+                setSocketDataExhausted(true)
+                return
+            }
+
+            if ('grid_size' in message) {
+                const { housing_area, work_area, transport_area, hospital_area, grid_size } = message
+                const areaDimensions = [
+                    { ...housing_area, color: AreaColors.HOUSING },
+                    { ...work_area, color: AreaColors.WORK },
+                    { ...transport_area, color: AreaColors.TRANSPORT },
+                    { ...hospital_area, color: AreaColors.HOSPITAL }
+                ]
+
+                const housesDimensions = message.houses,
+                    officesDimensions = message.offices
+
+                const cellDimension = Math.floor((window.innerHeight - 165) / grid_size),
+                    lineWidth = Math.floor(cellDimension / 4) < 1 ? 0 : Math.floor(cellDimension / 4),
+                    canvasDimension = (grid_size * cellDimension) + lineWidth;
+
+                setGridContextData({
+                    cellDimension: cellDimension,
+                    lineWidth: lineWidth,
+                    canvasDimension: canvasDimension,
+                    size: grid_size
+                })
+
+                setAreaDimensions(areaDimensions);
+                setLandmarksDimensions({ housesDimensions, officesDimensions })
+                return
+            }
+
+            if ('citizen_states' in message) {
+
+                setAgentPositions(pos => {
+                    if (!pos)
+                        return [message.citizen_states]
+
+                    return [...pos, message.citizen_states]
+                })
+            }
+
+        });
+    }, [socket])
+
+    if (!gridContextData)
+        return "Loading"
 
     return (
-        <div style={{ position: "relative" }}>
-            <GridContext.Provider value={{
-                cellDimension: cellDimension,
-                lineWidth: lineWidth,
-                canvasDimension: canvasDimension,
-                size: size
-            }}>
-                <AreasLayer areaDimensions={areaDimensions} />
-                <LinesLayer />
-                <LandmarksLayer landmarksDimensions={landmarksDimensions} />
-                <AgentsLayer agentPositions={agentMovement.agentsPerTick} />
+        <div className="grid-wrap">
+
+            <GridContext.Provider value={gridContextData}>
+                <div style={{ position: "relative" }}>
+                    <AreasLayer areaDimensions={areaDimensions} />
+                    <LinesLayer />
+                    <LandmarksLayer landmarksDimensions={landmarksDimensions} />
+                    <AgentsLayer agentPositions={agentPositions} simulationEnded={socketDataExhausted} />
+                </div >
             </GridContext.Provider>
+
+            <GridLegend />
         </div>
     )
 }

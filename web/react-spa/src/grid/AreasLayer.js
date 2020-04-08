@@ -28,15 +28,18 @@ export default function AreasLayer({ areaDimensions }) {
     const [areasCanvasContext, setAreasCanvasContext] = useState(null);
 
     useEffect(() => {
-        if (!areasLayerCanvas)
+        if (!areaDimensions)
+            return
+
+        if (!areaDimensions || !areasLayerCanvas)
             return
 
         setAreasCanvasContext(areasLayerCanvas.current.getContext("2d"));
 
-    }, [areasLayerCanvas])
+    }, [areasLayerCanvas, areaDimensions])
 
     useEffect(() => {
-        if (!areasCanvasContext)
+        if (!areaDimensions || !areasCanvasContext)
             return
 
         function updateAreaColor(areaDimensions, x, y) {

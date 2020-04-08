@@ -18,20 +18,11 @@
  */
 
 import React from 'react'
-import { render, findAllByTestId, fireEvent, getByText } from '@testing-library/react'
-import AgentsLayer from '../../grid/AgentsLayer'
+import { render, fireEvent } from '@testing-library/react'
 import { GridContext } from '../../grid/index'
 
-import io from "socket.io-client";
-jest.mock("socket.io-client");
-import MockSocket from 'socket.io-mock'
 import AgentPositionsWrapper from '../../grid/AgentsLayer';
-jest.mock('react-router-dom', () => ({
-    ...jest.requireActual('react-router-dom'), // use actual for all non-hook parts
-    useParams: () => ({
-      id: 1542319876,
-    }),
-  }));
+
 
 jest.useFakeTimers()
 
@@ -40,36 +31,26 @@ afterEach(() => {
     jest.clearAllMocks()
 })
 
-test('should render AgentsLayer when grid visualization starts', () => {
-    const cellDimension = 2
-    const lineWidth = 1
-    const canvasDimension = 20
-    const size = 10
+const gridContextData = {
+    cellDimension: 2,
+    lineWidth: 1,
+    canvasDimension: 20,
+    size: 10
+}
+const agentPositions = [[
+    { "id": 595, "state": "s", "location": { "x": 0, "y": 0 } },
+    { "id": 238, "state": "s", "location": { "x": 37, "y": 66 } },
+    { "id": 981, "state": "s", "location": { "x": 31, "y": 1 } }
+]];
 
-    const message = {
-        "hr": 1,
-        "citizen_states": [{
-            "id": 595, "state": "s",
-            "location": { "x": 0, "y": 0 }
-        },
-        { "id": 238, "state": "s", "location": { "x": 37, "y": 66 } },
-        {
-            "id": 981, "state": "s", "location": { "x": 31, "y": 1 }
-        }]
-    }
-    const mockSocket = new MockSocket()
-    io.mockImplementation(() => mockSocket)
-    mockSocket.close = jest.fn()
+test('should render AgentsLayer when grid visualization starts', () => {
+
     const { getByTestId, getByText } = render(
-        <GridContext.Provider value={{ cellDimension, lineWidth, canvasDimension, size }}>
-            <AgentPositionsWrapper />
+        <GridContext.Provider value={gridContextData}>
+            <AgentPositionsWrapper agentPositions={agentPositions} simulationEnded={false} />
         </GridContext.Provider>)
 
     fireEvent.click(getByText("START"))
-    mockSocket.socketClient.emit("gridData", message)
-    mockSocket.socketClient.emit("gridData", message)
-    mockSocket.socketClient.emit("gridData", { "simulation_ended": true })
-
     jest.advanceTimersByTime(1000)
 
     expect(setInterval).toHaveBeenCalledTimes(1)
@@ -77,38 +58,25 @@ test('should render AgentsLayer when grid visualization starts', () => {
 })
 
 test('should render AgentsLayer when grid visualization pauses', () => {
-    const cellDimension = 2
-    const lineWidth = 1
-    const canvasDimension = 20
-    const size = 10
-
-    const message = {
-        "hr": 1,
-        "citizen_states": [{
-            "id": 595, "state": "s",
-            "location": { "x": 0, "y": 0 }
-        },
-        { "id": 238, "state": "s", "location": { "x": 37, "y": 66 } },
-        {
-            "id": 981, "state": "s", "location": { "x": 31, "y": 1 }
-        }]
-    }
-    const mockSocket = new MockSocket()
-    io.mockImplementation(() => mockSocket)
-    mockSocket.close = jest.fn()
-    const { getByTestId, getByText } = render(
-        <GridContext.Provider value={{ cellDimension, lineWidth, canvasDimension, size }}>
-            <AgentPositionsWrapper />
+    const { getByTestId, getByText, rerender } = render(
+        <GridContext.Provider value={gridContextData}>
+            <AgentPositionsWrapper agentPositions={agentPositions} simulationEnded={false} />
         </GridContext.Provider>)
 
     fireEvent.click(getByText("START"))
-    mockSocket.socketClient.emit("gridData", message)
-    mockSocket.socketClient.emit("gridData", message)
 
-    jest.advanceTimersByTime(200)
+    jest.advanceTimersByTime(100)
+
     fireEvent.click(getByText("PAUSE"))
-    mockSocket.socketClient.emit("gridData", { "simulation_ended": true })
-    
+
+    rerender(
+        <GridContext.Provider value={gridContextData}>
+            <AgentPositionsWrapper agentPositions={[agentPositions[0], agentPositions[0]]} simulationEnded={false} />
+        </GridContext.Provider>
+    )
+
+    fireEvent.click(getByText("RESUME"))
+
     expect(getByTestId("grid-canvas-agents").getContext("2d").__getEvents()).toMatchSnapshot()
 })
 

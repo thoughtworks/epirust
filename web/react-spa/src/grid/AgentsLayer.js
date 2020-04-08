@@ -19,68 +19,17 @@
 import React, { useContext, useRef, useState, useEffect } from 'react';
 import { GridContext } from './index'
 import { AgentStateToColor } from './constants';
-import io from "socket.io-client";
-import { useParams } from "react-router-dom"
 
-export default function AgentPositionsWrapper() {
-    const { id } = useParams();
-    const [socket, setSocket] = useState(null);
-    const [agentPositions, setAgentPositions] = useState(null);
-
-    const [simulationStarted, setSimulationStarted] = useState(false);
-    const [socketDataExhausted, setSocketDataExhausted] = useState(false);
-
+export default function AgentPositionsWrapper({ agentPositions, simulationEnded }) {
+    const [simulationPaused, setSimulationPaused] = useState(true);
     const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
     const [intervalId, setIntervalId] = useState(null);
 
-    //starting socket
-    useEffect(() => {
-
-        if (agentPositions)
-            return
-
-        if (simulationStarted && currentDisplayIndex === 0) {
-            setSocket(io('http://localhost:3000/grid-updates'));
-        }
-    }, [currentDisplayIndex, simulationStarted, agentPositions])
-
-    //reading from socket
-    useEffect(() => {
-        if (!socket)
-            return
-
-        socket.emit('simulation_id', id);
-
-        socket.on('gridData', function (messageRaw) {
-            const message = messageRaw;
-
-            console.log(message)
-
-            let simulationEndedTemp = false
-            if ("simulation_ended" in message) {
-                simulationEndedTemp = true;
-                socket.close();
-            }
-            else {
-                message.citizen_states && setAgentPositions(pos => {
-                    if (!pos)
-                        return [message.citizen_states]
-
-                    return [...pos, message.citizen_states]
-                })
-            }
-
-            if (simulationEndedTemp) {
-                setSocketDataExhausted(true)
-            }
-        });
-    }, [socket])
-
     //displayed all the data
     useEffect(() => {
-        if (!socket) return
 
-        if (socket.connected) return
+        if (!simulationEnded)
+            return
 
         const displayedAllHours = currentDisplayIndex >= agentPositions.length;
 
@@ -90,21 +39,21 @@ export default function AgentPositionsWrapper() {
             setIntervalId(null)
             return
         }
-    }, [currentDisplayIndex, agentPositions, socketDataExhausted])
+    }, [currentDisplayIndex, agentPositions])
 
     //pause
     useEffect(() => {
-        if (!simulationStarted && agentPositions) {
+        if (simulationPaused && agentPositions) {
             console.log("interval cleared bacause Pause", intervalId)
             clearInterval(intervalId)
             setIntervalId(null)
         }
 
-    }, [simulationStarted, agentPositions])
+    }, [simulationPaused, agentPositions])
 
     //count++
     useEffect(() => {
-        if (!simulationStarted)
+        if (simulationPaused)
             return
 
         if (!agentPositions || intervalId)
@@ -115,23 +64,23 @@ export default function AgentPositionsWrapper() {
         setIntervalId(interval);
 
         return () => clearInterval(intervalId)
-    }, [simulationStarted, agentPositions])
+    }, [simulationPaused, agentPositions])
 
     const handleStart = () => {
-        setSimulationStarted(true)
+        setSimulationPaused(false)
     }
 
     const handlePause = () => {
-        setSimulationStarted(false)
+        setSimulationPaused(true)
     }
 
     const handleStop = () => {
         setCurrentDisplayIndex(0);
-        setSimulationStarted(false)
+        setSimulationPaused(true)
     }
 
     const positionsToDisplay = agentPositions
-        ? agentPositions[currentDisplayIndex - 1]
+        ? agentPositions[currentDisplayIndex]
         : []
 
     return (
@@ -139,9 +88,9 @@ export default function AgentPositionsWrapper() {
             <div style={{ position: "absolute", zIndex: 5, right: 0 }}>
                 <h4>{`${currentDisplayIndex}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
 
-                {simulationStarted
-                    ? <button className="btn btn-primary" onClick={handlePause}>PAUSE</button>
-                    : <button className="btn btn-success" onClick={handleStart}>{currentDisplayIndex === 0 ? 'START' : 'RESUME'}</button>
+                {simulationPaused
+                    ? <button className="btn btn-success" onClick={handleStart}>{currentDisplayIndex === 0 ? 'START' : 'RESUME'}</button>
+                    : <button className="btn btn-primary" onClick={handlePause}>PAUSE</button>
                 }
 
                 <button className="btn btn-danger" onClick={handleStop}>STOP</button>

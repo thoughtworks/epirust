@@ -26,13 +26,13 @@ use chrono::{DateTime, Local};
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
-use crate::{allocation_map, constants, ticks_consumer, RunMode};
+use crate::{allocation_map, ticks_consumer, RunMode};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population};
 use crate::disease::Disease;
 use crate::geography;
 use crate::geography::Grid;
-use crate::interventions::{Intervention, Lockdown, BuildNewHospital};
+use crate::interventions::{Intervention, LockdownConfig, BuildNewHospital, LockdownIntervention};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events::counts::Counts;
@@ -97,10 +97,8 @@ impl Epidemiology {
         self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
 
         let vaccinations = Epidemiology::prepare_vaccinations(config);
-        let lock_down_details = Intervention::get_lock_down_intervention(config);
+        let mut lock_down_details = LockdownIntervention::init(config);
         let mut hospital_intervention = BuildNewHospital::init(config);
-        let mut city_to_be_locked_till: i32 = 0;
-        let mut is_city_locked_down = false;
 
         listeners.grid_updated(&self.grid);
         let mut producer = KafkaProducer::new();
@@ -162,16 +160,12 @@ impl Epidemiology {
             listeners.counts_updated(counts_at_hr);
             hospital_intervention.counts_updated(&counts_at_hr);
 
-            match lock_down_details {
-                Some(x) if Epidemiology::should_lock_city(&counts_at_hr, is_city_locked_down, x) => {
-                    Epidemiology::lock_city(&mut write_buffer_reference, &mut rng, &x);
-                    is_city_locked_down = true;
-                    city_to_be_locked_till = simulation_hour + x.lock_down_period * constants::NUMBER_OF_HOURS;
-                }
-                _ => {}
+            if lock_down_details.should_apply(&counts_at_hr) {
+                lock_down_details.apply(&counts_at_hr);
+                Epidemiology::lock_city(&mut write_buffer_reference, &mut rng, &lock_down_details.get_config().unwrap());
             }
 
-            if is_city_locked_down && city_to_be_locked_till == simulation_hour {
+            if lock_down_details.should_unlock(&counts_at_hr) {
                 Epidemiology::unlock_city(&mut write_buffer_reference);
             }
 
@@ -204,10 +198,6 @@ impl Epidemiology {
             }
             _ => {}
         };
-    }
-
-    fn should_lock_city(counts_at_hr: &Counts, is_city_locked_down: bool, x: Lockdown) -> bool {
-        !is_city_locked_down && (counts_at_hr.get_infected() > x.at_number_of_infections)
     }
 
     fn prepare_vaccinations(config: &Config) -> HashMap<i32, f64> {
@@ -264,7 +254,7 @@ impl Epidemiology {
         }
     }
 
-    fn lock_city(write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper, lockdown_details: &Lockdown) {
+    fn lock_city(write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper, lockdown_details: &LockdownConfig) {
         info!("Locking the city");
         for (_v, agent_vec) in write_buffer_reference.agent_cell.iter_mut() {
             for agent in agent_vec{

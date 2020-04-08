@@ -17,16 +17,17 @@
  *
  */
 
-import React, { useContext, useRef, useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 
 import LandmarksLayer from './LandmarksLayer';
 import LinesLayer from './LinesLayer';
 import AreasLayer from './AreasLayer';
 import AgentsLayer from './AgentsLayer';
-import { AreaColors } from './constants';
+import {AreaColors} from './constants';
 import GridLegend from './GridLegend';
-import { useParams } from "react-router-dom"
+import {useParams} from "react-router-dom"
 import io from 'socket.io-client'
+import config from "../config";
 
 
 export const GridContext = React.createContext(null);
@@ -46,7 +47,7 @@ export default function GridPage() {
 
     useEffect(() => {
         console.log("started socket")
-        setSocket(io('http://localhost:3000/grid-updates'));
+        setSocket(io(`${config.API_HOST}/grid-updates`));
     }, [])
 
     //reading socket data

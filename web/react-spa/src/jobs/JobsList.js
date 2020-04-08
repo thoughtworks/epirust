@@ -22,13 +22,14 @@ import './jobs-list.scss'
 import {Job} from "./Job";
 import {JobDetails} from "./JobDetails";
 import {Redirect, useParams} from 'react-router-dom';
+import config from "../config";
 
 export const JobsList = () => {
   const {id, view} = useParams();
   const [simulations, updateSimulations] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/simulation/",
+    fetch(`${config.API_HOST}/simulation/`,
       {
         method: 'GET',
         headers: {'Content-Type': 'application/json'}

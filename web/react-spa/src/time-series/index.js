@@ -22,12 +22,13 @@ import SocketAwareGraph from "./SocketAwareGraph";
 import React, {useEffect, useState} from "react";
 import io from "socket.io-client";
 import PropTypes from 'prop-types'
+import config from "../config";
 
 function TimeSeries({simulationId}) {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    setSocket(io('http://localhost:3000/counts'));
+    setSocket(io(`${config.API_HOST}/counts`));
   }, []);
 
   return (

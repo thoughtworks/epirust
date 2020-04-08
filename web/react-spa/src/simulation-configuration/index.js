@@ -1,11 +1,12 @@
 import React from 'react';
 import ParametersForm from './ParamtersForm';
 import { useHistory } from "react-router-dom"
+import config from "../config";
 
 export default function SimulationConfiguration() {
     const history = useHistory();
     function pushData(paramsData) {
-        return fetch("http://localhost:3000/simulation/init", {
+        return fetch(`${config.API_HOST}/simulation/init`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

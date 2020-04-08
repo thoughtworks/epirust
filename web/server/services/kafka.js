@@ -18,6 +18,7 @@
  */
 
 const kafka = require('kafka-node');
+const config = require('../config');
 
 class KafkaGroupConsumer {
     constructor(host, topic, groupId) {
@@ -46,7 +47,8 @@ class KafkaConsumerService {
 
 class KafkaProducerService {
     constructor() {
-        const client = new kafka.KafkaClient();
+        const clientOptions = {kafkaHost: config.KAFKA_URL};
+        const client = new kafka.KafkaClient(clientOptions);
         this.producer = new kafka.Producer(client);
     }
 

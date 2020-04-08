@@ -74,7 +74,7 @@ async fn main() {
         panic!("Engine names should match regions in travel plan");
     }
 
-    let hours = 0..10000;
+    let hours = 1..10000;
 
     cleanup().await;
     start(&travel_plan, hours, &sim_conf).await;

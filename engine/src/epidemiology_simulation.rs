@@ -125,6 +125,9 @@ impl Epidemiology {
                 }
                 let clock_tick = clock_tick.unwrap();
                 debug!("tick {}", clock_tick);
+                if clock_tick != simulation_hour {
+                    panic!("Local hour is {}, but received tick for {}", simulation_hour, clock_tick);
+                }
                 let ack = TickAck { engine_id: engine_id.to_string(), hour: clock_tick, terminate: terminate_engine };
                 match producer.send_ack(&ack).await.unwrap() {
                     Ok(_) => {

@@ -35,18 +35,20 @@ exports[`should render GridPage component consuming the data coming from socket 
         <div
           style="position: absolute; z-index: 5; right: 0px;"
         >
-          <h4>
+          <h4
+            data-testid="counter"
+          >
             0/1 hrs
           </h4>
           <button
-            class="btn btn-success"
+            class="btn btn-primary btn-sm"
           >
-            START
+            PAUSE
           </button>
           <button
-            class="btn btn-danger"
+            class="btn btn-danger btn-sm"
           >
-            STOP
+            RESET
           </button>
         </div>
         <canvas

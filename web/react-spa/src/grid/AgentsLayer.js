@@ -24,32 +24,46 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
     const [simulationPaused, setSimulationPaused] = useState(true);
     const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
     const [intervalId, setIntervalId] = useState(null);
+    const [clickedPause, setClickedPause] = useState(false)
+
+    const stopIncrement = () => {
+        clearInterval(intervalId);
+        setIntervalId(null);
+    }
+
+    const displayedAll = () => {
+        return simulationEnded && (currentDisplayIndex >= agentPositions.length)
+    } 
 
     //displayed all the data
     useEffect(() => {
-
-        if (!simulationEnded)
-            return
-
-        const displayedAllHours = currentDisplayIndex >= agentPositions.length;
-
-        if (displayedAllHours) {
-            console.log("interval cleared bacause sim end", intervalId)
-            clearInterval(intervalId)
-            setIntervalId(null)
-            return
+        if (displayedAll()) {
+            stopIncrement()
         }
     }, [currentDisplayIndex, agentPositions])
 
     //pause
     useEffect(() => {
         if (simulationPaused && agentPositions) {
-            console.log("interval cleared bacause Pause", intervalId)
-            clearInterval(intervalId)
-            setIntervalId(null)
+            stopIncrement();
+        }
+    }, [simulationPaused, agentPositions])
+
+    //race condition
+    useEffect(() => {
+        if (!agentPositions || simulationEnded) {
+            return
+        }
+        if (currentDisplayIndex >= agentPositions.length) {
+            setSimulationPaused(true)
+            return
         }
 
-    }, [simulationPaused, agentPositions])
+        if (simulationPaused && !clickedPause) {
+            setSimulationPaused(false)
+        }
+
+    }, [currentDisplayIndex, agentPositions, simulationEnded, clickedPause])
 
     //count++
     useEffect(() => {
@@ -66,16 +80,19 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
         return () => clearInterval(intervalId)
     }, [simulationPaused, agentPositions])
 
-    const handleStart = () => {
+    const handleResume = () => {
+        setClickedPause(false)
         setSimulationPaused(false)
     }
 
     const handlePause = () => {
+        setClickedPause(true)
         setSimulationPaused(true)
     }
 
-    const handleStop = () => {
+    const handleReset = () => {
         setCurrentDisplayIndex(0);
+        setClickedPause(true)
         setSimulationPaused(true)
     }
 
@@ -86,14 +103,14 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
     return (
         <div style={{ position: "relative" }}>
             <div style={{ position: "absolute", zIndex: 5, right: 0 }}>
-                <h4>{`${currentDisplayIndex}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
+                <h4 data-testid="counter">{`${currentDisplayIndex}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
 
-                {simulationPaused
-                    ? <button className="btn btn-success" onClick={handleStart}>{currentDisplayIndex === 0 ? 'START' : 'RESUME'}</button>
-                    : <button className="btn btn-primary" onClick={handlePause}>PAUSE</button>
+                {clickedPause
+                    ? <button className="btn btn-success btn-sm" onClick={handleResume}>{currentDisplayIndex === 0 ? 'START' : 'RESUME'}</button>
+                    : <button className="btn btn-primary btn-sm" onClick={handlePause} disabled={displayedAll()}>PAUSE</button>
                 }
 
-                <button className="btn btn-danger" onClick={handleStop}>STOP</button>
+                <button className="btn btn-danger btn-sm" onClick={handleReset}>RESET</button>
             </div>
             <AgentsLayer agentPositionsPerHour={positionsToDisplay} />
         </div>

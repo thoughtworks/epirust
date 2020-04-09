@@ -28,6 +28,8 @@ async function sendCountsData(simulationId, socket, totalConsumedRecords) {
 
   let recordsConsumedInThisGo = 0;
   for await(const data of cursor) {
+    if(socket.disconnected)
+      return ;
     recordsConsumedInThisGo += 1;
     socket.emit('epidemicStats', data);
   }
@@ -36,6 +38,8 @@ async function sendCountsData(simulationId, socket, totalConsumedRecords) {
 
   await promise.then((simulation) => {
     if (simulation.status === SimulationStatus.FINISHED || simulation.status === SimulationStatus.FAILED) {
+      if(socket.disconnected)
+        return ;
       socket.emit('epidemicStats', {"simulation_ended": true});
     } else sendCountsData(simulationId, socket, totalConsumedRecords + recordsConsumedInThisGo);
   })

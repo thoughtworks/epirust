@@ -28,7 +28,12 @@ function TimeSeries({simulationId}) {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    setSocket(io(`${config.API_HOST}/counts`));
+    const socketInstance = io(`${config.API_HOST}/counts`);
+    setSocket(socketInstance);
+
+    return () => {
+      socketInstance.close();
+    }
   }, []);
 
   return (

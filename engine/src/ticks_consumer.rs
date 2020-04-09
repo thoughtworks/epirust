@@ -23,7 +23,6 @@ use rdkafka::{ClientConfig, Message};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
 use crate::environment;
-use serde_json::Value;
 
 const TICKS_TOPIC: &str = "ticks";
 
@@ -42,7 +41,7 @@ pub fn start(engine_id: &str) -> StreamConsumer {
     consumer
 }
 
-pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Option<i32> {
+pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Option<Tick> {
     match msg {
         None => {
             debug!("End of tick stream");
@@ -50,17 +49,33 @@ pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Option<i32> {
         }
         Some(m) => {
             let borrowed_message = m.unwrap();
-            let parsed_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-            debug!("Tick Data: {}", parsed_message);
-            let tick = parse_tick_hour(parsed_message);
-            Some(tick)
+            let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
+            debug!("Tick Data: {}", str_message);
+            Some(parse_tick(str_message))
         }
     }
 }
 
-fn parse_tick_hour(message: &str) -> i32 {
-    let tick_json: Value = serde_json::from_str(message).unwrap();
-    tick_json.get("hour").unwrap().as_i64().expect("Could not get tick as an i64") as i32
+fn parse_tick(message: &str) -> Tick {
+    serde_json::from_str(message).expect("Could not parse tick")
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct Tick {
+    hour: i32,
+    travel_plan: Option<TravelPlan>,
+}
+
+impl Tick {
+    pub fn hour(&self) -> i32 {
+        self.hour
+    }
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct TravelPlan {
+    regions: Vec<String>,
+    matrix: Vec<Vec<i32>>,
 }
 
 #[cfg(test)]
@@ -68,16 +83,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn should_parse_tick_hour() {
+    fn should_parse_tick() {
         let json = r#"
         {
             "hour": 1
         }"#;
-        assert_eq!(1, parse_tick_hour(json));
+        let expected = Tick { hour: 1, travel_plan: None };
+        assert_eq!(expected, parse_tick(json));
 
         let json = r#"
         {"hour":0,"travel_plan":{"regions":["engine1","engine2"],"matrix":[[0,156],[108,0]]}}
         "#;
-        assert_eq!(0, parse_tick_hour(json));
+        let travel_plan = TravelPlan {
+            regions: vec!["engine1".to_string(), "engine2".to_string()],
+            matrix: vec![
+                vec![0, 156],
+                vec![108, 0]
+            ],
+        };
+        let expected = Tick { hour: 0, travel_plan: Some(travel_plan) };
+        assert_eq!(expected, parse_tick(json));
     }
 }

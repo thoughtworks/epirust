@@ -42,6 +42,7 @@ use crate::listeners::events::counts::Counts;
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
 use crate::listeners::listener::Listeners;
 use crate::random_wrapper::RandomWrapper;
+use rdkafka::consumer::{MessageStream, DefaultConsumerContext};
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -118,17 +119,9 @@ impl Epidemiology {
         let mut terminate_engine = false;
 
         for simulation_hour in 1..config.get_hours() {
-            if let RunMode::MultiEngine { engine_id } = run_mode {
-                let msg = message_stream.next().await;
-                let clock_tick = ticks_consumer::read(msg);
-                if clock_tick.is_none() {
-                    break;
-                }
-                let clock_tick = clock_tick.unwrap();
-                debug!("tick {}", clock_tick);
-                if clock_tick != simulation_hour {
-                    panic!("Local hour is {}, but received tick for {}", simulation_hour, clock_tick);
-                }
+            let tick = Epidemiology::receive_tick(run_mode, &mut message_stream, simulation_hour).await;
+            if tick.is_none() {
+                break;
             }
 
             counts_at_hr.increment_hour();
@@ -185,6 +178,26 @@ impl Epidemiology {
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         listeners.simulation_ended();
+    }
+
+    async fn receive_tick(run_mode: &RunMode, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+                          simulation_hour: i32) -> Option<i32> {
+        if let RunMode::MultiEngine { engine_id: _e } = run_mode {
+            let msg = message_stream.next().await;
+            let clock_tick = ticks_consumer::read(msg);
+            match clock_tick {
+                None => {}
+                Some(t) => {
+                    debug!("tick {}", t);
+                    if t != simulation_hour {
+                        panic!("Local hour is {}, but received tick for {}", simulation_hour, t);
+                    }
+                }
+            };
+            clock_tick
+        } else {
+            Some(simulation_hour)
+        }
     }
 
     async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, terminate_engine: bool, simulation_hour: i32) {

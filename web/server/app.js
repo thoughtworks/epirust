@@ -55,6 +55,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', router);
 
+app.get('*', (req,res) =>{
+  res.sendFile(path.join(__dirname+'/public/index.html'));
+});
+
 function onError(error) {
   if (error.syscall !== 'listen') {
     throw error;

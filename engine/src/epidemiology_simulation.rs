@@ -82,14 +82,17 @@ impl Epidemiology {
         format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"))
     }
 
-    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
+    fn create_listeners(&self, config: &Config, run_mode: &RunMode) -> Listeners {
         let output_file_name = Epidemiology::output_file_name(config, run_mode);
-
         let csv_listener = CsvListener::new(output_file_name);
         let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), self.agent_location_map.agent_cell.len(),
                                                       config.enable_citizen_state_messages());
         let hotspot_tracker = Hotspot::new();
-        let mut listeners = Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)]);
+        Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)])
+    }
+
+    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
+        let mut listeners = self.create_listeners(config, run_mode);
 
         let mut counts_at_hr = Counts::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
         let mut rng = RandomWrapper::new();

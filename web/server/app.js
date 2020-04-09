@@ -47,7 +47,7 @@ const io = require("socket.io")(server);
 setupIO(io);
 
 
-app.use(cors({ origin: 'http://localhost:3001' }));
+app.use(cors({ origin: config.CLIENT_URL }));
 app.use(logger('dev'));
 app.use(cors());
 app.use(express.json());

@@ -60,8 +60,6 @@ export default function GridPage() {
         socket.on('gridData', function (messageRaw) {
             const message = messageRaw;
 
-            console.log(message)
-
             if ("simulation_ended" in message) {
                 socket.close();
                 setSocketDataExhausted(true)

@@ -47,7 +47,12 @@ export default function GridPage() {
 
     useEffect(() => {
         console.log("started socket")
-        setSocket(io(`${config.API_HOST}/grid-updates`));
+        const socketInstance = io(`${config.API_HOST}/grid-updates`);
+        setSocket(socketInstance);
+
+        return () => {
+            socketInstance.close();
+        }
     }, [])
 
     //reading socket data

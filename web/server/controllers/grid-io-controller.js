@@ -30,6 +30,8 @@ async function sendGridData(simulationId, socket, totalConsumerRecords) {
 
   let countOfMessagesConsumed = 0;
   for await (const data of cursor) {
+    if(socket.disconnected)
+      return ;
     countOfMessagesConsumed += 1;
     socket.emit('gridData', data);
   }
@@ -42,9 +44,13 @@ async function sendGridData(simulationId, socket, totalConsumerRecords) {
 
   await promise.then((simulation) => {
     if (simulation.grid_consumption_finished || simulation.status === SimulationStatus.FAILED) {
+      if(socket.disconnected)
+        return ;
       socket.emit('gridData', { "simulation_ended": true });
     }
     else if(!simulation.config.enable_citizen_state_messages) {
+      if(socket.disconnected)
+        return ;
       socket.emit('gridData', { message: "no grid data" });
     }
     else sendGridData(simulationId, socket, totalConsumerRecords + countOfMessagesConsumed);

@@ -18,12 +18,12 @@
  */
 
 import React from 'react'
-import { render } from '@testing-library/react'
+import {render} from '@testing-library/react'
 import GridPage from '../../grid/index'
 import MockSocket from 'socket.io-mock'
 import io from 'socket.io-client'
 
-jest.mock('socket.io-client')
+jest.mock('socket.io-client');
 jest.mock('react-router-dom', () => ({
     ...jest.requireActual('react-router-dom'), // use actual for all non-hook parts
     useParams: () => ({
@@ -31,122 +31,135 @@ jest.mock('react-router-dom', () => ({
     }),
 }));
 
-test('should render GridPage component with Loading', () => {
-    const { asFragment } = render(<GridPage />)
-    expect(asFragment()).toMatchSnapshot()
-})
+describe('Grid Page', () => {
+    let mockSocket, closeSpy;
+    beforeEach(() => {
+        mockSocket = new MockSocket();
+        io.mockImplementation(() => mockSocket);
+        closeSpy = jest.fn();
+        mockSocket.close = closeSpy;
+    });
 
-test('should render GridPage component consuming the data coming from socket', () => {
-    const layoutDimensions = {
-        "grid_size": 10,
-        "housing_area": {
-            "start_offset": {
-                "x": 0,
-                "y": 0
-            },
-            "end_offset": {
-                "x": 4,
-                "y": 10
-            }
-        },
-        "work_area": {
-            "start_offset": {
-                "x": 5,
-                "y": 0
-            },
-            "end_offset": {
-                "x": 7,
-                "y": 10
-            }
-        },
-        "transport_area": {
-            "start_offset": {
-                "x": 4,
-                "y": 0
-            },
-            "end_offset": {
-                "x": 5,
-                "y": 10
-            }
-        },
-        "hospital_area": {
-            "start_offset": {
-                "x": 7,
-                "y": 0
-            },
-            "end_offset": {
-                "x": 8,
-                "y": 10
-            }
-        },
-        "houses": [
-            {
+    it('should render GridPage component with Loading', () => {
+        const { asFragment } = render(<GridPage />);
+        expect(asFragment()).toMatchSnapshot()
+    });
+
+    it('should render GridPage component consuming the data coming from socket', () => {
+        const layoutDimensions = {
+            "grid_size": 10,
+            "housing_area": {
                 "start_offset": {
                     "x": 0,
                     "y": 0
                 },
                 "end_offset": {
-                    "x": 2,
-                    "y": 2
-                },
-            },
-            {
-                "start_offset": {
-                    "x": 2,
-                    "y": 0
-                },
-                "end_offset": {
                     "x": 4,
-                    "y": 2
-                },
-            }],
-        "offices": [
-            {
+                    "y": 10
+                }
+            },
+            "work_area": {
                 "start_offset": {
                     "x": 5,
                     "y": 0
                 },
                 "end_offset": {
-                    "x": 6,
-                    "y": 1
-                },
+                    "x": 7,
+                    "y": 10
+                }
             },
-            {
+            "transport_area": {
                 "start_offset": {
-                    "x": 6,
+                    "x": 4,
                     "y": 0
                 },
                 "end_offset": {
+                    "x": 5,
+                    "y": 10
+                }
+            },
+            "hospital_area": {
+                "start_offset": {
                     "x": 7,
-                    "y": 1
+                    "y": 0
                 },
-            }]
-    }
+                "end_offset": {
+                    "x": 8,
+                    "y": 10
+                }
+            },
+            "houses": [
+                {
+                    "start_offset": {
+                        "x": 0,
+                        "y": 0
+                    },
+                    "end_offset": {
+                        "x": 2,
+                        "y": 2
+                    },
+                },
+                {
+                    "start_offset": {
+                        "x": 2,
+                        "y": 0
+                    },
+                    "end_offset": {
+                        "x": 4,
+                        "y": 2
+                    },
+                }],
+            "offices": [
+                {
+                    "start_offset": {
+                        "x": 5,
+                        "y": 0
+                    },
+                    "end_offset": {
+                        "x": 6,
+                        "y": 1
+                    },
+                },
+                {
+                    "start_offset": {
+                        "x": 6,
+                        "y": 0
+                    },
+                    "end_offset": {
+                        "x": 7,
+                        "y": 1
+                    },
+                }]
+        };
 
-    const agentPositionMessage = {
-        "hr": 1,
-        "citizen_states": [
-            { "id": 595, "state": "s", "location": { "x": 0, "y": 0 } },
-            { "id": 238, "state": "s", "location": { "x": 37, "y": 66 } },
-            { "id": 981, "state": "s", "location": { "x": 31, "y": 1 } }]
-    }
+        const agentPositionMessage = {
+            "hr": 1,
+            "citizen_states": [
+                { "id": 595, "state": "s", "location": { "x": 0, "y": 0 } },
+                { "id": 238, "state": "s", "location": { "x": 37, "y": 66 } },
+                { "id": 981, "state": "s", "location": { "x": 31, "y": 1 } }]
+        };
 
-    let mockSocket = new MockSocket()
-    io.mockImplementation(() => mockSocket)
-    jest.mock('socket.io-client', () => { })
-    let emitSpy = jest.fn()
-    let closeSpy = jest.fn()
-    mockSocket.close = closeSpy
-    mockSocket.emit = emitSpy
-    const { asFragment } = render(<GridPage />)
+        jest.mock('socket.io-client', () => { });
+        let emitSpy = jest.fn();
+        mockSocket.emit = emitSpy;
+        const { asFragment } = render(<GridPage />);
 
-    mockSocket.socketClient.emit("gridData", layoutDimensions)
-    mockSocket.socketClient.emit("gridData", agentPositionMessage)
-    expect(closeSpy).toHaveBeenCalledTimes(0)
+        mockSocket.socketClient.emit("gridData", layoutDimensions);
+        mockSocket.socketClient.emit("gridData", agentPositionMessage);
+        expect(closeSpy).toHaveBeenCalledTimes(0);
 
-    mockSocket.socketClient.emit("gridData", { "simulation_ended": true })
+        mockSocket.socketClient.emit("gridData", { "simulation_ended": true });
 
-    expect(asFragment()).toMatchSnapshot()
-    expect(emitSpy).toHaveBeenCalledWith("simulation_id", 1542319876)
-    expect(closeSpy).toHaveBeenCalled()
-})
+        expect(asFragment()).toMatchSnapshot();
+        expect(emitSpy).toHaveBeenCalledWith("simulation_id", 1542319876);
+        expect(closeSpy).toHaveBeenCalled()
+    });
+
+    it('should close the socket before unmounting the component', () => {
+        render(<GridPage/>).unmount();
+
+        expect(closeSpy).toHaveBeenCalledTimes(1);
+        expect(closeSpy.mock.calls[0]).toHaveLength(0)
+    });
+});

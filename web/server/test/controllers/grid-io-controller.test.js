@@ -29,6 +29,7 @@ describe("Grid controller", () => {
         jest.clearAllMocks();
 
         mockSocket = {
+            disconnected: false,
             on: jest.fn(),
             emit: jest.fn()
         };
@@ -184,6 +185,58 @@ describe("Grid controller", () => {
 
             done();
         })
+    });
+
+    it('should not emit anymore messages if socket is closed', (done) => {
+        const docPromises = [
+            mockSimulationPromise(false, "running", true),
+            mockSimulationPromise(true, "running", true)
+        ];
+        const cursors = [[{dummyKey: 'dummyValue', _id:1}], [{dummyKey: 'dummyValue2', _id:2}]];
+        const mockExec = jest.fn(() => docPromises.shift());
+        Simulation.findOne.mockReturnValue({'exec': mockExec});
+        const mockCursor = jest.fn(() => {
+            const d = cursors.shift();
+            mockSocket.disconnected = d[0]._id!==1;
+            return d;
+        });
+        const mockSkip = jest.fn().mockReturnValue({cursor: mockCursor});
+        Grid.find.mockReturnValue({skip: mockSkip});
+
+        handleGridRequest(mockSocket);
+        expect(mockSocket.on).toHaveBeenCalledTimes(2);
+        expect(mockSocket.on.mock.calls[0]).toHaveLength(2);
+        expect(mockSocket.on.mock.calls[0][0]).toBe('simulation_id');
+        let testSimId = "1234";
+        mockSocket.on.mock.calls[0][1](testSimId);
+
+        process.nextTick(() => {
+            expect(mockSocket.emit).toHaveBeenCalledTimes(1);
+            expect(mockSocket.emit.mock.calls[0]).toEqual([
+                'gridData',
+                {dummyKey: 'dummyValue', _id:1}
+            ]);
+            expect(Simulation.findOne).toHaveBeenCalledTimes(1);
+            expect(Simulation.findOne.mock.calls[0]).toEqual([
+                {simulation_id: 1234},
+                {status:1, grid_consumption_finished: 1, "config.enable_citizen_state_messages": 1}
+            ]);
+            expect(Grid.find).toHaveBeenCalledTimes(2);
+            expect(Grid.find.mock.calls[0]).toEqual([
+                {simulation_id: 1234},
+                {},
+                {sort: {'_id': 1}}
+            ]);
+            expect(Grid.find.mock.calls[1]).toEqual([
+                {simulation_id: 1234},
+                {},
+                {sort: {'_id': 1}}
+            ]);
+            expect(mockSkip).toHaveBeenCalledTimes(2);
+            expect(mockSkip).toHaveBeenNthCalledWith(1, 0);
+            expect(mockSkip).toHaveBeenNthCalledWith(2, 1);
+            done();
+        });
     });
 
     it('should console on connection closed', () => {

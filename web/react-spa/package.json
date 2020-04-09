@@ -15,9 +15,9 @@
     "socket.io-client": "^2.3.0"
   },
   "scripts": {
-    "start": "REACT_APP_API_HOST=http://localhost:3000 react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "REACT_APP_API_HOST=http://localhost:3000 react-scripts test",
+    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

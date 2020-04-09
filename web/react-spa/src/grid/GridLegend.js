@@ -21,7 +21,7 @@ export default function GridLegend() {
             <h6>Areas</h6>
             <ul className="legends areas">{
                 areasLegends.map(({ backgroundColor, text }) => (
-                    <li>
+                    <li key={text}>
                         <div className="legend-item">
                             <span className="swatch" style={{ backgroundColor }}></span>
                             <span className="text">{text}</span>
@@ -33,7 +33,7 @@ export default function GridLegend() {
             <h6>Agent States</h6>
             <ul className="legends agents">{
                 agentsLegends.map(({ backgroundColor, text }) => (
-                    <li>
+                    <li key={text}>
                         <div className="legend-item">
                             <span className="swatch" style={{ backgroundColor }}></span>
                             <span className="text">{text}</span>

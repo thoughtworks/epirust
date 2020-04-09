@@ -129,18 +129,6 @@ impl Epidemiology {
                 if clock_tick != simulation_hour {
                     panic!("Local hour is {}, but received tick for {}", simulation_hour, clock_tick);
                 }
-                let ack = TickAck { engine_id: engine_id.to_string(), hour: clock_tick, terminate: terminate_engine };
-                match producer.send_ack(&ack).await.unwrap() {
-                    Ok(_) => {
-                        if clock_tick == config.get_hours() {
-                            break;
-                        }
-                    }
-                    Err(_) => panic!("Failed while sending acknowledgement")
-                }
-                if terminate_engine {
-                    break;
-                }
             }
 
             counts_at_hr.increment_hour();
@@ -186,11 +174,27 @@ impl Epidemiology {
                 info!("S: {}, I: {}, Q: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_infected(),
                       counts_at_hr.get_quarantined(), counts_at_hr.get_recovered(), counts_at_hr.get_deceased());
             }
+
+            Epidemiology::send_ack(run_mode, &mut producer, terminate_engine, simulation_hour).await;
+
+            if terminate_engine {
+                break;
+            }
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         listeners.simulation_ended();
+    }
+
+    async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, terminate_engine: bool, simulation_hour: i32) {
+        if let RunMode::MultiEngine { engine_id } = run_mode {
+            let ack = TickAck { engine_id: engine_id.to_string(), hour: simulation_hour, terminate: terminate_engine };
+            match producer.send_ack(&ack).await.unwrap() {
+                Ok(_) => {}
+                Err(_) => panic!("Failed while sending acknowledgement")
+            }
+        }
     }
 
     fn apply_vaccination_intervention(vaccinations: &VaccinateIntervention, counts: &Counts,

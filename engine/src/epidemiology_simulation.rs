@@ -186,15 +186,15 @@ impl Epidemiology {
             let msg = message_stream.next().await;
             let clock_tick = ticks_consumer::read(msg);
             match clock_tick {
-                None => {}
+                None => {None}
                 Some(t) => {
-                    debug!("tick {}", t);
-                    if t != simulation_hour {
-                        panic!("Local hour is {}, but received tick for {}", simulation_hour, t);
+                    debug!("tick {}", t.hour());
+                    if t.hour() != simulation_hour {
+                        panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
                     }
+                    Some(t.hour())
                 }
-            };
-            clock_tick
+            }
         } else {
             Some(simulation_hour)
         }

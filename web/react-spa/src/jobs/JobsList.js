@@ -17,39 +17,52 @@
  *
  */
 
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import './jobs-list.scss'
-import {Job} from "./Job";
-import {JobDetails} from "./JobDetails";
-import {Redirect, useParams} from 'react-router-dom';
+import { Job } from "./Job";
+import { JobDetails } from "./JobDetails";
+import { Redirect, useParams } from 'react-router-dom';
 import config from "../config";
 
 export const JobsList = () => {
-  const {id, view} = useParams();
+  const { id, view } = useParams();
   const [simulations, updateSimulations] = useState([]);
 
   useEffect(() => {
-    fetch(`${config.API_HOST}/simulation/`,
-      {
-        method: 'GET',
-        headers: {'Content-Type': 'application/json'}
-      })
-      .then(value => value.json())
+    fetch(`${config.API_HOST}/simulation/`)
+      .then(res => res.json())
       .then(value => updateSimulations(value.reverse()))
   }, []);
 
   if (id && !view) {
-    return (<Redirect to={`/jobs/${id}/time-series`}/>);
-  } else {
-    return (<div className="row jobs-list">
+    return (<Redirect to={`/jobs/${id}/time-series`} />);
+  }
+
+  console.log(simulations)
+
+  return (
+    <div className="row jobs-list">
+
       <div className="col-3">
-        <ul className="list-group scrollable padded-list">
-          {simulations.map(s => <Job key={s.simulation_id} simulationId={s.simulation_id} status={s.status}/>)}
+        <ul className="list-group scrollable">
+          {simulations.map(s =>
+            <Job
+              key={s.simulation_id}
+              simulationId={s.simulation_id}
+              status={s.status} />
+          )}
         </ul>
       </div>
+
       <div className="col-9 left-border scrollable">
-        {id && <JobDetails simulationId={parseInt(id)} details={simulations.find(s => s.simulation_id === parseInt(id))}/>}
+        {id && (
+          <JobDetails
+            simulationId={parseInt(id)}
+            details={simulations.find(s => s.simulation_id === parseInt(id))}
+          />
+        )}
       </div>
-    </div>);
-  }
+
+    </div>
+  );
 };

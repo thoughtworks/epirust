@@ -29,16 +29,6 @@ exports[`Job Details should not render the config if the config is not given 1`]
             class="nav-item"
           >
             <a
-              class="nav-link "
-              href="/jobs/123/time-series-deviation"
-            >
-              Time Series Deviation
-            </a>
-          </li>
-          <li
-            class="nav-item"
-          >
-            <a
               class="nav-link active"
               href="/jobs/123/config"
             >
@@ -62,8 +52,8 @@ exports[`Job Details should not render the config if the config is not given 1`]
 </div>
 `;
 
-exports[`Job Details should render grid if grid is enabled in config 1`] = `
-<div>
+exports[`Job Details should not render time series mean comparison tab when a job is not finished 1`] = `
+<DocumentFragment>
   <div
     class="job-details"
     style="padding-top: 4px;"
@@ -92,9 +82,98 @@ exports[`Job Details should render grid if grid is enabled in config 1`] = `
           >
             <a
               class="nav-link "
-              href="/jobs/123/time-series-deviation"
+              href="/jobs/123/config"
             >
-              Time Series Deviation
+              Config
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="col-4"
+      >
+        <h4
+          class="simulation-id"
+        >
+          Simulation: 123
+        </h4>
+      </div>
+    </div>
+    <div
+      class="graph-wrap"
+    >
+      <div
+        data-testid="visualization"
+        id="vis"
+      />
+      <div
+        class="graph-actions"
+      >
+        <p
+          class="action"
+        >
+          Zoom: 
+          <span
+            class="control"
+          >
+            click-drag
+          </span>
+        </p>
+        <p
+          class="action"
+        >
+          Pan: 
+          <span
+            class="control"
+          >
+            shift-click-drag
+          </span>
+        </p>
+        <p
+          class="action"
+        >
+          Restore: 
+          <span
+            class="control"
+          >
+            double-click
+          </span>
+        </p>
+        <button
+          class="btn btn-secondary"
+          disabled=""
+        >
+          Export graph
+        </button>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Job Details should render grid if grid is enabled in config 1`] = `
+<div>
+  <div
+    class="job-details"
+    style="padding-top: 4px;"
+  >
+    <div
+      class="row"
+    >
+      <div
+        class="col-8"
+      >
+        <ul
+          class="nav nav-tabs nav-fill"
+        >
+          <li
+            class="nav-item"
+          >
+            <a
+              class="nav-link "
+              href="/jobs/123/time-series"
+            >
+              Time Series
             </a>
           </li>
           <li
@@ -164,16 +243,6 @@ exports[`Job Details should render the config if the config is given 1`] = `
             class="nav-item"
           >
             <a
-              class="nav-link "
-              href="/jobs/123/time-series-deviation"
-            >
-              Time Series Deviation
-            </a>
-          </li>
-          <li
-            class="nav-item"
-          >
-            <a
               class="nav-link active"
               href="/jobs/123/config"
             >
@@ -232,16 +301,6 @@ exports[`Job Details should render the time series if the view is time-series 1`
           >
             <a
               class="nav-link "
-              href="/jobs/123/time-series-deviation"
-            >
-              Time Series Deviation
-            </a>
-          </li>
-          <li
-            class="nav-item"
-          >
-            <a
-              class="nav-link "
               href="/jobs/123/config"
             >
               Config
@@ -312,8 +371,8 @@ exports[`Job Details should render the time series if the view is time-series 1`
 </div>
 `;
 
-exports[`Job Details should render time series mean comparison graph 1`] = `
-<div>
+exports[`Job Details should render time series mean comparison graph tab when a job is finished 1`] = `
+<DocumentFragment>
   <div
     class="job-details"
     style="padding-top: 4px;"
@@ -365,8 +424,7 @@ exports[`Job Details should render time series mean comparison graph 1`] = `
         <h4
           class="simulation-id"
         >
-          Simulation: 
-          123
+          Simulation: 123
         </h4>
       </div>
     </div>
@@ -419,7 +477,7 @@ exports[`Job Details should render time series mean comparison graph 1`] = `
       </div>
     </div>
   </div>
-</div>
+</DocumentFragment>
 `;
 
 exports[`Job Details should render time-series if grid is disabled in config 1`] = `
@@ -445,16 +503,6 @@ exports[`Job Details should render time-series if grid is disabled in config 1`]
               href="/jobs/123/time-series"
             >
               Time Series
-            </a>
-          </li>
-          <li
-            class="nav-item"
-          >
-            <a
-              class="nav-link "
-              href="/jobs/123/time-series-deviation"
-            >
-              Time Series Deviation
             </a>
           </li>
           <li

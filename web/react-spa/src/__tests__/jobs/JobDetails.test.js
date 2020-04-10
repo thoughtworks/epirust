@@ -65,11 +65,25 @@ describe('Job Details', () => {
         expect(component.container).toMatchSnapshot()
     });
 
-    it('should render time series mean comparison graph', () => {
-        const component = render(<MemoryRouter initialEntries={['/jobs/123/time-series-deviation']}>
-            <JobDetails simulationId={123} details={{ config: {} }} />
-        </MemoryRouter>);
+    it('should not render time series mean comparison tab when a job is not finished', () => {
+        const { asFragment } = render(
+            <MemoryRouter initialEntries={['/jobs/123/time-series-deviation']}>
+                <JobDetails simulationId={123} details={{
+                    config: {},
+                    status: "in-queue"
+                }} />
+            </MemoryRouter>
+        );
 
-        expect(component.container).toMatchSnapshot()
+        expect(asFragment()).toMatchSnapshot()
     })
+    it('should render time series mean comparison graph tab when a job is finished', () => {
+        const { asFragment } = render(
+            <MemoryRouter initialEntries={['/jobs/123/time-series-deviation']}>
+                <JobDetails simulationId={123} details={{ config: {}, status: "finished" }} />
+            </MemoryRouter>
+        );
+        expect(asFragment()).toMatchSnapshot()
+    })
+
 });

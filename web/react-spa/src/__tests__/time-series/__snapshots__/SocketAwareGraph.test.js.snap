@@ -1,53 +1,54 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`should render SocketAwareGraph 1`] = `
-<div
-  className="graph-wrap"
->
+<DocumentFragment>
   <div
-    data-testid="visualization"
-    id="vis"
-  />
-  <div
-    className="graph-actions"
+    class="graph-wrap"
   >
-    <p
-      className="action"
+    <div
+      data-testid="visualization"
+      id="vis"
+    />
+    <div
+      class="graph-actions"
     >
-      Zoom: 
-      <span
-        className="control"
+      <p
+        class="action"
       >
-        click-drag
-      </span>
-    </p>
-    <p
-      className="action"
-    >
-      Pan: 
-      <span
-        className="control"
+        Zoom: 
+        <span
+          class="control"
+        >
+          click-drag
+        </span>
+      </p>
+      <p
+        class="action"
       >
-        shift-click-drag
-      </span>
-    </p>
-    <p
-      className="action"
-    >
-      Restore: 
-      <span
-        className="control"
+        Pan: 
+        <span
+          class="control"
+        >
+          shift-click-drag
+        </span>
+      </p>
+      <p
+        class="action"
       >
-        double-click
-      </span>
-    </p>
-    <button
-      className="btn btn-secondary"
-      disabled={true}
-      onClick={[Function]}
-    >
-      Export graph
-    </button>
+        Restore: 
+        <span
+          class="control"
+        >
+          double-click
+        </span>
+      </p>
+      <button
+        class="btn btn-secondary"
+        disabled=""
+      >
+        Export graph
+      </button>
+    </div>
   </div>
-</div>
+</DocumentFragment>
 `;

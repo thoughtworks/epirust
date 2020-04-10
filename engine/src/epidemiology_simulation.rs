@@ -43,6 +43,8 @@ use crate::listeners::events_kafka_producer::EventsKafkaProducer;
 use crate::listeners::listener::Listeners;
 use crate::random_wrapper::RandomWrapper;
 use rdkafka::consumer::{MessageStream, DefaultConsumerContext};
+use crate::ticks_consumer::Tick;
+use crate::travel_plan::EngineTravelPlan;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -109,20 +111,20 @@ impl Epidemiology {
         let mut producer = KafkaProducer::new();
 
         //todo stream should be started only in case of multi-sim mode
+        let standalone_engine_id = "standalone".to_string();
         let engine_id = if let RunMode::MultiEngine { engine_id } = run_mode {
             engine_id
         } else {
-            "n_a"
+            &standalone_engine_id
         };
+        let mut engine_travel_plan = EngineTravelPlan::new(engine_id, self.write_agent_location_map.total_population);
         let consumer = ticks_consumer::start(engine_id);
         let mut message_stream = consumer.start_with(Duration::from_millis(10), false);
         let mut terminate_engine = false;
 
         for simulation_hour in 1..config.get_hours() {
             let tick = Epidemiology::receive_tick(run_mode, &mut message_stream, simulation_hour).await;
-            if tick.is_none() {
-                break;
-            }
+            engine_travel_plan.receive_tick(tick);
 
             counts_at_hr.increment_hour();
 
@@ -141,7 +143,7 @@ impl Epidemiology {
             }
 
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
-                                   &self.grid, &mut listeners, &mut rng, &self.disease);
+                                   &self.grid, &mut listeners, &mut rng, &self.disease, &mut engine_travel_plan);
             listeners.counts_updated(counts_at_hr);
             hospital_intervention.counts_updated(&counts_at_hr);
 
@@ -180,8 +182,14 @@ impl Epidemiology {
         listeners.simulation_ended();
     }
 
+    // fn apply_travels(tick: &Option<Tick>, agent_location_map: &mut AgentLocationMap) {
+    //     // if tick.hour() % 24 == 0 && tick.travel_plan().is_some() {
+    //     //
+    //     // }
+    // }
+
     async fn receive_tick(run_mode: &RunMode, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
-                          simulation_hour: i32) -> Option<i32> {
+                          simulation_hour: i32) -> Option<Tick> {
         if let RunMode::MultiEngine { engine_id: _e } = run_mode {
             let msg = message_stream.next().await;
             let clock_tick = ticks_consumer::read(msg);
@@ -192,11 +200,11 @@ impl Epidemiology {
                     if t.hour() != simulation_hour {
                         panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
                     }
-                    Some(t.hour())
+                    Some(t)
                 }
             }
         } else {
-            Some(simulation_hour)
+            None
         }
     }
 
@@ -231,7 +239,7 @@ impl Epidemiology {
 
     fn simulate(mut csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
-                rng: &mut RandomWrapper, disease: &Disease) {
+                rng: &mut RandomWrapper, disease: &Disease, engine_travel_plan: &mut EngineTravelPlan) {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
             let mut current_agent = *agent;
@@ -247,6 +255,11 @@ impl Epidemiology {
                 Some(mut _agent) => cell, //occupied
                 _ => &point
             };
+
+            if current_agent.can_move() && rng.get().gen_bool(engine_travel_plan.percent_outgoing()) {
+                engine_travel_plan.add_outgoing(current_agent, *new_location);
+            }
+
             write_buffer.agent_cell.insert(*new_location, current_agent);
             listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
         }

@@ -28,6 +28,7 @@ use crate::random_wrapper::RandomWrapper;
 pub struct AgentLocationMap {
     pub grid_size: i32,
     pub agent_cell: FxHashMap<Point, agent::Citizen>,
+    pub total_population: i32,
 }
 
 impl AgentLocationMap {
@@ -38,7 +39,7 @@ impl AgentLocationMap {
             map.insert(points[i], agent_list[i]);
         }
 
-        AgentLocationMap { grid_size: size, agent_cell: map }
+        AgentLocationMap { grid_size: size, agent_cell: map, total_population: agent_list.len() as i32 }
     }
 
     pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point {

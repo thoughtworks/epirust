@@ -74,7 +74,7 @@ pub struct Tick<'a> {
 
 impl Tick<'_> {
     pub fn new(hour: i32, travel_plan: &TravelPlan) -> Tick {
-        let travel = if hour == 0 {
+        let travel = if hour == 1 {
             Some(travel_plan)
         } else {
             None

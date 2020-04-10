@@ -26,7 +26,7 @@ use futures::StreamExt;
 use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
-use crate::{allocation_map, RunMode, ticks_consumer};
+use crate::{allocation_map, RunMode, ticks_consumer, travellers_consumer};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population};
 use crate::disease::Disease;
@@ -44,7 +44,8 @@ use crate::listeners::listener::Listeners;
 use crate::random_wrapper::RandomWrapper;
 use rdkafka::consumer::{MessageStream, DefaultConsumerContext};
 use crate::ticks_consumer::Tick;
-use crate::travel_plan::EngineTravelPlan;
+use crate::travel_plan::{EngineTravelPlan, TravellersByRegion};
+use crate::agent::Citizen;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -118,12 +119,14 @@ impl Epidemiology {
             &standalone_engine_id
         };
         let mut engine_travel_plan = EngineTravelPlan::new(engine_id, self.write_agent_location_map.total_population);
-        let consumer = ticks_consumer::start(engine_id);
-        let mut message_stream = consumer.start_with(Duration::from_millis(10), false);
+        let ticks_consumer = ticks_consumer::start(engine_id);
+        let mut ticks_stream = ticks_consumer.start_with(Duration::from_millis(10), false);
+        let travellers_consumer = travellers_consumer::start(engine_id);
+        let mut travel_stream = travellers_consumer.start_with(Duration::from_millis(10), false);
         let mut terminate_engine = false;
 
         for simulation_hour in 1..config.get_hours() {
-            let tick = Epidemiology::receive_tick(run_mode, &mut message_stream, simulation_hour).await;
+            let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour).await;
             engine_travel_plan.receive_tick(tick.clone());
 
             counts_at_hr.increment_hour();
@@ -163,6 +166,7 @@ impl Epidemiology {
             }
 
             Epidemiology::send_travellers(tick.clone(), &mut producer, &mut engine_travel_plan).await;
+            Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan).await;
             Epidemiology::send_ack(run_mode, &mut producer, terminate_engine, simulation_hour).await;
 
             if simulation_hour % 100 == 0 {
@@ -227,6 +231,35 @@ impl Epidemiology {
                 Err(e) => { panic!("Failed to send travellers: {:?}", e.0) }
             }
         }
+    }
+
+    async fn receive_travellers(tick: Option<Tick>, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+                                engine_travel_plan: &EngineTravelPlan) -> Vec<Citizen> {
+        if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
+            let incoming_regions = engine_travel_plan.incoming_regions_count();
+            debug!("Receiving travellers from {} regions", incoming_regions);
+            let mut incoming: Vec<Citizen> = Vec::new();
+            for _i in 0..incoming_regions {
+                let region_incoming = Epidemiology::receive_travellers_from_region(message_stream, engine_travel_plan).await;
+                debug!("received travels: {}", region_incoming.len());
+                for i in region_incoming {
+                    incoming.extend(i.get_citizens());
+                }
+            }
+            println!("Received {} travellers", incoming.len());
+            incoming
+        } else {
+            Vec::new()
+        }
+    }
+
+    async fn receive_travellers_from_region(message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+                                engine_travel_plan: &EngineTravelPlan) -> Vec<TravellersByRegion> {
+        let msg = message_stream.next().await;
+
+        travellers_consumer::read(msg).into_iter()
+            .filter(|incoming| incoming.to_engine_id() == engine_travel_plan.engine_id())
+            .collect()
     }
 
     fn apply_vaccination_intervention(vaccinations: &VaccinateIntervention, counts: &Counts,

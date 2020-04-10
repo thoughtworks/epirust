@@ -102,12 +102,14 @@ class EpiCurves:
         plot_lines = []
 
         for curve in self.curves:
-            time_steps = np.arange(curve.curve_mean.size)
+            time_steps = np.arange(0, curve.curve_mean.size, 24)
             color = color_mapping[curve.name]
-            line_plot, = axes.plot(time_steps, curve.curve_mean, label=f'{curve.name}-baseline', alpha=0.5, color=color)
-            poly_line = axes.fill_between(time_steps, curve.curve_mean - curve.curve_std, curve.curve_mean + curve.curve_std, alpha=0.3, color=color)
+            curve_mean = curve.curve_mean[time_steps]
+            curve_std = curve.curve_std[time_steps]
+            line_plot, = axes.plot(curve_mean, label=f'{curve.name}-baseline', alpha=0.5, color=color)
+            poly_line = axes.fill_between(np.arange(time_steps.size), curve_mean - curve_std, curve_mean + curve_std, alpha=0.3, color=color)
             plot_lines.append([line_plot, poly_line])
-            line_plot, = axes.plot(data_frame[curve.name], label=curve.name, color=color)
+            line_plot, = axes.plot(np.array(data_frame[curve.name])[time_steps], label=curve.name, color=color)
             plot_lines.append([line_plot])
 
         legend = plt.legend()
@@ -119,7 +121,7 @@ class EpiCurves:
             toggle_visibility(fig, legend_line, plot_line)
 
         fig.canvas.mpl_connect('pick_event', lambda e: toggle_visibility(fig, e.artist, lined[e.artist]))
-        plt.xlabel('hour')
+        plt.xlabel('Days')
         plt.ylabel('No. of individuals')
         plt.show()
 

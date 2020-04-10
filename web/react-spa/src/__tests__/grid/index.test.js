@@ -140,9 +140,13 @@ describe('Grid Page', () => {
                 { "id": 981, "state": "s", "location": { "x": 31, "y": 1 } }]
         };
 
-        jest.mock('socket.io-client', () => { });
         let emitSpy = jest.fn();
-        mockSocket.emit = emitSpy;
+
+        act(() => {
+            jest.mock('socket.io-client', () => { });
+            mockSocket.emit = emitSpy;
+        })
+
         const { asFragment } = render(<GridPage />);
 
         act(() => {

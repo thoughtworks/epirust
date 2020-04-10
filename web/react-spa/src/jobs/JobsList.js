@@ -38,8 +38,6 @@ export const JobsList = () => {
     return (<Redirect to={`/jobs/${id}/time-series`} />);
   }
 
-  console.log(simulations)
-
   return (
     <div className="row jobs-list">
 

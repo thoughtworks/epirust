@@ -18,10 +18,29 @@
  */
 
 /* GET simulation listing. */
+const Count = require("../db/models/Count");
+
 const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
 const {Simulation, SimulationStatus} = require("../db/models/Simulation");
+
+const configMatch = {
+  "config.population.Auto.number_of_agents": 10000,
+  "config.population.Auto.public_transport_percentage": 0.2,
+  "config.population.Auto.working_percentage": 0.7,
+
+  "config.disease.regular_transmission_start_day": 5,
+  "config.disease.high_transmission_start_day": 20,
+  "config.disease.last_day": 40,
+  "config.disease.regular_transmission_rate": 0.025,
+  "config.disease.high_transmission_rate": 0.25,
+  "config.disease.death_rate": 0.2,
+
+  "config.hours": 10000,
+  "config.grid_size": 250,
+  "config.interventions": {$size: 0}
+};
 
 router.post('/init', (req, res, next) => {
   const message = req.body;
@@ -71,28 +90,30 @@ router.post('/init', (req, res, next) => {
   };
   const simulation = new Simulation(updateQuery);
   simulation.save()
-      .then(() => {
-        const kafkaProducer = new KafkaServices.KafkaProducerService();
-        return kafkaProducer.send('simulation_requests', simulation_config).catch(err => {
-          console.error("Error occurred while sending kafka message", err);
-          return Simulation.updateOne({simulation_id: simulationId}, {status: SimulationStatus.FAILED})
-              .exec().then(() => {throw new Error(err.message)});
-        })
+    .then(() => {
+      const kafkaProducer = new KafkaServices.KafkaProducerService();
+      return kafkaProducer.send('simulation_requests', simulation_config).catch(err => {
+        console.error("Error occurred while sending kafka message", err);
+        return Simulation.updateOne({simulation_id: simulationId}, {status: SimulationStatus.FAILED})
+          .exec().then(() => {
+            throw new Error(err.message)
+          });
       })
-      .then(() => {
-        res.status(201);
-        res.send({ status: "Simulation started", simulationId });
-      })
-      .catch((err) => {
-        res.status(500);
-        res.send({ message: err.message });
-        console.error("Failed to create Simulation entry ", err);
-      });
+    })
+    .then(() => {
+      res.status(201);
+      res.send({status: "Simulation started", simulationId});
+    })
+    .catch((err) => {
+      res.status(500);
+      res.send({message: err.message});
+      console.error("Failed to create Simulation entry ", err);
+    });
 });
 
 router.get('/', async (req, res, next) => {
   if (req.query.simulation_id) {
-    Simulation.find({ "simulation_id": req.query.simulation_id }, function (err, simulation) {
+    Simulation.find({"simulation_id": req.query.simulation_id}, function (err, simulation) {
       res.json(simulation)
     })
   } else {
@@ -102,10 +123,62 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+async function extractFromCursor(stream) {
+  const aggregate = [];
+  for await (const data of stream) {
+    aggregate.push(data)
+  }
+  return aggregate;
+}
+
+router.get("/:simulation_id/compare", async (req, res, next) => {
+
+  const simulationToAggregate = Simulation.find(configMatch, {simulation_id: 1})
+    .exec()
+    .then(async (docs) => {
+      let simulationIds = docs.map(a => a.simulation_id);
+
+      const aggregateStream = Count
+        .aggregate([
+          {$match: {simulation_id: {$in: simulationIds}}},
+          {
+            $group: {
+              _id: '$hour',
+              infected_mean: {$avg: '$infected'},
+              susceptible_mean: {$avg: '$susceptible'},
+              quarantined_mean: {$avg: '$quarantined'},
+              recovered_mean: {$avg: '$recovered'},
+              deceased_mean: {$avg: '$deceased'},
+              infected_std: {$stdDevPop: '$infected'},
+              susceptible_std: {$stdDevPop: '$susceptible'},
+              quarantined_std: {$stdDevPop: '$quarantined'},
+              recovered_std: {$stdDevPop: '$recovered'},
+              deceased_std: {$stdDevPop: '$deceased'},
+            }
+          },
+          {$sort: {hour: 1}}
+        ]);
+
+      const aggregate = await extractFromCursor(aggregateStream);
+
+      const countsCursor = Count.find({simulation_id: parseInt(req.params.simulation_id)}, {}, {sort: {hour: 1}})
+        .cursor();
+
+      const counts = await extractFromCursor(countsCursor);
+
+      if (counts.length < aggregate.length) {
+        res.json(counts.map((c, i) => ({...c.toObject(), ...aggregate[i]})));
+      } else {
+        res.json(aggregate.map((a, i) => ({...a, ...counts[i].toObject()})));
+      }
+    })
+
+});
+
 module.exports = router;
 
 function modelInterventions(message) {
-  const { vaccinate_at, vaccinate_percentage, lockdown_at_number_of_infections, essential_workers_population, hospital_spread_rate_threshold } = message;
+  const {vaccinate_at, vaccinate_percentage, lockdown_at_number_of_infections, essential_workers_population, hospital_spread_rate_threshold} = message;
 
   const areVaccinationParamsPresent = vaccinate_at && vaccinate_percentage,
     vaccinationIntervention = {

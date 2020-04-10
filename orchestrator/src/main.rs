@@ -86,7 +86,7 @@ async fn cleanup() {
         .set("bootstrap.servers", kafka_url.as_str())
         .create()
         .expect("Admin client creation failed");
-    match kafka_admin.delete_topics(&["ticks", "ticks_ack"], &AdminOptions::new()).await {
+    match kafka_admin.delete_topics(&["ticks", "ticks_ack", "travels"], &AdminOptions::new()).await {
         Ok(_) => {}
         Err(_) => { error!("Warning: Failed to cleanup ticks and ticks_ack topics") }
     }

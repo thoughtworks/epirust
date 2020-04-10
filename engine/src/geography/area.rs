@@ -24,7 +24,7 @@ use crate::random_wrapper::RandomWrapper;
 use std::slice::IterMut;
 use std::collections::HashSet;
 
-#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize)]
+#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Area {
     pub start_offset: Point,
     pub end_offset: Point,

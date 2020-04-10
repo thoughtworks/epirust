@@ -39,6 +39,11 @@ impl TravelPlan {
         row.iter().sum()
     }
 
+    pub fn incoming_regions_count(&self, engine_id: &String) -> i32 {
+        let index = self.get_position(engine_id);
+        self.column(index).filter(|val| *val > 0).count() as i32
+    }
+
     pub fn get_total_incoming(&self, engine_id: String) -> i32 {
         let index = self.get_position(&engine_id);
         self.matrix.iter().fold(0, |total, row| total + *row.get(index).unwrap())
@@ -55,6 +60,10 @@ impl TravelPlan {
     fn get_position(&self, engine_id: &String) -> usize {
         self.regions.iter().position(|i| i.eq(engine_id))
             .expect(format!("Could not find region named {}", engine_id).as_str())
+    }
+
+    fn column(&self, index: usize) -> impl Iterator<Item=i32> + '_ {
+        self.matrix.iter().map(move |row| *row.get(index).unwrap())
     }
 }
 
@@ -110,7 +119,7 @@ impl EngineTravelPlan {
         &self.outgoing
     }
 
-    pub fn alloc_outgoing_to_regions(&self) -> Vec<OutgoingByRegion> {
+    pub fn alloc_outgoing_to_regions(&self) -> Vec<TravellersByRegion> {
         let mut citizens: Vec<Citizen> = self.outgoing.iter().map(|x| x.1).collect();
         let total_outgoing = citizens.len();
         let mut outgoing_by_region = match &self.travel_plan {
@@ -119,7 +128,7 @@ impl EngineTravelPlan {
                 tp.regions.iter()
                     .filter(|region| !self.engine_id.eq(*region))
                     .map(|region| {
-                        let mut outgoing_by_region = OutgoingByRegion::create(region);
+                        let mut outgoing_by_region = TravellersByRegion::create(region);
                         outgoing_by_region.alloc_citizens(&mut citizens, tp, &self.engine_id, total_outgoing as i32);
                         outgoing_by_region
                     }).collect()
@@ -134,18 +143,29 @@ impl EngineTravelPlan {
         outgoing_by_region
     }
 
+    pub fn incoming_regions_count(&self) -> i32 {
+        match &self.travel_plan {
+            None => { 0 }
+            Some(tp) => { tp.incoming_regions_count(self.engine_id()) }
+        }
+    }
+
+    pub fn engine_id(&self) -> &String {
+        &self.engine_id
+    }
+
     fn set_current_population(&mut self, val: i32) {
         self.current_total_population = val;
     }
 }
 
-#[derive(Serialize)]
-pub struct OutgoingByRegion {
+#[derive(Serialize, Deserialize)]
+pub struct TravellersByRegion {
     to_engine_id: String,
     citizens: Vec<Citizen>,
 }
 
-impl OutgoingByRegion {
+impl TravellersByRegion {
     /// Since the actual outgoing count doesn't exactly match the travel plan, we pick a proportion
     /// of the actual outgoing count
     fn actual_outgoing_count(&self, travel_plan: &TravelPlan, actual_total_outgoing: i32, engine_id: &String) -> i32 {
@@ -170,11 +190,19 @@ impl OutgoingByRegion {
         self.citizens.push(citizen);
     }
 
-    pub fn create(to_engine_id: &String) -> OutgoingByRegion {
-        OutgoingByRegion {
+    pub fn create(to_engine_id: &String) -> TravellersByRegion {
+        TravellersByRegion {
             to_engine_id: to_engine_id.clone(),
             citizens: Vec::new(),
         }
+    }
+
+    pub fn to_engine_id(&self) -> &String {
+        &self.to_engine_id
+    }
+
+    pub fn get_citizens(self) -> Vec<Citizen> {
+        self.citizens
     }
 }
 
@@ -199,6 +227,22 @@ mod tests {
         assert_eq!(108 + 97, travel_plan.get_total_incoming("engine1".to_string()));
         assert_eq!(156 + 12, travel_plan.get_total_incoming("engine2".to_string()));
         assert_eq!(24 + 221, travel_plan.get_total_incoming("engine3".to_string()));
+    }
+
+    #[test]
+    fn should_get_incoming_regions_count() {
+        let travel_plan = TravelPlan {
+            regions: vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()],
+            matrix: vec![
+                vec![0, 0, 0],
+                vec![108, 0, 0],
+                vec![97, 12, 0],
+            ],
+        };
+
+        assert_eq!(2, travel_plan.incoming_regions_count(&"engine1".to_string()));
+        assert_eq!(1, travel_plan.incoming_regions_count(&"engine2".to_string()));
+        assert_eq!(0, travel_plan.incoming_regions_count(&"engine3".to_string()));
     }
 
     #[test]
@@ -246,7 +290,7 @@ mod tests {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
         for i in 0..180 {
-            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1,1));
+            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1, 1));
         }
 
         let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
@@ -261,7 +305,7 @@ mod tests {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
         for i in 0..147 {
-            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1,1));
+            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1, 1));
         }
 
         let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
@@ -276,7 +320,7 @@ mod tests {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
         for i in 0..202 {
-            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1,1));
+            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1, 1));
         }
 
         let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();

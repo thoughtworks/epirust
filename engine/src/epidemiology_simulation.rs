@@ -124,7 +124,7 @@ impl Epidemiology {
 
         for simulation_hour in 1..config.get_hours() {
             let tick = Epidemiology::receive_tick(run_mode, &mut message_stream, simulation_hour).await;
-            engine_travel_plan.receive_tick(tick);
+            engine_travel_plan.receive_tick(tick.clone());
 
             counts_at_hr.increment_hour();
 
@@ -162,6 +162,9 @@ impl Epidemiology {
                 terminate_engine = true;
             }
 
+            Epidemiology::send_travellers(tick.clone(), &mut producer, &mut engine_travel_plan).await;
+            Epidemiology::send_ack(run_mode, &mut producer, terminate_engine, simulation_hour).await;
+
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
                       simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
@@ -169,8 +172,6 @@ impl Epidemiology {
                 info!("S: {}, I: {}, Q: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_infected(),
                       counts_at_hr.get_quarantined(), counts_at_hr.get_recovered(), counts_at_hr.get_deceased());
             }
-
-            Epidemiology::send_ack(run_mode, &mut producer, terminate_engine, simulation_hour).await;
 
             if terminate_engine {
                 break;
@@ -194,7 +195,7 @@ impl Epidemiology {
             let msg = message_stream.next().await;
             let clock_tick = ticks_consumer::read(msg);
             match clock_tick {
-                None => {None}
+                None => { None }
                 Some(t) => {
                     debug!("tick {}", t.hour());
                     if t.hour() != simulation_hour {
@@ -213,7 +214,17 @@ impl Epidemiology {
             let ack = TickAck { engine_id: engine_id.to_string(), hour: simulation_hour, terminate: terminate_engine };
             match producer.send_ack(&ack).await.unwrap() {
                 Ok(_) => {}
-                Err(_) => panic!("Failed while sending acknowledgement")
+                Err(e) => panic!("Failed while sending acknowledgement: {:?}", e.0)
+            }
+        }
+    }
+
+    async fn send_travellers(tick: Option<Tick>, producer: &mut KafkaProducer, engine_travel_plan: &mut EngineTravelPlan) {
+        if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
+            let outgoing = engine_travel_plan.alloc_outgoing_to_regions();
+            match producer.send_travellers(outgoing).await.unwrap() {
+                Ok(_) => {}
+                Err(e) => { panic!("Failed to send travellers: {:?}", e.0) }
             }
         }
     }

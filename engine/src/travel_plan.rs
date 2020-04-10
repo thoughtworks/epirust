@@ -21,7 +21,7 @@ use crate::ticks_consumer::Tick;
 use crate::agent::Citizen;
 use crate::geography::Point;
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct TravelPlan {
     regions: Vec<String>,
     matrix: Vec<Vec<i32>>,
@@ -139,6 +139,7 @@ impl EngineTravelPlan {
     }
 }
 
+#[derive(Serialize)]
 pub struct OutgoingByRegion {
     to_engine_id: String,
     citizens: Vec<Citizen>,

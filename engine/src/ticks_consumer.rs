@@ -61,7 +61,7 @@ fn parse_tick(message: &str) -> Tick {
     serde_json::from_str(message).expect("Could not parse tick")
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct Tick {
     hour: i32,
     travel_plan: Option<TravelPlan>,

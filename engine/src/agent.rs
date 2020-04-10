@@ -272,7 +272,9 @@ impl Citizen {
                 self.update_infection_day();
                 new_cell = self.quarantine_all(cell, &grid.hospital_area, map, counts, disease);
             }
-            constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {}
+            constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {
+                self.current_area = grid.housing_area;
+            }
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
                 new_cell = self.goto_area(grid.transport_area, map, cell, rng);
                 self.current_area = grid.transport_area;
@@ -280,10 +282,12 @@ impl Citizen {
             }
             constants::ROUTINE_WORK_TIME => {
                 new_cell = self.goto_area(self.work_location, map, cell, rng);
+                self.current_area = grid.work_area;
                 self.update_infection(cell, map, counts, rng, disease);
             }
             constants::ROUTINE_WORK_END_TIME => {
                 new_cell = self.goto_area(self.home_location, map, cell, rng);
+                self.current_area = grid.housing_area;
                 self.update_infection(cell, map, counts, rng, disease);
             }
             constants::ROUTINE_END_TIME => {

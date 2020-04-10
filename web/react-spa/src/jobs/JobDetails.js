@@ -29,7 +29,8 @@ import { TimeSeriesDeviation, TimeSeries } from "../time-series";
 export const JobDetails = ({ simulationId, details }) => {
   const linkPrefix = `/jobs/${simulationId}`;
 
-  const isGridEnabled = details && details.config.enable_citizen_state_messages;
+  const isGridEnabled = details && details.config.enable_citizen_state_messages,
+    isFinished = details && details.status === 'finished';
 
   function renderTabs() {
     return (
@@ -37,7 +38,7 @@ export const JobDetails = ({ simulationId, details }) => {
         <div className="col-8">
           <ul className="nav nav-tabs nav-fill">
             <NavItem name="Time Series" linksTo={`${linkPrefix}/time-series`} activeOnExactMatch={true} />
-            <NavItem name="Time Series Deviation" linksTo={`${linkPrefix}/time-series-deviation`} />
+            {isFinished && <NavItem name="Time Series Deviation" linksTo={`${linkPrefix}/time-series-deviation`} />}
             {isGridEnabled && <NavItem name="Grid" linksTo={`${linkPrefix}/grid`} />}
             <NavItem name="Config" linksTo={`${linkPrefix}/config`} />
           </ul>
@@ -52,11 +53,19 @@ export const JobDetails = ({ simulationId, details }) => {
   function renderContentForTab() {
     return (
       <Switch>
-        <Route exact path={"/jobs/:id/time-series"}><TimeSeries simulationId={simulationId} /></Route>
-        <Route exact path={"/jobs/:id/time-series-deviation"}><TimeSeriesDeviation simulationId={simulationId} /></Route>
+
+        <Route exact path={"/jobs/:id/time-series"}>
+          <TimeSeries simulationId={simulationId} />
+        </Route>
+
+        <Route exact path={"/jobs/:id/time-series-deviation"}>
+          <TimeSeriesDeviation simulationId={simulationId} />
+        </Route>
+
         <Route exact path={"/jobs/:id/grid"}>
           {isGridEnabled ? <GridPage /> : <Redirect to={`/jobs/${simulationId}/time-series`} />}
-        </Route>}
+        </Route>
+
         <Route exact path={"/jobs/:id/config"}>
           {details && <pre>{JSON.stringify(details.config, undefined, 4)}</pre>}
         </Route>

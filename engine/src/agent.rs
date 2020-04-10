@@ -30,7 +30,7 @@ use serde::{Deserializer, Deserialize, de};
 use serde::de::{Unexpected};
 use crate::listeners::events::counts::Counts;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize)]
 pub enum State {
     Susceptible {},
     Infected {},
@@ -38,7 +38,7 @@ pub enum State {
     Deceased {},
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize)]
 pub struct StateMachine {
     pub state: State,
     infection_day: i32,
@@ -88,7 +88,7 @@ fn bool_from_string<'de, D>(deserializer: D) -> Result<bool, D::Error>
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize)]
 pub struct Citizen {
     pub id: i32,
     immunity: i32,

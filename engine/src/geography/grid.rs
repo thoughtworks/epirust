@@ -26,6 +26,7 @@ use crate::geography::{Area, area, Point};
 use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
 use crate::geography::area::AreaPointIterator;
+use std::collections::HashMap;
 
 #[derive(Serialize)]
 pub struct Grid {
@@ -55,12 +56,37 @@ impl Grid {
         let agent_list = agent::citizen_factory(number_of_agents, &self.houses, &self.offices, &transport_locations, public_transport_percentage, working_percentage, rng);
         debug!("Finished creating agent list");
 
-        for agent in agent_list.iter(){
-            home_loc.push(*agent.home_location.random_points(1, rng).get(0).unwrap());
+        let agents_by_home_locations = Grid::group_agents_by_home_locations(&agent_list);
+        let mut agents_in_order:Vec<Citizen> = Vec::with_capacity(agent_list.len());
+
+        for(home, agents) in agents_by_home_locations{
+            let mut random_points_within_home = home.random_points(agents.len() as i32, rng);
+
+            for agent in agents{
+                agents_in_order.push(*agent);
+            }
+            home_loc.append(&mut random_points_within_home);
         }
 
         self.draw(&home_loc, &self.houses, &self.offices);
-        (home_loc, agent_list)
+        (home_loc, agents_in_order)
+    }
+
+    fn group_agents_by_home_locations(agent_list: &Vec<Citizen>) -> HashMap<&Area, Vec<&Citizen>> {
+        let mut agents_by_home_locations: HashMap<&Area, Vec<&Citizen>> = HashMap::new();
+        agent_list.iter().for_each(|agent| {
+            match agents_by_home_locations.get(&agent.home_location) {
+                None => {
+                    agents_by_home_locations.insert(&agent.home_location, vec![&agent]);
+                }
+                Some(citizens) => {
+                    let mut updated_citizens = citizens.clone();
+                    updated_citizens.push(&agent);
+                    agents_by_home_locations.insert(&agent.home_location, updated_citizens);
+                }
+            }
+        });
+        agents_by_home_locations
     }
 
     fn draw(&self, home_locations: &Vec<Point>, homes: &Vec<Area>, offices: &Vec<Area>) {

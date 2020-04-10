@@ -19,16 +19,16 @@
 
 
 import SocketAwareGraph from "./SocketAwareGraph";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
-import PropTypes from 'prop-types'
 import config from "../config";
+import { transformTimeSeriesMessages, transformTimeSeriesDeviationMessages } from './utils'
 
-function TimeSeries({simulationId}) {
+function TimeSeriesWrap({ simulationId, socketPath, messageTransformFn }) {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const socketInstance = io(`${config.API_HOST}/counts`);
+    const socketInstance = io(`${config.API_HOST}/${socketPath}`);
     setSocket(socketInstance);
 
     return () => {
@@ -37,14 +37,26 @@ function TimeSeries({simulationId}) {
   }, []);
 
   return (
-    <>
-      <SocketAwareGraph socket={socket} simulationId={simulationId}/>
-    </>
+    <SocketAwareGraph socket={socket} simulationId={simulationId} transformFn={messageTransformFn} />
   )
 }
 
-TimeSeries.propTypes = {
-  simulationId: PropTypes.number.isRequired
-};
+export function TimeSeries({ simulationId }) {
+  return (
+    <TimeSeriesWrap
+      simulationId={simulationId}
+      socketPath={'counts'}
+      messageTransformFn={transformTimeSeriesMessages}
+    />
+  )
+}
 
-export default TimeSeries;
+export function TimeSeriesDeviation({ simulationId }) {
+  return (
+    <TimeSeriesWrap
+      simulationId={simulationId}
+      socketPath={'counts-deviation'}
+      messageTransformFn={transformTimeSeriesDeviationMessages}
+    />
+  )
+}

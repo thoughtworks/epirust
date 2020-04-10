@@ -17,15 +17,15 @@
  *
  */
 
-import {JobDetails} from "../../jobs/JobDetails";
-import {render} from "@testing-library/react";
+import { JobDetails } from "../../jobs/JobDetails";
+import { render } from "@testing-library/react";
 import React from "react";
-import {MemoryRouter} from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 
 describe('Job Details', () => {
     it('should render the time series if the view is time-series', () => {
         const component = render(<MemoryRouter initialEntries={['/jobs/123/time-series']}>
-            <JobDetails simulationId={123} details={{config:{}}}/>
+            <JobDetails simulationId={123} details={{ config: {} }} />
         </MemoryRouter>);
 
         expect(component.container).toMatchSnapshot()
@@ -33,7 +33,7 @@ describe('Job Details', () => {
 
     it('should render the config if the config is given', () => {
         const component = render(<MemoryRouter initialEntries={['/jobs/123/config']}>
-            <JobDetails simulationId={123} details={{config:{configKey: 'configValue'}}}/>
+            <JobDetails simulationId={123} details={{ config: { configKey: 'configValue' } }} />
         </MemoryRouter>);
 
         expect(component.container).toMatchSnapshot()
@@ -41,27 +41,35 @@ describe('Job Details', () => {
 
     it('should not render the config if the config is not given', () => {
         const component = render(<MemoryRouter initialEntries={['/jobs/123/config']}>
-            <JobDetails simulationId={123}/>
+            <JobDetails simulationId={123} />
         </MemoryRouter>);
 
         expect(component.container).toMatchSnapshot()
     });
 
     it('should render time-series if grid is disabled in config', () => {
-        const simulationDetails = {config: {enable_citizen_state_messages: false}};
+        const simulationDetails = { config: { enable_citizen_state_messages: false } };
         const component = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
-            <JobDetails simulationId={123} details={simulationDetails}/>
+            <JobDetails simulationId={123} details={simulationDetails} />
         </MemoryRouter>);
 
         expect(component.container).toMatchSnapshot()
     });
 
     it('should render grid if grid is enabled in config', () => {
-        const simulationDetails = {config: {enable_citizen_state_messages: true}};
+        const simulationDetails = { config: { enable_citizen_state_messages: true } };
         const component = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
-            <JobDetails simulationId={123} details={simulationDetails}/>
+            <JobDetails simulationId={123} details={simulationDetails} />
         </MemoryRouter>);
 
         expect(component.container).toMatchSnapshot()
     });
+
+    it('should render time series mean comparison graph', () => {
+        const component = render(<MemoryRouter initialEntries={['/jobs/123/time-series-deviation']}>
+            <JobDetails simulationId={123} details={{ config: {} }} />
+        </MemoryRouter>);
+
+        expect(component.container).toMatchSnapshot()
+    })
 });

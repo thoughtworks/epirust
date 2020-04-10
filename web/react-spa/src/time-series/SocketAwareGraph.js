@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Graph from './LineGraph';
 import PropTypes from 'prop-types'
 
-export default function SocketAwareGraph({ socket, simulationId }) {
+export default function SocketAwareGraph({ socket, simulationId, transformFn }) {
     const [dataBuffer, setDataBuffer] = useState([]);
     const [simulationEnded, setSimulationEnded] = useState(false);
     useEffect(() => {
@@ -24,8 +24,8 @@ export default function SocketAwareGraph({ socket, simulationId }) {
                 socket.close();
             }
             else {
-                const { hour, susceptible, infected, quarantined, recovered, deceased } = message;
-                buff.push([hour, susceptible, infected, quarantined, recovered, deceased]);
+                const perHourStats = transformFn(message);
+                buff.push(perHourStats);
             }
             if (message.hour % 100 === 0 || simulationEndedTemp) {
                 setDataBuffer(buffer => {
@@ -34,16 +34,17 @@ export default function SocketAwareGraph({ socket, simulationId }) {
                     return total;
                 });
             }
-            if(simulationEndedTemp) {
+            if (simulationEndedTemp) {
                 setSimulationEnded(true)
             }
         });
-    }, [socket, simulationId]);
+    }, [socket, simulationId, transformFn]);
 
-    return <Graph dataBuffer={dataBuffer} enableExport={simulationEnded}/>
+    return <Graph dataBuffer={dataBuffer} enableExport={simulationEnded} />
 }
 
 SocketAwareGraph.propTypes = {
     socket: PropTypes.object,
-    simulationId: PropTypes.number.isRequired
+    simulationId: PropTypes.number.isRequired,
+    transformFn: PropTypes.func.isRequired
 };

@@ -18,8 +18,6 @@
  */
 
 import React from 'react';
-import GridPage from "./grid";
-import TimeSeries from "./time-series";
 import SimulationConfiguration from "./simulation-configuration";
 import Header from './Header';
 

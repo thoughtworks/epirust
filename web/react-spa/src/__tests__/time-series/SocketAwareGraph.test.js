@@ -19,7 +19,7 @@
 
 import React from 'react'
 import SocketAwareGraph from '../../time-series/SocketAwareGraph'
-import {render } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import MockSocket from 'socket.io-mock'
 import Dygraph from 'dygraphs'
 import renderer from 'react-test-renderer'
@@ -27,16 +27,17 @@ import renderer from 'react-test-renderer'
 jest.mock('dygraphs')
 jest.useFakeTimers();
 
+const simulationId = 1231231231
 
 test('should render SocketAwareGraph', () => {
-    const component = renderer.create(<SocketAwareGraph />)
+    const component = renderer.create(<SocketAwareGraph simulationId={simulationId} transformFn={jest.fn()} socket={null} />)
     let tree = component.toJSON()
 
     expect(tree).toMatchSnapshot()
 })
 
 test('should recieve data sent on socket and parse & set graph to empty', () => {
-    const mockDygraphfn = Dygraph.mockImplementation(()=>{})
+    const mockDygraphfn = Dygraph.mockImplementation(() => { })
     let socket = new MockSocket()
     const hourStatistics = {
         hour: 10,
@@ -47,7 +48,9 @@ test('should recieve data sent on socket and parse & set graph to empty', () => 
         deceased: 0
     }
 
-    const {getByTestId} = render(<SocketAwareGraph socket={socket.socketClient}/>)
+    const transformSpy = jest.fn().mockImplementation(() => [])
+
+    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} transformFn={transformSpy} />)
     socket.emit("epidemicStats", hourStatistics)
 
     expect(mockDygraphfn).toHaveBeenCalledTimes(0)
@@ -55,8 +58,9 @@ test('should recieve data sent on socket and parse & set graph to empty', () => 
 })
 
 test('should set dataBuffer and render graph and plot graph', () => {
-    const mockDygraphfn = Dygraph.mockImplementation(()=>{})
+    const mockDygraphfn = Dygraph.mockImplementation(() => { })
     let socket = new MockSocket()
+
     const hourStatistics = {
         hour: 100,
         susceptible: 9,
@@ -66,23 +70,27 @@ test('should set dataBuffer and render graph and plot graph', () => {
         deceased: 0
     }
 
-    // act(() => { TODO: warning for act
-        render(<SocketAwareGraph socket={socket.socketClient}/>)
-        socket.emit("epidemicStats", hourStatistics)
-    // })
+    const transformendData = [],
+        transformSpy = jest.fn()
+            .mockImplementationOnce(() => transformendData)
+
+    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} transformFn={transformSpy} />)
+
+    socket.emit("epidemicStats", hourStatistics)
+
     jest.runAllTimers();
-    expect(mockDygraphfn).toHaveBeenCalledWith(expect.anything(), Array.of(Object.values(hourStatistics)), expect.anything())
+    expect(mockDygraphfn).toHaveBeenCalledWith(expect.anything(), [transformendData], expect.anything())
     jest.clearAllMocks()
 })
 
 
 test('should set residue also into data buffer when simulation ended flag is true', () => {
     const updateSpyFn = jest.fn()
-    const mockDygraphfn = Dygraph.mockImplementation(()=>({
-        updateOptions : updateSpyFn
+    const mockDygraphfn = Dygraph.mockImplementation(() => ({
+        updateOptions: updateSpyFn
     }))
     let socket = new MockSocket()
-    socket.socketClient.close = () => {}
+    socket.socketClient.close = () => { }
     const hourStatistics = {
         hour: 100,
         susceptible: 9,
@@ -91,24 +99,33 @@ test('should set residue also into data buffer when simulation ended flag is tru
         recovered: 0,
         deceased: 0
     }
-    const hourStatistics101 = {...hourStatistics, hour: 101}
-    render(<SocketAwareGraph socket={socket.socketClient}/>)
+    const hourStatistics101 = { ...hourStatistics, hour: 101 }
+
+    const transformendData = [],
+        transformendData2 = [1, 2, 3]
+
+    const transformSpy = jest.fn()
+        .mockImplementationOnce(() => transformendData)
+        .mockImplementationOnce(() => transformendData2)
+
+    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} transformFn={transformSpy} />)
+
     socket.emit("epidemicStats", hourStatistics)
     socket.emit("epidemicStats", hourStatistics101)
-    socket.emit("epidemicStats", {"simulation_ended": true})
+    socket.emit("epidemicStats", { "simulation_ended": true })
     jest.runAllTimers();
 
     expect(mockDygraphfn).toHaveBeenCalledTimes(1)
-    expect(updateSpyFn).toHaveBeenCalledWith({file: [Object.values(hourStatistics), Object.values(hourStatistics101)]})
+    expect(updateSpyFn).toHaveBeenCalledWith({ file: [transformendData, transformendData2] })
 })
 
 test("should enable export in graph if simulation has ended", () => {
     let socket = new MockSocket()
-    socket.socketClient.close = () => {};
-    const {container} = render(<SocketAwareGraph socket={socket.socketClient}/>)
+    socket.socketClient.close = () => { };
+    const { container } = render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} transformFn={jest.fn()} />)
     expect(container.querySelector(".graph-actions .btn-secondary")).toBeDisabled()
 
-    socket.emit("epidemicStats", {"simulation_ended": true})
+    socket.emit("epidemicStats", { "simulation_ended": true })
     jest.runAllTimers();
 
     expect(container.querySelector(".graph-actions .btn-secondary")).toBeEnabled()
@@ -117,10 +134,10 @@ test("should enable export in graph if simulation has ended", () => {
 test("should close the socket on receiving simulation ended message", () => {
     let socket = new MockSocket();
     let closeCall = 0;
-    socket.socketClient.close = () => {closeCall += 1};
-    render(<SocketAwareGraph socket={socket.socketClient}/>);
+    socket.socketClient.close = () => { closeCall += 1 };
+    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} transformFn={jest.fn()} />);
 
-    socket.emit("epidemicStats", {"simulation_ended": true});
+    socket.emit("epidemicStats", { "simulation_ended": true });
     jest.runAllTimers();
 
     expect(closeCall).toBe(1);

@@ -18,7 +18,7 @@
  */
 
 import React from 'react'
-import {render} from '@testing-library/react'
+import { render, act } from '@testing-library/react'
 import GridPage from '../../grid/index'
 import MockSocket from 'socket.io-mock'
 import io from 'socket.io-client'
@@ -145,11 +145,16 @@ describe('Grid Page', () => {
         mockSocket.emit = emitSpy;
         const { asFragment } = render(<GridPage />);
 
-        mockSocket.socketClient.emit("gridData", layoutDimensions);
-        mockSocket.socketClient.emit("gridData", agentPositionMessage);
+        act(() => {
+            mockSocket.socketClient.emit("gridData", layoutDimensions);
+            mockSocket.socketClient.emit("gridData", agentPositionMessage);
+        })
+
         expect(closeSpy).toHaveBeenCalledTimes(0);
 
-        mockSocket.socketClient.emit("gridData", { "simulation_ended": true });
+        act(() => {
+            mockSocket.socketClient.emit("gridData", { "simulation_ended": true });
+        })
 
         expect(asFragment()).toMatchSnapshot();
         expect(emitSpy).toHaveBeenCalledWith("simulation_id", 1542319876);
@@ -157,7 +162,7 @@ describe('Grid Page', () => {
     });
 
     it('should close the socket before unmounting the component', () => {
-        render(<GridPage/>).unmount();
+        render(<GridPage />).unmount();
 
         expect(closeSpy).toHaveBeenCalledTimes(1);
         expect(closeSpy.mock.calls[0]).toHaveLength(0)

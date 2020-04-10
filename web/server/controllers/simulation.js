@@ -131,7 +131,7 @@ async function extractFromCursor(stream) {
   return aggregate;
 }
 
-router.get("/:simulation_id/compare", async (req, res, next) => {
+router.get("/:simulation_id/time-series-deviation", async (req, res, next) => {
 
   const simulationToAggregate = Simulation.find(configMatch, {simulation_id: 1})
     .exec()

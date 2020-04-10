@@ -54,7 +54,8 @@ export const JobsList = () => {
         {simulationDetails && id && <JobDetails simulationId={parseInt(id)} details={simulationDetails} />}
       </div>
 
-    </div>
+    </div >
     );
   }
 }
+

@@ -38,23 +38,24 @@ export const JobsList = () => {
     return (<Redirect to={`/jobs/${id}/time-series`} />);
   } else {
     const simulationDetails = simulations.find(s => s.simulation_id === parseInt(id));
-    return (<div className="row jobs-list">
-      <div className="col-3">
-        <ul className="list-group scrollable">
-          {simulations.map(s =>
-            <Job
-              key={s.simulation_id}
-              simulationId={s.simulation_id}
-              status={s.status} />
-          )}
-        </ul>
-      </div>
+    return (
+      <div className="row jobs-list">
+        <div className="col-3">
+          <ul className="list-group scrollable">
+            {simulations.map(s =>
+              <Job
+                key={s.simulation_id}
+                simulationId={s.simulation_id}
+                status={s.status} />
+            )}
+          </ul>
+        </div>
 
-      <div className="col-9 left-border scrollable">
-        {simulationDetails && id && <JobDetails simulationId={parseInt(id)} details={simulationDetails} />}
-      </div>
+        <div className="col-9 left-border scrollable">
+          {simulationDetails && id && <JobDetails simulationId={parseInt(id)} details={simulationDetails} />}
+        </div>
 
-    </div >
+      </div >
     );
   }
 }

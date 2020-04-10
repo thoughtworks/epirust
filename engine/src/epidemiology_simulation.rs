@@ -63,7 +63,7 @@ impl Epidemiology {
         };
 
         let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
-        let write_agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
+        let write_agent_location_map = agent_location_map.clone();
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         Epidemiology { agent_location_map, write_agent_location_map, grid, disease, sim_id }

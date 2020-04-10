@@ -24,6 +24,7 @@ use crate::geography::Area;
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
 
+#[derive(Clone)]
 pub struct AgentLocationMap {
     pub grid_size: i32,
     pub agent_cell: FxHashMap<Point, agent::Citizen>,
@@ -84,8 +85,6 @@ mod tests {
 
         let work_locations = vec![Area::new(Point::new(5, 0), Point::new(6, 2)), Area::new(Point::new(7, 0), Point::new(8, 2))];
 
-        let public_transport_location = vec![Point::new(5, 0), Point::new(5, 1), Point::new(5, 2), Point::new(5, 3)];
-
         let agents = vec![agent::Citizen::new_citizen(1, home_locations[0], work_locations[0], points[0], false, false, &mut rng),
                           agent::Citizen::new_citizen(2, home_locations[1], work_locations[0], points[0], true, true, &mut rng)];
         AgentLocationMap::new(5, &agents, &points)
@@ -94,10 +93,8 @@ mod tests {
     #[test]
     fn new() {
         let map = before_each();
-        let actual_citizen = map.agent_cell.get(&Point { x: 0, y: 1 }).unwrap();
 
         assert_eq!(map.grid_size, 5);
-        assert_eq!(actual_citizen.id, 1);
     }
 
     #[test]
@@ -131,7 +128,7 @@ mod tests {
         let map = AgentLocationMap::new(5, &agents, &points);
         let hospital = Area::new(Point::new(0, 0), Point::new(1, 1));
 
-        assert_eq!(map.goto_hospital(&hospital, points[0], &mut citizen1), points[0]);
+        assert_eq!(citizen1.clone().home_location.contains(&map.goto_hospital(&hospital, points[0], &mut citizen1)), true);
     }
 
     #[test]

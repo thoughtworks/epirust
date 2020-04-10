@@ -45,6 +45,7 @@ mod kafka_consumer;
 mod kafka_producer;
 mod ticks_consumer;
 mod environment;
+mod travel_plan;
 
 const STANDALONE_SIM_ID: &str = "0";
 

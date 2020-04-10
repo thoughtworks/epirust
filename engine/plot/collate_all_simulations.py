@@ -26,6 +26,7 @@ def arg_parser():
     parser.add_argument('--data-path', nargs='+', help='pattern to the path of simulation csvs', default=[])
     parser.add_argument('--output-path', help='path to saving the collated csvs', default=None)
     parser.add_argument('--collated-csv', help='path to the collated csvs', default=None)
+    parser.add_argument('--compare-with', help='path to the csv to be compared with', default=None)
     return parser.parse_args()
 
 
@@ -40,6 +41,7 @@ if __name__ == '__main__':
     if len(args.data_path) != 0 and args.collated_csv is not None:
         raise Exception('Either enter the simulation csvs or the collated csv file. Can not do both')
 
+    epi_curves = None
     if len(args.data_path):
         data_frames = open_data_frames(args.data_path)
         epi_curves = EpiCurves(data_frames)
@@ -49,4 +51,8 @@ if __name__ == '__main__':
             epi_curves.to_csv(args.output_path)
 
     if args.collated_csv is not None:
-        EpiCurves(pd.read_csv(args.collated_csv)).plot()
+        epi_curves = EpiCurves(pd.read_csv(args.collated_csv)).plot()
+
+    if args.compare_with is not None:
+        epi_curves.compare_plot(pd.read_csv(args.compare_with))
+

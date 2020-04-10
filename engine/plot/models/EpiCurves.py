@@ -40,6 +40,17 @@ def calculate_mean_and_standard_dev(data_frames):
     return curves
 
 
+def toggle_visibility(figure, legend_line, plots):
+    for plot in plots:
+        vis = not plot.get_visible()
+        plot.set_visible(vis)
+        if vis:
+            legend_line.set_alpha(1.0)
+        else:
+            legend_line.set_alpha(0.2)
+        figure.canvas.draw()
+
+
 def load_collated_csv(data_frame):
     columns = list(filter(lambda c: c != 'hour' and '_std' not in c, data_frame.columns))
     return list(map(lambda c: Curve(c, data_frame[c], data_frame[f'{c}_std']), columns))
@@ -77,4 +88,42 @@ class EpiCurves:
         data_frame = pd.DataFrame(data)
         data_frame['hour'] = data_frame.index + 1
         data_frame.to_csv(output_path, index=None)
+
+    def compare_plot(self, data_frame):
+        color_mapping = {
+            'infected': '#d62728',
+            'recovered': '#2ca02c',
+            'susceptible': '#ff7f0e',
+            'deceased': '#9467bd',
+            'quarantined': '#1f77b4'
+        }
+        fig, axes = plt.subplots()
+
+        plot_lines = []
+
+        for curve in self.curves:
+            time_steps = np.arange(curve.curve_mean.size)
+            color = color_mapping[curve.name]
+            line_plot, = axes.plot(time_steps, curve.curve_mean, label=curve.name, alpha=0.5, color=color)
+            poly_line = axes.fill_between(time_steps, curve.curve_mean - curve.curve_std, curve.curve_mean + curve.curve_std, alpha=0.3, color=color)
+            plot_lines.append([line_plot, poly_line])
+            line_plot, = axes.plot(data_frame[curve.name], label=f'{curve.name}-comparison', color=color)
+            plot_lines.append([line_plot])
+
+        legend = plt.legend()
+
+        lined = dict()
+        for legend_line, plot_line in zip(legend.get_lines(), plot_lines):
+            legend_line.set_picker(5)  # 5 pts tolerance
+            lined[legend_line] = plot_line
+            toggle_visibility(fig, legend_line, plot_line)
+
+        fig.canvas.mpl_connect('pick_event', lambda e: toggle_visibility(fig, e.artist, lined[e.artist]))
+        plt.xlabel('hour')
+        plt.ylabel('No. of individuals')
+        plt.show()
+
+
+
+
 

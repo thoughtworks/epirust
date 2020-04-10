@@ -17,7 +17,6 @@
  *
  */
 
-use std::collections::HashMap;
 use crate::ticks_consumer::Tick;
 use crate::agent::Citizen;
 use crate::geography::Point;
@@ -34,19 +33,27 @@ impl TravelPlan {
         TravelPlan { regions, matrix }
     }
 
-    pub fn get_total_outgoing(&self, engine_id: String) -> i32 {
+    pub fn get_total_outgoing(&self, engine_id: &String) -> i32 {
         let index = self.get_position(engine_id);
         let row = self.matrix.get(index).unwrap();
         row.iter().sum()
     }
 
     pub fn get_total_incoming(&self, engine_id: String) -> i32 {
-        let index = self.get_position(engine_id);
+        let index = self.get_position(&engine_id);
         self.matrix.iter().fold(0, |total, row| total + *row.get(index).unwrap())
     }
 
-    fn get_position(&self, engine_id: String) -> usize {
-        self.regions.iter().position(|i| i.eq(&engine_id))
+    pub fn get_outgoing(&self, from_region: &String, to_region: &String) -> i32 {
+        let from_index = self.get_position(from_region);
+        let to_index = self.get_position(to_region);
+
+        let row = self.matrix.get(from_index).unwrap();
+        *row.get(to_index).unwrap()
+    }
+
+    fn get_position(&self, engine_id: &String) -> usize {
+        self.regions.iter().position(|i| i.eq(engine_id))
             .expect(format!("Could not find region named {}", engine_id).as_str())
     }
 }
@@ -56,7 +63,7 @@ pub struct EngineTravelPlan {
     engine_id: String,
     travel_plan: Option<TravelPlan>,
     current_total_population: i32,
-    outgoing: HashMap<Point, Citizen>,
+    outgoing: Vec<(Point, Citizen)>,
 }
 
 impl EngineTravelPlan {
@@ -65,7 +72,7 @@ impl EngineTravelPlan {
             engine_id: engine_id.clone(),
             travel_plan: None,
             current_total_population: current_population,
-            outgoing: HashMap::new(),
+            outgoing: Vec::new(),
         }
     }
 
@@ -86,27 +93,90 @@ impl EngineTravelPlan {
         match &self.travel_plan {
             None => { 0.0 }
             Some(tp) => {
-                tp.get_total_outgoing(self.engine_id.clone()) as f64 / self.current_total_population as f64
+                tp.get_total_outgoing(&self.engine_id) as f64 / self.current_total_population as f64
             }
         }
     }
 
     pub fn add_outgoing(&mut self, citizen: Citizen, loc: Point) {
-        self.outgoing.insert(loc, citizen);
+        self.outgoing.push((loc, citizen));
     }
 
     pub fn clear_outgoing(&mut self) {
         self.outgoing.clear();
     }
 
-    pub fn get_outgoing(&self) -> &HashMap<Point, Citizen> {
+    pub fn get_outgoing(&self) -> &Vec<(Point, Citizen)> {
         &self.outgoing
+    }
+
+    pub fn alloc_outgoing_to_regions(&self) -> Vec<OutgoingByRegion> {
+        let mut citizens: Vec<Citizen> = self.outgoing.iter().map(|x| x.1).collect();
+        let total_outgoing = citizens.len();
+        let mut outgoing_by_region = match &self.travel_plan {
+            None => { Vec::new() }
+            Some(tp) => {
+                tp.regions.iter()
+                    .filter(|region| !self.engine_id.eq(*region))
+                    .map(|region| {
+                        let mut outgoing_by_region = OutgoingByRegion::create(region);
+                        outgoing_by_region.alloc_citizens(&mut citizens, tp, &self.engine_id, total_outgoing as i32);
+                        outgoing_by_region
+                    }).collect()
+            }
+        };
+
+        //assign remaining citizens (if any) to last region
+        for remaining in citizens {
+            outgoing_by_region.last_mut().unwrap().alloc_citizen(remaining);
+        }
+
+        outgoing_by_region
     }
 
     fn set_current_population(&mut self, val: i32) {
         self.current_total_population = val;
     }
 }
+
+pub struct OutgoingByRegion {
+    to_engine_id: String,
+    citizens: Vec<Citizen>,
+}
+
+impl OutgoingByRegion {
+    /// Since the actual outgoing count doesn't exactly match the travel plan, we pick a proportion
+    /// of the actual outgoing count
+    fn actual_outgoing_count(&self, travel_plan: &TravelPlan, actual_total_outgoing: i32, engine_id: &String) -> i32 {
+        let planned_outgoing_for_region = travel_plan.get_outgoing(engine_id, &self.to_engine_id);
+        let planned_total_outgoing = travel_plan.get_total_outgoing(engine_id);
+        let percent_outgoing = planned_outgoing_for_region as f64 / planned_total_outgoing as f64;
+        (percent_outgoing * (actual_total_outgoing as f64)) as i32
+    }
+
+    /// Note that this function mutates (drains) the total list of outgoing citizens
+    pub fn alloc_citizens(&mut self, citizens: &mut Vec<Citizen>, travel_plan: &TravelPlan,
+                          engine_id: &String, total_outgoing: i32) {
+        let mut count = self.actual_outgoing_count(travel_plan, total_outgoing, engine_id) as usize;
+        if count > citizens.len() {
+            debug!("Limiting outgoing citizens to {} instead of {}", citizens.len(), count);
+            count = citizens.len();
+        }
+        self.citizens = citizens.drain(0..count).collect();
+    }
+
+    pub fn alloc_citizen(&mut self, citizen: Citizen) {
+        self.citizens.push(citizen);
+    }
+
+    pub fn create(to_engine_id: &String) -> OutgoingByRegion {
+        OutgoingByRegion {
+            to_engine_id: to_engine_id.clone(),
+            citizens: Vec::new(),
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -117,9 +187,9 @@ mod tests {
     #[test]
     fn should_get_total_outgoing() {
         let travel_plan = create_travel_plan();
-        assert_eq!(156 + 24, travel_plan.get_total_outgoing("engine1".to_string()));
-        assert_eq!(108 + 221, travel_plan.get_total_outgoing("engine2".to_string()));
-        assert_eq!(97 + 12, travel_plan.get_total_outgoing("engine3".to_string()));
+        assert_eq!(156 + 24, travel_plan.get_total_outgoing(&"engine1".to_string()));
+        assert_eq!(108 + 221, travel_plan.get_total_outgoing(&"engine2".to_string()));
+        assert_eq!(97 + 12, travel_plan.get_total_outgoing(&"engine3".to_string()));
     }
 
     #[test]
@@ -128,6 +198,91 @@ mod tests {
         assert_eq!(108 + 97, travel_plan.get_total_incoming("engine1".to_string()));
         assert_eq!(156 + 12, travel_plan.get_total_incoming("engine2".to_string()));
         assert_eq!(24 + 221, travel_plan.get_total_incoming("engine3".to_string()));
+    }
+
+    #[test]
+    fn should_keep_previous_travel_plan_on_new_tick() {
+        let mut engine_travel_plan = create_engine_with_travel_plan();
+
+        let tick = Tick::new(1, None);
+        engine_travel_plan.receive_tick(Some(tick));
+        assert_eq!(create_travel_plan(), engine_travel_plan.travel_plan.unwrap());
+    }
+
+    #[test]
+    fn should_calc_outgoing_percent() {
+        let engine_travel_plan = create_engine_with_travel_plan();
+        assert_eq!(0.018, engine_travel_plan.percent_outgoing())
+    }
+
+    #[test]
+    fn should_add_outgoing_citizen() {
+        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
+        engine_travel_plan.add_outgoing(create_citizen(), Point::new(2, 2));
+        let citizen_id = engine_travel_plan.outgoing.get(0).unwrap().1.id;
+
+        assert_eq!(create_citizen().id, citizen_id);
+    }
+
+    #[test]
+    fn should_clear_outgoing_citizens() {
+        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
+        engine_travel_plan.add_outgoing(create_citizen(), Point::new(2, 2));
+        engine_travel_plan.clear_outgoing();
+
+        assert!(engine_travel_plan.outgoing.is_empty())
+    }
+
+    #[test]
+    fn should_set_current_population() {
+        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
+        engine_travel_plan.set_current_population(9000);
+        assert_eq!(9000, engine_travel_plan.current_total_population);
+    }
+
+    #[test]
+    fn should_assign_outgoing_citizens_to_regions() {
+        let mut engine_travel_plan = create_engine_with_travel_plan();
+
+        for i in 0..180 {
+            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1,1));
+        }
+
+        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
+
+        assert_eq!(2, outgoing_by_region.len());
+        assert_eq!(156, outgoing_by_region.get(0).unwrap().citizens.len());
+        assert_eq!(24, outgoing_by_region.get(1).unwrap().citizens.len());
+    }
+
+    #[test]
+    fn should_handle_outgoing_with_actual_total_less_than_planned() {
+        let mut engine_travel_plan = create_engine_with_travel_plan();
+
+        for i in 0..147 {
+            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1,1));
+        }
+
+        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
+
+        assert_eq!(2, outgoing_by_region.len());
+        assert_eq!(127, outgoing_by_region.get(0).unwrap().citizens.len());
+        assert_eq!(20, outgoing_by_region.get(1).unwrap().citizens.len());
+    }
+
+    #[test]
+    fn should_handle_outgoing_with_actual_total_more_than_planned() {
+        let mut engine_travel_plan = create_engine_with_travel_plan();
+
+        for i in 0..202 {
+            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1,1));
+        }
+
+        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
+
+        assert_eq!(2, outgoing_by_region.len());
+        assert_eq!(175, outgoing_by_region.get(0).unwrap().citizens.len());
+        assert_eq!(27, outgoing_by_region.get(1).unwrap().citizens.len());
     }
 
     fn create_travel_plan() -> TravelPlan {
@@ -141,55 +296,20 @@ mod tests {
         }
     }
 
-    #[test]
-    fn should_keep_previous_travel_plan_on_new_tick() {
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        let travel_plan = create_travel_plan();
-        let tick = Tick::new(0, Some(travel_plan));
-        engine_travel_plan.receive_tick(Some(tick));
-
-        let tick = Tick::new(1, None);
-        engine_travel_plan.receive_tick(Some(tick));
-        assert_eq!(create_travel_plan(), engine_travel_plan.travel_plan.unwrap());
-    }
-
-    #[test]
-    fn should_calc_outgoing_percent() {
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        let travel_plan = create_travel_plan();
-        let tick = Tick::new(0, Some(travel_plan));
-        engine_travel_plan.receive_tick(Some(tick));
-        assert_eq!(0.018, engine_travel_plan.percent_outgoing())
-    }
-
-    #[test]
-    fn should_add_outgoing_citizen() {
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        engine_travel_plan.add_outgoing(create_citizen(), Point::new(2,2));
-        let citizen_id = engine_travel_plan.outgoing.get(&Point::new(2, 2)).unwrap().id;
-
-        assert_eq!(create_citizen().id, citizen_id);
-    }
-
-    #[test]
-    fn should_clear_outgoing_citizens() {
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        engine_travel_plan.add_outgoing(create_citizen(), Point::new(2,2));
-        engine_travel_plan.clear_outgoing();
-
-        assert!(engine_travel_plan.outgoing.is_empty())
-    }
-
-    #[test]
-    fn should_set_current_population() {
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        engine_travel_plan.set_current_population(9000);
-        assert_eq!(9000, engine_travel_plan.current_total_population);
-    }
-
     fn create_citizen() -> Citizen {
-        let area = Area::new(Point::new(0,0), Point::new(10,10));
-        Citizen::new_citizen(1, area, area, Point::new(5,5), false, false, &mut RandomWrapper::new())
+        create_citizen_with_id(1)
     }
 
+    fn create_citizen_with_id(id: i32) -> Citizen {
+        let area = Area::new(Point::new(0, 0), Point::new(10, 10));
+        Citizen::new_citizen(id, area, area, Point::new(5, 5), false, false, &mut RandomWrapper::new())
+    }
+
+    fn create_engine_with_travel_plan() -> EngineTravelPlan {
+        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
+        let travel_plan = create_travel_plan();
+        let tick = Tick::new(0, Some(travel_plan));
+        engine_travel_plan.receive_tick(Some(tick));
+        engine_travel_plan
+    }
 }

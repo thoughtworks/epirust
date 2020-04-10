@@ -9,7 +9,7 @@ exports[`JobsList should fetch simulations when id and view is not selected 1`] 
       class="col-3"
     >
       <ul
-        class="list-group scrollable padded-list"
+        class="list-group scrollable"
       >
         <li
           class="list-group-item borderless item-less-padding"

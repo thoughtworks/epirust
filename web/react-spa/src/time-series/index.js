@@ -19,44 +19,38 @@
 
 
 import SocketAwareGraph from "./SocketAwareGraph";
+import RestfulGraph from "./RestfulGraph";
 import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
 import config from "../config";
 import { transformTimeSeriesMessages, transformTimeSeriesDeviationMessages } from './utils'
 
-function TimeSeriesWrap({ simulationId, socketPath, messageTransformFn }) {
+export function TimeSeries({ simulationId }) {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const socketInstance = io(`${config.API_HOST}/${socketPath}`);
+    const socketInstance = io(`${config.API_HOST}/${'counts'}`);
     setSocket(socketInstance);
 
     return () => {
       socketInstance.close();
     }
   }, []);
-
   return (
-    <SocketAwareGraph socket={socket} simulationId={simulationId} transformFn={messageTransformFn} />
-  )
-}
-
-export function TimeSeries({ simulationId }) {
-  return (
-    <TimeSeriesWrap
+    <SocketAwareGraph
       simulationId={simulationId}
-      socketPath={'counts'}
-      messageTransformFn={transformTimeSeriesMessages}
+      socket={socket}
+      transformFn={transformTimeSeriesMessages}
     />
   )
 }
 
 export function TimeSeriesDeviation({ simulationId }) {
   return (
-    <TimeSeriesWrap
+    <RestfulGraph
       simulationId={simulationId}
-      socketPath={'counts-deviation'}
-      messageTransformFn={transformTimeSeriesDeviationMessages}
+      apiPath={`${config.API_HOST}/simulation/${simulationId}/time-series-deviation`}
+      transformFn={transformTimeSeriesDeviationMessages}
     />
   )
 }

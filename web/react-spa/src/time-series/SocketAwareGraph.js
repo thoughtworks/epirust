@@ -6,7 +6,6 @@ export default function SocketAwareGraph({ socket, simulationId, transformFn }) 
     const [dataBuffer, setDataBuffer] = useState([]);
     const [simulationEnded, setSimulationEnded] = useState(false);
     useEffect(() => {
-
         if (!socket) {
             setDataBuffer([])
             return
@@ -40,7 +39,7 @@ export default function SocketAwareGraph({ socket, simulationId, transformFn }) 
         });
     }, [socket, simulationId, transformFn]);
 
-    return <Graph dataBuffer={dataBuffer} enableExport={simulationEnded} />
+    return <Graph dataBuffer={dataBuffer} enableExport={simulationEnded} labels={["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]} />
 }
 
 SocketAwareGraph.propTypes = {

@@ -3,7 +3,7 @@ import Dygraph from 'dygraphs';
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'
 
-export default function Graph({ dataBuffer , enableExport = false}) {
+export default function Graph({ dataBuffer, enableExport = false, labels, errorBars = false }) {
     const [graph, setGraph] = useState(null);
     useEffect(() => {
         if (dataBuffer.length === 0) {
@@ -12,16 +12,19 @@ export default function Graph({ dataBuffer , enableExport = false}) {
             return
         }
         if (!graph) {
-            let graphInstance = new Dygraph(document.getElementById("vis"), dataBuffer, {
-                labels: ["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"],
+            const options = {
                 legend: 'always',
                 animatedZooms: true,
                 title: 'Time Series Graph',
                 ylabel: 'Number of Agents',
                 xlabel: 'Hours',
-                showRoller: true
-            });
-
+                showRoller: true,
+                errorBars: errorBars
+            }
+            if (labels) {
+                options = {...options, labels: labels}
+            }
+            let graphInstance = new Dygraph(document.getElementById("vis"), dataBuffer, options);
             setGraph(graphInstance)
         }
         else {
@@ -59,7 +62,6 @@ export default function Graph({ dataBuffer , enableExport = false}) {
 }
 
 Graph.propTypes = {
-    dataBuffer: PropTypes.array.isRequired,
     enableExport: PropTypes.bool
 }
 

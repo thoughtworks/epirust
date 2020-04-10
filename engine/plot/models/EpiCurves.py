@@ -104,10 +104,10 @@ class EpiCurves:
         for curve in self.curves:
             time_steps = np.arange(curve.curve_mean.size)
             color = color_mapping[curve.name]
-            line_plot, = axes.plot(time_steps, curve.curve_mean, label=curve.name, alpha=0.5, color=color)
+            line_plot, = axes.plot(time_steps, curve.curve_mean, label=f'{curve.name}-baseline', alpha=0.5, color=color)
             poly_line = axes.fill_between(time_steps, curve.curve_mean - curve.curve_std, curve.curve_mean + curve.curve_std, alpha=0.3, color=color)
             plot_lines.append([line_plot, poly_line])
-            line_plot, = axes.plot(data_frame[curve.name], label=f'{curve.name}-comparison', color=color)
+            line_plot, = axes.plot(data_frame[curve.name], label=curve.name, color=color)
             plot_lines.append([line_plot])
 
         legend = plt.legend()

@@ -21,6 +21,9 @@ use rdkafka::producer::{FutureProducer, FutureRecord, DeliveryFuture};
 use rdkafka::ClientConfig;
 use crate::environment;
 
+const TICK_ACKS_TOPIC: &str = "ticks_ack";
+// const TRAVELS_TOPIC: &str = "travels";
+
 pub struct KafkaProducer {
     producer: FutureProducer,
 }
@@ -38,10 +41,14 @@ impl KafkaProducer {
 
     pub fn send_ack(&mut self, tick: &TickAck) -> DeliveryFuture {
         let tick_string = serde_json::to_string(&tick).unwrap();
-        let record: FutureRecord<String, String> = FutureRecord::to("ticks_ack")
+        let record: FutureRecord<String, String> = FutureRecord::to(TICK_ACKS_TOPIC)
             .payload(&tick_string);
         self.producer.send(record, 0)
     }
+
+    // pub fn send_travels(&mut self, outgoing: HashMap<String, Vec<Citizen>>) -> DeliveryFuture {
+    //
+    // }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

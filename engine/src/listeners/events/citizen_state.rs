@@ -17,8 +17,9 @@
  *
  */
 
-use crate::agent::{Citizen, State};
+use crate::agent::Citizen;
 use crate::geography::Point;
+use crate::disease_state_machine::State;
 use uuid::Uuid;
 
 #[derive(Serialize)]

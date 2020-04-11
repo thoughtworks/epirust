@@ -23,12 +23,12 @@ use crate::agent;
 use crate::geography::Area;
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
+use crate::agent::Citizen;
 
 #[derive(Clone)]
 pub struct AgentLocationMap {
     pub grid_size: i32,
     pub agent_cell: FxHashMap<Point, agent::Citizen>,
-    pub total_population: i32,
 }
 
 impl AgentLocationMap {
@@ -39,7 +39,7 @@ impl AgentLocationMap {
             map.insert(points[i], agent_list[i]);
         }
 
-        AgentLocationMap { grid_size: size, agent_cell: map, total_population: agent_list.len() as i32 }
+        AgentLocationMap { grid_size: size, agent_cell: map }
     }
 
     pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point {
@@ -72,6 +72,22 @@ impl AgentLocationMap {
 
     pub fn is_cell_vacant(&self, cell: &Point) -> bool {
         !self.agent_cell.contains_key(cell)
+    }
+
+    pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Citizen)>) {
+        for (point, citizen) in outgoing {
+            match self.agent_cell.remove(point) {
+                None => {
+                    panic!("Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
+                           citizen.id, point)
+                }
+                Some(_) => {}
+            }
+        }
+    }
+
+    pub fn current_population(&self) -> i32 {
+        self.agent_cell.len() as i32
     }
 }
 
@@ -149,5 +165,26 @@ mod tests {
         for point in points {
             assert!(!map.is_point_in_grid(&point))
         }
+    }
+
+    #[test]
+    fn should_remove_citizens_from_grid() {
+        let mut map = before_each();
+        let home_location = Area::new(Point::new(0, 0), Point::new(2, 2));
+        let citizen = Citizen::new_citizen(1, home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
+
+        assert_eq!(2, map.current_population());
+        map.remove_citizens(&vec![(Point::new(0,1), citizen)]);
+        assert_eq!(1, map.current_population());
+    }
+
+    #[test]
+    #[should_panic]
+    fn should_panic_when_removing_citizen_not_present_at_point() {
+        let mut map = before_each();
+        let home_location = Area::new(Point::new(0, 0), Point::new(2, 2));
+        let citizen = Citizen::new_citizen(1, home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
+
+        map.remove_citizens(&vec![(Point::new(5,3), citizen)]);
     }
 }

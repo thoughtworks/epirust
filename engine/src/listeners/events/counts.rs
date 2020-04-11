@@ -33,8 +33,8 @@ impl Counts {
         Counts { hour, susceptible, infected, quarantined, recovered, deceased }
     }
 
-    pub fn new(population: i32, infected: i32) -> Counts {
-        Counts { hour: 0, susceptible: population, infected, quarantined: 0, recovered: 0, deceased: 0 }
+    pub fn new(susceptible: i32, infected: i32) -> Counts {
+        Counts { hour: 0, susceptible, infected, quarantined: 0, recovered: 0, deceased: 0 }
     }
 
     pub fn get_susceptible(&self) -> i32 {

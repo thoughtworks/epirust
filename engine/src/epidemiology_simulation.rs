@@ -89,7 +89,8 @@ impl Epidemiology {
     fn create_listeners(&self, config: &Config, run_mode: &RunMode) -> Listeners {
         let output_file_name = Epidemiology::output_file_name(config, run_mode);
         let csv_listener = CsvListener::new(output_file_name);
-        let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), self.agent_location_map.agent_cell.len(),
+        let population = self.agent_location_map.current_population();
+        let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), population as usize,
                                                       config.enable_citizen_state_messages());
         let hotspot_tracker = Hotspot::new();
         Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)])
@@ -97,12 +98,13 @@ impl Epidemiology {
 
     pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
         let mut listeners = self.create_listeners(config, run_mode);
-
-        let mut counts_at_hr = Counts::new((self.agent_location_map.agent_cell.len() - 1) as i32, 1);
+        let population = self.agent_location_map.current_population();
+        let mut counts_at_hr = Counts::new(population - 1, 1);
         let mut rng = RandomWrapper::new();
         let start_time = Instant::now();
 
-        self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(self.agent_location_map.agent_cell.len(), FxBuildHasher::default());
+        self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(population as usize,
+                                                                                       FxBuildHasher::default());
 
         let vaccinations = VaccinateIntervention::init(config);
         let mut lock_down_details = LockdownIntervention::init(config);
@@ -118,7 +120,7 @@ impl Epidemiology {
         } else {
             &standalone_engine_id
         };
-        let mut engine_travel_plan = EngineTravelPlan::new(engine_id, self.write_agent_location_map.total_population);
+        let mut engine_travel_plan = EngineTravelPlan::new(engine_id, population);
         let ticks_consumer = ticks_consumer::start(engine_id);
         let mut ticks_stream = ticks_consumer.start_with(Duration::from_millis(10), false);
         let travellers_consumer = travellers_consumer::start(engine_id);
@@ -168,6 +170,8 @@ impl Epidemiology {
             Epidemiology::send_travellers(tick.clone(), &mut producer, &mut engine_travel_plan).await;
             Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan).await;
             Epidemiology::send_ack(run_mode, &mut producer, terminate_engine, simulation_hour).await;
+
+            write_buffer_reference.remove_citizens(engine_travel_plan.get_outgoing());
 
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
@@ -254,7 +258,7 @@ impl Epidemiology {
     }
 
     async fn receive_travellers_from_region(message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
-                                engine_travel_plan: &EngineTravelPlan) -> Vec<TravellersByRegion> {
+                                            engine_travel_plan: &EngineTravelPlan) -> Vec<TravellersByRegion> {
         let msg = message_stream.next().await;
 
         travellers_consumer::read(msg).into_iter()
@@ -365,6 +369,6 @@ mod tests {
         let expected_hospital_area = Area::new(Point::new(70, 0), Point::new(80, 100));
         assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
 
-        assert_eq!(epidemiology.agent_location_map.agent_cell.len(), 10);
+        assert_eq!(epidemiology.agent_location_map.current_population(), 10);
     }
 }

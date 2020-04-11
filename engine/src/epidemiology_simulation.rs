@@ -288,7 +288,7 @@ impl Epidemiology {
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
         for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
-            if agent.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
+            if agent.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
                 agent.set_vaccination(true);
             }
         }
@@ -300,10 +300,10 @@ impl Epidemiology {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
             let mut current_agent = *agent;
-            let infection_status = current_agent.is_infected();
+            let infection_status = current_agent.state_machine.is_infected();
             let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut csv_record, rng, disease);
 
-            if infection_status == false && current_agent.is_infected() == true {
+            if infection_status == false && current_agent.state_machine.is_infected() == true {
                 listeners.citizen_got_infected(&cell);
             }
 

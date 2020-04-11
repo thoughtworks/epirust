@@ -23,7 +23,8 @@ use crate::agent;
 use crate::geography::{Area, Grid};
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
-use crate::agent::{Citizen, State};
+use crate::agent::Citizen;
+use crate::disease_state_machine::State;
 use crate::listeners::events::counts::Counts;
 
 #[derive(Clone)]

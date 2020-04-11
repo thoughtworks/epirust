@@ -29,39 +29,8 @@ use crate::disease::Disease;
 use serde::{Deserializer, Deserialize, de};
 use serde::de::Unexpected;
 use crate::listeners::events::counts::Counts;
+use crate::disease_state_machine::DiseaseStateMachine;
 use uuid::Uuid;
-
-#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
-pub enum State {
-    Susceptible {},
-    Infected {},
-    Recovered {},
-    Deceased {},
-}
-
-#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
-pub struct StateMachine {
-    pub state: State,
-    infection_day: i32,
-}
-
-impl StateMachine {
-    fn new() -> Self {
-        StateMachine {
-            state: State::Susceptible {},
-            infection_day: 0,
-        }
-    }
-
-    pub fn get_infection_day(self) -> i32 {
-        match self.state {
-            State::Infected {} => {
-                self.infection_day
-            }
-            _ => 0
-        }
-    }
-}
 
 #[derive(Deserialize)]
 pub struct PopulationRecord {
@@ -100,7 +69,7 @@ pub struct Citizen {
     working: bool,
     hospitalized: bool,
     pub transport_location: Point,
-    pub state_machine: StateMachine,
+    pub state_machine: DiseaseStateMachine,
     quarantined: bool,
     isolated: bool,
     current_area: Area,
@@ -127,7 +96,7 @@ impl Citizen {
             uses_public_transport,
             working,
             hospitalized: false,
-            state_machine: StateMachine::new(),
+            state_machine: DiseaseStateMachine::new(),
             quarantined: false,
             isolated: false,
             current_area: home_location,
@@ -148,7 +117,7 @@ impl Citizen {
             uses_public_transport: record.pub_transport,
             working: record.working,
             hospitalized: false,
-            state_machine: StateMachine::new(),
+            state_machine: DiseaseStateMachine::new(),
             quarantined: false,
             isolated: false,
             current_area: home_location,
@@ -163,92 +132,12 @@ impl Citizen {
         self.vaccinated = vaccinated;
     }
 
-    pub fn infect(&mut self) -> i32 {
-        match self.state_machine.state {
-            State::Susceptible {} => {
-                self.state_machine.state = State::Infected {};
-                1
-            }
-            _ => {
-                panic!("Invalid state transition!")
-            }
-        }
-    }
-
-    pub fn quarantine(&mut self, disease: &Disease) -> i32 {
-        match self.state_machine.state {
-            State::Infected {} => {
-                if disease.to_be_quarantined(self.state_machine.infection_day + self.immunity) {
-                    self.quarantined = true;
-                    return 1;
-                }
-                0
-            }
-            _ => {
-                panic!("Invalid state transition!")
-            }
-        }
-    }
-
-    pub fn decease(&mut self, rng: &mut RandomWrapper, disease: &Disease) -> (i32, i32) {
-        match self.state_machine.state {
-            State::Infected {} => {
-                if self.state_machine.infection_day == disease.get_disease_last_day() {
-                    self.hospitalized = false;
-                    self.quarantined = false;
-
-                    if disease.to_be_deceased(rng) {
-                        self.state_machine.state = State::Deceased {};
-                        return (1, 0);
-                    }
-                    self.state_machine.state = State::Recovered {};
-                    return (0, 1);
-                }
-            }
-            _ => {
-                panic!("Invalid state transition!")
-            }
-        }
-        (0, 0)
-    }
-
     pub fn is_quarantined(&self) -> bool {
         self.quarantined
     }
 
-    pub fn is_susceptible(&self) -> bool {
-        match self.state_machine.state {
-            State::Susceptible {} => {
-                true
-            }
-            _ => false
-        }
-    }
-
-    pub fn is_infected(&self) -> bool {
-        match self.state_machine.state {
-            State::Infected {} => {
-                true
-            }
-            _ => false
-        }
-    }
-
-    pub fn is_deceased(&self) -> bool {
-        match self.state_machine.state {
-            State::Deceased {} => {
-                true
-            }
-            _ => false
-        }
-    }
-
-    pub fn increment_infection_day(&mut self) {
-        self.state_machine.infection_day += 1;
-    }
-
     pub fn can_move(&self) -> bool {
-        if self.is_quarantined() || self.hospitalized || self.is_deceased() || self.isolated {
+        if self.is_quarantined() || self.hospitalized || self.state_machine.is_deceased() || self.isolated {
             return false;
         }
         true
@@ -314,23 +203,24 @@ impl Citizen {
     }
 
     fn update_infection_day(&mut self) {
-        if self.is_infected() || self.is_quarantined() {
-            self.increment_infection_day();
+        if self.state_machine.is_infected() || self.is_quarantined() {
+            self.state_machine.increment_infection_day();
         }
     }
 
     fn quarantine_all(&mut self, cell: Point, hospital: &Area, map: &AgentLocationMap, counts: &mut Counts,
                       disease: &Disease) -> Point {
         let mut new_cell = cell;
-        if self.is_infected() && !self.is_quarantined() {
-            let number_of_quarantined = self.quarantine(disease);
-            if number_of_quarantined > 0 {
+        if self.state_machine.is_infected() && !self.is_quarantined() {
+            let number_of_quarantined = self.state_machine.quarantine(disease, self.immunity);
+            if number_of_quarantined {
+                self.quarantined = true;
                 new_cell = AgentLocationMap::goto_hospital(map, hospital, cell, self);
                 if new_cell != cell {
                     self.hospitalized = true;
                 }
-                counts.update_quarantined(number_of_quarantined);
-                counts.update_infected(-number_of_quarantined);
+                counts.update_quarantined(1);
+                counts.update_infected(-1);
             }
         }
         new_cell
@@ -338,17 +228,17 @@ impl Citizen {
 
     fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Counts, rng: &mut RandomWrapper,
                         disease: &Disease) {
-        if self.is_susceptible() && !self.vaccinated {
+        if self.state_machine.is_susceptible() && !self.vaccinated {
             let neighbours = self.current_area.get_neighbors_of(cell);
 
             let neighbor_that_spreads_infection = neighbours
                 .filter(|p| map.is_point_in_grid(p))
                 .filter_map(|cell| { map.get_agent_for(&cell) })
-                .filter(|agent| (agent.is_infected() || agent.is_quarantined()) && !agent.hospitalized)
+                .filter(|agent| (agent.state_machine.is_infected() || agent.is_quarantined()) && !agent.hospitalized)
                 .find(|neighbor| rng.get().gen_bool(neighbor.get_infection_transmission_rate(disease)));
 
             if neighbor_that_spreads_infection.is_some() {
-                self.infect();
+                self.state_machine.infect();
                 counts.update_infected(1);
                 counts.update_susceptible(-1);
             }
@@ -374,7 +264,11 @@ impl Citizen {
                 disease: &Disease) -> Point {
         let mut new_cell = cell;
         if self.is_quarantined() {
-            let result = self.decease(rng, disease);
+            let result = self.state_machine.decease(rng, disease);
+            if result != (0,0) {
+                self.hospitalized = false;
+                self.quarantined = false;
+            }
             if result.1 == 1 {
                 new_cell = map.move_agent(cell, self.home_location.get_random_point(rng));
             }
@@ -425,7 +319,7 @@ pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_l
         agent_list.push(agent);
     }
 //TODO: pass number of infected as parameter
-    agent_list.last_mut().as_mut().unwrap().infect();
+    agent_list.last_mut().as_mut().unwrap().state_machine.infect();
     agent_list
 }
 
@@ -449,26 +343,10 @@ mod tests {
         let expected_home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
 
         assert_eq!(citizen_list.len(), 4);
-        assert_eq!(citizen_list.last().unwrap().is_infected(), true);
+        assert_eq!(citizen_list.last().unwrap().state_machine.is_infected(), true);
 
         for citizen in &citizen_list {
             assert!(expected_home_locations.contains(&citizen.home_location));
         }
-    }
-
-    #[test]
-    fn should_infect() {
-        let mut citizen_list = before_each();
-
-        assert_eq!(citizen_list[0].infect(), 1);
-    }
-
-    #[test]
-    #[should_panic]
-    fn should_panic() {
-        let mut citizen_list = before_each();
-        let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
-
-        citizen_list[0].quarantine(&disease);
     }
 }

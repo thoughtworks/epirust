@@ -45,6 +45,7 @@ mod kafka_consumer;
 mod kafka_producer;
 mod ticks_consumer;
 mod environment;
+mod disease_state_machine;
 mod travel_plan;
 mod travellers_consumer;
 

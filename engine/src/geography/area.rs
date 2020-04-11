@@ -48,8 +48,8 @@ impl Area {
         let mut points_collision_checker: HashSet<Point> = HashSet::with_capacity(number_of_points as usize);
         let rng = rng.get();
         while points.len() != (number_of_points as usize) {
-            let rand_x = rng.gen_range(self.start_offset.x, self.end_offset.x);
-            let rand_y = rng.gen_range(self.start_offset.y, self.end_offset.y);
+            let rand_x = rng.gen_range(self.start_offset.x, self.end_offset.x + 1);
+            let rand_y = rng.gen_range(self.start_offset.y, self.end_offset.y + 1);
             let new_point = Point::new(rand_x, rand_y);
             if !points_collision_checker.contains(&new_point) {
                 points.push(new_point);
@@ -60,8 +60,8 @@ impl Area {
     }
 
     pub fn get_random_point(&self, rng: &mut RandomWrapper) -> Point {
-        let rand_x = rng.get().gen_range(self.start_offset.x, self.end_offset.x);
-        let rand_y = rng.get().gen_range(self.start_offset.y, self.end_offset.y);
+        let rand_x = rng.get().gen_range(self.start_offset.x, self.end_offset.x + 1);
+        let rand_y = rng.get().gen_range(self.start_offset.y, self.end_offset.y + 1);
 
         Point::new(rand_x, rand_y)
     }
@@ -73,15 +73,15 @@ impl Area {
 }
 
 pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area> {
-    let feasible_houses_in_x_dim = (end_point.x - start_point.x) / size;
-    let feasible_houses_in_y_dim = (end_point.y - start_point.y) / size;
+    let feasible_houses_in_x_dim = (end_point.x - start_point.x + 1) / size;
+    let feasible_houses_in_y_dim = (end_point.y - start_point.y + 1) / size;
 
     let mut areas = Vec::with_capacity((feasible_houses_in_y_dim * feasible_houses_in_x_dim) as usize);
     let mut current_start_point = start_point;
 
     for _i in 0..feasible_houses_in_y_dim {
         for _j in 0..feasible_houses_in_x_dim {
-            let current_end_point: Point = Point::new(current_start_point.x + size, current_start_point.y + size);
+            let current_end_point: Point = Point::new(current_start_point.x + size - 1, current_start_point.y + size - 1);
 
             areas.push(Area::new(current_start_point, current_end_point));
 
@@ -158,9 +158,9 @@ mod tests {
     #[test]
     fn generate_points() {
         let area = get_area();
-        let points: Vec<Point> = area.random_points(10, &mut RandomWrapper::new());
+        let points: Vec<Point> = area.random_points(36, &mut RandomWrapper::new());
 
-        assert_eq!(points.len(), 10);
+        assert_eq!(points.len(), 36);
     }
 
     #[test]
@@ -181,20 +181,37 @@ mod tests {
     fn should_create_areas() {
         let buildings = area_factory(Point::new(10, 0), Point::new(21, 10), 3);
 
-        assert_eq!(buildings.len(), 9);
+        buildings.iter().for_each(|b| println!("start {:?}, end {:?}", b.start_offset, b.end_offset));
+
+        assert_eq!(buildings.len(), 12);
         assert_eq!(buildings.get(0).unwrap().start_offset, Point::new(10, 0));
-        assert_eq!(buildings.get(0).unwrap().end_offset, Point::new(13, 3));
-        assert_eq!(buildings.get(5).unwrap().start_offset, Point::new(16, 3));
-        assert_eq!(buildings.get(5).unwrap().end_offset, Point::new(19, 6));
-        assert_eq!(buildings.last().unwrap().start_offset, Point::new(16, 6));
-        assert_eq!(buildings.last().unwrap().end_offset, Point::new(19, 9));
+        assert_eq!(buildings.get(0).unwrap().end_offset, Point::new(12, 2));
+
+        assert!(buildings.get(0).unwrap().contains(&Point::new(12,0)));
+        assert!(!buildings.get(1).unwrap().contains(&Point::new(12,0)));
+        assert!(buildings.get(1).unwrap().contains(&Point::new(13,0)));
+
+        assert!(buildings.get(0).unwrap().contains(&Point::new(12,1)));
+        assert!(!buildings.get(1).unwrap().contains(&Point::new(12,1)));
+        assert!(buildings.get(1).unwrap().contains(&Point::new(13,1)));
+
+        assert!(buildings.get(0).unwrap().contains(&Point::new(12,2)));
+        assert!(!buildings.get(1).unwrap().contains(&Point::new(12,2)));
+        assert!(buildings.get(1).unwrap().contains(&Point::new(13,2)));
+
+        assert_eq!(buildings.get(5).unwrap().start_offset, Point::new(13, 3));
+        assert_eq!(buildings.get(5).unwrap().end_offset, Point::new(15, 5));
+
+        assert_eq!(buildings.last().unwrap().start_offset, Point::new(19, 6));
+        assert_eq!(buildings.last().unwrap().end_offset, Point::new(21, 8));
     }
 
     #[test]
     fn should_iterate_over_points_in_multiple_areas() {
         let area1 = Area::new(Point { x: 0, y: 0 }, Point { x: 1, y: 1 });
         let area2 = Area::new(Point { x: 2, y: 0 }, Point { x: 3, y: 1 });
-        let mut areas = vec![area1, area2];
+        let area3 = Area::new(Point { x: 4, y: 0 }, Point { x: 5, y: 1 });
+        let mut areas = vec![area1, area2, area3];
         let areas_points_iter = AreaPointIterator::init(&mut areas);
 
         let mut points = Vec::new();
@@ -205,6 +222,7 @@ mod tests {
         assert_eq!(points, vec![
             Point::new(0,0), Point::new(1,0), Point::new(0,1), Point::new(1,1),
             Point::new(2,0), Point::new(3,0), Point::new(2,1), Point::new(3,1),
+            Point::new(4,0), Point::new(5,0), Point::new(4,1), Point::new(5,1),
         ])
     }
 

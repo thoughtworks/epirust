@@ -57,9 +57,12 @@ impl Grid {
         debug!("Finished creating agent list");
 
         let agents_by_home_locations = Grid::group_agents_by_home_locations(&agent_list);
+        debug!("Finished grouping agents by home locations");
         let mut agents_in_order:Vec<Citizen> = Vec::with_capacity(agent_list.len());
 
         for(home, agents) in agents_by_home_locations{
+            trace!("home: {:?} {:?}", home.start_offset, home.end_offset);
+            trace!("agents in home: {:?}", agents.len());
             let mut random_points_within_home = home.random_points(agents.len() as i32, rng);
 
             for agent in agents{
@@ -67,6 +70,7 @@ impl Grid {
             }
             home_loc.append(&mut random_points_within_home);
         }
+        debug!("Assigned starting location to agents");
 
         self.draw(&home_loc, &self.houses, &self.offices);
         (home_loc, agents_in_order)
@@ -90,23 +94,23 @@ impl Grid {
     }
 
     fn draw(&self, home_locations: &Vec<Point>, homes: &Vec<Area>, offices: &Vec<Area>) {
-        let mut svg = SVGBackend::new("grid.svg", (self.grid_size as u32, self.grid_size as u32));
-        Grid::draw_rect(&mut svg, &self.housing_area, &plotters::style::YELLOW);
-        Grid::draw_rect(&mut svg, &self.transport_area, &plotters::style::RGBColor(121, 121, 121));
-        Grid::draw_rect(&mut svg, &self.work_area, &plotters::style::BLUE);
-        Grid::draw_rect(&mut svg, &self.hospital_area, &plotters::style::RED);
+        let mut draw_backend = BitMapBackend::new("grid.png", (self.grid_size as u32, self.grid_size as u32));
+        Grid::draw_rect(&mut draw_backend, &self.housing_area, &plotters::style::YELLOW);
+        Grid::draw_rect(&mut draw_backend, &self.transport_area, &plotters::style::RGBColor(121, 121, 121));
+        Grid::draw_rect(&mut draw_backend, &self.work_area, &plotters::style::BLUE);
+        Grid::draw_rect(&mut draw_backend, &self.hospital_area, &plotters::style::RED);
         for home in homes {
-            Grid::draw_rect(&mut svg, home, &plotters::style::RGBColor(204, 153, 0));
+            Grid::draw_rect(&mut draw_backend, home, &plotters::style::RGBColor(204, 153, 0));
         }
         for office in offices {
-            Grid::draw_rect(&mut svg, office, &plotters::style::RGBColor(51, 153, 255));
+            Grid::draw_rect(&mut draw_backend, office, &plotters::style::RGBColor(51, 153, 255));
         }
         for home in home_locations {
-            svg.draw_pixel((home.x, home.y), &plotters::style::BLACK.to_rgba()).unwrap();
+            draw_backend.draw_pixel((home.x, home.y), &plotters::style::BLACK.to_rgba()).unwrap();
         }
     }
 
-    fn draw_rect(svg: &mut SVGBackend, area: &Area, style: &RGBColor) {
+    fn draw_rect(svg: &mut impl DrawingBackend, area: &Area, style: &RGBColor) {
         svg.draw_rect((area.start_offset.x, area.start_offset.y),
                       (area.end_offset.x, area.end_offset.y),
                       style, true).unwrap();

@@ -32,6 +32,7 @@ pub struct AgentLocationMap {
 
 impl AgentLocationMap {
     pub fn new(size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
+        debug!("{} agents and {} starting points", agent_list.len(), points.len());
         let mut map: FxHashMap<Point, agent::Citizen> = FxHashMap::default();
         for i in 0..agent_list.len() {
             map.insert(points[i], agent_list[i]);

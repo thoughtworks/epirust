@@ -146,6 +146,7 @@ impl Epidemiology {
             if read_buffer_reference.current_population() == 0 {
                 panic!("No citizens!");
             }
+            engine_travel_plan.set_current_population(read_buffer_reference.current_population());
 
             if hospital_intervention.should_apply(&counts_at_hr) {
                 info!("Increasing the hospital size");
@@ -181,8 +182,7 @@ impl Epidemiology {
             n_incoming += incoming.len();
             n_outgoing += engine_travel_plan.get_outgoing().len();
             write_buffer_reference.remove_citizens(engine_travel_plan.get_outgoing());
-            write_buffer_reference.assimilate_citizens(&mut incoming, &self.grid, &mut rng);
-
+            write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, &mut rng);
 
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
@@ -205,12 +205,6 @@ impl Epidemiology {
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         listeners.simulation_ended();
     }
-
-    // fn apply_travels(tick: &Option<Tick>, agent_location_map: &mut AgentLocationMap) {
-    //     // if tick.hour() % 24 == 0 && tick.travel_plan().is_some() {
-    //     //
-    //     // }
-    // }
 
     async fn receive_tick(run_mode: &RunMode, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                           simulation_hour: i32) -> Option<Tick> {
@@ -255,14 +249,16 @@ impl Epidemiology {
     async fn receive_travellers(tick: Option<Tick>, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                                 engine_travel_plan: &EngineTravelPlan) -> Vec<Citizen> {
         if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
-            let incoming_regions = engine_travel_plan.incoming_regions_count();
-            debug!("Receiving travellers from {} regions", incoming_regions);
+            let expected_incoming_regions = engine_travel_plan.incoming_regions_count();
+            let mut received_incoming_regions = 0;
+            debug!("Receiving travellers from {} regions", expected_incoming_regions);
             let mut incoming: Vec<Citizen> = Vec::new();
-            for _i in 0..incoming_regions {
+            while expected_incoming_regions != received_incoming_regions {
                 let region_incoming = Epidemiology::receive_travellers_from_region(message_stream, engine_travel_plan).await;
                 debug!("received travels: {}", region_incoming.len());
                 for i in region_incoming {
                     incoming.extend(i.get_citizens());
+                    received_incoming_regions += 1;
                 }
             }
             println!("Received {} travellers", incoming.len());

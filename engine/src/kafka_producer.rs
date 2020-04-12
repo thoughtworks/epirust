@@ -49,6 +49,7 @@ impl KafkaProducer {
 
     pub fn send_travellers(&mut self, outgoing: Vec<TravellersByRegion>) -> DeliveryFuture {
         let payload = serde_json::to_string(&outgoing).unwrap();
+        debug!("Sending travellers: {}", payload);
         let record: FutureRecord<String, String> = FutureRecord::to(TRAVELS_TOPIC)
             .payload(&payload);
         self.producer.send(record, 0)

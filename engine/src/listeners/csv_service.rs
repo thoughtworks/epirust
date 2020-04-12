@@ -23,7 +23,6 @@ use std::error::Error;
 
 use csv::Writer;
 
-use crate::geography::Point;
 use std::any::Any;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
@@ -69,9 +68,6 @@ impl Listener for CsvListener {
 
         CsvListener::write(&output_path, &self.counts)
             .expect("Failed to write to file");
-    }
-
-    fn citizen_got_infected(&mut self, _cell: &Point) {
     }
 
     fn as_any(&self) -> &dyn Any {

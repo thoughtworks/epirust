@@ -23,7 +23,8 @@ use crate::agent;
 use crate::geography::{Area, Grid};
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
-use crate::agent::Citizen;
+use crate::agent::{Citizen, State};
+use crate::listeners::events::counts::Counts;
 
 #[derive(Clone)]
 pub struct AgentLocationMap {
@@ -32,14 +33,14 @@ pub struct AgentLocationMap {
 }
 
 impl AgentLocationMap {
-    pub fn new(size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
+    pub fn new(grid_size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
         let mut map: FxHashMap<Point, agent::Citizen> = FxHashMap::default();
         for i in 0..agent_list.len() {
             map.insert(points[i], agent_list[i]);
         }
 
-        AgentLocationMap { grid_size: size, agent_cell: map }
+        AgentLocationMap { grid_size, agent_cell: map }
     }
 
     pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point {
@@ -74,8 +75,14 @@ impl AgentLocationMap {
         !self.agent_cell.contains_key(cell)
     }
 
-    pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Citizen)>) {
+    pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Citizen)>, counts: &mut Counts) {
         for (point, citizen) in outgoing {
+            match citizen.state_machine.state {
+                State::Susceptible { .. } => { counts.update_susceptible(-1) },
+                State::Infected { .. } => { counts.update_infected(-1) },
+                State::Recovered { .. } => { counts.update_recovered(-1) },
+                State::Deceased { .. } => { panic!("Deceased agent should not travel!") },
+            }
             match self.agent_cell.remove(point) {
                 None => {
                     panic!("Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
@@ -86,7 +93,8 @@ impl AgentLocationMap {
         }
     }
 
-    pub fn assimilate_citizens(&mut self, incoming: &mut Vec<Citizen>, grid: &mut Grid, rng: &mut RandomWrapper) {
+    pub fn assimilate_citizens(&mut self, incoming: &mut Vec<Citizen>, grid: &mut Grid, counts: &mut Counts,
+                               rng: &mut RandomWrapper) {
         if incoming.is_empty() {
             return;
         }
@@ -106,6 +114,12 @@ impl AgentLocationMap {
             new_citizens.push((position, *citizen));
         }
         for (p, c) in new_citizens {
+            match c.state_machine.state {
+                State::Susceptible { .. } => { counts.update_susceptible(1) }
+                State::Infected { .. } => { counts.update_infected(1) }
+                State::Recovered { .. } => { counts.update_recovered(1) }
+                State::Deceased { .. } => { panic!("Should not receive deceased agent!") }
+            }
             self.agent_cell.insert(p, c);
         }
     }
@@ -201,10 +215,12 @@ mod tests {
         let mut map = before_each();
         let home_location = Area::new(Point::new(0, 0), Point::new(2, 2));
         let citizen = Citizen::new(home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
+        let mut counts = Counts::new(2, 0);
 
         assert_eq!(2, map.current_population());
-        map.remove_citizens(&vec![(Point::new(0,1), citizen)]);
+        map.remove_citizens(&vec![(Point::new(0, 1), citizen)], &mut counts);
         assert_eq!(1, map.current_population());
+        assert_eq!(1, counts.get_susceptible());
     }
 
     #[test]
@@ -213,7 +229,8 @@ mod tests {
         let mut map = before_each();
         let home_location = Area::new(Point::new(0, 0), Point::new(2, 2));
         let citizen = Citizen::new(home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
+        let mut counts = Counts::new(2, 0);
 
-        map.remove_citizens(&vec![(Point::new(5,3), citizen)]);
+        map.remove_citizens(&vec![(Point::new(5, 3), citizen)], &mut counts);
     }
 }

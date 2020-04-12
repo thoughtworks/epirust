@@ -19,10 +19,11 @@
 
 use crate::agent::{Citizen, State};
 use crate::geography::Point;
+use uuid::Uuid;
 
 #[derive(Serialize)]
 pub struct CitizenState {
-    citizen_id: i32,
+    citizen_id: Uuid,
     state: String,
     location: Point,
 }
@@ -91,6 +92,6 @@ mod tests {
 
     fn citizen() -> Citizen {
         let area = Area::new(Point::new(0, 0), Point::new(1, 1));
-        Citizen::new_citizen(1, area, area, Point::new(2, 2), true, true, &mut RandomWrapper::new())
+        Citizen::new(area, area, Point::new(2, 2), true, true, &mut RandomWrapper::new())
     }
 }

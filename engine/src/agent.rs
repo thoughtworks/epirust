@@ -27,8 +27,9 @@ use crate::geography::{Area, Grid, Point};
 use crate::random_wrapper::RandomWrapper;
 use crate::disease::Disease;
 use serde::{Deserializer, Deserialize, de};
-use serde::de::{Unexpected};
+use serde::de::Unexpected;
 use crate::listeners::events::counts::Counts;
+use uuid::Uuid;
 
 #[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum State {
@@ -90,7 +91,7 @@ fn bool_from_string<'de, D>(deserializer: D) -> Result<bool, D::Error>
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Citizen {
-    pub id: i32,
+    pub id: Uuid,
     immunity: i32,
     pub home_location: Area,
     pub work_location: Area,
@@ -102,11 +103,18 @@ pub struct Citizen {
     pub state_machine: StateMachine,
     quarantined: bool,
     isolated: bool,
-    current_area: Area
+    current_area: Area,
 }
 
 impl Citizen {
-    pub fn new_citizen(id: i32, home_location: Area, work_location: Area, transport_location: Point, uses_public_transport: bool, working: bool, rng: &mut RandomWrapper) -> Citizen {
+    pub fn new(home_location: Area, work_location: Area, transport_location: Point,
+               uses_public_transport: bool, working: bool, rng: &mut RandomWrapper) -> Citizen {
+        Citizen::new_with_id(Uuid::new_v4(), home_location, work_location, transport_location, uses_public_transport,
+                             working, rng)
+    }
+
+    pub fn new_with_id(id: Uuid, home_location: Area, work_location: Area, transport_location: Point,
+                       uses_public_transport: bool, working: bool, rng: &mut RandomWrapper) -> Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor(rng);
 
         Citizen {
@@ -122,7 +130,7 @@ impl Citizen {
             state_machine: StateMachine::new(),
             quarantined: false,
             isolated: false,
-            current_area: home_location
+            current_area: home_location,
         }
     }
 
@@ -131,7 +139,7 @@ impl Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor(rng);
 
         Citizen {
-            id: record.ind,
+            id: Uuid::new_v4(),
             immunity: disease_randomness_factor,
             home_location,
             work_location,
@@ -143,7 +151,7 @@ impl Citizen {
             state_machine: StateMachine::new(),
             quarantined: false,
             isolated: false,
-            current_area: home_location
+            current_area: home_location,
         }
     }
 
@@ -246,11 +254,11 @@ impl Citizen {
         true
     }
 
-    pub fn set_isolation(&mut self, state: bool){
+    pub fn set_isolation(&mut self, state: bool) {
         self.isolated = state;
     }
 
-    pub fn is_isolated(&self) -> bool{
+    pub fn is_isolated(&self) -> bool {
         self.isolated
     }
 
@@ -349,9 +357,9 @@ impl Citizen {
         }
         if self.working {
             let mut new_cell: Point = target_area.get_random_point(rng);
-                if !map.is_cell_vacant(&new_cell){
-                    new_cell = cell;
-                }
+            if !map.is_cell_vacant(&new_cell) {
+                new_cell = cell;
+            }
 
             return map.move_agent(cell, new_cell);
         }
@@ -408,8 +416,8 @@ pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_l
             home_location
         };
 
-        let agent = Citizen::new_citizen(i as i32, home_location, work_location,
-                                         public_transport_location, uses_public_transport, is_a_working_citizen, rng);
+        let agent = Citizen::new(home_location, work_location, public_transport_location,
+                                 uses_public_transport, is_a_working_citizen, rng);
         agent_list.push(agent);
     }
 //TODO: pass number of infected as parameter

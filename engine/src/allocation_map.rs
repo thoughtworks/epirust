@@ -20,7 +20,7 @@
 use fxhash::FxHashMap;
 
 use crate::agent;
-use crate::geography::Area;
+use crate::geography::{Area, Grid};
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
 use crate::agent::Citizen;
@@ -83,6 +83,24 @@ impl AgentLocationMap {
                 }
                 Some(_) => {}
             }
+        }
+    }
+
+    pub fn assimilate_citizens(&mut self, incoming: &mut Vec<Citizen>, grid: &Grid, rng: &mut RandomWrapper) {
+        if incoming.is_empty() {
+            return;
+        }
+        let local_citizens: Vec<&Citizen> = self.agent_cell.iter().map(|(_k, v)| v).collect();
+        for citizen in incoming {
+            let house = grid.choose_house_with_free_space(local_citizens.as_slice(), rng);
+            citizen.home_location = house;
+            if citizen.is_working() {
+                let office = grid.choose_office_with_free_space(local_citizens.as_slice(), rng);
+                citizen.work_location = office;
+            } else {
+                citizen.work_location = house;
+            }
+            citizen.transport_location = house.get_random_point(rng); // Fixme
         }
     }
 

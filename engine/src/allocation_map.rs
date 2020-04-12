@@ -103,8 +103,8 @@ mod tests {
 
         let work_locations = vec![Area::new(Point::new(5, 0), Point::new(6, 2)), Area::new(Point::new(7, 0), Point::new(8, 2))];
 
-        let agents = vec![agent::Citizen::new_citizen(1, home_locations[0], work_locations[0], points[0], false, false, &mut rng),
-                          agent::Citizen::new_citizen(2, home_locations[1], work_locations[0], points[0], true, true, &mut rng)];
+        let agents = vec![agent::Citizen::new(home_locations[0], work_locations[0], points[0], false, false, &mut rng),
+                          agent::Citizen::new(home_locations[1], work_locations[0], points[0], true, true, &mut rng)];
         AgentLocationMap::new(5, &agents, &points)
     }
 
@@ -122,8 +122,8 @@ mod tests {
         let home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
 
         let work_locations = vec![Area::new(Point::new(5, 0), Point::new(6, 2)), Area::new(Point::new(7, 0), Point::new(8, 2))];
-        let mut citizen1 = agent::Citizen::new_citizen(1, home_locations[0], work_locations[1], points[0], false, false, &mut rng);
-        let citizen2 = agent::Citizen::new_citizen(2, home_locations[1], work_locations[0], points[0], true, true, &mut rng);
+        let mut citizen1 = agent::Citizen::new(home_locations[0], work_locations[1], points[0], false, false, &mut rng);
+        let citizen2 = agent::Citizen::new(home_locations[1], work_locations[0], points[0], true, true, &mut rng);
         let agents = vec![citizen1, citizen2];
         let map = AgentLocationMap::new(5, &agents, &points);
         let hospital = Area::new(Point::new(2, 2), Point::new(4, 4));
@@ -138,10 +138,10 @@ mod tests {
         let home = Area::new(Point::new(0, 0), Point::new(2, 2));
 
         let work = Area::new(Point::new(5, 0), Point::new(6, 2));
-        let mut citizen1 = agent::Citizen::new_citizen(1, home, work, points[0], false, false, &mut rng);
-        let citizen2 = agent::Citizen::new_citizen(2, home, work, points[0], false, false, &mut rng);
-        let citizen3 = agent::Citizen::new_citizen(3, home, work, points[0], false, false, &mut rng);
-        let citizen4 = agent::Citizen::new_citizen(4, home, work, points[0], false, false, &mut rng);
+        let mut citizen1 = agent::Citizen::new(home, work, points[0], false, false, &mut rng);
+        let citizen2 = agent::Citizen::new(home, work, points[0], false, false, &mut rng);
+        let citizen3 = agent::Citizen::new(home, work, points[0], false, false, &mut rng);
+        let citizen4 = agent::Citizen::new(home, work, points[0], false, false, &mut rng);
         let agents = vec![citizen1, citizen2, citizen3, citizen4];
         let map = AgentLocationMap::new(5, &agents, &points);
         let hospital = Area::new(Point::new(0, 0), Point::new(1, 1));
@@ -171,7 +171,7 @@ mod tests {
     fn should_remove_citizens_from_grid() {
         let mut map = before_each();
         let home_location = Area::new(Point::new(0, 0), Point::new(2, 2));
-        let citizen = Citizen::new_citizen(1, home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
+        let citizen = Citizen::new(home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
 
         assert_eq!(2, map.current_population());
         map.remove_citizens(&vec![(Point::new(0,1), citizen)]);
@@ -183,7 +183,7 @@ mod tests {
     fn should_panic_when_removing_citizen_not_present_at_point() {
         let mut map = before_each();
         let home_location = Area::new(Point::new(0, 0), Point::new(2, 2));
-        let citizen = Citizen::new_citizen(1, home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
+        let citizen = Citizen::new(home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
 
         map.remove_citizens(&vec![(Point::new(5,3), citizen)]);
     }

@@ -263,10 +263,11 @@ mod tests {
     #[test]
     fn should_add_outgoing_citizen() {
         let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        engine_travel_plan.add_outgoing(create_citizen(), Point::new(2, 2));
+        let citizen = create_citizen();
+        engine_travel_plan.add_outgoing(citizen, Point::new(2, 2));
         let citizen_id = engine_travel_plan.outgoing.get(0).unwrap().1.id;
 
-        assert_eq!(create_citizen().id, citizen_id);
+        assert_eq!(citizen.id, citizen_id);
     }
 
     #[test]
@@ -289,8 +290,8 @@ mod tests {
     fn should_assign_outgoing_citizens_to_regions() {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
-        for i in 0..180 {
-            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1, 1));
+        for _i in 0..180 {
+            engine_travel_plan.add_outgoing(create_citizen(), Point::new(1, 1));
         }
 
         let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
@@ -304,8 +305,8 @@ mod tests {
     fn should_handle_outgoing_with_actual_total_less_than_planned() {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
-        for i in 0..147 {
-            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1, 1));
+        for _i in 0..147 {
+            engine_travel_plan.add_outgoing(create_citizen(), Point::new(1, 1));
         }
 
         let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
@@ -319,8 +320,8 @@ mod tests {
     fn should_handle_outgoing_with_actual_total_more_than_planned() {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
-        for i in 0..202 {
-            engine_travel_plan.add_outgoing(create_citizen_with_id(i + 1), Point::new(1, 1));
+        for _i in 0..202 {
+            engine_travel_plan.add_outgoing(create_citizen(), Point::new(1, 1));
         }
 
         let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
@@ -342,12 +343,8 @@ mod tests {
     }
 
     fn create_citizen() -> Citizen {
-        create_citizen_with_id(1)
-    }
-
-    fn create_citizen_with_id(id: i32) -> Citizen {
         let area = Area::new(Point::new(0, 0), Point::new(10, 10));
-        Citizen::new_citizen(id, area, area, Point::new(5, 5), false, false, &mut RandomWrapper::new())
+        Citizen::new(area, area, Point::new(5, 5), false, false, &mut RandomWrapper::new())
     }
 
     fn create_engine_with_travel_plan() -> EngineTravelPlan {

@@ -156,6 +156,13 @@ impl Epidemiology {
 
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                    &self.grid, &mut listeners, &mut rng, &self.disease, &mut engine_travel_plan);
+            Epidemiology::send_travellers(tick.clone(), &mut producer, &mut engine_travel_plan).await;
+            let mut incoming = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan).await;
+            n_incoming += incoming.len();
+            n_outgoing += engine_travel_plan.get_outgoing().len();
+            write_buffer_reference.remove_citizens(engine_travel_plan.get_outgoing(), &mut counts_at_hr);
+            write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, &mut counts_at_hr, &mut rng);
+
             listeners.counts_updated(counts_at_hr);
             hospital_intervention.counts_updated(&counts_at_hr);
 
@@ -174,15 +181,7 @@ impl Epidemiology {
                 terminate_engine = true;
             }
 
-            Epidemiology::send_travellers(tick.clone(), &mut producer, &mut engine_travel_plan).await;
-            let mut incoming = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan).await;
             Epidemiology::send_ack(run_mode, &mut producer, terminate_engine, simulation_hour).await;
-
-
-            n_incoming += incoming.len();
-            n_outgoing += engine_travel_plan.get_outgoing().len();
-            write_buffer_reference.remove_citizens(engine_travel_plan.get_outgoing());
-            write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, &mut rng);
 
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
@@ -261,7 +260,6 @@ impl Epidemiology {
                     received_incoming_regions += 1;
                 }
             }
-            println!("Received {} travellers", incoming.len());
             incoming
         } else {
             Vec::new()

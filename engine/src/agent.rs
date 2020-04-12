@@ -262,6 +262,10 @@ impl Citizen {
         self.isolated
     }
 
+    pub fn is_working(&self) -> bool {
+        self.working
+    }
+
     fn generate_disease_randomness_factor(rng: &mut RandomWrapper) -> i32 {
         let option = constants::IMMUNITY_RANGE.choose(rng.get());
         *option.unwrap()

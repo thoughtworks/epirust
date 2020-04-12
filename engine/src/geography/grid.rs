@@ -27,6 +27,7 @@ use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
 use crate::geography::area::AreaPointIterator;
 use std::collections::HashMap;
+use rand::seq::SliceRandom;
 
 #[derive(Serialize)]
 pub struct Grid {
@@ -76,7 +77,7 @@ impl Grid {
         (home_loc, agents_in_order)
     }
 
-    fn group_agents_by_home_locations(agent_list: &Vec<Citizen>) -> HashMap<&Area, Vec<&Citizen>> {
+    pub fn group_agents_by_home_locations(agent_list: &Vec<Citizen>) -> HashMap<&Area, Vec<&Citizen>> {
         let mut agents_by_home_locations: HashMap<&Area, Vec<&Citizen>> = HashMap::new();
         agent_list.iter().for_each(|agent| {
             match agents_by_home_locations.get(&agent.home_location) {
@@ -150,6 +151,36 @@ impl Grid {
         let end_offset = Point::new(grid_size, grid_size);
 
         self.hospital_area = Area::new(start_offset, end_offset)
+    }
+
+    pub fn choose_house_with_free_space(&self, citizens: &[&Citizen], rng: &mut RandomWrapper) -> Area {
+        let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
+        loop {
+            let house = self.houses.choose(rng.get()).unwrap();
+            let occupants = Grid::find_home_occupants(&citizens, house);
+            if occupants < house_capacity {
+                return *house;
+            }
+        }
+    }
+
+    pub fn choose_office_with_free_space(&self, citizens: &[&Citizen], rng: &mut RandomWrapper) -> Area {
+        let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
+        loop {
+            let office = self.offices.choose(rng.get()).unwrap();
+            let occupants = Grid::find_office_occupants(&citizens, office);
+            if occupants < office_capacity {
+                return *office;
+            }
+        }
+    }
+
+    fn find_home_occupants(citizens: &[&Citizen], house: &Area) -> i32 {
+        citizens.iter().filter(|citizen| citizen.home_location == *house).count() as i32
+    }
+
+    fn find_office_occupants(citizens: &[&Citizen], office: &Area) -> i32 {
+        citizens.iter().filter(|citizen| citizen.work_location == *office).count() as i32
     }
 }
 

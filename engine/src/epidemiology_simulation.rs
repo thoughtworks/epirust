@@ -126,6 +126,8 @@ impl Epidemiology {
         let travellers_consumer = travellers_consumer::start(engine_id);
         let mut travel_stream = travellers_consumer.start_with(Duration::from_millis(10), false);
         let mut terminate_engine = false;
+        let mut n_incoming = 0;
+        let mut n_outgoing = 0;
 
         for simulation_hour in 1..config.get_hours() {
             let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour).await;
@@ -139,6 +141,10 @@ impl Epidemiology {
             if simulation_hour % 2 == 0 {
                 read_buffer_reference = self.write_agent_location_map.borrow();
                 write_buffer_reference = self.agent_location_map.borrow_mut();
+            }
+
+            if read_buffer_reference.current_population() == 0 {
+                panic!("No citizens!");
             }
 
             if hospital_intervention.should_apply(&counts_at_hr) {
@@ -168,10 +174,15 @@ impl Epidemiology {
             }
 
             Epidemiology::send_travellers(tick.clone(), &mut producer, &mut engine_travel_plan).await;
-            Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan).await;
+            let mut incoming = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan).await;
             Epidemiology::send_ack(run_mode, &mut producer, terminate_engine, simulation_hour).await;
 
+
+            n_incoming += incoming.len();
+            n_outgoing += engine_travel_plan.get_outgoing().len();
             write_buffer_reference.remove_citizens(engine_travel_plan.get_outgoing());
+            write_buffer_reference.assimilate_citizens(&mut incoming, &self.grid, &mut rng);
+
 
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
@@ -179,6 +190,10 @@ impl Epidemiology {
                       simulation_hour, config.get_hours());
                 info!("S: {}, I: {}, Q: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_infected(),
                       counts_at_hr.get_quarantined(), counts_at_hr.get_recovered(), counts_at_hr.get_deceased());
+                info!("Incoming: {}, Outgoing: {}, Current Population: {}", n_incoming, n_outgoing,
+                      write_buffer_reference.current_population());
+                n_incoming = 0;
+                n_outgoing = 0;
             }
 
             if terminate_engine {
@@ -304,7 +319,8 @@ impl Epidemiology {
                 _ => &point
             };
 
-            if current_agent.can_move() && rng.get().gen_bool(engine_travel_plan.percent_outgoing()) {
+            if simulation_hour % 24 == 0 && current_agent.can_move()
+                && rng.get().gen_bool(engine_travel_plan.percent_outgoing()) {
                 engine_travel_plan.add_outgoing(current_agent, *new_location);
             }
 

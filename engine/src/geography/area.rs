@@ -24,7 +24,7 @@ use crate::random_wrapper::RandomWrapper;
 use std::slice::IterMut;
 use std::collections::HashSet;
 
-#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Hash, Eq, Debug, Serialize, Deserialize)]
 pub struct Area {
     pub start_offset: Point,
     pub end_offset: Point,
@@ -69,6 +69,13 @@ impl Area {
     pub fn contains(&self, point: &Point) -> bool {
         self.start_offset.x <= point.x && self.end_offset.x >= point.x
             && self.start_offset.y <= point.y && self.end_offset.y >= point.y
+    }
+}
+
+// We need to ignore the iter_index when comparing
+impl PartialEq for Area {
+    fn eq(&self, other: &Self) -> bool {
+        self.start_offset == other.start_offset && self.end_offset == other.end_offset
     }
 }
 

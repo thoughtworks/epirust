@@ -255,6 +255,16 @@ mod tests {
     }
 
     #[test]
+    fn should_clear_outgoing_on_new_tick() {
+        let mut engine_travel_plan = create_engine_with_travel_plan();
+        engine_travel_plan.add_outgoing(create_citizen(), Point::new(2,4));
+
+        let tick = Tick::new(1, None);
+        engine_travel_plan.receive_tick(Some(tick));
+        assert!(engine_travel_plan.outgoing.is_empty());
+    }
+
+    #[test]
     fn should_calc_outgoing_percent() {
         let engine_travel_plan = create_engine_with_travel_plan();
         assert_eq!(0.018, engine_travel_plan.percent_outgoing())

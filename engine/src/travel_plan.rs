@@ -154,7 +154,7 @@ impl EngineTravelPlan {
         &self.engine_id
     }
 
-    fn set_current_population(&mut self, val: i32) {
+    pub fn set_current_population(&mut self, val: i32) {
         self.current_total_population = val;
     }
 }

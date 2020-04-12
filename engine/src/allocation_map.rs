@@ -86,11 +86,12 @@ impl AgentLocationMap {
         }
     }
 
-    pub fn assimilate_citizens(&mut self, incoming: &mut Vec<Citizen>, grid: &Grid, rng: &mut RandomWrapper) {
+    pub fn assimilate_citizens(&mut self, incoming: &mut Vec<Citizen>, grid: &mut Grid, rng: &mut RandomWrapper) {
         if incoming.is_empty() {
             return;
         }
-        let local_citizens: Vec<&Citizen> = self.agent_cell.iter().map(|(_k, v)| v).collect();
+        let local_citizens: Vec<&Citizen> = self.agent_cell.values().collect();
+        let mut new_citizens: Vec<(Point, Citizen)> = Vec::with_capacity(incoming.len());
         for citizen in incoming {
             let house = grid.choose_house_with_free_space(local_citizens.as_slice(), rng);
             citizen.home_location = house;
@@ -101,7 +102,17 @@ impl AgentLocationMap {
                 citizen.work_location = house;
             }
             citizen.transport_location = house.get_random_point(rng); // Fixme
+            let position = self.get_vacant_cell(&mut grid.housing_area);
+            new_citizens.push((position, *citizen));
         }
+        for (p, c) in new_citizens {
+            self.agent_cell.insert(p, c);
+        }
+    }
+
+    pub fn get_vacant_cell(&self, area: &mut Area) -> Point {
+        area.find(|point| !self.agent_cell.contains_key(point))
+            .expect("No vacant cell in area!")
     }
 
     pub fn current_population(&self) -> i32 {

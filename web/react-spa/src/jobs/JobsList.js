@@ -36,11 +36,9 @@ export const JobsList = () => {
 
   if (id && !view) {
     return (<Redirect to={`/jobs/${id}/time-series`} />);
-  }
-
-  return (
-    <div className="row jobs-list">
-
+  } else {
+    const simulationDetails = simulations.find(s => s.simulation_id === parseInt(id));
+    return (<div className="row jobs-list">
       <div className="col-3">
         <ul className="list-group scrollable">
           {simulations.map(s =>
@@ -53,14 +51,10 @@ export const JobsList = () => {
       </div>
 
       <div className="col-9 left-border scrollable">
-        {id && (
-          <JobDetails
-            simulationId={parseInt(id)}
-            details={simulations.find(s => s.simulation_id === parseInt(id))}
-          />
-        )}
+        {simulationDetails && id && <JobDetails simulationId={parseInt(id)} details={simulationDetails} />}
       </div>
 
     </div>
-  );
-};
+    );
+  }
+}

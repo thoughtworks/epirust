@@ -1,7 +1,0 @@
-{
-  "regions": ["engine1", "engine2"],
-  "matrix": [
-    [0, 10],
-    [10, 0]
-  ]
-}

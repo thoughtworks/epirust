@@ -20,8 +20,12 @@
 import React from 'react';
 import Header from './Header';
 
-import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
-import {JobsList} from "./jobs/JobsList";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route
+} from "react-router-dom";
+import { JobsList } from "./jobs";
 import SimulationConfiguration from "./simulation-configuration";
 
 export const Routes = {
@@ -36,7 +40,7 @@ function App() {
       <div className="container-fluid mt-4">
         <Switch>
           <Route exact path={Routes.HOME}><SimulationConfiguration /></Route>
-          <Route path={`${Routes.JOBS}/:id?/:view?`}><JobsList/></Route>
+          <Route path={`${Routes.JOBS}/:id?/:view?`}><JobsList /></Route>
         </Switch>
       </div >
     </Router >

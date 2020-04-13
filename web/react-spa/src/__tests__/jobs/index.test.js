@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { JobsList } from "../../jobs/JobsList";
+import { JobsList } from "../../jobs";
 import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { act } from "react-dom/test-utils";
@@ -24,7 +24,11 @@ describe('JobsList', function () {
       }
     });
 
-    const { asFragment } = await render(<MemoryRouter><JobsList /></MemoryRouter>);
+    const { asFragment } = await render(
+      <MemoryRouter>
+        <JobsList />
+      </MemoryRouter>
+    );
 
     expect(asFragment()).toMatchSnapshot();
     expect(fetch).toHaveBeenCalledTimes(1);

@@ -5,6 +5,7 @@ import PropTypes from 'prop-types'
 
 export default function Graph({ dataBuffer, enableExport = false, labels, errorBars = false }) {
     const [graph, setGraph] = useState(null);
+
     useEffect(() => {
         if (dataBuffer.length === 0) {
             graph && graph.destroy()
@@ -19,10 +20,12 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
                 ylabel: 'Number of Agents',
                 xlabel: 'Hours',
                 showRoller: true,
-                errorBars: errorBars
+                errorBars: errorBars,
+                height: 700,
+                width: 1300
             }
             if (labels) {
-                options = {...options, labels: labels}
+                options = { ...options, labels: labels }
             }
             let graphInstance = new Dygraph(document.getElementById("vis"), dataBuffer, options);
             setGraph(graphInstance)
@@ -48,14 +51,14 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
     return (
         <div className="graph-wrap">
 
-            <div id="vis" data-testid="visualization"></div>
-
             <div className="graph-actions">
-                <p className="action">Zoom: <span className='control'>click-drag</span></p>
-                <p className="action">Pan: <span className='control'>shift-click-drag</span></p>
-                <p className="action">Restore: <span className='control'>double-click</span></p>
-                <button onClick={handleExportClick} className="btn btn-secondary" disabled={!enableExport}>Export graph</button>
+                <p className="action">Zoom: <code className='control'>click-drag</code></p>
+                <p className="action">Pan: <code className='control'>shift-click-drag</code></p>
+                <p className="action">Restore: <code className='control'>double-click</code></p>
+                <button onClick={handleExportClick} className="btn btn-sm btn-secondary" disabled={!enableExport}>Export graph data</button>
             </div>
+
+            <div id="vis" data-testid="visualization"></div>
 
         </div>
     );

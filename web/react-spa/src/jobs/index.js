@@ -59,8 +59,8 @@ export const JobsList = () => {
   function renderDetails() {
     const simulationDetails = simulations.find(s => s.simulation_id === parseInt(id));
     return (
-      <div className="col-9 left-border scrollable">
-        <JobDetails simulationId={parseInt(id)} details={simulationDetails} />
+      <div className="col-10 left-border scrollable details">
+        <JobDetails simulationId={activeSimulationId} details={simulationDetails} />
       </div>
     );
   }

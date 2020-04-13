@@ -13,11 +13,10 @@ exports[`JobsList should fetch simulations when id and view is not selected 1`] 
       />
     </div>
     <div
-      class="col-9 left-border scrollable"
+      class="col-10 left-border scrollable details"
     >
       <div
         class="job-details"
-        style="padding-top: 4px;"
       >
         <div
           class="row"
@@ -33,7 +32,7 @@ exports[`JobsList should fetch simulations when id and view is not selected 1`] 
               >
                 <a
                   class="nav-link "
-                  href="/jobs/NaN/time-series"
+                  href="/jobs/null/time-series"
                 >
                   Time Series
                 </a>
@@ -43,7 +42,7 @@ exports[`JobsList should fetch simulations when id and view is not selected 1`] 
               >
                 <a
                   class="nav-link "
-                  href="/jobs/NaN/config"
+                  href="/jobs/null/config"
                 >
                   Config
                 </a>
@@ -56,7 +55,8 @@ exports[`JobsList should fetch simulations when id and view is not selected 1`] 
             <h4
               class="simulation-id"
             >
-              Simulation: NaN
+              Simulation: 
+              <code />
             </h4>
           </div>
         </div>

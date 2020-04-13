@@ -33,19 +33,22 @@ export const JobDetails = ({ simulationId, details }) => {
   const isGridEnabled = details && details.config.enable_citizen_state_messages,
     isFinished = details && details.status === 'finished';
 
-  function renderTabs() {
+  function renderGraphTabs() {
     return (
       <div className="row">
         <div className="col-8">
           <ul className="nav nav-tabs nav-fill">
+
             <NavItem name="Time Series" linksTo={`${linkPrefix}/time-series`} activeOnExactMatch={true} />
             {isFinished && <NavItem name="Time Series Deviation" linksTo={`${linkPrefix}/time-series-deviation`} />}
             {isGridEnabled && <NavItem name="Grid" linksTo={`${linkPrefix}/grid`} />}
             <NavItem name="Config" linksTo={`${linkPrefix}/config`} />
+
           </ul>
         </div>
+
         <div className="col-4">
-          <h4 className="simulation-id">Simulation: {simulationId}</h4>
+          <h4 className="simulation-id">{`Simulation: `}<code>{simulationId}</code></h4>
         </div>
       </div>
     );
@@ -76,8 +79,8 @@ export const JobDetails = ({ simulationId, details }) => {
 
 
   return (
-    <div className="job-details" style={{ paddingTop: 4 }}>
-      {renderTabs()}
+    <div className="job-details">
+      {renderGraphTabs()}
       {renderContentForTab()}
     </div>
   )

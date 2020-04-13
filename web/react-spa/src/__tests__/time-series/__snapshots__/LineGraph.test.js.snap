@@ -5,49 +5,49 @@ exports[`should render Graph 1`] = `
   className="graph-wrap"
 >
   <div
-    data-testid="visualization"
-    id="vis"
-  />
-  <div
     className="graph-actions"
   >
     <p
       className="action"
     >
       Zoom: 
-      <span
+      <code
         className="control"
       >
         click-drag
-      </span>
+      </code>
     </p>
     <p
       className="action"
     >
       Pan: 
-      <span
+      <code
         className="control"
       >
         shift-click-drag
-      </span>
+      </code>
     </p>
     <p
       className="action"
     >
       Restore: 
-      <span
+      <code
         className="control"
       >
         double-click
-      </span>
+      </code>
     </p>
     <button
-      className="btn btn-secondary"
+      className="btn btn-sm btn-secondary"
       disabled={true}
       onClick={[Function]}
     >
-      Export graph
+      Export graph data
     </button>
   </div>
+  <div
+    data-testid="visualization"
+    id="vis"
+  />
 </div>
 `;

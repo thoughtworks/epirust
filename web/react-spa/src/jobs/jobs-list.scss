@@ -18,8 +18,11 @@
  */
 
 .jobs-list {
-  color: white;
-  padding: 0 40px 0 40px;
+  .tabs {
+  }
+  .details {
+    padding: 0 20px;
+  }
 }
 
 .scrollable {

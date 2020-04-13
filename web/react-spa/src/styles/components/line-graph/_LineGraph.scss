@@ -112,7 +112,7 @@
   
   /* For y2-axis label */
   .dygraph-label-rotate-right {
-    left: -300px !important;
+    left: -340px !important;
     text-align: center;
     /* See http://caniuse.com/#feat=transforms2d */
     transform: rotate(-90deg);
@@ -123,22 +123,23 @@
   }
 
   .graph-wrap {
-    display: flex;
-    flex-direction: row;
+    padding-top: 20px;
 
     #vis {
-      padding: 20px;
-      flex-basis: 80%;
-      height: 600px;
+      padding: 10px 20px;
     }
 
     .graph-actions {
+      display: flex;
       padding: 20px;
+      justify-content: center;
+      position: relative;
     }
   
     .action {
       margin-right: 15px;
       font-size: 0.9rem;
+      margin-bottom: 0;
       color: rgb(41, 134, 233);
   
       .control {
@@ -152,5 +153,10 @@
       &:last-child {
         margin-right: 0;
       }
+    }
+
+    button {
+      position: absolute;
+      right: 0;
     }
   }

@@ -19,9 +19,14 @@
 
 .job-details {
   color: black;
+  box-sizing: content-box;
 }
 
 .simulation-id {
   padding-top: 4px;
   text-align: center;
+  
+  code {
+    color: var(--gray-dark);
+  }
 }

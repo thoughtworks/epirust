@@ -1,31 +1,32 @@
-import {render} from "@testing-library/react";
-import {JobsList} from "../../jobs/JobsList";
+import { render } from "@testing-library/react";
+import { JobsList } from "../../jobs/JobsList";
 import React from "react";
-import {MemoryRouter} from "react-router-dom";
-import {act} from "react-dom/test-utils";
+import { MemoryRouter } from "react-router-dom";
+import { act } from "react-dom/test-utils";
 
-describe('JobsList',  function () {
+describe('JobsList', function () {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('should fetch simulations when id and view is not selected', async function () {
-    const mockResponse = Promise.resolve([{simulation_id: 1234, status: "finished"}]);
+    const mockResponse = Promise.resolve([{ simulation_id: 1234, status: "finished" }]);
     const mockJson = jest.fn().mockReturnValueOnce(mockResponse);
-    const mockPromise = {json: mockJson};
+    const mockPromise = { json: mockJson };
+
     jest.spyOn(global, 'fetch')
       .mockImplementation(() => Promise.resolve(mockPromise));
-    jest.mock('react-router-dom', () => {return {
-      ...jest.requireActual('react-router-dom'),
-      useParams: () => ({})
-    }});
 
-    let component;
-    await act(async () => {
-      component = render(<MemoryRouter><JobsList/></MemoryRouter>);
+    jest.mock('react-router-dom', () => {
+      return {
+        ...jest.requireActual('react-router-dom'),
+        useParams: () => ({})
+      }
     });
 
-    expect(component.container).toMatchSnapshot();
+    const { asFragment } = await render(<MemoryRouter><JobsList /></MemoryRouter>);
+
+    expect(asFragment()).toMatchSnapshot();
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(mockJson).toHaveBeenCalledTimes(1);
   });

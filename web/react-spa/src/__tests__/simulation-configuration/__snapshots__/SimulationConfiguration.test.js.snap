@@ -1,0 +1,975 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ParametersForm should disable submit button and show loading animation to button 1`] = `
+<div>
+  <div
+    class="graph-input"
+  >
+    <form
+      class="user-inputs"
+      data-testid="simulationForm"
+    >
+      <div
+        class="form-row"
+      >
+        <div
+          class="col inputs"
+        >
+          <div>
+            <fieldset>
+              <legend>
+                Population
+              </legend>
+              <div
+                class="input-control"
+              >
+                <label
+                  class="col-form-label-sm"
+                  for="number_of_agents"
+                >
+                  Number of Agents
+                </label>
+                <input
+                  aria-describedby="number_of_agents"
+                  class="form-control form-control-sm"
+                  id="number_of_agents"
+                  name="number_of_agents"
+                  placeholder="Number of Agents"
+                  type="number"
+                  value="10000"
+                />
+              </div>
+              <div
+                class="input-control"
+              >
+                <label
+                  class="col-form-label-sm"
+                  for="public_transport_percentage"
+                >
+                  Public Transport Percentage
+                </label>
+                <input
+                  aria-describedby="public_transport_percentage"
+                  class="form-control form-control-sm"
+                  id="public_transport_percentage"
+                  name="public_transport_percentage"
+                  placeholder="Public Transport Percentage"
+                  step="any"
+                  type="number"
+                  value="0.2"
+                />
+              </div>
+              <div
+                class="input-control"
+              >
+                <label
+                  class="col-form-label-sm"
+                  for="working_percentage"
+                >
+                  Working Percentage
+                </label>
+                <input
+                  aria-describedby="working_percentage"
+                  class="form-control form-control-sm"
+                  id="working_percentage"
+                  max="1"
+                  min="0"
+                  name="working_percentage"
+                  placeholder="Working Percentage"
+                  step="any"
+                  type="number"
+                  value="0.7"
+                />
+              </div>
+            </fieldset>
+            <fieldset>
+              <div
+                class="input-control"
+              >
+                <label
+                  class="col-form-label-sm"
+                  for="grid_size"
+                >
+                  Grid Size
+                </label>
+                <input
+                  aria-describedby="grid_size"
+                  class="form-control form-control-sm"
+                  id="grid_size"
+                  name="grid_size"
+                  placeholder="Grid Size"
+                  type="number"
+                  value="250"
+                />
+              </div>
+              <div
+                class="input-control"
+              >
+                <label
+                  class="col-form-label-sm"
+                  for="simulation_hrs"
+                >
+                  Simulation Hours
+                </label>
+                <input
+                  aria-describedby="simulation_hrs"
+                  class="form-control form-control-sm"
+                  id="simulation_hrs"
+                  name="simulation_hrs"
+                  placeholder="Simulation Hours"
+                  type="number"
+                  value="10000"
+                />
+              </div>
+              <div
+                class="custom-control custom-switch switch-right"
+              >
+                <input
+                  class="custom-control-input"
+                  disabled=""
+                  id="generate_grid_vis"
+                  name="generate_grid_vis"
+                  type="checkbox"
+                />
+                <label
+                  class="custom-control-label col-form-label-sm"
+                  for="generate_grid_vis"
+                >
+                  Grid Visualization
+                </label>
+              </div>
+              <small
+                class="form-text text-muted"
+              >
+                Allowed when grid size less than 101 
+              </small>
+            </fieldset>
+          </div>
+          <fieldset>
+            <legend>
+              Disease Dynamics
+            </legend>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="disease_name"
+              >
+                Disease Name
+              </label>
+              <select
+                aria-describedby="disease_name"
+                class="form-control form-control-sm"
+                data-testid="select-disease"
+                id="disease_name"
+                name="disease_name"
+                placeholder="Disease Name"
+              >
+                <option
+                  selected=""
+                  value="small_pox"
+                >
+                  Small Pox
+                </option>
+                <option
+                  value="sars"
+                >
+                  SARS
+                </option>
+                <option
+                  value="covid_19"
+                >
+                  COVID-19
+                </option>
+              </select>
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="regular_transmission_start_day"
+              >
+                Regular Transmission Start Day
+              </label>
+              <input
+                aria-describedby="regular_transmission_start_day"
+                class="form-control form-control-sm"
+                id="regular_transmission_start_day"
+                name="regular_transmission_start_day"
+                placeholder="Regular Transmission Start Day"
+                type="text"
+                value="10"
+              />
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="high_transmission_start_day"
+              >
+                High Transmission Start Day
+              </label>
+              <input
+                aria-describedby="high_transmission_start_day"
+                class="form-control form-control-sm"
+                id="high_transmission_start_day"
+                name="high_transmission_start_day"
+                placeholder="High Transmission Start Day"
+                type="text"
+                value="16"
+              />
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="last_day"
+              >
+                Last Day
+              </label>
+              <input
+                aria-describedby="last_day"
+                class="form-control form-control-sm"
+                id="last_day"
+                name="last_day"
+                placeholder="Last Day"
+                type="text"
+                value="22"
+              />
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="regular_transmission_rate"
+              >
+                Regular Transmission Rate
+              </label>
+              <input
+                aria-describedby="regular_transmission_rate"
+                class="form-control form-control-sm"
+                id="regular_transmission_rate"
+                name="regular_transmission_rate"
+                placeholder="Regular Transmission Rate"
+                type="text"
+                value="0.05"
+              />
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="high_transmission_rate"
+              >
+                High Transmission Rate
+              </label>
+              <input
+                aria-describedby="high_transmission_rate"
+                class="form-control form-control-sm"
+                id="high_transmission_rate"
+                name="high_transmission_rate"
+                placeholder="High Transmission Rate"
+                type="text"
+                value="0.5"
+              />
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="death_rate"
+              >
+                Death Rate
+              </label>
+              <input
+                aria-describedby="death_rate"
+                class="form-control form-control-sm"
+                id="death_rate"
+                name="death_rate"
+                placeholder="Death Rate"
+                type="text"
+                value="0.2"
+              />
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>
+              Interventions
+            </legend>
+            <small
+              class="form-text text-muted"
+            >
+              Only the active interventions will be taken into consideration
+            </small>
+            <div
+              class="custom-control custom-switch switch-right"
+            >
+              <input
+                checked=""
+                class="custom-control-input"
+                id="vaccine-switch"
+                type="checkbox"
+              />
+              <label
+                class="custom-control-label col-form-label-sm"
+                for="vaccine-switch"
+              >
+                Vaccination
+              </label>
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="vaccinate_at"
+              >
+                Vaccinate At
+              </label>
+              <input
+                aria-describedby="vaccinate_at"
+                class="form-control form-control-sm"
+                id="vaccinate_at"
+                name="vaccinate_at"
+                placeholder="Vaccinate At"
+                type="number"
+                value="5000"
+              />
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="vaccinate_percentage"
+              >
+                Vaccinate Percentage
+              </label>
+              <input
+                aria-describedby="vaccinate_percentage"
+                class="form-control form-control-sm"
+                id="vaccinate_percentage"
+                name="vaccinate_percentage"
+                placeholder="Vaccinate Percentage"
+                step="any"
+                type="number"
+                value="0.2"
+              />
+            </div>
+            <div
+              class="custom-control custom-switch switch-right"
+            >
+              <input
+                checked=""
+                class="custom-control-input"
+                id="lockdown-switch"
+                type="checkbox"
+              />
+              <label
+                class="custom-control-label col-form-label-sm"
+                for="lockdown-switch"
+              >
+                Lockdown
+              </label>
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="lockdown_at_number_of_infections"
+              >
+                Lockdown at number of infections
+              </label>
+              <input
+                aria-describedby="lockdown_at_number_of_infections"
+                class="form-control form-control-sm"
+                id="lockdown_at_number_of_infections"
+                name="lockdown_at_number_of_infections"
+                placeholder="Lockdown At(number of infections)"
+                step="any"
+                type="number"
+                value="100"
+              />
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="essential_workers_population"
+              >
+                Essentials Workers Population
+              </label>
+              <input
+                aria-describedby="essential_workers_population"
+                class="form-control form-control-sm"
+                id="essential_workers_population"
+                name="essential_workers_population"
+                placeholder="Emergency Workers Population"
+                step="any"
+                type="number"
+                value="0.1"
+              />
+            </div>
+            <div
+              class="custom-control custom-switch switch-right"
+            >
+              <input
+                checked=""
+                class="custom-control-input"
+                id="hospital-switch"
+                type="checkbox"
+              />
+              <label
+                class="custom-control-label col-form-label-sm"
+                for="hospital-switch"
+              >
+                Hospital Spread
+              </label>
+            </div>
+            <div
+              class="input-control"
+            >
+              <label
+                class="col-form-label-sm"
+                for="hospital_spread_rate_threshold"
+              >
+                Hospital Spread Rate Threshold
+              </label>
+              <input
+                aria-describedby="hospital_spread_rate_threshold"
+                class="form-control form-control-sm"
+                id="hospital_spread_rate_threshold"
+                name="hospital_spread_rate_threshold"
+                placeholder="Hospital Spread Rate Threshold"
+                step="any"
+                type="number"
+                value="100"
+              />
+            </div>
+          </fieldset>
+        </div>
+        <div
+          class="col actions"
+        >
+          <button
+            class="btn btn-primary btn-lg"
+            disabled=""
+            id="submitBtn"
+            type="submit"
+          >
+            <span
+              class="spinner-grow spinner-grow-lg"
+            />
+            <span
+              class="button-text"
+            >
+               Submitting..
+            </span>
+             
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+`;
+
+exports[`ParametersForm should invoke fetch on form submit 1`] = `
+Object {
+  "body": "{\\"number_of_agents\\":10000,\\"public_transport_percentage\\":0.2,\\"working_percentage\\":0.7,\\"grid_size\\":250,\\"simulation_hrs\\":10000,\\"disease_name\\":\\"small_pox\\",\\"regular_transmission_start_day\\":10,\\"high_transmission_start_day\\":16,\\"last_day\\":22,\\"regular_transmission_rate\\":0.05,\\"high_transmission_rate\\":0.5,\\"death_rate\\":0.2,\\"vaccinate_at\\":5000,\\"vaccinate_percentage\\":0.2,\\"lockdown_at_number_of_infections\\":100,\\"essential_workers_population\\":0.1,\\"hospital_spread_rate_threshold\\":100,\\"enable_citizen_state_messages\\":false}",
+  "headers": Object {
+    "Content-Type": "application/json",
+  },
+  "method": "POST",
+}
+`;
+
+exports[`ParametersForm should render ParametersForm with defaults 1`] = `
+<div
+  className="graph-input"
+>
+  <form
+    className="user-inputs"
+    data-testid="simulationForm"
+    onSubmit={[Function]}
+  >
+    <div
+      className="form-row"
+    >
+      <div
+        className="col inputs"
+      >
+        <div>
+          <fieldset>
+            <legend>
+              Population
+            </legend>
+            <div
+              className="input-control"
+            >
+              <label
+                className="col-form-label-sm"
+                htmlFor="number_of_agents"
+              >
+                Number of Agents
+              </label>
+              <input
+                aria-describedby="number_of_agents"
+                className="form-control form-control-sm"
+                defaultValue="10000"
+                id="number_of_agents"
+                name="number_of_agents"
+                placeholder="Number of Agents"
+                type="number"
+              />
+            </div>
+            <div
+              className="input-control"
+            >
+              <label
+                className="col-form-label-sm"
+                htmlFor="public_transport_percentage"
+              >
+                Public Transport Percentage
+              </label>
+              <input
+                aria-describedby="public_transport_percentage"
+                className="form-control form-control-sm"
+                defaultValue="0.2"
+                id="public_transport_percentage"
+                name="public_transport_percentage"
+                placeholder="Public Transport Percentage"
+                step="any"
+                type="number"
+              />
+            </div>
+            <div
+              className="input-control"
+            >
+              <label
+                className="col-form-label-sm"
+                htmlFor="working_percentage"
+              >
+                Working Percentage
+              </label>
+              <input
+                aria-describedby="working_percentage"
+                className="form-control form-control-sm"
+                defaultValue="0.7"
+                id="working_percentage"
+                max="1"
+                min="0"
+                name="working_percentage"
+                placeholder="Working Percentage"
+                step="any"
+                type="number"
+              />
+            </div>
+          </fieldset>
+          <fieldset>
+            <div
+              className="input-control"
+            >
+              <label
+                className="col-form-label-sm"
+                htmlFor="grid_size"
+              >
+                Grid Size
+              </label>
+              <input
+                aria-describedby="grid_size"
+                className="form-control form-control-sm"
+                defaultValue={250}
+                id="grid_size"
+                name="grid_size"
+                onChange={[Function]}
+                placeholder="Grid Size"
+                type="number"
+              />
+            </div>
+            <div
+              className="input-control"
+            >
+              <label
+                className="col-form-label-sm"
+                htmlFor="simulation_hrs"
+              >
+                Simulation Hours
+              </label>
+              <input
+                aria-describedby="simulation_hrs"
+                className="form-control form-control-sm"
+                defaultValue="10000"
+                id="simulation_hrs"
+                name="simulation_hrs"
+                placeholder="Simulation Hours"
+                type="number"
+              />
+            </div>
+            <div
+              className="custom-control custom-switch switch-right"
+            >
+              <input
+                checked={false}
+                className="custom-control-input"
+                disabled={true}
+                id="generate_grid_vis"
+                name="generate_grid_vis"
+                onChange={[Function]}
+                type="checkbox"
+              />
+              <label
+                className="custom-control-label col-form-label-sm"
+                htmlFor="generate_grid_vis"
+              >
+                Grid Visualization
+              </label>
+            </div>
+            <small
+              className="form-text text-muted"
+            >
+              Allowed when grid size less than 101 
+            </small>
+          </fieldset>
+        </div>
+        <fieldset>
+          <legend>
+            Disease Dynamics
+          </legend>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="disease_name"
+            >
+              Disease Name
+            </label>
+            <select
+              aria-describedby="disease_name"
+              className="form-control form-control-sm"
+              data-testid="select-disease"
+              defaultValue="small_pox"
+              id="disease_name"
+              name="disease_name"
+              onChange={[Function]}
+              placeholder="Disease Name"
+            >
+              <option
+                value="small_pox"
+              >
+                Small Pox
+              </option>
+              <option
+                value="sars"
+              >
+                SARS
+              </option>
+              <option
+                value="covid_19"
+              >
+                COVID-19
+              </option>
+            </select>
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="regular_transmission_start_day"
+            >
+              Regular Transmission Start Day
+            </label>
+            <input
+              aria-describedby="regular_transmission_start_day"
+              className="form-control form-control-sm"
+              defaultValue={10}
+              id="regular_transmission_start_day"
+              name="regular_transmission_start_day"
+              placeholder="Regular Transmission Start Day"
+              type="text"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="high_transmission_start_day"
+            >
+              High Transmission Start Day
+            </label>
+            <input
+              aria-describedby="high_transmission_start_day"
+              className="form-control form-control-sm"
+              defaultValue={16}
+              id="high_transmission_start_day"
+              name="high_transmission_start_day"
+              placeholder="High Transmission Start Day"
+              type="text"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="last_day"
+            >
+              Last Day
+            </label>
+            <input
+              aria-describedby="last_day"
+              className="form-control form-control-sm"
+              defaultValue={22}
+              id="last_day"
+              name="last_day"
+              placeholder="Last Day"
+              type="text"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="regular_transmission_rate"
+            >
+              Regular Transmission Rate
+            </label>
+            <input
+              aria-describedby="regular_transmission_rate"
+              className="form-control form-control-sm"
+              defaultValue={0.05}
+              id="regular_transmission_rate"
+              name="regular_transmission_rate"
+              placeholder="Regular Transmission Rate"
+              type="text"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="high_transmission_rate"
+            >
+              High Transmission Rate
+            </label>
+            <input
+              aria-describedby="high_transmission_rate"
+              className="form-control form-control-sm"
+              defaultValue={0.5}
+              id="high_transmission_rate"
+              name="high_transmission_rate"
+              placeholder="High Transmission Rate"
+              type="text"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="death_rate"
+            >
+              Death Rate
+            </label>
+            <input
+              aria-describedby="death_rate"
+              className="form-control form-control-sm"
+              defaultValue={0.2}
+              id="death_rate"
+              name="death_rate"
+              placeholder="Death Rate"
+              type="text"
+            />
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>
+            Interventions
+          </legend>
+          <small
+            className="form-text text-muted"
+          >
+            Only the active interventions will be taken into consideration
+          </small>
+          <div
+            className="custom-control custom-switch switch-right"
+          >
+            <input
+              checked={true}
+              className="custom-control-input"
+              id="vaccine-switch"
+              onChange={[Function]}
+              type="checkbox"
+            />
+            <label
+              className="custom-control-label col-form-label-sm"
+              htmlFor="vaccine-switch"
+            >
+              Vaccination
+            </label>
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="vaccinate_at"
+            >
+              Vaccinate At
+            </label>
+            <input
+              aria-describedby="vaccinate_at"
+              className="form-control form-control-sm"
+              defaultValue="5000"
+              id="vaccinate_at"
+              name="vaccinate_at"
+              placeholder="Vaccinate At"
+              type="number"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="vaccinate_percentage"
+            >
+              Vaccinate Percentage
+            </label>
+            <input
+              aria-describedby="vaccinate_percentage"
+              className="form-control form-control-sm"
+              defaultValue="0.2"
+              id="vaccinate_percentage"
+              name="vaccinate_percentage"
+              placeholder="Vaccinate Percentage"
+              step="any"
+              type="number"
+            />
+          </div>
+          <div
+            className="custom-control custom-switch switch-right"
+          >
+            <input
+              checked={true}
+              className="custom-control-input"
+              id="lockdown-switch"
+              onChange={[Function]}
+              type="checkbox"
+            />
+            <label
+              className="custom-control-label col-form-label-sm"
+              htmlFor="lockdown-switch"
+            >
+              Lockdown
+            </label>
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="lockdown_at_number_of_infections"
+            >
+              Lockdown at number of infections
+            </label>
+            <input
+              aria-describedby="lockdown_at_number_of_infections"
+              className="form-control form-control-sm"
+              defaultValue="100"
+              id="lockdown_at_number_of_infections"
+              name="lockdown_at_number_of_infections"
+              placeholder="Lockdown At(number of infections)"
+              step="any"
+              type="number"
+            />
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="essential_workers_population"
+            >
+              Essentials Workers Population
+            </label>
+            <input
+              aria-describedby="essential_workers_population"
+              className="form-control form-control-sm"
+              defaultValue="0.1"
+              id="essential_workers_population"
+              name="essential_workers_population"
+              placeholder="Emergency Workers Population"
+              step="any"
+              type="number"
+            />
+          </div>
+          <div
+            className="custom-control custom-switch switch-right"
+          >
+            <input
+              checked={true}
+              className="custom-control-input"
+              id="hospital-switch"
+              onChange={[Function]}
+              type="checkbox"
+            />
+            <label
+              className="custom-control-label col-form-label-sm"
+              htmlFor="hospital-switch"
+            >
+              Hospital Spread
+            </label>
+          </div>
+          <div
+            className="input-control"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="hospital_spread_rate_threshold"
+            >
+              Hospital Spread Rate Threshold
+            </label>
+            <input
+              aria-describedby="hospital_spread_rate_threshold"
+              className="form-control form-control-sm"
+              defaultValue="100"
+              id="hospital_spread_rate_threshold"
+              name="hospital_spread_rate_threshold"
+              placeholder="Hospital Spread Rate Threshold"
+              step="any"
+              type="number"
+            />
+          </div>
+        </fieldset>
+      </div>
+      <div
+        className="col actions"
+      >
+        <button
+          className="btn btn-primary btn-lg"
+          disabled={false}
+          id="submitBtn"
+          type="submit"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+`;

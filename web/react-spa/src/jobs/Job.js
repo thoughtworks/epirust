@@ -20,9 +20,9 @@
 import React from "react";
 import './job.scss'
 import PropTypes from "prop-types";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 
-export const Job = ({simulationId, status}) => {
+export const Job = ({ simulationId, status }) => {
   const statusText = {
     "running": "In-Progress",
     "finished": "Finished",
@@ -32,14 +32,16 @@ export const Job = ({simulationId, status}) => {
 
   return (
     <li className="list-group-item borderless item-less-padding">
+
       <Link to={`/jobs/${simulationId}`} className={'no-link-formatting'}>
         <div className={`card ${status}`}>
           <div className="card-body card-body-less-padding">
-            <div className="job-status">{statusText[status]}</div>
-            <div className="minor-details">Simulation Id: {simulationId} </div>
+            <p className="job-status">{statusText[status]}</p>
+            <p className="minor-details">{`Id: `}<code>{simulationId}</code></p>
           </div>
         </div>
       </Link>
+
     </li>
   );
 };

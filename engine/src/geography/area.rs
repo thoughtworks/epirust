@@ -21,25 +21,28 @@ use rand::Rng;
 
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
-use std::slice::IterMut;
+use std::slice::Iter;
 use std::collections::HashSet;
 
 #[derive(Copy, Clone, Hash, Eq, Debug, Serialize, Deserialize)]
 pub struct Area {
     pub start_offset: Point,
     pub end_offset: Point,
-    iter_index: Point,
 }
 
 impl Area {
     pub fn new(start_offset: Point, end_offset: Point) -> Area {
-        Area { start_offset, end_offset, iter_index: Point::new(start_offset.x - 1, start_offset.y) }
+        Area { start_offset, end_offset }
     }
 
     pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item=Point> + '_ {
         point.neighbor_iterator().filter(move |p| {
             self.contains(p)
         })
+    }
+
+    pub fn iter(&self) -> AreaIterator {
+        AreaIterator::new(*self)
     }
 
     //TODO improve randomness
@@ -102,18 +105,32 @@ pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area
     areas
 }
 
-impl Iterator for Area {
+pub struct AreaIterator {
+    area: Area,
+    iter_index: Point,
+}
+
+impl AreaIterator {
+    pub fn new(area: Area) -> AreaIterator {
+        AreaIterator {
+            area,
+            iter_index: Point::new(area.start_offset.x - 1, area.start_offset.y)
+        }
+    }
+}
+
+impl Iterator for AreaIterator {
     type Item = Point;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut new_x = self.iter_index.x + 1;
         let mut new_y = self.iter_index.y;
-        if new_x > self.end_offset.x {
-            new_x = self.start_offset.x;
+        if new_x > self.area.end_offset.x {
+            new_x = self.area.start_offset.x;
             new_y += 1;
         }
         self.iter_index = Point::new(new_x, new_y);
-        if new_y > self.end_offset.y {
+        if new_y > self.area.end_offset.y {
             return Option::None;
         }
         Option::Some(self.iter_index)
@@ -123,15 +140,16 @@ impl Iterator for Area {
 
 /// loops through points in multiple areas
 pub struct AreaPointIterator<'a> {
-    areas_iter: IterMut<'a, Area>,
+    areas_iter: Iter<'a, Area>,
     current_area: Area,
+    current_area_iter: AreaIterator,
 }
 
 impl AreaPointIterator<'_> {
     pub fn init(areas: &mut Vec<Area>) -> AreaPointIterator {
-        let mut areas_iter = areas.into_iter();
+        let mut areas_iter = areas.iter();
         let current_area = *areas_iter.next().unwrap();
-        AreaPointIterator { areas_iter, current_area }
+        AreaPointIterator { areas_iter, current_area, current_area_iter: current_area.iter() }
     }
 }
 
@@ -139,7 +157,7 @@ impl Iterator for AreaPointIterator<'_> {
     type Item = (Area, Point);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let maybe_point = self.current_area.next();
+        let maybe_point = self.current_area_iter.next();
         if maybe_point.is_some() {
             return Some((self.current_area, maybe_point.unwrap()));
         }
@@ -147,7 +165,8 @@ impl Iterator for AreaPointIterator<'_> {
         let next_area = self.areas_iter.next();
         if next_area.is_some() {
             self.current_area = *next_area.unwrap();
-            let point = self.current_area.next().unwrap();
+            self.current_area_iter = self.current_area.iter();
+            let point = self.current_area_iter.next().unwrap();
             return Some((self.current_area, point));
         }
         return None;
@@ -173,15 +192,25 @@ mod tests {
     #[test]
     fn should_iterate_over_points_in_area() {
         let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
-        let x: Vec<Point> = area.collect();
+        let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(0, 0), Point::new(1, 0), Point::new(2, 0),
                            Point::new(0, 1), Point::new(1, 1), Point::new(2, 1),
                            Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)]);
 
         let area = Area::new(Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
-        let x: Vec<Point> = area.collect();
+        let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1),
                            Point::new(1, 2), Point::new(2, 2)])
+    }
+
+    #[test]
+    fn iterator_should_work_multiple_times() {
+        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let x: Option<Point> = area.iter().find(|p| *p == Point::new(1,1));
+        assert!(x.is_some());
+
+        let x: Option<Point> = area.iter().find(|p| *p == Point::new(1,1));
+        assert!(x.is_some());
     }
 
     #[test]

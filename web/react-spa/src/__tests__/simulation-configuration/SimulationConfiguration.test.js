@@ -19,54 +19,98 @@
 
 import React from 'react'
 import {fireEvent, render} from '@testing-library/react'
-import SimulationConfiguration from '../../simulation-configuration'
+import renderer from 'react-test-renderer'
+import {MemoryRouter} from "react-router-dom";
+import SimulationConfiguration from "../../simulation-configuration";
 
 const mockHistoryPush = jest.fn();
 jest.mock('react-router-dom', () => ({
-    useHistory: () => ({
-        push: mockHistoryPush,
-    }),
+  ...jest.requireActual('react-router-dom'),
+  useHistory: () => ({
+    push: mockHistoryPush,
+  }),
 }));
 
-jest.useFakeTimers();
+describe('ParametersForm', function () {
+  beforeEach(() => {
+    jest.clearAllMocks();
 
-test('make API call form data to server on submit', () => {
-        const mockToJson = jest.fn().mockResolvedValue({simulationId: 'dummyId'});
-        jest.spyOn(global, 'fetch')
-            .mockImplementation(() => Promise.resolve({json: mockToJson}));
+    const mockToJson = jest.fn().mockResolvedValue({simulationId: 'dummyId'});
+    jest.spyOn(global, 'fetch')
+      .mockImplementation(() => Promise.resolve({json: mockToJson}));
+  });
 
-        const expectedBody = {
-            "death_rate": 0.2,
-            "disease_name": "small_pox",
-            "essential_workers_population": 0.1,
-            "grid_size": 250,
-            "high_transmission_rate": 0.5,
-            "high_transmission_start_day": 16,
-            "hospital_spread_rate_threshold": 100,
-            "last_day": 22,
-            "lockdown_at_number_of_infections": 100,
-            "number_of_agents": 10000,
-            "public_transport_percentage": 0.2,
-            "regular_transmission_rate": 0.05,
-            "regular_transmission_start_day": 10,
-            "simulation_hrs": 10000,
-            "vaccinate_at": 5000,
-            "vaccinate_percentage": 0.2,
-            "working_percentage": 0.7,
-            "enable_citizen_state_messages": false
-        };
+  function getComponent() {
+    return <MemoryRouter><SimulationConfiguration/></MemoryRouter>;
+  }
 
-        const { getByTestId } = render(<SimulationConfiguration />);
+  it('should render ParametersForm with defaults', () => {
 
-        fireEvent.submit(getByTestId('simulationForm'));
+    const component = renderer.create(getComponent());
+    let tree = component.toJSON()
 
-        expect(global.fetch).toHaveBeenCalledTimes(1);
-        expect(global.fetch.mock.calls[0][0]).toBe("http://localhost:3000/simulation/init");
-        expect(global.fetch.mock.calls[0][1].method).toBe("POST");
-        expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toStrictEqual(expectedBody);
-        process.nextTick(() => {
-            expect(mockHistoryPush).toHaveBeenCalledTimes(1);
-            expect(mockHistoryPush).toHaveBeenCalledWith('/jobs/dummyId')
-        });
+    expect(tree).toMatchSnapshot()
+  });
+
+  it('should invoke fetch on form submit', () => {
+    const {getByTestId} = render(getComponent());
+
+    fireEvent.submit(getByTestId('simulationForm'));
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0]).toBe("http://localhost:3000/simulation/init");
+    expect(fetch.mock.calls[0][1]).toMatchSnapshot()
+  });
+
+  it("onSubmit form if grid-view checkbox is on data should contain `enable_citizen_state_messages` with value true", () => {
+    const {getByLabelText, getByTestId} = render(getComponent());
+
+    fireEvent.change(getByLabelText("Grid Size"), {target: {value: 100}});
+    fireEvent.change(getByLabelText("Grid Visualization"), {target: {checked: true}});
+    fireEvent.submit(getByTestId('simulationForm'));
+
+    const body = JSON.parse(fetch.mock.calls[0][1].body);
+
+    expect(body).toHaveProperty('enable_citizen_state_messages');
+    expect(body.enable_citizen_state_messages).toBe(true);
+  });
+
+  it('invoke handler on form submit with only active interventions', () => {
+    const {getByTestId, getByLabelText} = render(getComponent());
+
+    //click the lockdown intervention
+    expect(getByLabelText('Lockdown').checked).toBe(true);
+    fireEvent.click(getByLabelText('Lockdown'));
+    expect(getByLabelText('Lockdown').checked).toBe(false);
+
+    fireEvent.submit(getByTestId('simulationForm'));
+
+    const requestBody = JSON.parse(fetch.mock.calls[0][1].body);
+
+    expect(requestBody).not.toHaveProperty("essential_workers_population");
+    expect(requestBody).not.toHaveProperty("lockdown_at_number_of_infections");
+
+    expect(requestBody["hospital_spread_rate_threshold"]).toBe(100);
+    expect(requestBody["vaccinate_at"]).toBe(5000);
+    expect(requestBody["vaccinate_percentage"]).toBe(0.2);
+  });
+
+  it('should disable submit button and show loading animation to button', () => {
+    const {getByTestId, container} = render(getComponent());
+
+    fireEvent.submit(getByTestId('simulationForm'));
+    const button = container.querySelector('button');
+    expect(button.disabled).toBe(true);
+    expect(container).toMatchSnapshot()
+  });
+
+  it('should redirect to Jobs page on successful job creation', function () {
+    const { getByTestId } = render(getComponent());
+
+    fireEvent.submit(getByTestId('simulationForm'));
+
+    process.nextTick(() => {
+      expect(mockHistoryPush).toHaveBeenCalledTimes(1);
+      expect(mockHistoryPush).toHaveBeenCalledWith('/jobs/dummyId')
+    });
+  });
 });
-

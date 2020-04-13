@@ -18,15 +18,11 @@
  */
 
 import React from 'react';
-import SimulationConfiguration from "./simulation-configuration";
 import Header from './Header';
 
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route
-} from "react-router-dom";
+import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
 import {JobsList} from "./jobs/JobsList";
+import SimulationConfiguration from "./simulation-configuration";
 
 export const Routes = {
   HOME: "/",

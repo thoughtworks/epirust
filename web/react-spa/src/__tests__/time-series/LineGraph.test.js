@@ -42,11 +42,13 @@ test('should render an empty Graph without calling dygraphs for empty data buffe
 
 test('should invoke dygraph when data buffer length is not 0 and graph is null', () => {
     const simulationData = [
-    [1,10,5,0,0,0],
-    [2,15,6,0,0,0],
-    [3,20,7,0,0,1]]
+        [1, 10, 5, 0, 0, 0],
+        [2, 15, 6, 0, 0, 0],
+        [3, 20, 7, 0, 0, 1]]
+    const labels = ["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]
+
     const expectedOptions = {
-        "labels": ["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"],
+        "labels": labels,
         legend: 'always',
         animatedZooms: true,
         title: 'Time Series Graph',
@@ -56,7 +58,7 @@ test('should invoke dygraph when data buffer length is not 0 and graph is null',
         errorBars: false
     }
     const dygraphMockFn = Dygraph.mockImplementationOnce(() => { graph: "mockGraph" })
-    render(<Graph dataBuffer={simulationData} />)
+    render(<Graph dataBuffer={simulationData} labels={labels} />)
 
     expect(dygraphMockFn).toHaveBeenCalledTimes(1)
     expect(dygraphMockFn).toHaveBeenCalledWith(expect.anything(), simulationData, expectedOptions)
@@ -65,16 +67,16 @@ test('should invoke dygraph when data buffer length is not 0 and graph is null',
 
 test('should update dygraph chart when data buffer is not 0 and graph is not null', () => {
     const simulationData1 = [
-    [1,10,5,0,0,0],
-    [2,15,6,0,0,0],
-    [3,20,7,0,0,1]]
-    const simulationData2 = [[4,30,8,0,0,2]]
+        [1, 10, 5, 0, 0, 0],
+        [2, 15, 6, 0, 0, 0],
+        [3, 20, 7, 0, 0, 1]]
+    const simulationData2 = [[4, 30, 8, 0, 0, 2]]
     const updateSpyFn = jest.fn()
-    const dygraphMockFn = Dygraph.mockImplementation(() => ({updateOptions: updateSpyFn}))
-    const {rerender} = render(<Graph dataBuffer={simulationData1}/>)
+    const dygraphMockFn = Dygraph.mockImplementation(() => ({ updateOptions: updateSpyFn }))
+    const { rerender } = render(<Graph dataBuffer={simulationData1} />)
     expect(dygraphMockFn).toHaveBeenCalled()
-    expect(updateSpyFn).toHaveBeenNthCalledWith(1, {file: simulationData1}) //TODO: stop update if new Dygraph has already been generated
+    expect(updateSpyFn).toHaveBeenNthCalledWith(1, { file: simulationData1 }) //TODO: stop update if new Dygraph has already been generated
 
-    rerender(<Graph dataBuffer={simulationData2}/>)
-    expect(updateSpyFn).toHaveBeenNthCalledWith(2, {file: simulationData2})
+    rerender(<Graph dataBuffer={simulationData2} />)
+    expect(updateSpyFn).toHaveBeenNthCalledWith(2, { file: simulationData2 })
 })

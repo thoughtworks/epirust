@@ -4,7 +4,6 @@ export function transformTimeSeriesMessages(message) {
     return perHourStats;
 }
 
-//TODO: Modify this function according to the socket message
 export function transformTimeSeriesDeviationMessages(message) {
     const { hour, susceptible, infected, quarantined, recovered, deceased,
         infected_mean, susceptible_mean, quarantined_mean, recovered_mean, deceased_mean,

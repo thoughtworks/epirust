@@ -39,7 +39,13 @@ export default function SocketAwareGraph({ socket, simulationId, transformFn }) 
         });
     }, [socket, simulationId, transformFn]);
 
-    return <Graph dataBuffer={dataBuffer} enableExport={simulationEnded} labels={["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]} />
+    return (
+        <Graph
+            dataBuffer={dataBuffer}
+            enableExport={simulationEnded}
+            labels={["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]}
+        />
+    )
 }
 
 SocketAwareGraph.propTypes = {

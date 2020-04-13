@@ -33,7 +33,7 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
 
     const displayedAll = () => {
         return simulationEnded && (currentDisplayIndex >= agentPositions.length)
-    } 
+    }
 
     //displayed all the data
     useEffect(() => {

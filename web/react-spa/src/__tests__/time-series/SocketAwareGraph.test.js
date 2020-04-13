@@ -37,6 +37,9 @@ test('should render SocketAwareGraph', () => {
 test('should recieve data sent on socket and parse & set graph to empty', () => {
     const mockDygraphfn = Dygraph.mockImplementation(() => { })
     let socket = new MockSocket()
+    const closeSpy = jest.fn()
+    socket.socketClient.close = closeSpy
+
     const hourStatistics = {
         hour: 10,
         susceptible: 9,
@@ -58,6 +61,8 @@ test('should recieve data sent on socket and parse & set graph to empty', () => 
 test('should set dataBuffer and render graph and plot graph', () => {
     const mockDygraphfn = Dygraph.mockImplementation(() => { })
     let socket = new MockSocket()
+    const closeSpy = jest.fn()
+    socket.socketClient.close = closeSpy
 
     const hourStatistics = {
         hour: 100,
@@ -86,7 +91,9 @@ test('should set residue also into data buffer when simulation ended flag is tru
         updateOptions: updateSpyFn
     }))
     let socket = new MockSocket()
-    socket.socketClient.close = () => { }
+
+    const closeSpy = jest.fn()
+    socket.socketClient.close = closeSpy
     const hourStatistics = {
         hour: 100,
         susceptible: 9,
@@ -112,7 +119,8 @@ test('should set residue also into data buffer when simulation ended flag is tru
 
 test("should enable export in graph if simulation has ended", () => {
     let socket = new MockSocket()
-    socket.socketClient.close = () => { };
+    const closeSpy = jest.fn()
+    socket.socketClient.close = closeSpy
     const { container } = render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
     expect(container.querySelector(".graph-actions .btn-secondary")).toBeDisabled()
 
@@ -128,6 +136,7 @@ test("should close the socket on receiving simulation ended message", () => {
     let socket = new MockSocket();
     let closeCall = 0;
     socket.socketClient.close = () => { closeCall += 1 };
+
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {

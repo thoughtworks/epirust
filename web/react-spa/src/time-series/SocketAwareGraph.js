@@ -38,6 +38,8 @@ export default function SocketAwareGraph({ socket, simulationId }) {
                 setSimulationEnded(true)
             }
         });
+
+        return () => socket.close()
     }, [socket, simulationId]);
 
     return (

@@ -51,7 +51,7 @@ impl AgentLocationMap {
     }
 
     pub fn goto_hospital(&self, hospital_area: &Area, cell: Point, citizen: &mut agent::Citizen) -> Point {
-        let vacant_hospital_cell = hospital_area.into_iter().find(|cell| {
+        let vacant_hospital_cell = hospital_area.iter().find(|cell| {
             self.is_cell_vacant(cell)
         });
         self.move_agent(cell, vacant_hospital_cell.unwrap_or(citizen.home_location.get_random_point(&mut RandomWrapper::new())))
@@ -125,7 +125,7 @@ impl AgentLocationMap {
     }
 
     pub fn get_vacant_cell(&self, area: &mut Area) -> Point {
-        area.find(|point| !self.agent_cell.contains_key(point))
+        area.iter().find(|point| !self.agent_cell.contains_key(point))
             .expect("No vacant cell in area!")
     }
 

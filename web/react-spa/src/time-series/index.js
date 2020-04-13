@@ -22,7 +22,6 @@ import SocketAwareGraph from "./SocketAwareGraph";
 import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
 import config from "../config";
-import { transformTimeSeriesMessages } from './utils'
 
 export function TimeSeries({ simulationId }) {
   const [socket, setSocket] = useState(null);
@@ -36,10 +35,6 @@ export function TimeSeries({ simulationId }) {
     }
   }, []);
   return (
-    <SocketAwareGraph
-      simulationId={simulationId}
-      socket={socket}
-      transformFn={transformTimeSeriesMessages}
-    />
+    <SocketAwareGraph simulationId={simulationId} socket={socket} />
   )
 }

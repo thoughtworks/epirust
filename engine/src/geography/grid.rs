@@ -25,7 +25,6 @@ use crate::config::{AutoPopulation, CsvPopulation};
 use crate::geography::{Area, area, Point};
 use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
-use crate::geography::area::AreaPointIterator;
 use std::collections::HashMap;
 use rand::seq::SliceRandom;
 
@@ -120,7 +119,8 @@ impl Grid {
     pub fn read_population(&self, csv_pop: &CsvPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
         let file = File::open(&csv_pop.file).expect("Could not read population file");
         let mut rdr = csv::Reader::from_reader(file);
-        let mut homes = area::area_factory(self.housing_area.start_offset, self.housing_area.end_offset, constants::HOME_SIZE);
+        let homes = area::area_factory(self.housing_area.start_offset, self.housing_area.end_offset, constants::HOME_SIZE);
+        let mut homes_iter = homes.iter().cycle();
         let scaling_factor = self.hospital_area.end_offset.x + 1;
 
         let office_start_point = Point::new(self.hospital_area.end_offset.x + 1, self.housing_area.start_offset.y);
@@ -131,19 +131,37 @@ impl Grid {
 
         let mut citizens = Vec::new();
         let mut home_loc = Vec::new();
-        let mut home_points_iter = AreaPointIterator::init(&mut homes);
 
         for result in rdr.deserialize() {
             let record: PopulationRecord = result.expect("Could not deserialize population line");
-            let (home_area, home_point) = home_points_iter.next().expect("Ran out of homes!");
 
             //TODO seems like transport point isn't being used on the routine() function
-            let citizen = Citizen::from_record(record, home_area, *offices_iter.next().unwrap(), home_point, rng);
+            let home = *homes_iter.next().unwrap();
+            let office = *offices_iter.next().unwrap();
+            let citizen = Citizen::from_record(record, home, office, home.get_random_point(rng), rng);
             citizens.push(citizen);
-            home_loc.push(home_point);
         }
+
+        //TODO remove duplication
+        let agents_by_home_locations = Grid::group_agents_by_home_locations(&citizens);
+        debug!("Finished grouping agents by home locations");
+        let mut agents_in_order:Vec<Citizen> = Vec::with_capacity(citizens.len());
+
+        for(home, agents) in agents_by_home_locations {
+            trace!("home: {:?} {:?}", home.start_offset, home.end_offset);
+            trace!("agents in home: {:?}", agents.len());
+            let mut random_points_within_home = home.random_points(agents.len() as i32, rng);
+
+            for agent in agents {
+                agents_in_order.push(*agent);
+            }
+            home_loc.append(&mut random_points_within_home);
+        }
+        debug!("Assigned starting location to agents");
+        agents_in_order.last_mut().as_mut().unwrap().state_machine.infect();
+
         self.draw(&home_loc, &homes, &offices);
-        (home_loc, citizens)
+        (home_loc, agents_in_order)
     }
 
     pub fn increase_hospital_size(&mut self, grid_size: i32) {

@@ -22,21 +22,23 @@ import DiseaseDynamics from './DiseaseDynamics'
 import Interventions from './Interventions'
 import MiscellaneousConfig from "./MiscellaneousConfig";
 import {useHistory} from "react-router-dom";
-import config from "../config";
+import {post} from "../common/apiCall";
 
 export default function SimulationConfiguration() {
   const [buttonDisabled, setButtonDisabled] = useState(false);
+  const [errorOccurred, setErrorOccurred] = useState(false);
 
   const history = useHistory();
 
   function pushData(paramsData) {
-    return fetch(`${config.API_HOST}/simulation/init`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(paramsData)
-    })
+    post("/simulation/init", paramsData)
       .then(res => res.json())
-      .then(data => history.push(`/jobs/${data.simulationId}`));
+      .then(data => history.push(`/jobs/${data.simulationId}`))
+      .catch(err => {
+        console.error(err);
+        setButtonDisabled(false);
+        setErrorOccurred(true)
+      })
   }
 
   function handleSubmit(e) {
@@ -126,6 +128,7 @@ export default function SimulationConfiguration() {
 
             </button>
           </div>
+            {errorOccurred && <div className="error-message alert-danger">Error Occurred please try again!</div>}
         </div>
 
       </form>

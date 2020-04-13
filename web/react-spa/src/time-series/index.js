@@ -19,11 +19,10 @@
 
 
 import SocketAwareGraph from "./SocketAwareGraph";
-import RestfulGraph from "./RestfulGraph";
 import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
 import config from "../config";
-import { transformTimeSeriesMessages, transformTimeSeriesDeviationMessages } from './utils'
+import { transformTimeSeriesMessages } from './utils'
 
 export function TimeSeries({ simulationId }) {
   const [socket, setSocket] = useState(null);
@@ -41,16 +40,6 @@ export function TimeSeries({ simulationId }) {
       simulationId={simulationId}
       socket={socket}
       transformFn={transformTimeSeriesMessages}
-    />
-  )
-}
-
-export function TimeSeriesDeviation({ simulationId }) {
-  return (
-    <RestfulGraph
-      simulationId={simulationId}
-      apiPath={`${config.API_HOST}/simulation/${simulationId}/time-series-deviation`}
-      transformFn={transformTimeSeriesDeviationMessages}
     />
   )
 }

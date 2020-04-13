@@ -24,7 +24,8 @@ import { NavItem } from "../common/NavItem";
 import { Redirect, Route, Switch } from "react-router-dom";
 import GridPage from "../grid";
 import PropTypes from 'prop-types';
-import { TimeSeriesDeviation, TimeSeries } from "../time-series";
+import { TimeSeries } from "../time-series";
+import { TimeSeriesDeviation } from "../time-series/TimeSeriesDeviation";
 
 export const JobDetails = ({ simulationId, details }) => {
   const linkPrefix = `/jobs/${simulationId}`;

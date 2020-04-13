@@ -12,7 +12,7 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
             return
         }
         if (!graph) {
-            const options = {
+            let options = {
                 legend: 'always',
                 animatedZooms: true,
                 title: 'Time Series Graph',

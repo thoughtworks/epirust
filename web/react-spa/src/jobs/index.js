@@ -65,8 +65,8 @@ export const JobsList = () => {
     );
   }
 
-  if (activeSimulationId && !view) {
-    return (<Redirect to={`/jobs/${activeSimulationId}/time-series`} />);
+  if (id && !view) {
+    return (<Redirect to={`/jobs/${id}/time-series`} />);
   }
 
   return (

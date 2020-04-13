@@ -22,7 +22,7 @@
 }
 
 .card-body-less-padding {
-  padding: 0.5rem;
+  padding: 0.3rem;
 }
 
 .item-less-padding {
@@ -30,13 +30,19 @@
 }
 
 .job-status {
-  font-size: 22px;
+  font-size: 16px;
   font-weight: bold;
   line-height: 26px;
+  margin-bottom: 0;
 }
 
 .minor-details {
   font-size: 16px;
+  margin-bottom: 0;
+
+  code {
+    color: white;
+  }
 }
 
 .no-link-formatting {

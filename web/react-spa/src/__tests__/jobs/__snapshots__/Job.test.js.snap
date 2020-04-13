@@ -18,18 +18,19 @@ Object {
             <div
               class="card-body card-body-less-padding"
             >
-              <div
+              <p
                 class="job-status"
               >
                 In-Progress
-              </div>
-              <div
+              </p>
+              <p
                 class="minor-details"
               >
-                Simulation Id: 
-                1234
-                 
-              </div>
+                Id: 
+                <code>
+                  1234
+                </code>
+              </p>
             </div>
           </div>
         </a>
@@ -50,18 +51,19 @@ Object {
           <div
             class="card-body card-body-less-padding"
           >
-            <div
+            <p
               class="job-status"
             >
               In-Progress
-            </div>
-            <div
+            </p>
+            <p
               class="minor-details"
             >
-              Simulation Id: 
-              1234
-               
-            </div>
+              Id: 
+              <code>
+                1234
+              </code>
+            </p>
           </div>
         </div>
       </a>

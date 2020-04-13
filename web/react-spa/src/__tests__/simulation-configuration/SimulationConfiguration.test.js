@@ -18,14 +18,15 @@
  */
 
 import React from 'react'
-import { render, fireEvent } from '@testing-library/react'
+import {fireEvent, render} from '@testing-library/react'
+import SimulationConfiguration from '../../simulation-configuration'
+
 const mockHistoryPush = jest.fn();
 jest.mock('react-router-dom', () => ({
     useHistory: () => ({
         push: mockHistoryPush,
     }),
 }));
-import SimulationConfiguration from '../../simulation-configuration'
 
 jest.useFakeTimers();
 

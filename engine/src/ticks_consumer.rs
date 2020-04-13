@@ -65,12 +65,13 @@ fn parse_tick(message: &str) -> Tick {
 pub struct Tick {
     hour: i32,
     travel_plan: Option<TravelPlan>,
+    terminate: bool,
 }
 
 impl Tick {
     #[cfg(test)]
-    pub fn new(hour: i32, travel_plan: Option<TravelPlan>) -> Tick {
-        return Tick { hour, travel_plan }
+    pub fn new(hour: i32, travel_plan: Option<TravelPlan>, terminate: bool) -> Tick {
+        return Tick { hour, travel_plan, terminate }
     }
 
     pub fn hour(&self) -> i32 {
@@ -79,6 +80,10 @@ impl Tick {
 
     pub fn travel_plan(self) -> Option<TravelPlan> {
         self.travel_plan
+    }
+
+    pub fn terminate(&self) -> bool {
+        self.terminate
     }
 }
 
@@ -90,13 +95,14 @@ mod tests {
     fn should_parse_tick() {
         let json = r#"
         {
-            "hour": 1
+            "hour": 1,
+            "terminate": false
         }"#;
-        let expected = Tick { hour: 1, travel_plan: None };
+        let expected = Tick { hour: 1, travel_plan: None, terminate: false };
         assert_eq!(expected, parse_tick(json));
 
         let json = r#"
-        {"hour":0,"travel_plan":{"regions":["engine1","engine2"],"matrix":[[0,156],[108,0]]}}
+        {"hour":0,"terminate":false,"travel_plan":{"regions":["engine1","engine2"],"matrix":[[0,156],[108,0]]}}
         "#;
         let travel_plan = TravelPlan::new(
             vec!["engine1".to_string(), "engine2".to_string()],
@@ -105,7 +111,7 @@ mod tests {
                 vec![108, 0]
             ],
         );
-        let expected = Tick { hour: 0, travel_plan: Some(travel_plan) };
+        let expected = Tick { hour: 0, travel_plan: Some(travel_plan), terminate: false };
         assert_eq!(expected, parse_tick(json));
     }
 }

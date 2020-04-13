@@ -44,10 +44,10 @@ impl TravelPlan {
         self.column(index).filter(|val| *val > 0).count() as i32
     }
 
-    pub fn get_total_incoming(&self, engine_id: String) -> i32 {
-        let index = self.get_position(&engine_id);
-        self.matrix.iter().fold(0, |total, row| total + *row.get(index).unwrap())
-    }
+    // pub fn get_total_incoming(&self, engine_id: String) -> i32 {
+    //     let index = self.get_position(&engine_id);
+    //     self.matrix.iter().fold(0, |total, row| total + *row.get(index).unwrap())
+    // }
 
     pub fn get_outgoing(&self, from_region: &String, to_region: &String) -> i32 {
         let from_index = self.get_position(from_region);
@@ -221,13 +221,13 @@ mod tests {
         assert_eq!(97 + 12, travel_plan.get_total_outgoing(&"engine3".to_string()));
     }
 
-    #[test]
-    fn should_get_total_incoming() {
-        let travel_plan = create_travel_plan();
-        assert_eq!(108 + 97, travel_plan.get_total_incoming("engine1".to_string()));
-        assert_eq!(156 + 12, travel_plan.get_total_incoming("engine2".to_string()));
-        assert_eq!(24 + 221, travel_plan.get_total_incoming("engine3".to_string()));
-    }
+    // #[test]
+    // fn should_get_total_incoming() {
+    //     let travel_plan = create_travel_plan();
+    //     assert_eq!(108 + 97, travel_plan.get_total_incoming("engine1".to_string()));
+    //     assert_eq!(156 + 12, travel_plan.get_total_incoming("engine2".to_string()));
+    //     assert_eq!(24 + 221, travel_plan.get_total_incoming("engine3".to_string()));
+    // }
 
     #[test]
     fn should_get_incoming_regions_count() {
@@ -249,7 +249,7 @@ mod tests {
     fn should_keep_previous_travel_plan_on_new_tick() {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
-        let tick = Tick::new(1, None);
+        let tick = Tick::new(1, None, false);
         engine_travel_plan.receive_tick(Some(tick));
         assert_eq!(create_travel_plan(), engine_travel_plan.travel_plan.unwrap());
     }
@@ -259,7 +259,7 @@ mod tests {
         let mut engine_travel_plan = create_engine_with_travel_plan();
         engine_travel_plan.add_outgoing(create_citizen(), Point::new(2,4));
 
-        let tick = Tick::new(1, None);
+        let tick = Tick::new(1, None, false);
         engine_travel_plan.receive_tick(Some(tick));
         assert!(engine_travel_plan.outgoing.is_empty());
     }
@@ -360,7 +360,7 @@ mod tests {
     fn create_engine_with_travel_plan() -> EngineTravelPlan {
         let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
         let travel_plan = create_travel_plan();
-        let tick = Tick::new(0, Some(travel_plan));
+        let tick = Tick::new(0, Some(travel_plan), false);
         engine_travel_plan.receive_tick(Some(tick));
         engine_travel_plan
     }

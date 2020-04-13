@@ -5,13 +5,15 @@ version: '3.7'
 
 services:
   mongodb_container:
+    container_name: db
     image: mongo:latest
     ports:
       - 27017:27017
     volumes:
       - ./mongo-data:/data/db
-
+      
   zookeeper:
+    container_name: zookeeper
     image: zookeeper:3.4.9
     hostname: zookeeper
     ports:
@@ -25,6 +27,7 @@ services:
       - ./zookeeper/datalog:/datalog
 
   kafka:
+    container_name: kafka
     image: confluentinc/cp-kafka:5.4.1
     hostname: kafka
     ports:

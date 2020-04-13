@@ -36,17 +36,9 @@ export const JobsList = () => {
 
   if (id && !view) {
     return (<Redirect to={`/jobs/${id}/time-series`} />);
-<<<<<<< HEAD
   } else {
     const simulationDetails = simulations.find(s => s.simulation_id === parseInt(id));
     return (<div className="row jobs-list">
-=======
-  }
-
-  return (
-    <div className="row jobs-list">
-
->>>>>>> Meenakshi | Add RestfulGraph to visualize time series with deviation
       <div className="col-3">
         <ul className="list-group scrollable">
           {simulations.map(s =>
@@ -64,5 +56,5 @@ export const JobsList = () => {
 
     </div>
     );
-  };
+  }
 }

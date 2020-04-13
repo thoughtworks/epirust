@@ -17,7 +17,7 @@
  *
  */
 
-#[derive(Serialize, Copy, Clone)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Counts {
     hour: i32,
     susceptible: i32,

@@ -73,8 +73,12 @@ impl Epidemiology {
         Epidemiology { agent_location_map, write_agent_location_map, grid, disease, sim_id }
     }
 
-    fn stop_simulation(row: Counts) -> bool {
-        row.get_infected() == 0 && row.get_quarantined() == 0
+    fn stop_simulation(run_mode: &RunMode, row: Counts) -> bool {
+        let zero_active_cases = row.get_infected() == 0 && row.get_quarantined() == 0;
+        match run_mode {
+            RunMode::MultiEngine { .. } => { false },
+            _ => zero_active_cases
+        }
     }
 
     fn output_file_name(config: &Config, run_mode: &RunMode) -> String {
@@ -125,12 +129,19 @@ impl Epidemiology {
         let mut ticks_stream = ticks_consumer.start_with(Duration::from_millis(10), false);
         let travellers_consumer = travellers_consumer::start(engine_id);
         let mut travel_stream = travellers_consumer.start_with(Duration::from_millis(10), false);
-        let mut terminate_engine = false;
         let mut n_incoming = 0;
         let mut n_outgoing = 0;
 
         for simulation_hour in 1..config.get_hours() {
             let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour).await;
+            match &tick {
+                None => {}
+                Some(t) => {
+                    if t.terminate() {
+                        break;
+                    }
+                }
+            }
             engine_travel_plan.receive_tick(tick.clone());
 
             counts_at_hr.increment_hour();
@@ -177,11 +188,11 @@ impl Epidemiology {
 
             Epidemiology::apply_vaccination_intervention(&vaccinations, &counts_at_hr, &mut write_buffer_reference, &mut rng);
 
-            if Epidemiology::stop_simulation(counts_at_hr) {
-                terminate_engine = true;
+            if Epidemiology::stop_simulation(&run_mode, counts_at_hr) {
+                break;
             }
 
-            Epidemiology::send_ack(run_mode, &mut producer, terminate_engine, simulation_hour).await;
+            Epidemiology::send_ack(run_mode, &mut producer, counts_at_hr, simulation_hour).await;
 
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
@@ -193,10 +204,6 @@ impl Epidemiology {
                       write_buffer_reference.current_population());
                 n_incoming = 0;
                 n_outgoing = 0;
-            }
-
-            if terminate_engine {
-                break;
             }
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();
@@ -225,9 +232,9 @@ impl Epidemiology {
         }
     }
 
-    async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, terminate_engine: bool, simulation_hour: i32) {
+    async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, counts: Counts, simulation_hour: i32) {
         if let RunMode::MultiEngine { engine_id } = run_mode {
-            let ack = TickAck { engine_id: engine_id.to_string(), hour: simulation_hour, terminate: terminate_engine };
+            let ack = TickAck { engine_id: engine_id.to_string(), hour: simulation_hour, counts };
             match producer.send_ack(&ack).await.unwrap() {
                 Ok(_) => {}
                 Err(e) => panic!("Failed while sending acknowledgement: {:?}", e.0)

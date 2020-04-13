@@ -21,6 +21,7 @@ use rdkafka::producer::{FutureProducer, FutureRecord, DeliveryFuture};
 use rdkafka::ClientConfig;
 use crate::environment;
 use crate::travel_plan::TravellersByRegion;
+use crate::listeners::events::counts::Counts;
 
 const TICK_ACKS_TOPIC: &str = "ticks_ack";
 pub const TRAVELS_TOPIC: &str = "travels";
@@ -60,5 +61,5 @@ impl KafkaProducer {
 pub struct TickAck {
     pub engine_id: String,
     pub hour: i32,
-    pub terminate: bool
+    pub counts: Counts
 }

@@ -35,11 +35,15 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i32>) {
     let consumer = KafkaConsumer::new();
     let mut message_stream = consumer.start_message_stream();
     for h in hours {
+        let should_terminate = h > 1 && acks.should_terminate();
         acks.reset(h);
-        let tick = Tick::new(h, travel_plan);
+        let tick = Tick::new(h, travel_plan, should_terminate);
 
         match producer.send_tick(&tick).await.unwrap() {
             Ok(_) => {
+                if should_terminate {
+                    break;
+                }
                 while let Some(message) = message_stream.next().await {
                     let tick_ack = TickAck::parse_message(message);
                     match tick_ack {
@@ -58,10 +62,6 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i32>) {
             }
             Err(_) => { panic!("Failed to send simulation request to engines"); }
         }
-
-        if acks.get_number_of_engines() == 0 {
-            break;
-        }
     }
 }
 
@@ -70,10 +70,11 @@ pub struct Tick<'a> {
     hour: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
     travel_plan: Option<&'a TravelPlan>,
+    terminate: bool,
 }
 
 impl Tick<'_> {
-    pub fn new(hour: i32, travel_plan: &TravelPlan) -> Tick {
+    pub fn new(hour: i32, travel_plan: &TravelPlan, terminate: bool) -> Tick {
         let travel = if hour == 1 {
             Some(travel_plan)
         } else {
@@ -82,15 +83,16 @@ impl Tick<'_> {
         return Tick {
             hour,
             travel_plan: travel,
+            terminate
         };
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct TickAck {
     engine_id: String,
     hour: i32,
-    terminate: bool,
+    counts: Counts,
 }
 
 impl TickAck {
@@ -102,9 +104,33 @@ impl TickAck {
     }
 }
 
+#[derive(Deserialize, Copy, Clone, Debug, PartialEq)]
+pub struct Counts {
+    hour: i32,
+    susceptible: i32,
+    infected: i32,
+    quarantined: i32,
+    recovered: i32,
+    deceased: i32,
+}
+
+impl Counts {
+    #[cfg(test)]
+    pub fn new(hr: i32, s: i32, i: i32, q: i32, r: i32, d: i32) -> Counts {
+        Counts {
+            hour: hr,
+            susceptible: s,
+            infected: i,
+            quarantined: q,
+            recovered: r,
+            deceased: d,
+        }
+    }
+}
+
 /// stores a record of all the acks received for a tick
 pub struct TickAcks {
-    acks: HashMap<String, i32>,
+    acks: HashMap<String, TickAck>,
     current_hour: i32,
     engines: Vec<String>,
 }
@@ -124,12 +150,6 @@ impl TickAcks {
     }
 
     pub fn push(&mut self, ack: TickAck) {
-        if ack.terminate {
-            self.engines.retain(|e| !(e.to_string() == ack.engine_id));
-            info!("stopping engine {}", ack.engine_id);
-            return;
-        }
-
         if ack.hour != self.current_hour {
             error!("Received ack for another hour. Current hour: {}, received: {}", self.current_hour, ack.hour);
             return;
@@ -142,15 +162,18 @@ impl TickAcks {
             error!("Received an ack from an unknown engine: {}", ack.engine_id);
             return;
         }
-        self.acks.insert(ack.engine_id, ack.hour);
-    }
-
-    pub fn get_number_of_engines(&self) -> usize {
-        self.engines.len()
+        let cloned = ack.clone();
+        self.acks.insert(ack.engine_id, cloned);
     }
 
     pub fn all_received(&self) -> bool {
         self.acks.keys().count() == self.engines.len()
+    }
+
+    pub fn should_terminate(&self) -> bool {
+        let total_infected: i32 = self.acks.values().map(|ack| ack.counts.infected).sum();
+        let total_quarantined: i32 = self.acks.values().map(|ack| ack.counts.quarantined).sum();
+        total_infected == 0 && total_quarantined == 0
     }
 }
 
@@ -164,10 +187,10 @@ mod tests {
         let engines = vec!["engine1".to_string(), "engine2".to_string()];
         let mut acks = TickAcks::new(&engines);
         acks.reset(22);
-        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, terminate: false };
-        acks.push(ack);
+        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, counts: Counts::new(1, 100, 0, 0, 0, 0) };
+        acks.push(ack.clone());
 
-        assert_eq!(*acks.acks.get("engine1").unwrap(), 22 as i32);
+        assert_eq!(*acks.acks.get("engine1").unwrap(), ack);
     }
 
     #[test]
@@ -183,11 +206,54 @@ mod tests {
     fn should_add_travel_payload_at_first_hour() {
         let config = Config::read("config/test/travel_plan.json").unwrap();
         let travel_plan = config.get_travel_plan();
-        let tick = Tick::new(1, travel_plan);
+        let tick = Tick::new(1, travel_plan, false);
         assert!(tick.travel_plan.is_some());
 
-        let tick = Tick::new(2, &travel_plan);
+        let tick = Tick::new(2, &travel_plan, false);
         assert!(tick.travel_plan.is_none());
+    }
+
+    #[test]
+    fn should_terminate_when_infected_and_quarantined_are_zero() {
+        let mut acks = TickAcks::new(&vec!["engine1".to_string(), "engine2".to_string()]);
+        acks.reset(1);
+        acks.push(TickAck {
+            engine_id: "engine1".to_string(),
+            hour: 1,
+            counts: Counts::new(1, 99, 1, 0, 0, 0),
+        });
+        acks.push(TickAck {
+            engine_id: "engine2".to_string(),
+            hour: 1,
+            counts: Counts::new(1, 99, 1, 0, 0, 0),
+        });
+        assert!(!acks.should_terminate());
+
+        acks.reset(2);
+        acks.push(TickAck {
+            engine_id: "engine1".to_string(),
+            hour: 2,
+            counts: Counts::new(2, 99, 0, 1, 0, 0),
+        });
+        acks.push(TickAck {
+            engine_id: "engine2".to_string(),
+            hour: 2,
+            counts: Counts::new(2, 100, 0, 0, 0, 0),
+        });
+        assert!(!acks.should_terminate());
+
+        acks.reset(3);
+        acks.push(TickAck {
+            engine_id: "engine1".to_string(),
+            hour: 3,
+            counts: Counts::new(3, 100, 0, 0, 0, 0),
+        });
+        acks.push(TickAck {
+            engine_id: "engine2".to_string(),
+            hour: 3,
+            counts: Counts::new(3, 100, 0, 0, 0, 0),
+        });
+        assert!(acks.should_terminate());
     }
 
     // #[test]

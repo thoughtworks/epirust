@@ -25,6 +25,14 @@
   vertical-align: text-bottom;
 }
 
+.error-message {
+  padding: 10px;
+  width: 30%;
+  margin: 10px auto auto auto;
+  display: flex;
+  justify-content: center;
+}
+
 .form-row {
     margin: 10px;
     display: flex;

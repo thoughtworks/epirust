@@ -18,10 +18,14 @@
  */
 
 import React from 'react'
-import {fireEvent, render} from '@testing-library/react'
+import {act, fireEvent, render} from '@testing-library/react'
 import renderer from 'react-test-renderer'
 import {MemoryRouter} from "react-router-dom";
 import SimulationConfiguration from "../../simulation-configuration";
+
+jest.mock("../../common/apiCall");
+
+const {post} = require("../../common/apiCall");
 
 const mockHistoryPush = jest.fn();
 jest.mock('react-router-dom', () => ({
@@ -36,8 +40,7 @@ describe('ParametersForm', function () {
     jest.clearAllMocks();
 
     const mockToJson = jest.fn().mockResolvedValue({simulationId: 'dummyId'});
-    jest.spyOn(global, 'fetch')
-      .mockImplementation(() => Promise.resolve({json: mockToJson}));
+    post.mockResolvedValueOnce({json: mockToJson});
   });
 
   function getComponent() {
@@ -56,9 +59,9 @@ describe('ParametersForm', function () {
     const {getByTestId} = render(getComponent());
 
     fireEvent.submit(getByTestId('simulationForm'));
-    expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch.mock.calls[0][0]).toBe("http://localhost:3000/simulation/init");
-    expect(fetch.mock.calls[0][1]).toMatchSnapshot()
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post.mock.calls[0][0]).toBe("/simulation/init");
+    expect(post.mock.calls[0][1]).toMatchSnapshot()
   });
 
   it("onSubmit form if grid-view checkbox is on data should contain `enable_citizen_state_messages` with value true", () => {
@@ -68,7 +71,7 @@ describe('ParametersForm', function () {
     fireEvent.change(getByLabelText("Grid Visualization"), {target: {checked: true}});
     fireEvent.submit(getByTestId('simulationForm'));
 
-    const body = JSON.parse(fetch.mock.calls[0][1].body);
+    const body = post.mock.calls[0][1];
 
     expect(body).toHaveProperty('enable_citizen_state_messages');
     expect(body.enable_citizen_state_messages).toBe(true);
@@ -84,7 +87,7 @@ describe('ParametersForm', function () {
 
     fireEvent.submit(getByTestId('simulationForm'));
 
-    const requestBody = JSON.parse(fetch.mock.calls[0][1].body);
+    const requestBody = post.mock.calls[0][1];
 
     expect(requestBody).not.toHaveProperty("essential_workers_population");
     expect(requestBody).not.toHaveProperty("lockdown_at_number_of_infections");
@@ -104,13 +107,34 @@ describe('ParametersForm', function () {
   });
 
   it('should redirect to Jobs page on successful job creation', function () {
-    const { getByTestId } = render(getComponent());
+    const {getByTestId} = render(getComponent());
 
     fireEvent.submit(getByTestId('simulationForm'));
 
     process.nextTick(() => {
       expect(mockHistoryPush).toHaveBeenCalledTimes(1);
       expect(mockHistoryPush).toHaveBeenCalledWith('/jobs/dummyId')
+    });
+  });
+
+  it('should show error message if submit job fails and should enable start button', function () {
+    post.mockReset();
+    post.mockRejectedValueOnce(new Error("error message"));
+
+    let container_a;
+    act(() => {
+      const {container, getByTestId} = render(getComponent());
+      container_a = container;
+      fireEvent.submit(getByTestId('simulationForm'))
+    });
+
+    process.nextTick(() => {
+      const button = container_a.querySelector('button');
+      expect(button.disabled).toBe(false);
+      expect(button.textContent).toBe("Submit");
+
+      const errorMessage = container_a.querySelector('.error-message');
+      expect(errorMessage.textContent).toBe("Error Occurred please try again!");
     });
   });
 });

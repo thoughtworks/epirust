@@ -1,14 +1,29 @@
-import React from 'react';
-import PropTypes from 'prop-types'
+import React, {useState} from 'react';
 import DiseaseDynamics from './DiseaseDynamics'
 import Interventions from './Interventions'
 import MiscellaneousConfig from "./MiscellaneousConfig";
+import {useHistory} from "react-router-dom";
+import config from "../config";
 
-export default function ParametersForm({ onDataSubmit }) {
+export default function ParametersForm() {
+    const [buttonDisabled, setButtonDisabled] = useState(false);
+
+    const history = useHistory();
+
+    function pushData(paramsData) {
+        return fetch(`${config.API_HOST}/simulation/init`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(paramsData)
+        })
+          .then(res => res.json())
+          .then(data => history.push(`/jobs/${data.simulationId}`));
+    }
 
     function handleSubmit(e) {
+        setButtonDisabled(true);
         e.preventDefault();
-        let paramsData = {}
+        let paramsData = {};
         new FormData(e.target).forEach(function (value, key) {
             if (["number_of_agents",
                 "grid_size",
@@ -39,7 +54,7 @@ export default function ParametersForm({ onDataSubmit }) {
             paramsData["enable_citizen_state_messages"] = false;
         }
 
-        onDataSubmit(paramsData)
+        pushData(paramsData)
     }
 
     function renderPopulation() {
@@ -64,6 +79,9 @@ export default function ParametersForm({ onDataSubmit }) {
         )
     }
 
+    const loading = () => (<><span className="spinner-grow spinner-grow-lg"/>
+      <span className="button-text"> Submitting..</span> </>);
+
     return (
         <form className="user-inputs" onSubmit={handleSubmit} data-testid='simulationForm'>
 
@@ -78,14 +96,13 @@ export default function ParametersForm({ onDataSubmit }) {
                     <Interventions />
                 </div>
                 <div className="col actions">
-                    <button type="submit" className="btn btn-primary btn-lg" id="submitBtn">Start</button>
+                    <button type="submit" className="btn btn-primary btn-lg" id="submitBtn" disabled={buttonDisabled}>
+                        {buttonDisabled ? loading() : "Submit"}
+
+                    </button>
                 </div>
             </div>
 
         </form>
     )
-}
-
-ParametersForm.propTypes = {
-    onDataSubmit: PropTypes.func.isRequired
 }

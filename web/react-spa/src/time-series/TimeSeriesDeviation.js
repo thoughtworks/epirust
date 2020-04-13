@@ -64,10 +64,7 @@ export function TimeSeriesDeviation({ simulationId }) {
 
                 hours.unshift(labels)
                 setData(hours.join("\n"))
-
-                console.log(hours.join("\n"))
-
             })
-    }, [])
+    }, [simulationId])
     return <Graph dataBuffer={data} enableExport={true} errorBars={true} />
 }

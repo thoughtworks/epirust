@@ -6,49 +6,49 @@ exports[`should render SocketAwareGraph 1`] = `
     class="graph-wrap"
   >
     <div
-      data-testid="visualization"
-      id="vis"
-    />
-    <div
       class="graph-actions"
     >
       <p
         class="action"
       >
         Zoom: 
-        <span
+        <code
           class="control"
         >
           click-drag
-        </span>
+        </code>
       </p>
       <p
         class="action"
       >
         Pan: 
-        <span
+        <code
           class="control"
         >
           shift-click-drag
-        </span>
+        </code>
       </p>
       <p
         class="action"
       >
         Restore: 
-        <span
+        <code
           class="control"
         >
           double-click
-        </span>
+        </code>
       </p>
       <button
-        class="btn btn-secondary"
+        class="btn btn-sm btn-secondary"
         disabled=""
       >
-        Export graph
+        Export graph data
       </button>
     </div>
+    <div
+      data-testid="visualization"
+      id="vis"
+    />
   </div>
 </DocumentFragment>
 `;

@@ -154,7 +154,9 @@ impl Epidemiology {
                 write_buffer_reference = self.agent_location_map.borrow_mut();
             }
 
-            if read_buffer_reference.current_population() == 0 {
+            let population_before_travel = read_buffer_reference.current_population();
+
+            if population_before_travel == 0 {
                 panic!("No citizens!");
             }
             engine_travel_plan.set_current_population(read_buffer_reference.current_population());

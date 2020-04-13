@@ -100,7 +100,7 @@ impl AgentLocationMap {
             return;
         }
         let local_citizens: Vec<&Citizen> = self.agent_cell.values().collect();
-        let mut new_citizens: Vec<(Point, Citizen)> = Vec::with_capacity(incoming.len());
+        let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
         for citizen in incoming {
             let house = grid.choose_house_with_free_space(local_citizens.as_slice(), rng);
             citizen.home_location = house;
@@ -111,17 +111,18 @@ impl AgentLocationMap {
                 citizen.work_location = house;
             }
             citizen.transport_location = house.get_random_point(rng); // Fixme
-            let position = self.get_vacant_cell(&mut grid.housing_area);
-            new_citizens.push((position, *citizen));
+            new_citizens.push(*citizen);
         }
-        for (p, c) in new_citizens {
+        for c in new_citizens {
             match c.state_machine.state {
                 State::Susceptible { .. } => { counts.update_susceptible(1) }
                 State::Infected { .. } => { counts.update_infected(1) }
                 State::Recovered { .. } => { counts.update_recovered(1) }
                 State::Deceased { .. } => { panic!("Should not receive deceased agent!") }
             }
-            self.agent_cell.insert(p, c);
+            let p = self.get_vacant_cell(&mut grid.housing_area);
+            let result = self.agent_cell.insert(p, c);
+            assert!(result.is_none());
         }
     }
 

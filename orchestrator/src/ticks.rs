@@ -157,6 +157,7 @@ impl TickAcks {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Config;
 
     #[test]
     fn should_push_ack() {
@@ -179,12 +180,13 @@ mod tests {
     }
 
     #[test]
-    fn should_add_travel_payload_at_zero() {
-        let travel_plan = TravelPlan::read("config/test/travel_plan.json");
-        let tick = Tick::new(0, &travel_plan);
+    fn should_add_travel_payload_at_first_hour() {
+        let config = Config::read("config/test/travel_plan.json").unwrap();
+        let travel_plan = config.get_travel_plan();
+        let tick = Tick::new(1, travel_plan);
         assert!(tick.travel_plan.is_some());
 
-        let tick = Tick::new(1, &travel_plan);
+        let tick = Tick::new(2, &travel_plan);
         assert!(tick.travel_plan.is_none());
     }
 

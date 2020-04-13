@@ -23,9 +23,6 @@ extern crate log;
 #[macro_use]
 extern crate serde_derive;
 
-use std::error::Error;
-use std::fs::File;
-use std::io::Read;
 use std::ops::Range;
 
 use clap::{App, Arg};
@@ -35,12 +32,14 @@ use rdkafka::client::DefaultClientContext;
 
 use crate::kafka_producer::KafkaProducer;
 use crate::travel_plan::TravelPlan;
+use crate::config::Config;
 
 mod kafka_producer;
 mod kafka_consumer;
 mod ticks;
 mod environment;
 mod travel_plan;
+mod config;
 
 #[tokio::main]
 async fn main() {
@@ -55,24 +54,13 @@ async fn main() {
             .value_name("FILE")
             .default_value("config/simulation.json")
             .help("Use a config file to run the simulation"))
-        .arg(Arg::with_name("travel")
-            .long("travel")
-            .short("t")
-            .default_value("config/travel_plan.json")
-            .help("The travel plan for agents to move between regions"))
         .get_matches();
 
     let config_path = matches.value_of("config").unwrap_or("config/simulation.json");
-    let travel_plan_config = matches.value_of("travel").unwrap_or("config/travel_plan.json");
 
-    let sim_conf = read(config_path)
-        .expect("Unable to read configuration file");
-    let engines = parse_engine_names(&sim_conf);
-
-    let travel_plan = TravelPlan::read(travel_plan_config);
-    if !travel_plan.validate_regions(&engines) {
-        panic!("Engine names should match regions in travel plan");
-    }
+    let config = Config::read(config_path).expect("Error while reading config");
+    let sim_conf = config::read_simulation_conf(config_path);
+    let travel_plan = config.get_travel_plan();
 
     let hours = 1..10000;
 
@@ -99,22 +87,4 @@ async fn start(travel_plan: &TravelPlan, hours: Range<i32>, sim_conf: &String) {
         Ok(_) => { ticks::start_ticking(travel_plan, hours).await; }
         Err(_) => { panic!("Failed to send simulation request to engines"); }
     }
-}
-
-fn read(filename: &str) -> Result<String, Box<dyn Error>> {
-    let mut reader = File::open(filename)?;
-    let mut contents: String = "".to_string();
-    reader.read_to_string(&mut contents)?;
-    Ok(contents)
-}
-
-fn parse_engine_names(sim_conf: &String) -> Vec<String> {
-    let engine_ids: Vec<EngineId> = serde_json::from_str(sim_conf).expect("Failed to parse simulation config");
-    engine_ids.iter().map(|e| e.engine_id.clone()).collect()
-}
-
-// just a struct for easier parsing
-#[derive(Deserialize)]
-struct EngineId {
-    engine_id: String,
 }

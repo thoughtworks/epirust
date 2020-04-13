@@ -17,7 +17,6 @@
  *
  */
 
-use std::fs::File;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TravelPlan {
@@ -26,10 +25,6 @@ pub struct TravelPlan {
 }
 
 impl TravelPlan {
-    pub fn read(file_path: &str) -> TravelPlan {
-        let file = File::open(file_path).unwrap();
-        serde_json::from_reader(file).unwrap()
-    }
 
     pub fn validate_regions(&self, regions: &Vec<String>) -> bool {
         regions.len() == self.regions.len() &&
@@ -40,28 +35,21 @@ impl TravelPlan {
     pub fn get_regions(&self) -> &Vec<String> {
         &self.regions
     }
+
+    #[cfg(test)]
+    pub fn get_matrix(&self) -> &Vec<Vec<i32>> {
+        &self.matrix
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn should_read() {
-        let travel_plan: TravelPlan = TravelPlan::read("config/test/travel_plan.json");
-
-        assert_eq!(travel_plan.regions, vec!["engine1".to_string(), "engine2".to_string(),
-                                             "engine3".to_string()]);
-        assert_eq!(travel_plan.matrix, vec![
-            vec![0, 156, 10],
-            vec![108, 0, 290],
-            vec![90, 75, 0]
-        ]);
-    }
+    use crate::config::Config;
 
     #[test]
     fn should_validate_regions() {
-        let travel_plan: TravelPlan = TravelPlan::read("config/test/travel_plan.json");
+        let config = Config::read("config/test/travel_plan.json").unwrap();
+        let travel_plan = config.get_travel_plan();
         assert!(travel_plan.validate_regions(&vec!["engine1".to_string(), "engine2".to_string(),
                                                   "engine3".to_string()]));
         assert!(travel_plan.validate_regions(&vec!["engine3".to_string(), "engine2".to_string(),

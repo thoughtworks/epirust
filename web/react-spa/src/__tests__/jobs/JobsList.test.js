@@ -1,7 +1,7 @@
-import {fireEvent, render} from "@testing-library/react";
+import {render} from "@testing-library/react";
 import {JobsList} from "../../jobs/JobsList";
 import React from "react";
-import {BrowserRouter, MemoryRouter} from "react-router-dom";
+import {MemoryRouter} from "react-router-dom";
 import {act} from "react-dom/test-utils";
 
 describe('JobsList',  function () {

@@ -465,7 +465,7 @@ exports[`should render ParametersForm with defaults 1`] = `
       className="col actions"
     >
       <button
-        className="btn btn-primary"
+        className="btn btn-primary btn-lg"
         id="submitBtn"
         type="submit"
       >

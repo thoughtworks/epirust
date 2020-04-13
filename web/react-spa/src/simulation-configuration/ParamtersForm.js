@@ -78,7 +78,7 @@ export default function ParametersForm({ onDataSubmit }) {
                     <Interventions />
                 </div>
                 <div className="col actions">
-                    <button type="submit" className="btn btn-primary" id="submitBtn">Start</button>
+                    <button type="submit" className="btn btn-primary btn-lg" id="submitBtn">Start</button>
                 </div>
             </div>
 

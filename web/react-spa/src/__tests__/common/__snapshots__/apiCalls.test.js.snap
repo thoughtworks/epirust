@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`apiCalls post should return promise if response is in 200 range 1`] = `
+Object {
+  "body": "{\\"key\\":\\"value\\"}",
+  "headers": Object {
+    "Content-Type": "application/json",
+  },
+  "method": "POST",
+}
+`;

@@ -1,50 +1,67 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`JobsList should fetch simulations when id and view is not selected 1`] = `
-<div>
+<DocumentFragment>
   <div
     class="row jobs-list"
   >
     <div
-      class="col-3"
+      class="col-2"
     >
       <ul
         class="list-group scrollable"
-      >
-        <li
-          class="list-group-item borderless item-less-padding"
-        >
-          <a
-            class="no-link-formatting"
-            href="/jobs/1234"
-          >
-            <div
-              class="card finished"
-            >
-              <div
-                class="card-body card-body-less-padding"
-              >
-                <div
-                  class="job-status"
-                >
-                  Finished
-                </div>
-                <div
-                  class="minor-details"
-                >
-                  Simulation Id: 
-                  1234
-                   
-                </div>
-              </div>
-            </div>
-          </a>
-        </li>
-      </ul>
+      />
     </div>
     <div
       class="col-9 left-border scrollable"
-    />
+    >
+      <div
+        class="job-details"
+        style="padding-top: 4px;"
+      >
+        <div
+          class="row"
+        >
+          <div
+            class="col-8"
+          >
+            <ul
+              class="nav nav-tabs nav-fill"
+            >
+              <li
+                class="nav-item"
+              >
+                <a
+                  class="nav-link "
+                  href="/jobs/NaN/time-series"
+                >
+                  Time Series
+                </a>
+              </li>
+              <li
+                class="nav-item"
+              >
+                <a
+                  class="nav-link "
+                  href="/jobs/NaN/config"
+                >
+                  Config
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div
+            class="col-4"
+          >
+            <h4
+              class="simulation-id"
+            >
+              Simulation: NaN
+            </h4>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+</DocumentFragment>
 `;

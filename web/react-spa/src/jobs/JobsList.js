@@ -27,6 +27,7 @@ import config from "../config";
 export const JobsList = () => {
   const { id, view } = useParams();
   const [simulations, updateSimulations] = useState([]);
+  const [activeSimulationId, setActiveSimulationId] = useState(null);
 
   useEffect(() => {
     fetch(`${config.API_HOST}/simulation/`)
@@ -34,29 +35,46 @@ export const JobsList = () => {
       .then(value => updateSimulations(value.reverse()))
   }, []);
 
-  if (id && !view) {
-    return (<Redirect to={`/jobs/${id}/time-series`} />);
-  } else {
-    const simulationDetails = simulations.find(s => s.simulation_id === parseInt(id));
+  useEffect(() => {
+    if (!id && simulations.length > 0)
+      setActiveSimulationId(simulations[0].simulation_id)
+
+    if (id)
+      setActiveSimulationId(parseInt(id))
+
+  }, [simulations, id])
+
+  function renderSimulationTabs() {
     return (
-      <div className="row jobs-list">
-        <div className="col-3">
-          <ul className="list-group scrollable">
-            {simulations.map(s =>
-              <Job
-                key={s.simulation_id}
-                simulationId={s.simulation_id}
-                status={s.status} />
-            )}
-          </ul>
-        </div>
-
-        <div className="col-9 left-border scrollable">
-          {simulationDetails && id && <JobDetails simulationId={parseInt(id)} details={simulationDetails} />}
-        </div>
-
-      </div >
+      <div className="col-2">
+        <ul className="list-group scrollable">
+          {simulations.map(s =>
+            <Job key={s.simulation_id} simulationId={s.simulation_id} status={s.status} />
+          )}
+        </ul>
+      </div>
     );
   }
+
+  function renderDetails() {
+    const simulationDetails = simulations.find(s => s.simulation_id === parseInt(id));
+    return (
+      <div className="col-9 left-border scrollable">
+        <JobDetails simulationId={parseInt(id)} details={simulationDetails} />
+      </div>
+    );
+  }
+
+  if (activeSimulationId && !view) {
+    return (<Redirect to={`/jobs/${activeSimulationId}/time-series`} />);
+  }
+
+  return (
+    <div className="row jobs-list">
+      {renderSimulationTabs()}
+      {renderDetails()}
+    </div >
+  );
+
 }
 

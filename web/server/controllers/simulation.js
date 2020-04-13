@@ -156,7 +156,7 @@ router.get("/:simulation_id/time-series-deviation", async (req, res, next) => {
               deceased_std: {$stdDevPop: '$deceased'},
             }
           },
-          {$sort: {hour: 1}}
+          {$sort: {_id: 1}}
         ]);
 
       const aggregate = await extractFromCursor(aggregateStream);

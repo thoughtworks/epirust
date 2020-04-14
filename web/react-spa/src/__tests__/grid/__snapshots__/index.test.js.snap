@@ -38,7 +38,7 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
           <h4
             data-testid="counter"
           >
-            0/1 hrs
+            1/1 hrs
           </h4>
           <div
             aria-label="Buttons to pause/play and reset"
@@ -47,6 +47,7 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
           >
             <button
               class="btn btn-primary btn-sm"
+              disabled=""
             >
               PAUSE
             </button>

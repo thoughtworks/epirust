@@ -33,7 +33,7 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
         else {
             graph.updateOptions({ 'file': dataBuffer });
         }
-    }, [graph, dataBuffer])
+    }, [graph, dataBuffer, labels, errorBars])
 
     function handleExportClick() {
         let filename = "export.json";

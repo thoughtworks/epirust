@@ -48,12 +48,14 @@ impl KafkaProducer {
         self.producer.send(record, 0)
     }
 
-    pub fn send_travellers(&mut self, outgoing: Vec<TravellersByRegion>) -> DeliveryFuture {
-        let payload = serde_json::to_string(&outgoing).unwrap();
-        debug!("Sending travellers: {}", payload);
-        let record: FutureRecord<String, String> = FutureRecord::to(TRAVELS_TOPIC)
-            .payload(&payload);
-        self.producer.send(record, 0)
+    pub fn send_travellers(&mut self, outgoing: Vec<TravellersByRegion>) {
+        outgoing.iter().for_each(|out_region| {
+            let payload = serde_json::to_string(out_region).unwrap();
+            debug!("Sending travellers: {} to region: {}", payload, out_region.to_engine_id());
+            let record: FutureRecord<String, String> = FutureRecord::to(TRAVELS_TOPIC)
+                .payload(&payload);
+            self.producer.send(record, 0);
+        });
     }
 }
 
@@ -61,5 +63,5 @@ impl KafkaProducer {
 pub struct TickAck {
     pub engine_id: String,
     pub hour: i32,
-    pub counts: Counts
+    pub counts: Counts,
 }

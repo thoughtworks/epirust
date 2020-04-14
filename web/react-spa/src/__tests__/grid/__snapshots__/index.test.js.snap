@@ -245,6 +245,27 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
 
 exports[`Grid Page should render GridPage component with Loading 1`] = `
 <DocumentFragment>
-  Loading
+  <div
+    class="multi-spinners"
+  >
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+  </div>
 </DocumentFragment>
 `;

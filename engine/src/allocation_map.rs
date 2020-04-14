@@ -26,6 +26,7 @@ use crate::random_wrapper::RandomWrapper;
 use crate::agent::Citizen;
 use crate::disease_state_machine::State;
 use crate::listeners::events::counts::Counts;
+use crate::travel_plan::Traveller;
 
 #[derive(Clone)]
 pub struct AgentLocationMap {
@@ -76,9 +77,9 @@ impl AgentLocationMap {
         !self.agent_cell.contains_key(cell)
     }
 
-    pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Citizen)>, counts: &mut Counts) {
-        for (point, citizen) in outgoing {
-            match citizen.state_machine.state {
+    pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Traveller)>, counts: &mut Counts) {
+        for (point, traveller) in outgoing {
+            match traveller.state_machine.state {
                 State::Susceptible { .. } => { counts.update_susceptible(-1) },
                 State::Infected { .. } => { counts.update_infected(-1) },
                 State::Recovered { .. } => { counts.update_recovered(-1) },
@@ -87,31 +88,29 @@ impl AgentLocationMap {
             match self.agent_cell.remove(point) {
                 None => {
                     panic!("Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
-                           citizen.id, point)
+                           traveller.id, point)
                 }
                 Some(_) => {}
             }
         }
     }
 
-    pub fn assimilate_citizens(&mut self, incoming: &mut Vec<Citizen>, grid: &mut Grid, counts: &mut Counts,
+    pub fn assimilate_citizens(&mut self, incoming: &mut Vec<Traveller>, grid: &mut Grid, counts: &mut Counts,
                                rng: &mut RandomWrapper) {
         if incoming.is_empty() {
             return;
         }
         let local_citizens: Vec<&Citizen> = self.agent_cell.values().collect();
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
-        for citizen in incoming {
+        for traveller in incoming {
             let house = grid.choose_house_with_free_space(local_citizens.as_slice(), rng);
-            citizen.home_location = house;
-            if citizen.is_working() {
-                let office = grid.choose_office_with_free_space(local_citizens.as_slice(), rng);
-                citizen.work_location = office;
+            let office = if traveller.working {
+                grid.choose_office_with_free_space(local_citizens.as_slice(), rng)
             } else {
-                citizen.work_location = house;
-            }
-            citizen.transport_location = house.get_random_point(rng); // Fixme
-            new_citizens.push(*citizen);
+                house
+            };
+            let transport_location = house.get_random_point(rng); // Fixme
+            new_citizens.push(Citizen::from_traveller(traveller, house, office, transport_location, grid.housing_area));
         }
         for c in new_citizens {
             match c.state_machine.state {
@@ -215,12 +214,11 @@ mod tests {
     #[test]
     fn should_remove_citizens_from_grid() {
         let mut map = before_each();
-        let home_location = Area::new(Point::new(0, 0), Point::new(2, 2));
-        let citizen = Citizen::new(home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
+        let traveller = Traveller::new();
         let mut counts = Counts::new(2, 0);
 
         assert_eq!(2, map.current_population());
-        map.remove_citizens(&vec![(Point::new(0, 1), citizen)], &mut counts);
+        map.remove_citizens(&vec![(Point::new(0, 1), traveller)], &mut counts);
         assert_eq!(1, map.current_population());
         assert_eq!(1, counts.get_susceptible());
     }
@@ -229,10 +227,9 @@ mod tests {
     #[should_panic]
     fn should_panic_when_removing_citizen_not_present_at_point() {
         let mut map = before_each();
-        let home_location = Area::new(Point::new(0, 0), Point::new(2, 2));
-        let citizen = Citizen::new(home_location, home_location, Point::new(1, 1), false, false, &mut RandomWrapper::new());
+        let traveller = Traveller::new();
         let mut counts = Counts::new(2, 0);
 
-        map.remove_citizens(&vec![(Point::new(5, 3), citizen)], &mut counts);
+        map.remove_citizens(&vec![(Point::new(5, 3), traveller)], &mut counts);
     }
 }

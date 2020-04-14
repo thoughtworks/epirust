@@ -20,6 +20,8 @@
 use crate::ticks_consumer::Tick;
 use crate::agent::Citizen;
 use crate::geography::Point;
+use uuid::Uuid;
+use crate::disease_state_machine::DiseaseStateMachine;
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct TravelPlan {
@@ -72,7 +74,7 @@ pub struct EngineTravelPlan {
     engine_id: String,
     travel_plan: Option<TravelPlan>,
     current_total_population: i32,
-    outgoing: Vec<(Point, Citizen)>,
+    outgoing: Vec<(Point, Traveller)>,
 }
 
 impl EngineTravelPlan {
@@ -107,21 +109,21 @@ impl EngineTravelPlan {
         }
     }
 
-    pub fn add_outgoing(&mut self, citizen: Citizen, loc: Point) {
-        self.outgoing.push((loc, citizen));
+    pub fn add_outgoing(&mut self, traveller: Traveller, loc: Point) {
+        self.outgoing.push((loc, traveller));
     }
 
     pub fn clear_outgoing(&mut self) {
         self.outgoing.clear();
     }
 
-    pub fn get_outgoing(&self) -> &Vec<(Point, Citizen)> {
+    pub fn get_outgoing(&self) -> &Vec<(Point, Traveller)> {
         &self.outgoing
     }
 
     pub fn alloc_outgoing_to_regions(&self) -> Vec<TravellersByRegion> {
-        let mut citizens: Vec<Citizen> = self.outgoing.iter().map(|x| x.1).collect();
-        let total_outgoing = citizens.len();
+        let mut travellers: Vec<Traveller> = self.outgoing.iter().map(|x| x.1).collect();
+        let total_outgoing = travellers.len();
         let mut outgoing_by_region = match &self.travel_plan {
             None => { Vec::new() }
             Some(tp) => {
@@ -129,14 +131,14 @@ impl EngineTravelPlan {
                     .filter(|region| !self.engine_id.eq(*region))
                     .map(|region| {
                         let mut outgoing_by_region = TravellersByRegion::create(region);
-                        outgoing_by_region.alloc_citizens(&mut citizens, tp, &self.engine_id, total_outgoing as i32);
+                        outgoing_by_region.alloc_citizens(&mut travellers, tp, &self.engine_id, total_outgoing as i32);
                         outgoing_by_region
                     }).collect()
             }
         };
 
         //assign remaining citizens (if any) to last region
-        for remaining in citizens {
+        for remaining in travellers {
             outgoing_by_region.last_mut().unwrap().alloc_citizen(remaining);
         }
 
@@ -162,7 +164,7 @@ impl EngineTravelPlan {
 #[derive(Serialize, Deserialize)]
 pub struct TravellersByRegion {
     to_engine_id: String,
-    citizens: Vec<Citizen>,
+    travellers: Vec<Traveller>,
 }
 
 impl TravellersByRegion {
@@ -176,24 +178,24 @@ impl TravellersByRegion {
     }
 
     /// Note that this function mutates (drains) the total list of outgoing citizens
-    pub fn alloc_citizens(&mut self, citizens: &mut Vec<Citizen>, travel_plan: &TravelPlan,
+    pub fn alloc_citizens(&mut self, citizens: &mut Vec<Traveller>, travel_plan: &TravelPlan,
                           engine_id: &String, total_outgoing: i32) {
         let mut count = self.actual_outgoing_count(travel_plan, total_outgoing, engine_id) as usize;
         if count > citizens.len() {
             debug!("Limiting outgoing citizens to {} instead of {}", citizens.len(), count);
             count = citizens.len();
         }
-        self.citizens = citizens.drain(0..count).collect();
+        self.travellers = citizens.drain(0..count).collect();
     }
 
-    pub fn alloc_citizen(&mut self, citizen: Citizen) {
-        self.citizens.push(citizen);
+    pub fn alloc_citizen(&mut self, traveller: Traveller) {
+        self.travellers.push(traveller);
     }
 
     pub fn create(to_engine_id: &String) -> TravellersByRegion {
         TravellersByRegion {
             to_engine_id: to_engine_id.clone(),
-            citizens: Vec::new(),
+            travellers: Vec::new(),
         }
     }
 
@@ -201,17 +203,51 @@ impl TravellersByRegion {
         &self.to_engine_id
     }
 
-    pub fn get_citizens(self) -> Vec<Citizen> {
-        self.citizens
+    pub fn get_travellers(self) -> Vec<Traveller> {
+        self.travellers
     }
 }
 
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+pub struct Traveller {
+    pub id: Uuid,
+    pub immunity: i32,
+    pub vaccinated: bool,
+    pub uses_public_transport: bool,
+    pub working: bool,
+    pub state_machine: DiseaseStateMachine,
+}
+
+impl Traveller {
+    #[cfg(test)]
+    pub fn new() -> Traveller {
+        Traveller {
+            id: Uuid::new_v4(),
+            immunity: 0,
+            vaccinated: false,
+            uses_public_transport: false,
+            working: false,
+            state_machine: DiseaseStateMachine::new()
+        }
+    }
+}
+
+impl From<&Citizen> for Traveller {
+    fn from(citizen: &Citizen) -> Self {
+        Traveller {
+            id: citizen.id,
+            immunity: citizen.get_immunity(),
+            vaccinated: citizen.is_vaccinated(),
+            uses_public_transport: citizen.uses_public_transport,
+            working: citizen.is_working(),
+            state_machine: citizen.state_machine
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geography::Area;
-    use crate::random_wrapper::RandomWrapper;
 
     #[test]
     fn should_get_total_outgoing() {
@@ -257,7 +293,7 @@ mod tests {
     #[test]
     fn should_clear_outgoing_on_new_tick() {
         let mut engine_travel_plan = create_engine_with_travel_plan();
-        engine_travel_plan.add_outgoing(create_citizen(), Point::new(2,4));
+        engine_travel_plan.add_outgoing(create_traveller(), Point::new(2, 4));
 
         let tick = Tick::new(1, None, false);
         engine_travel_plan.receive_tick(Some(tick));
@@ -273,7 +309,7 @@ mod tests {
     #[test]
     fn should_add_outgoing_citizen() {
         let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        let citizen = create_citizen();
+        let citizen = create_traveller();
         engine_travel_plan.add_outgoing(citizen, Point::new(2, 2));
         let citizen_id = engine_travel_plan.outgoing.get(0).unwrap().1.id;
 
@@ -283,7 +319,7 @@ mod tests {
     #[test]
     fn should_clear_outgoing_citizens() {
         let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        engine_travel_plan.add_outgoing(create_citizen(), Point::new(2, 2));
+        engine_travel_plan.add_outgoing(create_traveller(), Point::new(2, 2));
         engine_travel_plan.clear_outgoing();
 
         assert!(engine_travel_plan.outgoing.is_empty())
@@ -301,14 +337,14 @@ mod tests {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
         for _i in 0..180 {
-            engine_travel_plan.add_outgoing(create_citizen(), Point::new(1, 1));
+            engine_travel_plan.add_outgoing(create_traveller(), Point::new(1, 1));
         }
 
         let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
 
         assert_eq!(2, outgoing_by_region.len());
-        assert_eq!(156, outgoing_by_region.get(0).unwrap().citizens.len());
-        assert_eq!(24, outgoing_by_region.get(1).unwrap().citizens.len());
+        assert_eq!(156, outgoing_by_region.get(0).unwrap().travellers.len());
+        assert_eq!(24, outgoing_by_region.get(1).unwrap().travellers.len());
     }
 
     #[test]
@@ -316,14 +352,14 @@ mod tests {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
         for _i in 0..147 {
-            engine_travel_plan.add_outgoing(create_citizen(), Point::new(1, 1));
+            engine_travel_plan.add_outgoing(create_traveller(), Point::new(1, 1));
         }
 
         let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
 
         assert_eq!(2, outgoing_by_region.len());
-        assert_eq!(127, outgoing_by_region.get(0).unwrap().citizens.len());
-        assert_eq!(20, outgoing_by_region.get(1).unwrap().citizens.len());
+        assert_eq!(127, outgoing_by_region.get(0).unwrap().travellers.len());
+        assert_eq!(20, outgoing_by_region.get(1).unwrap().travellers.len());
     }
 
     #[test]
@@ -331,14 +367,14 @@ mod tests {
         let mut engine_travel_plan = create_engine_with_travel_plan();
 
         for _i in 0..202 {
-            engine_travel_plan.add_outgoing(create_citizen(), Point::new(1, 1));
+            engine_travel_plan.add_outgoing(create_traveller(), Point::new(1, 1));
         }
 
         let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
 
         assert_eq!(2, outgoing_by_region.len());
-        assert_eq!(175, outgoing_by_region.get(0).unwrap().citizens.len());
-        assert_eq!(27, outgoing_by_region.get(1).unwrap().citizens.len());
+        assert_eq!(175, outgoing_by_region.get(0).unwrap().travellers.len());
+        assert_eq!(27, outgoing_by_region.get(1).unwrap().travellers.len());
     }
 
     fn create_travel_plan() -> TravelPlan {
@@ -352,9 +388,8 @@ mod tests {
         }
     }
 
-    fn create_citizen() -> Citizen {
-        let area = Area::new(Point::new(0, 0), Point::new(10, 10));
-        Citizen::new(area, area, Point::new(5, 5), false, false, &mut RandomWrapper::new())
+    fn create_traveller() -> Traveller {
+        Traveller::new()
     }
 
     fn create_engine_with_travel_plan() -> EngineTravelPlan {

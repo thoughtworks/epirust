@@ -31,6 +31,7 @@ use serde::de::Unexpected;
 use crate::listeners::events::counts::Counts;
 use crate::disease_state_machine::DiseaseStateMachine;
 use uuid::Uuid;
+use crate::travel_plan::Traveller;
 
 #[derive(Deserialize)]
 pub struct PopulationRecord {
@@ -103,6 +104,25 @@ impl Citizen {
         }
     }
 
+    pub fn from_traveller(traveller: &Traveller, home_location: Area, work_location: Area,
+                          transport_location: Point, current_area: Area) -> Citizen {
+        Citizen {
+            id: traveller.id,
+            immunity: traveller.immunity,
+            home_location,
+            work_location,
+            vaccinated: traveller.vaccinated,
+            uses_public_transport: traveller.uses_public_transport,
+            working: false,
+            hospitalized: false,
+            transport_location,
+            state_machine: traveller.state_machine,
+            quarantined: false,
+            isolated: false,
+            current_area,
+        }
+    }
+
     pub fn from_record(record: PopulationRecord, home_location: Area, work_location: Area,
                        transport_location: Point, rng: &mut RandomWrapper) -> Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor(rng);
@@ -153,6 +173,14 @@ impl Citizen {
 
     pub fn is_working(&self) -> bool {
         self.working
+    }
+
+    pub fn get_immunity(&self) -> i32 {
+        self.immunity
+    }
+
+    pub fn is_vaccinated(&self) -> bool {
+        self.vaccinated
     }
 
     fn generate_disease_randomness_factor(rng: &mut RandomWrapper) -> i32 {

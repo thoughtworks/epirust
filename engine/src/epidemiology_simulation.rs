@@ -44,8 +44,7 @@ use crate::listeners::listener::Listeners;
 use crate::random_wrapper::RandomWrapper;
 use rdkafka::consumer::{MessageStream, DefaultConsumerContext};
 use crate::ticks_consumer::Tick;
-use crate::travel_plan::{EngineTravelPlan, TravellersByRegion};
-use crate::agent::Citizen;
+use crate::travel_plan::{EngineTravelPlan, TravellersByRegion, Traveller};
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -255,17 +254,17 @@ impl Epidemiology {
     }
 
     async fn receive_travellers(tick: Option<Tick>, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
-                                engine_travel_plan: &EngineTravelPlan) -> Vec<Citizen> {
+                                engine_travel_plan: &EngineTravelPlan) -> Vec<Traveller> {
         if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
             let expected_incoming_regions = engine_travel_plan.incoming_regions_count();
             let mut received_incoming_regions = 0;
             debug!("Receiving travellers from {} regions", expected_incoming_regions);
-            let mut incoming: Vec<Citizen> = Vec::new();
+            let mut incoming: Vec<Traveller> = Vec::new();
             while expected_incoming_regions != received_incoming_regions {
                 let region_incoming = Epidemiology::receive_travellers_from_region(message_stream, engine_travel_plan).await;
                 debug!("received travels: {}", region_incoming.len());
                 for i in region_incoming {
-                    incoming.extend(i.get_citizens());
+                    incoming.extend(i.get_travellers());
                     received_incoming_regions += 1;
                 }
             }
@@ -324,7 +323,7 @@ impl Epidemiology {
 
             if simulation_hour % 24 == 0 && current_agent.can_move()
                 && rng.get().gen_bool(engine_travel_plan.percent_outgoing()) {
-                engine_travel_plan.add_outgoing(current_agent, *new_location);
+                engine_travel_plan.add_outgoing(Traveller::from(&current_agent), *new_location);
             }
 
             write_buffer.agent_cell.insert(*new_location, current_agent);

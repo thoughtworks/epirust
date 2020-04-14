@@ -31,7 +31,7 @@ use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population};
 use crate::disease::Disease;
 use crate::geography;
-use crate::geography::Grid;
+use crate::geography::{Grid, Point};
 use crate::interventions::hospital::BuildNewHospital;
 use crate::interventions::lockdown::{LockdownConfig, LockdownIntervention};
 use crate::interventions::vaccination::VaccinateIntervention;
@@ -128,6 +128,7 @@ impl Epidemiology {
         let mut ticks_stream = ticks_consumer.start_with(Duration::from_millis(10), false);
         let travellers_consumer = travellers_consumer::start(engine_id);
         let mut travel_stream = travellers_consumer.start_with(Duration::from_millis(10), false);
+        let mut outgoing: Vec<(Point, Traveller)> = Vec::new();
         let mut n_incoming = 0;
         let mut n_outgoing = 0;
 
@@ -136,6 +137,7 @@ impl Epidemiology {
             match &tick {
                 None => {}
                 Some(t) => {
+                    outgoing.clear();
                     if t.terminate() {
                         break;
                     }
@@ -166,13 +168,15 @@ impl Epidemiology {
                 listeners.grid_updated(&self.grid);
             }
 
+            let recv_travellers = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan);
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
-                                   &self.grid, &mut listeners, &mut rng, &self.disease, &mut engine_travel_plan);
-            Epidemiology::send_travellers(tick.clone(), &mut producer, &mut engine_travel_plan);
-            let mut incoming = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan).await;
+                                   &self.grid, &mut listeners, &mut rng, &self.disease, &engine_travel_plan,
+                                   &mut outgoing);
+            Epidemiology::send_travellers(tick.clone(), &mut producer, engine_travel_plan.alloc_outgoing_to_regions(&outgoing));
+            let mut incoming = recv_travellers.await;
             n_incoming += incoming.len();
-            n_outgoing += engine_travel_plan.get_outgoing().len();
-            write_buffer_reference.remove_citizens(engine_travel_plan.get_outgoing(), &mut counts_at_hr);
+            n_outgoing += outgoing.len();
+            write_buffer_reference.remove_citizens(&outgoing, &mut counts_at_hr);
             write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, &mut counts_at_hr, &mut rng);
 
             listeners.counts_updated(counts_at_hr);
@@ -243,9 +247,8 @@ impl Epidemiology {
         }
     }
 
-    fn send_travellers(tick: Option<Tick>, producer: &mut KafkaProducer, engine_travel_plan: &mut EngineTravelPlan) {
+    fn send_travellers(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<TravellersByRegion>) {
         if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
-            let outgoing = engine_travel_plan.alloc_outgoing_to_regions();
             producer.send_travellers(outgoing);
         }
     }
@@ -302,7 +305,8 @@ impl Epidemiology {
 
     fn simulate(mut csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
-                rng: &mut RandomWrapper, disease: &Disease, engine_travel_plan: &mut EngineTravelPlan) {
+                rng: &mut RandomWrapper, disease: &Disease, engine_travel_plan: &EngineTravelPlan,
+                outgoing: &mut Vec<(Point, Traveller)>) {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
             let mut current_agent = *agent;
@@ -321,7 +325,7 @@ impl Epidemiology {
 
             if simulation_hour % 24 == 0 && current_agent.can_move()
                 && rng.get().gen_bool(engine_travel_plan.percent_outgoing()) {
-                engine_travel_plan.add_outgoing(Traveller::from(&current_agent), *new_location);
+                outgoing.push((*new_location, Traveller::from(&current_agent)));
             }
 
             write_buffer.agent_cell.insert(*new_location, current_agent);

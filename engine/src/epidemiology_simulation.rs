@@ -168,7 +168,7 @@ impl Epidemiology {
 
             Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                    &self.grid, &mut listeners, &mut rng, &self.disease, &mut engine_travel_plan);
-            Epidemiology::send_travellers(tick.clone(), &mut producer, &mut engine_travel_plan).await;
+            Epidemiology::send_travellers(tick.clone(), &mut producer, &mut engine_travel_plan);
             let mut incoming = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan).await;
             n_incoming += incoming.len();
             n_outgoing += engine_travel_plan.get_outgoing().len();
@@ -243,13 +243,10 @@ impl Epidemiology {
         }
     }
 
-    async fn send_travellers(tick: Option<Tick>, producer: &mut KafkaProducer, engine_travel_plan: &mut EngineTravelPlan) {
+    fn send_travellers(tick: Option<Tick>, producer: &mut KafkaProducer, engine_travel_plan: &mut EngineTravelPlan) {
         if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
             let outgoing = engine_travel_plan.alloc_outgoing_to_regions();
-            match producer.send_travellers(outgoing).await.unwrap() {
-                Ok(_) => {}
-                Err(e) => { panic!("Failed to send travellers: {:?}", e.0) }
-            }
+            producer.send_travellers(outgoing);
         }
     }
 
@@ -261,11 +258,13 @@ impl Epidemiology {
             debug!("Receiving travellers from {} regions", expected_incoming_regions);
             let mut incoming: Vec<Traveller> = Vec::new();
             while expected_incoming_regions != received_incoming_regions {
-                let region_incoming = Epidemiology::receive_travellers_from_region(message_stream, engine_travel_plan).await;
-                debug!("received travels: {}", region_incoming.len());
-                for i in region_incoming {
-                    incoming.extend(i.get_travellers());
-                    received_incoming_regions += 1;
+                let maybe_msg = Epidemiology::receive_travellers_from_region(message_stream, engine_travel_plan).await;
+                match maybe_msg {
+                    None => {},
+                    Some(region_incoming) => {
+                        incoming.extend(region_incoming.get_travellers());
+                        received_incoming_regions += 1;
+                    }
                 }
             }
             incoming
@@ -275,12 +274,11 @@ impl Epidemiology {
     }
 
     async fn receive_travellers_from_region(message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
-                                            engine_travel_plan: &EngineTravelPlan) -> Vec<TravellersByRegion> {
+                                            engine_travel_plan: &EngineTravelPlan) -> Option<TravellersByRegion> {
         let msg = message_stream.next().await;
-
-        travellers_consumer::read(msg).into_iter()
-            .filter(|incoming| incoming.to_engine_id() == engine_travel_plan.engine_id())
-            .collect()
+        travellers_consumer::read(msg).filter(|incoming| {
+            incoming.to_engine_id() == engine_travel_plan.engine_id()
+        })
     }
 
     fn apply_vaccination_intervention(vaccinations: &VaccinateIntervention, counts: &Counts,

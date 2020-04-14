@@ -41,21 +41,15 @@ pub fn start(engine_id: &str) -> StreamConsumer {
     consumer
 }
 
-pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Vec<TravellersByRegion> {
-    match msg {
-        None => {
-            debug!("End of travels stream");
-            Vec::new()
-        }
-        Some(m) => {
-            let borrowed_message = m.unwrap();
-            let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-            debug!("Travel Data: {}", str_message);
-            parse_travellers(str_message)
-        }
-    }
+pub fn read(message: Option<KafkaResult<BorrowedMessage>>) -> Option<TravellersByRegion> {
+    message.map(|msg| {
+        let borrowed_message = msg.unwrap();
+        let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
+        debug!("Reading Travel Data: {}", str_message);
+        parse_travellers(str_message)
+    })
 }
 
-fn parse_travellers(message: &str) -> Vec<TravellersByRegion> {
+fn parse_travellers(message: &str) -> TravellersByRegion {
     serde_json::from_str(message).expect("Could not parse travellers")
 }

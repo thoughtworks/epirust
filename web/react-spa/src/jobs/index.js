@@ -39,7 +39,12 @@ export const JobsList = () => {
       <div className="col-2">
         <ul className="list-group scrollable">
           {simulations.map(s =>
-            <Job key={s.simulation_id} simulationId={s.simulation_id} status={s.status} />
+            <Job
+              key={s.simulation_id}
+              simulationId={s.simulation_id}
+              status={s.status}
+              isActive={s.simulation_id === parseInt(id)}
+            />
           )}
         </ul>
       </div>

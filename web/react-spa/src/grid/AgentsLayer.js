@@ -33,7 +33,7 @@ export default function AgentPositionsWrapper({agentPositions, simulationEnded})
     };
 
     const displayedAll = () => {
-        return simulationEnded && (currentDisplayIndex >= agentPositions.length)
+        return simulationEnded && (currentDisplayIndex >= agentPositions.length - 1)
     };
 
     //displayed all the data
@@ -55,7 +55,7 @@ export default function AgentPositionsWrapper({agentPositions, simulationEnded})
         if (!agentPositions || simulationEnded) {
             return
         }
-        if (currentDisplayIndex >= agentPositions.length) {
+        if (currentDisplayIndex >= agentPositions.length - 1) {
             setSimulationPaused(true);
             return
         }
@@ -116,7 +116,7 @@ export default function AgentPositionsWrapper({agentPositions, simulationEnded})
     return (
         <div style={{ position: "relative" }}>
             <div style={{ position: "absolute", zIndex: 5, right: 0, width: 190 }}>
-                <h4 data-testid="counter">{`${currentDisplayIndex}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
+                <h4 data-testid="counter">{`${currentDisplayIndex + 1}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
 
                 <div className="btn-group mr-2" role="group" aria-label="Buttons to pause/play and reset">
                     {clickedPause

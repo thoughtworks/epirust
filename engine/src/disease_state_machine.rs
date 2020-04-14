@@ -19,13 +19,22 @@
 
 use crate::disease::Disease;
 use crate::random_wrapper::RandomWrapper;
+use rand::Rng;
+use crate::constants::{PERCENTAGE_ASYMPTOMATIC_POPULATION, PERCENTAGE_SEVERE_INFECTED_POPULATION, EXPOSED_DURATION};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum State {
     Susceptible {},
-    Infected {},
+    Exposed { at_hour: i32 },
+    Infected { symptoms: bool, severity: InfectionSeverity },
     Recovered {},
     Deceased {},
+}
+
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+enum InfectionSeverity {
+    Mild {},
+    Severe {},
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
@@ -44,18 +53,38 @@ impl DiseaseStateMachine {
 
     pub fn get_infection_day(self) -> i32 {
         match self.state {
-            State::Infected {} => {
+            State::Infected { .. } => {
                 self.infection_day
             }
             _ => 0
         }
     }
 
-    pub fn infect(&mut self) -> i32 {
+    pub fn expose(&mut self, current_hour: i32) {
         match self.state {
             State::Susceptible {} => {
-                self.state = State::Infected {};
-                1
+                self.state = State::Exposed { at_hour: current_hour }
+            },
+            _ => {
+                panic!("Invalid state transition!")
+            }
+        }
+    }
+
+    pub fn infect(&mut self, rng: &mut RandomWrapper, current_hour: i32) -> i32 {
+        match self.state {
+            State::Exposed { at_hour } => {
+                if current_hour - at_hour >= EXPOSED_DURATION {
+                    let symptoms = rng.get().gen_bool(PERCENTAGE_ASYMPTOMATIC_POPULATION);
+                    let severe = rng.get().gen_bool(PERCENTAGE_SEVERE_INFECTED_POPULATION);
+                    let mut severity = InfectionSeverity::Mild {};
+                    if severe {
+                        severity = InfectionSeverity::Severe {};
+                    }
+                    self.state = State::Infected { symptoms, severity };
+                    return 1
+                }
+                    return 0
             }
             _ => {
                 panic!("Invalid state transition!")
@@ -65,8 +94,9 @@ impl DiseaseStateMachine {
 
     pub fn quarantine(&mut self, disease: &Disease, immunity: i32) -> bool {
         match self.state {
-            State::Infected {} =>
+            State::Infected { symptoms: true, .. } =>
                 return disease.to_be_quarantined(self.infection_day + immunity),
+            State::Infected { symptoms: false, .. } => { false }
             _ => {
                 panic!("Invalid state transition!")
             }
@@ -75,7 +105,7 @@ impl DiseaseStateMachine {
 
     pub fn decease(&mut self, rng: &mut RandomWrapper, disease: &Disease) -> (i32, i32) {
         match self.state {
-            State::Infected {} => {
+            State::Infected { symptoms: true, severity: InfectionSeverity::Severe {} } => {
                 if self.infection_day == disease.get_disease_last_day() {
                     if disease.to_be_deceased(rng) {
                         self.state = State::Deceased {};
@@ -85,11 +115,11 @@ impl DiseaseStateMachine {
                     return (0, 1);
                 }
             }
-            State::Susceptible {} => {
-                println!("Susceptible");
-            }
-            State::Recovered {} => {
-                println!("Recovered");
+            State::Infected { .. } => {
+                if self.infection_day == disease.get_disease_last_day() {
+                    self.state = State::Recovered {};
+                    return (0, 1);
+                }
             }
             _ => {
                 panic!("Invalid state transition!")
@@ -107,9 +137,18 @@ impl DiseaseStateMachine {
         }
     }
 
+    pub fn is_exposed(&self) -> bool {
+        match self.state {
+            State::Exposed { .. } => {
+                true
+            }
+            _ => false
+        }
+    }
+
     pub fn is_infected(&self) -> bool {
         match self.state {
-            State::Infected {} => {
+            State::Infected { .. } => {
                 true
             }
             _ => false
@@ -149,10 +188,25 @@ mod tests {
     #[test]
     fn should_infect() {
         let mut machine = DiseaseStateMachine::new();
-        machine.infect();
+        machine.expose(100);
+        machine.infect(&mut RandomWrapper::new(), 140);
 
         let result = match machine.state {
-            State::Infected {} => true,
+            State::Infected { .. } => true,
+            _ => false
+        };
+
+        assert_eq!(result, true);
+    }
+
+    #[test]
+    fn should_not_infect() {
+        let mut machine = DiseaseStateMachine::new();
+        machine.expose(100);
+        machine.infect(&mut RandomWrapper::new(), 110);
+
+        let result = match machine.state {
+            State::Exposed { .. } => true,
             _ => false
         };
 

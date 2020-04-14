@@ -129,11 +129,11 @@ mod tests {
             intervention: Some(config),
         };
 
-        assert!(!lockdown.should_apply(&Counts::new_test(0, 99, 1, 0, 0, 0)));
-        assert!(!lockdown.should_apply(&Counts::new_test(22, 80, 20, 0, 0, 0)));
-        assert!(lockdown.should_apply(&Counts::new_test(28, 79, 21, 0, 0, 0)));
+        assert!(!lockdown.should_apply(&Counts::new_test(0, 99, 0,1, 0, 0, 0)));
+        assert!(!lockdown.should_apply(&Counts::new_test(22, 80, 0, 20, 0, 0, 0)));
+        assert!(lockdown.should_apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0)));
 
-        lockdown.apply(&Counts::new_test(28, 79, 21, 0, 0, 0));
+        lockdown.apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0));
         assert_eq!(lockdown.locked_till_hr, 196);
         assert_eq!(lockdown.is_locked_down, true);
     }
@@ -151,9 +151,9 @@ mod tests {
             intervention: Some(config),
         };
 
-        assert!(lockdown.should_apply(&Counts::new_test(28, 79, 21, 0, 0, 0)));
-        lockdown.apply(&Counts::new_test(28, 79, 21, 0, 0, 0));
-        assert!(!lockdown.should_apply(&Counts::new_test(29, 75, 25, 0, 0, 0)));
+        assert!(lockdown.should_apply(&Counts::new_test(28, 79, 0,21, 0, 0, 0)));
+        lockdown.apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0));
+        assert!(!lockdown.should_apply(&Counts::new_test(29, 75, 0, 25, 0, 0, 0)));
     }
 
     #[test]
@@ -168,11 +168,11 @@ mod tests {
             locked_till_hr: 0,
             intervention: Some(config),
         };
-        assert!(lockdown.should_apply(&Counts::new_test(28, 79, 21, 0, 0, 0)));
+        assert!(lockdown.should_apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0)));
 
-        lockdown.apply(&Counts::new_test(28, 79, 21, 0, 0, 0));
-        assert!(!lockdown.should_unlock(&Counts::new_test(42, 79, 21, 0, 0, 0)));
-        assert!(lockdown.should_unlock(&Counts::new_test(196, 79, 21, 0, 0, 0)));
+        lockdown.apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0));
+        assert!(!lockdown.should_unlock(&Counts::new_test(42, 79, 0,21, 0, 0, 0)));
+        assert!(lockdown.should_unlock(&Counts::new_test(196, 79, 0, 21, 0, 0, 0)));
     }
 
     #[test]
@@ -187,9 +187,9 @@ mod tests {
             locked_till_hr: 0,
             intervention: Some(config),
         };
-        lockdown.apply(&Counts::new_test(28, 79, 21, 0, 0, 0));
-        assert!(lockdown.should_unlock(&Counts::new_test(196, 79, 21, 0, 0, 0)));
-        assert!(!lockdown.should_apply(&Counts::new_test(200, 70, 30, 0, 0, 0)));
+        lockdown.apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0));
+        assert!(lockdown.should_unlock(&Counts::new_test(196, 79,  0,21, 0, 0, 0)));
+        assert!(!lockdown.should_apply(&Counts::new_test(200, 70, 0, 30, 0, 0, 0)));
     }
 
     #[test]

@@ -74,7 +74,7 @@ impl Epidemiology {
     }
 
     fn stop_simulation(run_mode: &RunMode, row: Counts) -> bool {
-        let zero_active_cases = row.get_infected() == 0 && row.get_quarantined() == 0;
+        let zero_active_cases = row.get_exposed() == 0 && row.get_infected() == 0 && row.get_quarantined() == 0;
         match run_mode {
             RunMode::MultiEngine { .. } => { false },
             _ => zero_active_cases
@@ -222,7 +222,7 @@ impl Epidemiology {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
                       simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
                       simulation_hour, config.get_hours());
-                info!("S: {}, I: {}, Q: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_infected(),
+                info!("S: {}, E:{}, I: {}, Q: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_exposed(), counts_at_hr.get_infected(),
                       counts_at_hr.get_quarantined(), counts_at_hr.get_recovered(), counts_at_hr.get_deceased());
                 info!("Incoming: {}, Outgoing: {}, Current Population: {}", n_incoming, n_outgoing,
                       write_buffer_reference.current_population());

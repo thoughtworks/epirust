@@ -33,6 +33,7 @@ impl CitizenState {
     fn state_str(state: State) -> String {
         match state {
             State::Susceptible { .. } => "s".to_string(),
+            State::Exposed { .. } => "e".to_string(),
             State::Infected { .. } => "i".to_string(),
             State::Recovered { .. } => "r".to_string(),
             State::Deceased { .. } => "d".to_string(),

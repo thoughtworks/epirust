@@ -103,10 +103,10 @@ mod tests {
         let config = config::read("config/test/auto_pop.json".to_string()).unwrap();
         let vaccinate_intervention = VaccinateIntervention::init(&config);
 
-        let counts = Counts::new_test(5000, 10, 10, 10, 10, 10);
+        let counts = Counts::new_test(5000, 10, 0, 10, 10, 10, 10);
         assert_eq!(Some(&0.2), vaccinate_intervention.get_vaccination_percentage(&counts));
 
-        let counts = Counts::new_test(5001, 10, 10, 10, 10, 10);
+        let counts = Counts::new_test(5001, 10, 0, 10, 10, 10, 10);
         assert_eq!(None, vaccinate_intervention.get_vaccination_percentage(&counts));
     }
 

@@ -207,24 +207,28 @@ impl Citizen {
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
                 new_cell = self.goto_area(grid.transport_area, map, cell, rng);
                 self.current_area = grid.transport_area;
-                self.update_infection(cell, map, counts, rng, disease);
+                self.update_exposure(cell, map, counts, rng, disease);
+                self.update_infection(counts, rng);
             }
             constants::ROUTINE_WORK_TIME => {
                 new_cell = self.goto_area(self.work_location, map, cell, rng);
                 self.current_area = grid.work_area;
-                self.update_infection(cell, map, counts, rng, disease);
+                self.update_exposure(cell, map, counts, rng, disease);
+                self.update_infection(counts, rng);
             }
             constants::ROUTINE_WORK_END_TIME => {
                 new_cell = self.goto_area(self.home_location, map, cell, rng);
                 self.current_area = grid.housing_area;
-                self.update_infection(cell, map, counts, rng, disease);
+                self.update_exposure(cell, map, counts, rng, disease);
+                self.update_infection(counts, rng);
             }
             constants::ROUTINE_END_TIME => {
                 new_cell = self.deceased(map, cell, counts, rng, disease)
             }
             _ => {
                 new_cell = self.move_agent_from(map, cell, rng);
-                self.update_infection(cell, map, counts, rng, disease);
+                self.update_exposure(cell, map, counts, rng, disease);
+                self.update_infection(counts, rng);
             }
         }
         new_cell
@@ -240,8 +244,8 @@ impl Citizen {
                       disease: &Disease) -> Point {
         let mut new_cell = cell;
         if self.state_machine.is_infected() && !self.is_quarantined() {
-            let number_of_quarantined = self.state_machine.quarantine(disease, self.immunity);
-            if number_of_quarantined {
+            let to_be_quarantined = self.state_machine.quarantine(disease, self.immunity);
+            if to_be_quarantined {
                 self.quarantined = true;
                 new_cell = AgentLocationMap::goto_hospital(map, hospital, cell, self);
                 if new_cell != cell {
@@ -254,8 +258,18 @@ impl Citizen {
         new_cell
     }
 
-    fn update_infection(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Counts, rng: &mut RandomWrapper,
-                        disease: &Disease) {
+    fn update_infection(&mut self, counts: &mut Counts, rng: &mut RandomWrapper) {
+        if self.state_machine.is_exposed() {
+            let updated_infection_count = self.state_machine.infect(rng, counts.get_hour());
+            if updated_infection_count == 1{
+                counts.update_infected(1);
+                counts.update_exposed(-1);
+            }
+        }
+    }
+
+    fn update_exposure(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Counts, rng: &mut RandomWrapper,
+                       disease: &Disease) {
         if self.state_machine.is_susceptible() && !self.vaccinated {
             let neighbours = self.current_area.get_neighbors_of(cell);
 
@@ -266,8 +280,8 @@ impl Citizen {
                 .find(|neighbor| rng.get().gen_bool(neighbor.get_infection_transmission_rate(disease)));
 
             if neighbor_that_spreads_infection.is_some() {
-                self.state_machine.infect();
-                counts.update_infected(1);
+                self.state_machine.expose(counts.get_hour());
+                counts.update_exposed(1);
                 counts.update_susceptible(-1);
             }
         }
@@ -291,18 +305,23 @@ impl Citizen {
     fn deceased(&mut self, map: &AgentLocationMap, cell: Point, counts: &mut Counts, rng: &mut RandomWrapper,
                 disease: &Disease) -> Point {
         let mut new_cell = cell;
-        if self.is_quarantined() {
+        if self.state_machine.is_infected() {
             let result = self.state_machine.decease(rng, disease);
-            if result != (0,0) {
-                self.hospitalized = false;
-                self.quarantined = false;
+            if !self.quarantined && result.1 == 1 {
+                counts.update_infected(-1);
             }
             if result.1 == 1 {
                 new_cell = map.move_agent(cell, self.home_location.get_random_point(rng));
             }
             counts.update_deceased(result.0);
             counts.update_recovered(result.1);
-            counts.update_quarantined(-(result.0 + result.1));
+            if self.quarantined {
+                counts.update_quarantined(-(result.0 + result.1));
+            }
+            if result != (0,0) {
+                self.hospitalized = false;
+                self.quarantined = false;
+            }
         }
         new_cell
     }
@@ -347,7 +366,7 @@ pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_l
         agent_list.push(agent);
     }
 //TODO: pass number of infected as parameter
-    agent_list.last_mut().as_mut().unwrap().state_machine.infect();
+    agent_list.last_mut().as_mut().unwrap().state_machine.expose(0);
     agent_list
 }
 
@@ -371,7 +390,7 @@ mod tests {
         let expected_home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
 
         assert_eq!(citizen_list.len(), 4);
-        assert_eq!(citizen_list.last().unwrap().state_machine.is_infected(), true);
+        assert_eq!(citizen_list.last().unwrap().state_machine.is_exposed(), true);
 
         for citizen in &citizen_list {
             assert!(expected_home_locations.contains(&citizen.home_location));

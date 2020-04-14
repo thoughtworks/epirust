@@ -164,7 +164,7 @@ impl Grid {
             home_loc.append(&mut random_points_within_home);
         }
         debug!("Assigned starting location to agents");
-        agents_in_order.last_mut().as_mut().unwrap().state_machine.infect();
+        agents_in_order.last_mut().as_mut().unwrap().state_machine.expose(0);
 
         self.draw(&home_loc, &homes, &offices);
         (home_loc, agents_in_order)

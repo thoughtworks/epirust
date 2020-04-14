@@ -82,6 +82,7 @@ impl AgentLocationMap {
         for (point, traveller) in outgoing {
             match traveller.state_machine.state {
                 State::Susceptible { .. } => { counts.update_susceptible(-1) },
+                State::Exposed { .. } => { counts.update_exposed(-1) }
                 State::Infected { .. } => { counts.update_infected(-1) },
                 State::Recovered { .. } => { counts.update_recovered(-1) },
                 State::Deceased { .. } => { panic!("Deceased agent should not travel!") },
@@ -125,6 +126,7 @@ impl AgentLocationMap {
         for c in new_citizens {
             match c.state_machine.state {
                 State::Susceptible { .. } => { counts.update_susceptible(1) }
+                State::Exposed { .. } => { counts.update_exposed(1) }
                 State::Infected { .. } => { counts.update_infected(1) }
                 State::Recovered { .. } => { counts.update_recovered(1) }
                 State::Deceased { .. } => { panic!("Should not receive deceased agent!") }

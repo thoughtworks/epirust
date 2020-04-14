@@ -112,6 +112,7 @@ impl TickAck {
 pub struct Counts {
     hour: i32,
     susceptible: i32,
+    exposed: i32,
     infected: i32,
     quarantined: i32,
     recovered: i32,
@@ -120,10 +121,11 @@ pub struct Counts {
 
 impl Counts {
     #[cfg(test)]
-    pub fn new(hr: i32, s: i32, i: i32, q: i32, r: i32, d: i32) -> Counts {
+    pub fn new(hr: i32, s: i32, e: i32, i: i32, q: i32, r: i32, d: i32) -> Counts {
         Counts {
             hour: hr,
             susceptible: s,
+            exposed: e,
             infected: i,
             quarantined: q,
             recovered: r,
@@ -175,9 +177,10 @@ impl TickAcks {
     }
 
     pub fn should_terminate(&self) -> bool {
+        let total_exposed: i32 = self.acks.values().map( |ack| ack.counts.exposed).sum();
         let total_infected: i32 = self.acks.values().map(|ack| ack.counts.infected).sum();
         let total_quarantined: i32 = self.acks.values().map(|ack| ack.counts.quarantined).sum();
-        total_infected == 0 && total_quarantined == 0
+        total_exposed ==0 && total_infected == 0 && total_quarantined == 0
     }
 }
 
@@ -191,7 +194,7 @@ mod tests {
         let engines = vec!["engine1".to_string(), "engine2".to_string()];
         let mut acks = TickAcks::new(&engines);
         acks.reset(22);
-        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, counts: Counts::new(1, 100, 0, 0, 0, 0) };
+        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, counts: Counts::new(1, 100, 0, 0, 0, 0, 0) };
         acks.push(ack.clone());
 
         assert_eq!(*acks.acks.get("engine1").unwrap(), ack);
@@ -218,18 +221,18 @@ mod tests {
     }
 
     #[test]
-    fn should_terminate_when_infected_and_quarantined_are_zero() {
+    fn should_terminate_when_exposed_and_infected_and_quarantined_are_zero() {
         let mut acks = TickAcks::new(&vec!["engine1".to_string(), "engine2".to_string()]);
         acks.reset(1);
         acks.push(TickAck {
             engine_id: "engine1".to_string(),
             hour: 1,
-            counts: Counts::new(1, 99, 1, 0, 0, 0),
+            counts: Counts::new(1, 99, 0, 1, 0, 0, 0),
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 1,
-            counts: Counts::new(1, 99, 1, 0, 0, 0),
+            counts: Counts::new(1, 99, 0, 1, 0, 0, 0),
         });
         assert!(!acks.should_terminate());
 
@@ -237,12 +240,12 @@ mod tests {
         acks.push(TickAck {
             engine_id: "engine1".to_string(),
             hour: 2,
-            counts: Counts::new(2, 99, 0, 1, 0, 0),
+            counts: Counts::new(2, 99, 0, 0, 1, 0, 0),
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 2,
-            counts: Counts::new(2, 100, 0, 0, 0, 0),
+            counts: Counts::new(2, 100, 0, 0, 0, 0, 0),
         });
         assert!(!acks.should_terminate());
 
@@ -250,12 +253,25 @@ mod tests {
         acks.push(TickAck {
             engine_id: "engine1".to_string(),
             hour: 3,
-            counts: Counts::new(3, 100, 0, 0, 0, 0),
+            counts: Counts::new(2, 99, 1, 0, 0, 0, 0),
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 3,
-            counts: Counts::new(3, 100, 0, 0, 0, 0),
+            counts: Counts::new(2, 100, 0, 0, 0, 0, 0),
+        });
+        assert!(!acks.should_terminate());
+
+        acks.reset(4);
+        acks.push(TickAck {
+            engine_id: "engine1".to_string(),
+            hour: 4,
+            counts: Counts::new(3, 100, 0, 0, 0, 0, 0),
+        });
+        acks.push(TickAck {
+            engine_id: "engine2".to_string(),
+            hour: 4,
+            counts: Counts::new(3, 100, 0, 0, 0, 0, 0),
         });
         assert!(acks.should_terminate());
     }

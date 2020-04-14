@@ -102,20 +102,20 @@ mod tests {
     fn should_apply_hospital_intervention_when_threshold_increases_at_start_of_day() {
         let config = BuildNewHospitalConfig { spread_rate_threshold: 10 };
         let mut build_new_hospital = BuildNewHospital { has_applied: false, new_infections_in_a_day: 0, intervention: Some(config) };
-        let counts = Counts::new_test(0, 99, 1, 0, 0, 0);
+        let counts = Counts::new_test(0, 99, 1, 0, 0, 0, 0);
         build_new_hospital.counts_updated(&counts);
         assert!(!build_new_hospital.should_apply(&counts));
-        build_new_hospital.counts_updated(&Counts::new_test(24, 80, 20, 0, 0, 0));
+        build_new_hospital.counts_updated(&Counts::new_test(24, 80, 0, 20, 0, 0, 0));
         assert!(build_new_hospital.should_apply(&counts));
     }
 
     #[test]
     fn should_not_apply_hospital_intervention_when_absent() {
         let mut build_new_hospital = BuildNewHospital { has_applied: false, new_infections_in_a_day: 0, intervention: None };
-        let counts = Counts::new_test(0, 99, 1, 0, 0, 0);
+        let counts = Counts::new_test(0, 99, 1, 0, 0, 0, 0);
         build_new_hospital.counts_updated(&counts);
         assert!(!build_new_hospital.should_apply(&counts));
-        build_new_hospital.counts_updated(&Counts::new_test(24, 80, 20, 0, 0, 0));
+        build_new_hospital.counts_updated(&Counts::new_test(24, 80, 0, 20, 0, 0, 0));
         assert!(!build_new_hospital.should_apply(&counts));
     }
 
@@ -123,10 +123,10 @@ mod tests {
     fn should_not_apply_hospital_intervention_when_below_threshold() {
         let config = BuildNewHospitalConfig { spread_rate_threshold: 10 };
         let mut build_new_hospital = BuildNewHospital { has_applied: false, new_infections_in_a_day: 0, intervention: Some(config) };
-        let counts = Counts::new_test(0, 99, 1, 0, 0, 0);
+        let counts = Counts::new_test(0, 99, 1, 0, 0, 0, 0);
         build_new_hospital.counts_updated(&counts);
         assert!(!build_new_hospital.should_apply(&counts));
-        build_new_hospital.counts_updated(&Counts::new_test(24, 95, 5, 0, 0, 0));
+        build_new_hospital.counts_updated(&Counts::new_test(24, 95, 0, 5, 0, 0, 0));
         assert!(!build_new_hospital.should_apply(&counts));
     }
 
@@ -156,9 +156,9 @@ mod tests {
     #[test]
     fn should_not_invoke_intervention_if_already_invoked() {
         let mut hospital_intervention = get_test_hospital_intervention();
-        let counts = Counts::new_test(0, 99, 1, 0, 0, 0);
+        let counts = Counts::new_test(0, 99, 1, 0,0, 0, 0);
         hospital_intervention.apply();
-        hospital_intervention.counts_updated(&Counts::new_test(24, 80, 20, 0, 0, 0));
+        hospital_intervention.counts_updated(&Counts::new_test(24, 80, 0, 20, 0, 0, 0));
         assert_eq!(hospital_intervention.should_apply(&counts), false);
     }
 }

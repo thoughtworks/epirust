@@ -60,6 +60,21 @@ sample = """
   }
 """
 
+def generate_travel_matrix(region_count, travel_count):
+    rows, cols = (region_count, region_count)
+    arr = [[int(travel_count) for i in range(cols)] for j in range(rows)]
+    for (i,row) in enumerate(arr):
+        for (j,value) in enumerate(row):
+            if i == j:
+                arr[i][j] = 0
+    return arr
+
+def engine_names(engine_count):
+    engine_names = []
+    for i in range(engine_count):
+        engine_names.append("engine" + str(i + 1))
+    return engine_names
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: generate.py [n_engines] [population]")
@@ -81,15 +96,18 @@ if __name__ == "__main__":
     else:
         print("Unsupported population size")
         sys.exit(1)
+    travel_percent = 0.001
+    travel_count = travel_percent * population
     json_sample["config"]["population"]["Auto"]["number_of_agents"] = population
     json_sample["config"]["grid_size"] = grid_size
-    final = []
+    simulation_config = []
     for i in range(engines):
         json_sample["engine_id"] = "engine" + str(i + 1)
-        final.append(copy.deepcopy(json_sample))
+        simulation_config.append(copy.deepcopy(json_sample))
+
+    travel_plan = { "regions": engine_names(engines), "matrix": generate_travel_matrix(engines, travel_count) }
+
+    final = { "simulation": simulation_config, "travel_plan": travel_plan }
+
     with open("generated.json", "w") as outfile:
         outfile.write(json.dumps(final))
-
-
-
-

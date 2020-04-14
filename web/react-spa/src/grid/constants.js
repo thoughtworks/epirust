@@ -13,7 +13,7 @@ export const BaseColors = {
     WHITE: "#fff",
     LIGHT_ORANGE: "#fad5b5",
     LIGHT_BLUE: "#b9dafd"
-}
+};
 
 export const AreaColors = {
     HOUSING: BaseColors.LIGHT_YELLOW,
@@ -21,17 +21,24 @@ export const AreaColors = {
     TRANSPORT: BaseColors.LIGHT_ORANGE,
     HOSPITAL: BaseColors.LIGHT_BLUE,
     OTHER: BaseColors.GRAY
-}
+};
 
 export const LandmarkColors = {
     HOUSES: BaseColors.GRAY,
     OFFICES: BaseColors.GRAY
-}
+};
 
 export const AgentStateToColor = {
     's': BaseColors.BLUE,
     'i': BaseColors.RED,
     'r': BaseColors.GREEN,
     'd': BaseColors.BLACK
-}
+};
+
+export const AgentStateMapper = {
+    's': 'susceptible',
+    'i': 'infected',
+    'r': 'recovered',
+    'd': 'deceased'
+};
 

@@ -7,8 +7,9 @@ services:
   mongodb_container:
     container_name: db
     image: mongo:latest
+    command: mongod --port 27018
     ports:
-      - 27017:27017
+      - 27018:27018
     volumes:
       - ./mongo-data:/data/db
       

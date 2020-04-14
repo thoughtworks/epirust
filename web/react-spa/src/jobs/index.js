@@ -27,22 +27,12 @@ import config from "../config";
 export const JobsList = () => {
   const { id, view } = useParams();
   const [simulations, updateSimulations] = useState([]);
-  const [activeSimulationId, setActiveSimulationId] = useState(null);
 
   useEffect(() => {
     fetch(`${config.API_HOST}/simulation/`)
       .then(res => res.json())
       .then(value => updateSimulations(value.reverse()))
   }, []);
-
-  useEffect(() => {
-    if (!id && simulations.length > 0)
-      setActiveSimulationId(simulations[0].simulation_id)
-
-    if (id)
-      setActiveSimulationId(parseInt(id))
-
-  }, [simulations, id])
 
   function renderSimulationTabs() {
     return (
@@ -58,11 +48,22 @@ export const JobsList = () => {
 
   function renderDetails() {
     const simulationDetails = simulations.find(s => s.simulation_id === parseInt(id));
+
+    if (!simulationDetails) return null
+
     return (
       <div className="col-10 left-border scrollable details">
-        <JobDetails simulationId={activeSimulationId} details={simulationDetails} />
+        <JobDetails simulationId={parseInt(id)} details={simulationDetails} />
       </div>
     );
+  }
+
+  if (!id && !simulations.length) {
+    return "Loading"
+  }
+
+  if (!id && simulations.length) {
+    return (<Redirect to={`/jobs/${simulations[0].simulation_id}/time-series`} />);
   }
 
   if (id && !view) {

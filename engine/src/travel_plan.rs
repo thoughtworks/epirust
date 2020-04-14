@@ -74,7 +74,6 @@ pub struct EngineTravelPlan {
     engine_id: String,
     travel_plan: Option<TravelPlan>,
     current_total_population: i32,
-    outgoing: Vec<(Point, Traveller)>,
 }
 
 impl EngineTravelPlan {
@@ -83,7 +82,6 @@ impl EngineTravelPlan {
             engine_id: engine_id.clone(),
             travel_plan: None,
             current_total_population: current_population,
-            outgoing: Vec::new(),
         }
     }
 
@@ -91,7 +89,6 @@ impl EngineTravelPlan {
         match tick {
             None => {}
             Some(t) => {
-                self.clear_outgoing();
                 match t.travel_plan() {
                     None => {}
                     Some(tp) => { self.travel_plan = Some(tp) }
@@ -109,20 +106,8 @@ impl EngineTravelPlan {
         }
     }
 
-    pub fn add_outgoing(&mut self, traveller: Traveller, loc: Point) {
-        self.outgoing.push((loc, traveller));
-    }
-
-    pub fn clear_outgoing(&mut self) {
-        self.outgoing.clear();
-    }
-
-    pub fn get_outgoing(&self) -> &Vec<(Point, Traveller)> {
-        &self.outgoing
-    }
-
-    pub fn alloc_outgoing_to_regions(&self) -> Vec<TravellersByRegion> {
-        let mut travellers: Vec<Traveller> = self.outgoing.iter().map(|x| x.1).collect();
+    pub fn alloc_outgoing_to_regions(&self, outgoing: &Vec<(Point, Traveller)>) -> Vec<TravellersByRegion> {
+        let mut travellers: Vec<Traveller> = outgoing.iter().map(|x| x.1).collect();
         let total_outgoing = travellers.len();
         let mut outgoing_by_region = match &self.travel_plan {
             None => { Vec::new() }
@@ -291,38 +276,9 @@ mod tests {
     }
 
     #[test]
-    fn should_clear_outgoing_on_new_tick() {
-        let mut engine_travel_plan = create_engine_with_travel_plan();
-        engine_travel_plan.add_outgoing(create_traveller(), Point::new(2, 4));
-
-        let tick = Tick::new(1, None, false);
-        engine_travel_plan.receive_tick(Some(tick));
-        assert!(engine_travel_plan.outgoing.is_empty());
-    }
-
-    #[test]
     fn should_calc_outgoing_percent() {
         let engine_travel_plan = create_engine_with_travel_plan();
         assert_eq!(0.018, engine_travel_plan.percent_outgoing())
-    }
-
-    #[test]
-    fn should_add_outgoing_citizen() {
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        let citizen = create_traveller();
-        engine_travel_plan.add_outgoing(citizen, Point::new(2, 2));
-        let citizen_id = engine_travel_plan.outgoing.get(0).unwrap().1.id;
-
-        assert_eq!(citizen.id, citizen_id);
-    }
-
-    #[test]
-    fn should_clear_outgoing_citizens() {
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
-        engine_travel_plan.add_outgoing(create_traveller(), Point::new(2, 2));
-        engine_travel_plan.clear_outgoing();
-
-        assert!(engine_travel_plan.outgoing.is_empty())
     }
 
     #[test]
@@ -334,13 +290,14 @@ mod tests {
 
     #[test]
     fn should_assign_outgoing_citizens_to_regions() {
-        let mut engine_travel_plan = create_engine_with_travel_plan();
+        let engine_travel_plan = create_engine_with_travel_plan();
+        let mut outgoing = Vec::new();
 
         for _i in 0..180 {
-            engine_travel_plan.add_outgoing(create_traveller(), Point::new(1, 1));
+            outgoing.push((Point::new(1, 1), create_traveller()));
         }
 
-        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
+        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
 
         assert_eq!(2, outgoing_by_region.len());
         assert_eq!(156, outgoing_by_region.get(0).unwrap().travellers.len());
@@ -349,13 +306,14 @@ mod tests {
 
     #[test]
     fn should_handle_outgoing_with_actual_total_less_than_planned() {
-        let mut engine_travel_plan = create_engine_with_travel_plan();
+        let engine_travel_plan = create_engine_with_travel_plan();
+        let mut outgoing = Vec::new();
 
         for _i in 0..147 {
-            engine_travel_plan.add_outgoing(create_traveller(), Point::new(1, 1));
+            outgoing.push((Point::new(1, 1), create_traveller()));
         }
 
-        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
+        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
 
         assert_eq!(2, outgoing_by_region.len());
         assert_eq!(127, outgoing_by_region.get(0).unwrap().travellers.len());
@@ -364,13 +322,14 @@ mod tests {
 
     #[test]
     fn should_handle_outgoing_with_actual_total_more_than_planned() {
-        let mut engine_travel_plan = create_engine_with_travel_plan();
+        let engine_travel_plan = create_engine_with_travel_plan();
+        let mut outgoing = Vec::new();
 
         for _i in 0..202 {
-            engine_travel_plan.add_outgoing(create_traveller(), Point::new(1, 1));
+            outgoing.push((Point::new(1, 1), create_traveller()));
         }
 
-        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions();
+        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
 
         assert_eq!(2, outgoing_by_region.len());
         assert_eq!(175, outgoing_by_region.get(0).unwrap().travellers.len());

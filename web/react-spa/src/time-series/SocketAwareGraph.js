@@ -7,7 +7,7 @@ export default function SocketAwareGraph({ socket, simulationId }) {
     const [simulationEnded, setSimulationEnded] = useState(false);
     useEffect(() => {
         if (!socket) {
-            setDataBuffer([])
+            setDataBuffer([]);
             return
         }
 
@@ -17,7 +17,7 @@ export default function SocketAwareGraph({ socket, simulationId }) {
         socket.on('epidemicStats', function (messageRaw) {
             const message = messageRaw;
 
-            let simulationEndedTemp = false
+            let simulationEndedTemp = false;
             if ("simulation_ended" in message) {
                 simulationEndedTemp = true;
                 socket.close();
@@ -29,7 +29,7 @@ export default function SocketAwareGraph({ socket, simulationId }) {
             }
             if (message.hour % 100 === 0 || simulationEndedTemp) {
                 setDataBuffer(buffer => {
-                    let total = [...buffer, ...buff]
+                    let total = [...buffer, ...buff];
                     buff = [];
                     return total;
                 });

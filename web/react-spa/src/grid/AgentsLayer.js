@@ -24,30 +24,30 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
     const [simulationPaused, setSimulationPaused] = useState(true);
     const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
     const [intervalId, setIntervalId] = useState(null);
-    const [clickedPause, setClickedPause] = useState(false)
+    const [clickedPause, setClickedPause] = useState(false);
 
     const stopIncrement = () => {
         clearInterval(intervalId);
         setIntervalId(null);
-    }
+    };
 
     const displayedAll = () => {
         return simulationEnded && (currentDisplayIndex >= agentPositions.length)
-    }
+    };
 
     //displayed all the data
     useEffect(() => {
         if (displayedAll()) {
             stopIncrement()
         }
-    }, [currentDisplayIndex, agentPositions])
+    }, [currentDisplayIndex, agentPositions]);
 
     //pause
     useEffect(() => {
         if (simulationPaused && agentPositions) {
             stopIncrement();
         }
-    }, [simulationPaused, agentPositions])
+    }, [simulationPaused, agentPositions]);
 
     //race condition
     useEffect(() => {
@@ -55,7 +55,7 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
             return
         }
         if (currentDisplayIndex >= agentPositions.length) {
-            setSimulationPaused(true)
+            setSimulationPaused(true);
             return
         }
 
@@ -63,42 +63,42 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
             setSimulationPaused(false)
         }
 
-    }, [currentDisplayIndex, agentPositions, simulationEnded, clickedPause])
+    }, [currentDisplayIndex, agentPositions, simulationEnded, clickedPause]);
 
     //count++
     useEffect(() => {
         if (simulationPaused)
-            return
+            return;
 
         if (!agentPositions || intervalId)
-            return
+            return;
 
-        const interval = setInterval(() => setCurrentDisplayIndex(index => index + 1), 100)
-        console.log("interval started", interval)
+        const interval = setInterval(() => setCurrentDisplayIndex(index => index + 1), 100);
+        console.log("interval started", interval);
         setIntervalId(interval);
 
         return () => clearInterval(intervalId)
-    }, [simulationPaused, agentPositions])
+    }, [simulationPaused, agentPositions]);
 
     const handleResume = () => {
-        setClickedPause(false)
+        setClickedPause(false);
         setSimulationPaused(false)
-    }
+    };
 
     const handlePause = () => {
-        setClickedPause(true)
+        setClickedPause(true);
         setSimulationPaused(true)
-    }
+    };
 
     const handleReset = () => {
         setCurrentDisplayIndex(0);
-        setClickedPause(true)
+        setClickedPause(true);
         setSimulationPaused(true)
-    }
+    };
 
     const positionsToDisplay = agentPositions
         ? agentPositions[currentDisplayIndex]
-        : []
+        : [];
 
     return (
         <div style={{ position: "relative" }}>
@@ -125,30 +125,30 @@ function AgentsLayer({ agentPositionsPerHour }) {
 
     useEffect(() => {
         if (!agentsLayerCanvas)
-            return
+            return;
 
         setAgentsCanvasContext(agentsLayerCanvas.current.getContext("2d"));
 
-    }, [agentsLayerCanvas])
+    }, [agentsLayerCanvas]);
 
     useEffect(() => {
         if (!agentsCanvasContext || !agentPositionsPerHour)
-            return
+            return;
 
         agentsCanvasContext.clearRect(0, 0, canvasDimension, canvasDimension);
 
         agentPositionsPerHour.forEach((agent) => {
-            const { x, y } = agent.location
+            const { x, y } = agent.location;
 
             agentsCanvasContext.fillStyle = AgentStateToColor[agent.state];
 
             agentsCanvasContext.beginPath();
-            const agentCircleRadius = Math.floor(cellDimension / 2)
-            const startAngle = 0, endAngle = 2 * Math.PI
+            const agentCircleRadius = Math.floor(cellDimension / 2);
+            const startAngle = 0, endAngle = 2 * Math.PI;
             agentsCanvasContext.arc(calculateCoordinate(x), calculateCoordinate(y), agentCircleRadius, startAngle, endAngle);
             agentsCanvasContext.fill();
         })
-    }, [agentsCanvasContext, agentPositionsPerHour])
+    }, [agentsCanvasContext, agentPositionsPerHour]);
 
     function calculateCoordinate(x) {
         return Math.floor(x * cellDimension + (0.5 * cellDimension) + lineWidth)

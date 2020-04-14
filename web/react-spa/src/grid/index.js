@@ -43,22 +43,22 @@ export default function GridPage() {
     const [landmarksDimensions, setLandmarksDimensions] = useState(null);
     const [agentPositions, setAgentPositions] = useState(null);
 
-    const [gridContextData, setGridContextData] = useState(null)
+    const [gridContextData, setGridContextData] = useState(null);
 
     useEffect(() => {
-        console.log("started socket")
+        console.log("started socket");
         const socketInstance = io(`${config.API_HOST}/grid-updates`);
         setSocket(socketInstance);
 
         return () => {
             socketInstance.close();
         }
-    }, [])
+    }, []);
 
     //reading socket data
     useEffect(() => {
         if (!socket)
-            return
+            return;
 
         socket.emit('simulation_id', id);
 
@@ -67,21 +67,21 @@ export default function GridPage() {
 
             if ("simulation_ended" in message) {
                 socket.close();
-                setSocketDataExhausted(true)
+                setSocketDataExhausted(true);
                 return
             }
 
             if ('grid_size' in message) {
-                const { housing_area, work_area, transport_area, hospital_area, grid_size } = message
+                const { housing_area, work_area, transport_area, hospital_area, grid_size } = message;
                 const areaDimensions = [
                     { ...housing_area, color: AreaColors.HOUSING },
                     { ...work_area, color: AreaColors.WORK },
                     { ...transport_area, color: AreaColors.TRANSPORT },
                     { ...hospital_area, color: AreaColors.HOSPITAL }
-                ]
+                ];
 
                 const housesDimensions = message.houses,
-                    officesDimensions = message.offices
+                    officesDimensions = message.offices;
 
                 const cellDimension = Math.floor((window.innerHeight - 165) / grid_size),
                     lineWidth = Math.floor(cellDimension / 4) < 1 ? 0 : Math.floor(cellDimension / 4),
@@ -92,10 +92,10 @@ export default function GridPage() {
                     lineWidth: lineWidth,
                     canvasDimension: canvasDimension,
                     size: grid_size
-                })
+                });
 
                 setAreaDimensions(areaDimensions);
-                setLandmarksDimensions({ housesDimensions, officesDimensions })
+                setLandmarksDimensions({ housesDimensions, officesDimensions });
                 return
             }
 
@@ -103,17 +103,17 @@ export default function GridPage() {
 
                 setAgentPositions(pos => {
                     if (!pos)
-                        return [message.citizen_states]
+                        return [message.citizen_states];
 
                     return [...pos, message.citizen_states]
                 })
             }
 
         });
-    }, [socket])
+    }, [socket]);
 
     if (!gridContextData)
-        return "Loading"
+        return "Loading";
 
     return (
         <div className="grid-wrap">

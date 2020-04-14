@@ -103,15 +103,18 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
 
     return (
         <div style={{ position: "relative" }}>
-            <div style={{ position: "absolute", zIndex: 5, right: 0 }}>
+            <div style={{ position: "absolute", zIndex: 5, right: 0, width: 190 }}>
                 <h4 data-testid="counter">{`${currentDisplayIndex}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
 
-                {clickedPause
-                    ? <button className="btn btn-success btn-sm" onClick={handleResume}>{currentDisplayIndex === 0 ? 'START' : 'RESUME'}</button>
-                    : <button className="btn btn-primary btn-sm" onClick={handlePause} disabled={displayedAll()}>PAUSE</button>
-                }
+                <div className="btn-group mr-2" role="group" aria-label="Buttons to pause/play and reset">
+                    {clickedPause
+                        ? <button className="btn btn-success btn-sm" onClick={handleResume}>{currentDisplayIndex === 0 ? 'START' : 'RESUME'}</button>
+                        : <button className="btn btn-primary btn-sm" onClick={handlePause} disabled={displayedAll()}>PAUSE</button>
+                    }
 
-                <button className="btn btn-danger btn-sm" onClick={handleReset}>RESET</button>
+                    <button className="btn btn-danger btn-sm" onClick={handleReset}>RESET</button>
+                </div>
+
             </div>
             <AgentsLayer agentPositionsPerHour={positionsToDisplay} />
 

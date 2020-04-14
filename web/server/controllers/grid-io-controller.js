@@ -30,8 +30,10 @@ async function sendGridData(simulationId, socket, totalConsumerRecords) {
 
   let countOfMessagesConsumed = 0;
   for await (const data of cursor) {
-    if(socket.disconnected)
-      return ;
+    if(socket.disconnected) {
+      cursor.close();
+      return;
+    }
     countOfMessagesConsumed += 1;
     socket.emit('gridData', data);
   }

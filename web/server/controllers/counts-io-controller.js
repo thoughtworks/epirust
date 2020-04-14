@@ -28,8 +28,10 @@ async function sendCountsData(simulationId, socket, totalConsumedRecords) {
 
   let recordsConsumedInThisGo = 0;
   for await(const data of cursor) {
-    if(socket.disconnected)
+    if(socket.disconnected){
+      cursor.close();
       return ;
+    }
     recordsConsumedInThisGo += 1;
     socket.emit('epidemicStats', data);
   }

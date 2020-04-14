@@ -12,7 +12,7 @@ services:
       - kafka
     environment:
       RUST_LOG: INFO
-      EPI_KAFKA_URL: "kafka:29092"
+      EPI_KAFKA_URL: "localhost:29092"
     command: cargo run --release -- --daemon
 
   server:
@@ -21,11 +21,10 @@ services:
     build:
      context: ../web
     environment:
-      DATABASE_URL: "mongodb://db:27017"
+      DATABASE_URL: "mongodb://127.0.0.1:27018/local_database"
+      KAFKA_URL: "localhost:29092"
     working_dir: /web/server    
     command: npm start
-    depends_on:
-      - mongodb_container
     ports:
       - "3000:3000"
 
@@ -33,13 +32,12 @@ services:
     image: epi-web:latest
     container_name: epi-kafka-consumers
     environment:
-      DATABASE_URL: "mongodb://db:27017"
+      DATABASE_URL: "mongodb://127.0.0.1:27018/local_database"
+      KAFKA_URL: "localhost:29092"
     build:
       context: ../web
     working_dir: /web/server  
     command: npm run start-consumers  
-    depends_on:
-      - kafka
 
   react-spa:
     image: epi-web:latest
@@ -52,5 +50,4 @@ services:
       - server
     ports:
       - "3001:3001"
-    
 

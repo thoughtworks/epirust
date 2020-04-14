@@ -16,9 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import React, { useContext, useRef, useState, useEffect } from 'react';
-import { GridContext } from './index'
-import { AgentStateToColor } from './constants';
+import React, {useContext, useEffect, useRef, useState} from 'react';
+import {GridContext} from './index'
+import {AgentStateToColor} from './constants';
+import GridLegend from "./GridLegend";
 
 export default function AgentPositionsWrapper({ agentPositions, simulationEnded }) {
     const [simulationPaused, setSimulationPaused] = useState(true);
@@ -113,6 +114,8 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
                 <button className="btn btn-danger btn-sm" onClick={handleReset}>RESET</button>
             </div>
             <AgentsLayer agentPositionsPerHour={positionsToDisplay} />
+
+            <GridLegend susceptible={12} infected={13} recovered={14} deceased={15}/>
         </div>
     )
 }

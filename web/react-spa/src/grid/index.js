@@ -24,7 +24,6 @@ import LinesLayer from './LinesLayer';
 import AreasLayer from './AreasLayer';
 import AgentsLayer from './AgentsLayer';
 import {AreaColors} from './constants';
-import GridLegend from './GridLegend';
 import {useParams} from "react-router-dom"
 import io from 'socket.io-client'
 import config from "../config";
@@ -126,8 +125,6 @@ export default function GridPage() {
                     <AgentsLayer agentPositions={agentPositions} simulationEnded={socketDataExhausted} />
                 </div >
             </GridContext.Provider>
-
-            <GridLegend />
         </div>
     )
 }

@@ -34,7 +34,7 @@ export const Job = ({ simulationId, status, isActive = false }) => {
     <li className="list-group-item borderless item-less-padding">
 
       <Link to={`/jobs/${simulationId}`} className={'no-link-formatting'}>
-        <div className={`simulation-tab ${isActive ? "active" : ""} ${status}`}>
+        <div className={`simulation-tab ${isActive ? "active shadow" : ""} ${status}`}>
           <div className="card-body card-body-less-padding">
             <p className="job-status">{statusText[status]}</p>
             <p className="minor-details">{`Id: `}<code>{simulationId}</code></p>

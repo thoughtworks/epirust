@@ -110,7 +110,14 @@ export default function GridPage() {
     }, [socket]);
 
     if (!gridContextData)
-        return "Loading";
+        return (<div className="multi-spinners">
+            <div className="spinner-grow text-dark"/>
+            <div className="spinner-grow text-dark"/>
+            <div className="spinner-grow text-dark"/>
+            <div className="spinner-grow text-dark"/>
+            <div className="spinner-grow text-dark"/>
+            <div className="spinner-grow text-dark"/>
+        </div>);
 
     return (
         <div className="grid-wrap">

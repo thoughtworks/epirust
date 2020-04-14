@@ -31,25 +31,9 @@
   overflow: auto;
 }
 
-.running {
-  background-color: #F6BB43;
-}
-
-.failed {
-  background-color: #F9694C;
-}
-
-.finished {
-  background-color: #8BC253;
-}
-
-.in-queue {
-  background-color: #3CAEDA;
-}
-
 .left-border {
-  border-style: none none none solid;
-  border-color: black;
+  border-style: none none none dashed;
+  border-color:#ccc;
 }
 
 .padded-list {

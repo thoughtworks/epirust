@@ -29,7 +29,40 @@
   padding: 0.25rem 0
 }
 
-.job-status {
+.simulation-tab {
+  border: 1px solid #ccc;
+  background-color: #fcfcfc;
+
+  border-right: 20px solid white;
+  position: relative;
+
+  &.running {
+    --statusColor: #F6BB43;
+  }
+  
+  &.failed {
+    --statusColor: #F9694C;
+  }
+  
+  &.finished {
+    --statusColor: #8BC253;
+  }
+  
+  &.in-queue {
+    --statusColor: #3CAEDA;
+  }
+
+  border-right-color: var(--statusColor);
+
+  &.active {
+    border-width: 2px;
+    border-right-width: 20px;
+    border-color: var(--statusColor);
+  }
+
+}
+
+.job-status { 
   font-size: 16px;
   font-weight: bold;
   line-height: 26px;
@@ -41,15 +74,20 @@
   margin-bottom: 0;
 
   code {
-    color: white;
+    color: #666666;
   }
 }
 
 .no-link-formatting {
-  color: white;
+  color: #666666;
   text-decoration: none;
   &:focus, &:hover, &:visited, &:link, &:active {
     text-decoration: none;
     color: white;
   }
+}
+
+.no-link-formatting:visited, 
+.no-link-formatting:link {
+  color: #666666;
 }

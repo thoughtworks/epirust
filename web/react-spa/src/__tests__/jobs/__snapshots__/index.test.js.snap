@@ -2,66 +2,6 @@
 
 exports[`JobsList should fetch simulations when id and view is not selected 1`] = `
 <DocumentFragment>
-  <div
-    class="row jobs-list"
-  >
-    <div
-      class="col-2"
-    >
-      <ul
-        class="list-group scrollable"
-      />
-    </div>
-    <div
-      class="col-10 left-border scrollable details"
-    >
-      <div
-        class="job-details"
-      >
-        <div
-          class="row"
-        >
-          <div
-            class="col-8"
-          >
-            <ul
-              class="nav nav-tabs nav-fill"
-            >
-              <li
-                class="nav-item"
-              >
-                <a
-                  class="nav-link "
-                  href="/jobs/null/time-series"
-                >
-                  Time Series
-                </a>
-              </li>
-              <li
-                class="nav-item"
-              >
-                <a
-                  class="nav-link "
-                  href="/jobs/null/config"
-                >
-                  Config
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div
-            class="col-4"
-          >
-            <h4
-              class="simulation-id"
-            >
-              Simulation: 
-              <code />
-            </h4>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  Loading
 </DocumentFragment>
 `;

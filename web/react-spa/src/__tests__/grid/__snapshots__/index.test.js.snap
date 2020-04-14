@@ -166,7 +166,7 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
                 <span
                   class="text count"
                 >
-                  12
+                  3
                 </span>
                 <span
                   class="text"
@@ -186,7 +186,7 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
                 <span
                   class="text count"
                 >
-                  13
+                  0
                 </span>
                 <span
                   class="text"
@@ -206,7 +206,7 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
                 <span
                   class="text count"
                 >
-                  14
+                  0
                 </span>
                 <span
                   class="text"
@@ -226,7 +226,7 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
                 <span
                   class="text count"
                 >
-                  15
+                  0
                 </span>
                 <span
                   class="text"

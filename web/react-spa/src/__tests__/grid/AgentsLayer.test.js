@@ -18,25 +18,25 @@
  */
 
 import React from 'react'
-import { render, fireEvent, act } from '@testing-library/react'
-import { GridContext } from '../../grid/index'
+import {act, fireEvent, render} from '@testing-library/react'
+import {GridContext} from '../../grid/index'
 
 import AgentPositionsWrapper from '../../grid/AgentsLayer';
 
 
-jest.useFakeTimers()
+jest.useFakeTimers();
 
 afterEach(() => {
-    jest.clearAllTimers()
+    jest.clearAllTimers();
     jest.clearAllMocks()
-})
+});
 
 const gridContextData = {
     cellDimension: 2,
     lineWidth: 1,
     canvasDimension: 20,
     size: 10
-}
+};
 const agentPositions = [[
     { "id": 595, "state": "s", "location": { "x": 0, "y": 0 } },
     { "id": 238, "state": "s", "location": { "x": 37, "y": 66 } },
@@ -48,78 +48,78 @@ test('should render AgentsLayer when grid visualization resets', () => {
     const { getByTestId, getByText, container } = render(
         <GridContext.Provider value={gridContextData}>
             <AgentPositionsWrapper agentPositions={agentPositions} simulationEnded={false} />
-        </GridContext.Provider>)
+        </GridContext.Provider>);
     act(() => {
         jest.advanceTimersByTime(100)
-    })
+    });
 
-    expect(getByTestId("counter").textContent).toBe("1/1 hrs")
+    expect(getByTestId("counter").textContent).toBe("1/1 hrs");
 
     act(() => {
         fireEvent.click(getByText("RESET"));
-    })
+    });
 
-    expect(getByText("START")).toBeInTheDocument()
-    expect(getByTestId("counter").textContent).toBe("0/1 hrs")
+    expect(getByText("START")).toBeInTheDocument();
+    expect(getByTestId("counter").textContent).toBe("0/1 hrs");
     expect(getByTestId("grid-canvas-agents").getContext("2d").__getEvents()).toMatchSnapshot()
-})
+});
 
 
 test('should render AgentsLayer when grid visualization pauses and resume', () => {
-    const { getByTestId, getByText, container, rerender } = render(
+    const { getByTestId, getByText, rerender } = render(
         <GridContext.Provider value={gridContextData}>
             <AgentPositionsWrapper agentPositions={[agentPositions[0], agentPositions[0]]} simulationEnded={false} />
-        </GridContext.Provider>)
+        </GridContext.Provider>);
 
     act(() => {
-        jest.advanceTimersByTime(100)
+        jest.advanceTimersByTime(100);
         fireEvent.click(getByText("PAUSE"))
-    })
+    });
 
-    expect(getByTestId("counter").textContent).toBe("1/2 hrs")
+    expect(getByTestId("counter").textContent).toBe("1/2 hrs");
 
     act(() => {
         fireEvent.click(getByText("RESUME"))
-    })
+    });
 
     rerender(
         <GridContext.Provider value={gridContextData}>
             <AgentPositionsWrapper agentPositions={[agentPositions[0], agentPositions[0]]} simulationEnded={true} />
-        </GridContext.Provider>)
+        </GridContext.Provider>);
 
     act(() => {
         jest.advanceTimersByTime(100)
-    })
+    });
 
-    expect(getByTestId("counter").textContent).toBe("2/2 hrs")
-    expect(getByText("PAUSE")).toBeDisabled()
+    expect(getByTestId("counter").textContent).toBe("2/2 hrs");
+    expect(getByText("PAUSE")).toBeDisabled();
     expect(getByTestId("grid-canvas-agents").getContext("2d").__getEvents()).toMatchSnapshot()
-})
+});
 
 test('should pause without clicking when displayed all hours are sent by socket and resume when new data is received', () => {
     const { getByTestId, getByText, container, rerender } = render(
         <GridContext.Provider value={gridContextData}>
             <AgentPositionsWrapper agentPositions={[agentPositions[0], agentPositions[0]]} simulationEnded={false} />
-        </GridContext.Provider>)
+        </GridContext.Provider>);
 
     act(() => {
         jest.advanceTimersByTime(200)
-    })
+    });
 
-    expect(getByTestId("counter").textContent).toBe("2/2 hrs")
-    expect(clearInterval).toHaveBeenCalled()
+    expect(getByTestId("counter").textContent).toBe("2/2 hrs");
+    expect(clearInterval).toHaveBeenCalled();
 
     rerender(
         <GridContext.Provider value={gridContextData}>
             <AgentPositionsWrapper agentPositions={[agentPositions[0], agentPositions[0], agentPositions[0]]} simulationEnded={false} />
-        </GridContext.Provider>)
+        </GridContext.Provider>);
 
-    expect(setInterval).toHaveBeenCalled()
+    expect(setInterval).toHaveBeenCalled();
 
     act(() => {
         jest.advanceTimersByTime(100)
-    })
+    });
 
-    expect(getByTestId("counter").textContent).toBe("3/3 hrs")
+    expect(getByTestId("counter").textContent).toBe("3/3 hrs");
     expect(getByTestId("grid-canvas-agents").getContext("2d").__getEvents()).toMatchSnapshot()
-})
+});

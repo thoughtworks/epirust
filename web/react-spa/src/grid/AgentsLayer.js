@@ -18,10 +18,10 @@
  */
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {GridContext} from './index'
-import {AgentStateToColor} from './constants';
+import {AgentStateMapper, AgentStateToColor} from './constants';
 import GridLegend from "./GridLegend";
 
-export default function AgentPositionsWrapper({ agentPositions, simulationEnded }) {
+export default function AgentPositionsWrapper({agentPositions, simulationEnded}) {
     const [simulationPaused, setSimulationPaused] = useState(true);
     const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
     const [intervalId, setIntervalId] = useState(null);
@@ -101,6 +101,18 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
         ? agentPositions[currentDisplayIndex]
         : [];
 
+    const getCounts = (citizens) => {
+        const counts = {
+            'susceptible': 0,
+            'infected': 0,
+            'recovered': 0,
+            'deceased': 0
+        };
+        citizens && citizens.forEach(a => counts[AgentStateMapper[a.state]] += 1);
+        return counts
+
+    };
+
     return (
         <div style={{ position: "relative" }}>
             <div style={{ position: "absolute", zIndex: 5, right: 0, width: 190 }}>
@@ -116,15 +128,15 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
                 </div>
 
             </div>
-            <AgentsLayer agentPositionsPerHour={positionsToDisplay} />
+            <AgentsLayer agentPositionsPerHour={positionsToDisplay}/>
 
-            <GridLegend susceptible={12} infected={13} recovered={14} deceased={15}/>
+            <GridLegend {...getCounts(positionsToDisplay)}/>
         </div>
     )
 }
 
-function AgentsLayer({ agentPositionsPerHour }) {
-    const { cellDimension, lineWidth, canvasDimension } = useContext(GridContext);
+function AgentsLayer({agentPositionsPerHour}) {
+    const {cellDimension, lineWidth, canvasDimension} = useContext(GridContext);
 
     const agentsLayerCanvas = useRef(null);
     const [agentsCanvasContext, setAgentsCanvasContext] = useState(null);
@@ -144,7 +156,7 @@ function AgentsLayer({ agentPositionsPerHour }) {
         agentsCanvasContext.clearRect(0, 0, canvasDimension, canvasDimension);
 
         agentPositionsPerHour.forEach((agent) => {
-            const { x, y } = agent.location;
+            const {x, y} = agent.location;
 
             agentsCanvasContext.fillStyle = AgentStateToColor[agent.state];
 
@@ -161,6 +173,7 @@ function AgentsLayer({ agentPositionsPerHour }) {
     }
 
     return (
-        <canvas ref={agentsLayerCanvas} data-testid="grid-canvas-agents" id="grid-canvas-agents" width={canvasDimension} height={canvasDimension} style={{ position: "absolute", zIndex: 4 }} />
+        <canvas ref={agentsLayerCanvas} data-testid="grid-canvas-agents" id="grid-canvas-agents" width={canvasDimension}
+                height={canvasDimension} style={{position: "absolute", zIndex: 4}}/>
     )
 }

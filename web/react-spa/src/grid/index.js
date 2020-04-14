@@ -61,9 +61,7 @@ export default function GridPage() {
 
         socket.emit('simulation_id', id);
 
-        socket.on('gridData', function (messageRaw) {
-            const message = messageRaw;
-
+        socket.on('gridData', function (message) {
             if ("simulation_ended" in message) {
                 socket.close();
                 setSocketDataExhausted(true);
@@ -122,7 +120,7 @@ export default function GridPage() {
                     <AreasLayer areaDimensions={areaDimensions} />
                     <LinesLayer />
                     <LandmarksLayer landmarksDimensions={landmarksDimensions} />
-                    <AgentsLayer agentPositions={agentPositions} simulationEnded={socketDataExhausted} />
+                    {agentPositions && <AgentsLayer agentPositions={agentPositions} simulationEnded={socketDataExhausted} />}
                 </div >
             </GridContext.Provider>
         </div>

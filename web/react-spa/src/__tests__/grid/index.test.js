@@ -18,7 +18,7 @@
  */
 
 import React from 'react'
-import { render, act } from '@testing-library/react'
+import {act, render} from '@testing-library/react'
 import GridPage from '../../grid/index'
 import MockSocket from 'socket.io-mock'
 import io from 'socket.io-client'
@@ -145,20 +145,20 @@ describe('Grid Page', () => {
         act(() => {
             jest.mock('socket.io-client', () => { });
             mockSocket.emit = emitSpy;
-        })
+        });
 
         const { asFragment } = render(<GridPage />);
 
         act(() => {
             mockSocket.socketClient.emit("gridData", layoutDimensions);
             mockSocket.socketClient.emit("gridData", agentPositionMessage);
-        })
+        });
 
         expect(closeSpy).toHaveBeenCalledTimes(0);
 
         act(() => {
             mockSocket.socketClient.emit("gridData", { "simulation_ended": true });
-        })
+        });
 
         expect(asFragment()).toMatchSnapshot();
         expect(emitSpy).toHaveBeenCalledWith("simulation_id", 1542319876);

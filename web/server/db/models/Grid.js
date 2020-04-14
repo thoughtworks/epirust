@@ -31,7 +31,7 @@ const citizenStateSchema = new Schema({
 
   hr: {type: Number},
   citizen_states: [{
-    citizen_id: Number,
+    citizen_id: String,
     state: String,
     location: {
       x: Number,

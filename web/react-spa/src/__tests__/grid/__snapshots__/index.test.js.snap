@@ -10,24 +10,24 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
     >
       <canvas
         data-testid="grid-canvas"
-        height="615"
+        height="625"
         id="grid-canvas"
         style="position: absolute; z-index: 1;"
-        width="615"
+        width="625"
       />
       <canvas
         data-testid="grid-canvas-bg"
-        height="615"
+        height="625"
         id="grid-canvas-bg"
         style="position: absolute; z-index: 2;"
-        width="615"
+        width="625"
       />
       <canvas
         data-testid="grid-canvas-landmarks"
-        height="615"
+        height="625"
         id="grid-canvas-landmarks"
         style="position: absolute; z-index: 3;"
-        width="615"
+        width="625"
       />
       <div
         style="position: relative;"
@@ -53,10 +53,10 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
         </div>
         <canvas
           data-testid="grid-canvas-agents"
-          height="615"
+          height="625"
           id="grid-canvas-agents"
           style="position: absolute; z-index: 4;"
-          width="615"
+          width="625"
         />
         <div
           class="legends-wrap"

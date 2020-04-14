@@ -82,7 +82,7 @@ export default function GridPage() {
                 const housesDimensions = message.houses,
                     officesDimensions = message.offices;
 
-                const cellDimension = Math.floor((window.innerHeight - 165) / grid_size),
+                const cellDimension = Math.floor((window.innerHeight - 150) / grid_size),
                     lineWidth = Math.floor(cellDimension / 4) < 1 ? 0 : Math.floor(cellDimension / 4),
                     canvasDimension = (grid_size * cellDimension) + lineWidth;
 

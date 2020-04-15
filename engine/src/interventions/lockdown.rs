@@ -21,6 +21,7 @@ use crate::config::Config;
 use crate::constants;
 use crate::interventions::Intervention::Lockdown;
 use crate::listeners::events::counts::Counts;
+use crate::interventions::intervention_type::InterventionType;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct LockdownConfig {
@@ -79,9 +80,37 @@ impl LockdownIntervention {
     }
 }
 
+impl InterventionType for LockdownIntervention {
+    fn name(&mut self) -> String {
+        "lockdown".to_string()
+    }
+
+    fn json_data(&mut self) -> String {
+        if self.is_locked_down {
+            r#"{status: "locked_down"}"#.to_string()
+        }
+        else {
+            r#"{status: "lockdown_revoked"}"#.to_string()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn get_test_lockdown_intervention(is_locked_down: bool) -> LockdownIntervention {
+        let config = LockdownConfig {
+            at_number_of_infections: 20,
+            essential_workers_population: 0.1,
+            lock_down_period: 7,
+        };
+        return LockdownIntervention {
+            is_locked_down,
+            locked_till_hr: 0,
+            intervention: Some(config),
+        };
+    }
 
     #[test]
     fn should_apply_lockdown_at_threshold() {
@@ -157,5 +186,26 @@ mod tests {
         lockdown.apply(&Counts::new_test(28, 79, 21, 0, 0, 0));
         assert!(lockdown.should_unlock(&Counts::new_test(196, 79, 21, 0, 0, 0)));
         assert!(!lockdown.should_apply(&Counts::new_test(200, 70, 30, 0, 0, 0)));
+    }
+
+    #[test]
+    fn should_return_intervention_name_as_lockdown() {
+        let mut lockdown_intervention = get_test_lockdown_intervention(false);
+
+        assert_eq!(lockdown_intervention.name(), "lockdown")
+    }
+
+    #[test]
+    fn should_return_json_data_with_lockdown_state_as_locked_down_when_city_is_locked_down() {
+        let mut lockdown_intervention = get_test_lockdown_intervention(true);
+
+        assert_eq!(lockdown_intervention.json_data(), r#"{status: "locked_down"}"#)
+    }
+
+    #[test]
+    fn should_return_json_data_with_lockdown_state_as_lockdown_revoked_when_city_is_not_locked_down() {
+        let mut lockdown_intervention = get_test_lockdown_intervention(false);
+
+        assert_eq!(lockdown_intervention.json_data(), r#"{status: "lockdown_revoked"}"#)
     }
 }

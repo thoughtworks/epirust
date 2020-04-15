@@ -59,7 +59,7 @@ impl Epidemiology {
     pub fn new(config: &Config, sim_id: String) -> Epidemiology {
         let start = Instant::now();
         let disease = config.get_disease();
-        let grid = geography::define_geography(config.get_grid_size());
+        let mut grid = geography::define_geography(config.get_grid_size());
         let mut rng = RandomWrapper::new();
         let (start_locations, agent_list) = match config.get_population() {
             Population::Csv(csv_pop) => grid.read_population(&csv_pop, &mut rng),
@@ -182,7 +182,7 @@ impl Epidemiology {
             let (mut incoming, ()) = join!(recv_travellers, sim);
             n_incoming += incoming.len();
             n_outgoing += outgoing.len();
-            write_buffer_reference.remove_citizens(&outgoing, &mut counts_at_hr);
+            write_buffer_reference.remove_citizens(&outgoing, &mut counts_at_hr, &mut self.grid);
             write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, &mut counts_at_hr, &mut rng);
 
             listeners.counts_updated(counts_at_hr);

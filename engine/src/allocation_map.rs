@@ -77,7 +77,7 @@ impl AgentLocationMap {
         !self.agent_cell.contains_key(cell)
     }
 
-    pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Traveller)>, counts: &mut Counts) {
+    pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Traveller)>, counts: &mut Counts, grid: &mut Grid) {
         debug!("Removing {} outgoing travellers", outgoing.len());
         for (point, traveller) in outgoing {
             match traveller.state_machine.state {
@@ -91,7 +91,12 @@ impl AgentLocationMap {
                     panic!("Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
                            traveller.id, point)
                 }
-                Some(_) => {}
+                Some(citizen) => {
+                    grid.remove_house_occupant(&citizen.home_location);
+                    if citizen.is_working() {
+                        grid.remove_office_occupant(&citizen.work_location);
+                    }
+                }
             }
         }
     }
@@ -102,22 +107,19 @@ impl AgentLocationMap {
             return;
         }
         debug!("Assimilating {} incoming travellers", incoming.len());
-        let local_citizens: Vec<&Citizen> = self.agent_cell.values().collect();
-        let mut home_occupancy = grid.group_home_locations_by_occupancy(local_citizens.as_slice());
-        let mut office_occupancy = grid.group_office_locations_by_occupancy(local_citizens.as_slice());
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
         for traveller in incoming {
-            let house = grid.choose_house_with_free_space(home_occupancy.clone(), rng);
+            let house = grid.choose_house_with_free_space(rng);
             let office = if traveller.working {
-                grid.choose_office_with_free_space(office_occupancy.clone(), rng)
+                grid.choose_office_with_free_space(rng)
             } else {
                 house
             };
             let transport_location = house.get_random_point(rng); // Fixme
             new_citizens.push(Citizen::from_traveller(traveller, house, office, transport_location, grid.housing_area));
-            *home_occupancy.get_mut(&house).unwrap() += 1;
+            grid.add_house_occupant(&house);
             if traveller.working {
-                *office_occupancy.get_mut(&office).unwrap() += 1;
+                grid.add_office_occupant(&office)
             }
         }
         for c in new_citizens {
@@ -217,27 +219,5 @@ mod tests {
         for point in points {
             assert!(!map.is_point_in_grid(&point))
         }
-    }
-
-    #[test]
-    fn should_remove_citizens_from_grid() {
-        let mut map = before_each();
-        let traveller = Traveller::new();
-        let mut counts = Counts::new(2, 0);
-
-        assert_eq!(2, map.current_population());
-        map.remove_citizens(&vec![(Point::new(0, 1), traveller)], &mut counts);
-        assert_eq!(1, map.current_population());
-        assert_eq!(1, counts.get_susceptible());
-    }
-
-    #[test]
-    #[should_panic]
-    fn should_panic_when_removing_citizen_not_present_at_point() {
-        let mut map = before_each();
-        let traveller = Traveller::new();
-        let mut counts = Counts::new(2, 0);
-
-        map.remove_citizens(&vec![(Point::new(5, 3), traveller)], &mut counts);
     }
 }

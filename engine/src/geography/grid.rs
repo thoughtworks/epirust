@@ -36,11 +36,15 @@ pub struct Grid {
     pub transport_area: Area,
     pub hospital_area: Area,
     pub houses: Vec<Area>,
-    pub offices: Vec<Area>
+    pub offices: Vec<Area>,
+
+    //Occupancy based on home and work locations - updated when travellers arrive/depart
+    pub houses_occupancy: HashMap<Area, i32>,
+    pub offices_occupancy: HashMap<Area, i32>,
 }
 
 impl Grid {
-    pub fn generate_population(&self, auto_pop: &AutoPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
+    pub fn generate_population(&mut self, auto_pop: &AutoPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
         debug!("Generating Population");
         let number_of_agents = auto_pop.number_of_agents;
         let working_percentage = auto_pop.working_percentage;
@@ -64,6 +68,7 @@ impl Grid {
             trace!("home: {:?} {:?}", home.start_offset, home.end_offset);
             trace!("agents in home: {:?}", agents.len());
             let mut random_points_within_home = home.random_points(agents.len() as i32, rng);
+            self.houses_occupancy.insert(*home, agents.len() as i32);
 
             for agent in agents{
                 agents_in_order.push(*agent);
@@ -71,6 +76,8 @@ impl Grid {
             home_loc.append(&mut random_points_within_home);
         }
         debug!("Assigned starting location to agents");
+
+        self.offices_occupancy = self.group_office_locations_by_occupancy(agents_in_order.as_slice());
 
         self.draw(&home_loc, &self.houses, &self.offices);
         (home_loc, agents_in_order)
@@ -171,19 +178,19 @@ impl Grid {
         self.hospital_area = Area::new(start_offset, end_offset)
     }
 
-    pub fn group_home_locations_by_occupancy(&self, citizens: &[&Citizen]) -> HashMap<Area, i32> {
-        let mut occupancy = HashMap::new();
-        self.houses.iter().for_each(|house| {
-            occupancy.insert(*house, 0);
-        });
-        citizens.iter().for_each(|citizen| {
-            let home = citizen.home_location;
-            *occupancy.get_mut(&home).expect("Unknown home! Doesn't exist in grid") += 1;
-        });
-        occupancy
-    }
+    // pub fn group_home_locations_by_occupancy(&self, citizens: &[&Citizen]) -> HashMap<Area, i32> {
+    //     let mut occupancy = HashMap::new();
+    //     self.houses.iter().for_each(|house| {
+    //         occupancy.insert(*house, 0);
+    //     });
+    //     citizens.iter().for_each(|citizen| {
+    //         let home = citizen.home_location;
+    //         *occupancy.get_mut(&home).expect("Unknown home! Doesn't exist in grid") += 1;
+    //     });
+    //     occupancy
+    // }
 
-    pub fn group_office_locations_by_occupancy(&self, citizens: &[&Citizen]) -> HashMap<Area, i32> {
+    pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen]) -> HashMap<Area, i32> {
         let mut occupancy = HashMap::new();
         self.offices.iter().for_each(|house| {
             occupancy.insert(*house, 0);
@@ -196,18 +203,34 @@ impl Grid {
         occupancy
     }
 
-    pub fn choose_house_with_free_space(&self, occupancy: HashMap<Area, i32>, rng: &mut RandomWrapper) -> Area {
+    pub fn choose_house_with_free_space(&self, rng: &mut RandomWrapper) -> Area {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
-        *occupancy.iter().filter(|(_house, occupants)| **occupants < house_capacity)
+        *self.houses_occupancy.iter().filter(|(_house, occupants)| **occupants < house_capacity)
             .choose(rng.get())
             .expect("Couldn't find any house with free space!").0
     }
 
-    pub fn choose_office_with_free_space(&self, occupancy: HashMap<Area, i32>, rng: &mut RandomWrapper) -> Area {
+    pub fn choose_office_with_free_space(&self, rng: &mut RandomWrapper) -> Area {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
-        *occupancy.iter().filter(|(_house, occupants)| **occupants < office_capacity)
+        *self.offices_occupancy.iter().filter(|(_house, occupants)| **occupants < office_capacity)
             .choose(rng.get())
             .expect("Couldn't find any offices with free space!").0
+    }
+
+    pub fn add_house_occupant(&mut self, house: &Area) {
+        *self.houses_occupancy.get_mut(house).expect("Could not find house!") += 1;
+    }
+
+    pub fn add_office_occupant(&mut self, office: &Area) {
+        *self.offices_occupancy.get_mut(office).expect("Could not find office!") += 1;
+    }
+
+    pub fn remove_house_occupant(&mut self, house: &Area) {
+        *self.houses_occupancy.get_mut(house).expect("Could not find house!") -= 1;
+    }
+
+    pub fn remove_office_occupant(&mut self, office: &Area) {
+        *self.offices_occupancy.get_mut(office).expect("Could not find office!") -= 1;
     }
 }
 
@@ -220,7 +243,7 @@ mod tests {
     fn should_generate_population() {
         let mut rng = RandomWrapper::new();
 
-        let grid = define_geography(100);
+        let mut grid = define_geography(100);
         let housing_area = grid.housing_area;
         let transport_area = grid.transport_area;
         let work_area = grid.work_area;

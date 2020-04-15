@@ -26,6 +26,7 @@ mod point;
 pub use self::area::Area;
 pub use self::grid::Grid;
 pub use self::point::Point;
+use std::collections::HashMap;
 
 pub fn define_geography(grid_size: i32) -> Grid {
     let home_width = (grid_size as f32 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32;
@@ -44,7 +45,17 @@ pub fn define_geography(grid_size: i32) -> Grid {
     let houses = area::area_factory(housing_area.start_offset, housing_area.end_offset, constants::HOME_SIZE);
     let offices = area::area_factory(work_area.start_offset, work_area.end_offset, constants::OFFICE_SIZE);
 
-    Grid { grid_size, housing_area, transport_area, hospital_area, work_area, houses, offices }
+    Grid {
+        grid_size,
+        housing_area,
+        transport_area,
+        hospital_area,
+        work_area,
+        houses,
+        offices,
+        houses_occupancy: HashMap::new(),
+        offices_occupancy: HashMap::new(),
+    }
 }
 
 #[cfg(test)]

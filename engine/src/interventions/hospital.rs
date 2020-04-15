@@ -30,6 +30,7 @@ pub struct BuildNewHospitalConfig {
 pub struct BuildNewHospital {
     new_infections_in_a_day: i32,
     intervention: Option<BuildNewHospitalConfig>,
+    has_applied: bool,
 }
 
 impl BuildNewHospital {
@@ -47,16 +48,28 @@ impl BuildNewHospital {
         BuildNewHospital {
             new_infections_in_a_day: 0,
             intervention,
+            has_applied: false,
         }
     }
 
     pub fn should_apply(&self, counts: &Counts) -> bool {
+        if self.has_applied() {
+            return false;
+        }
         let start_of_day = counts.get_hour() % 24 == 0;
         let exceeds_threshold = match self.intervention {
             None => { false }
             Some(i) => { self.new_infections_in_a_day >= i.spread_rate_threshold }
         };
         start_of_day && exceeds_threshold
+    }
+
+    pub fn apply(&mut self) {
+        self.has_applied = true;
+    }
+
+    pub fn has_applied(&self) -> bool {
+        self.has_applied
     }
 
     pub fn counts_updated(&mut self, counts: &Counts) {
@@ -82,13 +95,13 @@ mod tests {
 
     fn get_test_hospital_intervention() -> BuildNewHospital {
         let config = BuildNewHospitalConfig { spread_rate_threshold: 10 };
-        return BuildNewHospital { new_infections_in_a_day: 0, intervention: Some(config) };
+        return BuildNewHospital { has_applied: false, new_infections_in_a_day: 0, intervention: Some(config) };
     }
 
     #[test]
     fn should_apply_hospital_intervention_when_threshold_increases_at_start_of_day() {
         let config = BuildNewHospitalConfig { spread_rate_threshold: 10 };
-        let mut build_new_hospital = BuildNewHospital { new_infections_in_a_day: 0, intervention: Some(config) };
+        let mut build_new_hospital = BuildNewHospital { has_applied: false, new_infections_in_a_day: 0, intervention: Some(config) };
         let counts = Counts::new_test(0, 99, 1, 0, 0, 0);
         build_new_hospital.counts_updated(&counts);
         assert!(!build_new_hospital.should_apply(&counts));
@@ -98,7 +111,7 @@ mod tests {
 
     #[test]
     fn should_not_apply_hospital_intervention_when_absent() {
-        let mut build_new_hospital = BuildNewHospital { new_infections_in_a_day: 0, intervention: None };
+        let mut build_new_hospital = BuildNewHospital { has_applied: false, new_infections_in_a_day: 0, intervention: None };
         let counts = Counts::new_test(0, 99, 1, 0, 0, 0);
         build_new_hospital.counts_updated(&counts);
         assert!(!build_new_hospital.should_apply(&counts));
@@ -109,7 +122,7 @@ mod tests {
     #[test]
     fn should_not_apply_hospital_intervention_when_below_threshold() {
         let config = BuildNewHospitalConfig { spread_rate_threshold: 10 };
-        let mut build_new_hospital = BuildNewHospital { new_infections_in_a_day: 0, intervention: Some(config) };
+        let mut build_new_hospital = BuildNewHospital { has_applied: false, new_infections_in_a_day: 0, intervention: Some(config) };
         let counts = Counts::new_test(0, 99, 1, 0, 0, 0);
         build_new_hospital.counts_updated(&counts);
         assert!(!build_new_hospital.should_apply(&counts));
@@ -129,5 +142,23 @@ mod tests {
         let build_new_hospital = get_test_hospital_intervention();
 
         assert_eq!(build_new_hospital.json_data(), "{}")
+    }
+
+    #[test]
+    fn should_be_able_to_mark_intervention_applied() {
+        let mut hospital_intervention = get_test_hospital_intervention();
+
+        hospital_intervention.apply();
+
+        assert_eq!(hospital_intervention.has_applied(), true)
+    }
+
+    #[test]
+    fn should_not_invoke_intervention_if_already_invoked() {
+        let mut hospital_intervention = get_test_hospital_intervention();
+        let counts = Counts::new_test(0, 99, 1, 0, 0, 0);
+        hospital_intervention.apply();
+        hospital_intervention.counts_updated(&Counts::new_test(24, 80, 20, 0, 0, 0));
+        assert_eq!(hospital_intervention.should_apply(&counts), false);
     }
 }

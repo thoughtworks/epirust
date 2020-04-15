@@ -166,6 +166,8 @@ impl Epidemiology {
             if hospital_intervention.should_apply(&counts_at_hr) {
                 info!("Increasing the hospital size");
                 self.grid.increase_hospital_size(config.get_grid_size());
+                hospital_intervention.apply();
+
                 listeners.grid_updated(&self.grid);
                 listeners.intervention_applied(simulation_hour, &hospital_intervention);
             }

@@ -24,6 +24,7 @@ use crate::interventions::hospital::BuildNewHospitalConfig;
 pub mod hospital;
 pub mod lockdown;
 pub mod vaccination;
+pub mod intervention_type;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub enum Intervention {

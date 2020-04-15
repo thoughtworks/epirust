@@ -19,6 +19,7 @@
 
 use crate::listeners::events::counts::Counts;
 use crate::interventions::Intervention;
+use crate::interventions::intervention_type::InterventionType;
 use crate::config::Config;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
@@ -65,9 +66,24 @@ impl BuildNewHospital {
     }
 }
 
+impl InterventionType for BuildNewHospital {
+    fn name(&mut self) -> String {
+        return "build_new_hospital".to_string();
+    }
+
+    fn json_data(&mut self) -> String {
+        return r#"{}"#.to_string();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn get_test_hospital_intervention() -> BuildNewHospital {
+        let config = BuildNewHospitalConfig { spread_rate_threshold: 10 };
+        return BuildNewHospital { new_infections_in_a_day: 0, intervention: Some(config) };
+    }
 
     #[test]
     fn should_apply_hospital_intervention_when_threshold_increases_at_start_of_day() {
@@ -99,5 +115,19 @@ mod tests {
         assert!(!build_new_hospital.should_apply(&counts));
         build_new_hospital.counts_updated(&Counts::new_test(24, 95, 5, 0, 0, 0));
         assert!(!build_new_hospital.should_apply(&counts));
+    }
+
+    #[test]
+    fn should_return_intervention_name_as_build_new_hospital() {
+        let mut build_new_hospital = get_test_hospital_intervention();
+
+        assert_eq!(build_new_hospital.name(), "build_new_hospital")
+    }
+
+    #[test]
+    fn should_return_json_data_as_empty() {
+        let mut build_new_hospital = get_test_hospital_intervention();
+
+        assert_eq!(build_new_hospital.json_data(), "{}")
     }
 }

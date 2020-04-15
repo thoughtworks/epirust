@@ -70,20 +70,20 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn infect(&mut self, rng: &mut RandomWrapper, current_hour: i32, disease: &Disease) -> i32 {
+    pub fn infect(&mut self, rng: &mut RandomWrapper, current_hour: i32, disease: &Disease) -> bool {
         match self.state {
             State::Exposed { at_hour } => {
                 if current_hour - at_hour >= disease.get_exposed_duration() {
                     let symptoms = rng.get().gen_bool(disease.get_percentage_asymptomatic_population());
                     let severe = rng.get().gen_bool(disease.get_percentage_severe_infected_population());
                     let mut severity = InfectionSeverity::Mild {};
-                    if severe {
+                    if symptoms && severe {
                         severity = InfectionSeverity::Severe {};
                     }
                     self.state = State::Infected { symptoms, severity };
-                    return 1
+                    return true;
                 }
-                    return 0
+                return false;
             }
             _ => {
                 panic!("Invalid state transition!")
@@ -93,9 +93,9 @@ impl DiseaseStateMachine {
 
     pub fn quarantine(&mut self, disease: &Disease, immunity: i32) -> bool {
         match self.state {
-            State::Infected { symptoms: true, .. } =>
+            State::Infected { symptoms: true, severity: InfectionSeverity::Severe {} } =>
                 return disease.to_be_quarantined(self.infection_day + immunity),
-            State::Infected { symptoms: false, .. } => { false }
+            State::Infected { .. } => { false }
             _ => {
                 panic!("Invalid state transition!")
             }

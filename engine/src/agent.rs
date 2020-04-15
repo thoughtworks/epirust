@@ -260,8 +260,8 @@ impl Citizen {
 
     fn update_infection(&mut self, counts: &mut Counts, rng: &mut RandomWrapper, disease: &Disease) {
         if self.state_machine.is_exposed() {
-            let updated_infection_count = self.state_machine.infect(rng, counts.get_hour(), &disease);
-            if updated_infection_count == 1{
+            let is_infected = self.state_machine.infect(rng, counts.get_hour(), &disease);
+            if is_infected {
                 counts.update_infected(1);
                 counts.update_exposed(-1);
             }
@@ -318,7 +318,7 @@ impl Citizen {
             if self.quarantined {
                 counts.update_quarantined(-(result.0 + result.1));
             }
-            if result != (0,0) {
+            if result != (0, 0) {
                 self.hospitalized = false;
                 self.quarantined = false;
             }

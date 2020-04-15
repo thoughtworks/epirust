@@ -26,7 +26,7 @@ use crate::geography::{Area, area, Point};
 use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
 use std::collections::HashMap;
-use rand::seq::SliceRandom;
+use rand::seq::IteratorRandom;
 
 #[derive(Serialize)]
 pub struct Grid {
@@ -171,34 +171,43 @@ impl Grid {
         self.hospital_area = Area::new(start_offset, end_offset)
     }
 
-    pub fn choose_house_with_free_space(&self, citizens: &[&Citizen], rng: &mut RandomWrapper) -> Area {
+    pub fn group_home_locations_by_occupancy(&self, citizens: &[&Citizen]) -> HashMap<Area, i32> {
+        let mut occupancy = HashMap::new();
+        self.houses.iter().for_each(|house| {
+            occupancy.insert(*house, 0);
+        });
+        citizens.iter().for_each(|citizen| {
+            let home = citizen.home_location;
+            *occupancy.get_mut(&home).expect("Unknown home! Doesn't exist in grid") += 1;
+        });
+        occupancy
+    }
+
+    pub fn group_office_locations_by_occupancy(&self, citizens: &[&Citizen]) -> HashMap<Area, i32> {
+        let mut occupancy = HashMap::new();
+        self.offices.iter().for_each(|house| {
+            occupancy.insert(*house, 0);
+        });
+        citizens.iter().filter(|citizen| citizen.is_working())
+            .for_each(|worker| {
+                let office = worker.work_location;
+                *occupancy.get_mut(&office).expect("Unknown office! Doesn't exist in grid") += 1;
+            });
+        occupancy
+    }
+
+    pub fn choose_house_with_free_space(&self, occupancy: HashMap<Area, i32>, rng: &mut RandomWrapper) -> Area {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
-        loop {
-            let house = self.houses.choose(rng.get()).unwrap();
-            let occupants = Grid::find_home_occupants(&citizens, house);
-            if occupants < house_capacity {
-                return *house;
-            }
-        }
+        *occupancy.iter().filter(|(_house, occupants)| **occupants < house_capacity)
+            .choose(rng.get())
+            .expect("Couldn't find any house with free space!").0
     }
 
-    pub fn choose_office_with_free_space(&self, citizens: &[&Citizen], rng: &mut RandomWrapper) -> Area {
+    pub fn choose_office_with_free_space(&self, occupancy: HashMap<Area, i32>, rng: &mut RandomWrapper) -> Area {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
-        loop {
-            let office = self.offices.choose(rng.get()).unwrap();
-            let occupants = Grid::find_office_occupants(&citizens, office);
-            if occupants < office_capacity {
-                return *office;
-            }
-        }
-    }
-
-    fn find_home_occupants(citizens: &[&Citizen], house: &Area) -> i32 {
-        citizens.iter().filter(|citizen| citizen.home_location == *house).count() as i32
-    }
-
-    fn find_office_occupants(citizens: &[&Citizen], office: &Area) -> i32 {
-        citizens.iter().filter(|citizen| citizen.work_location == *office).count() as i32
+        *occupancy.iter().filter(|(_house, occupants)| **occupants < office_capacity)
+            .choose(rng.get())
+            .expect("Couldn't find any offices with free space!").0
     }
 }
 

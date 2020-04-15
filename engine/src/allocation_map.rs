@@ -78,6 +78,7 @@ impl AgentLocationMap {
     }
 
     pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Traveller)>, counts: &mut Counts) {
+        debug!("Removing {} outgoing travellers", outgoing.len());
         for (point, traveller) in outgoing {
             match traveller.state_machine.state {
                 State::Susceptible { .. } => { counts.update_susceptible(-1) },
@@ -100,17 +101,24 @@ impl AgentLocationMap {
         if incoming.is_empty() {
             return;
         }
+        debug!("Assimilating {} incoming travellers", incoming.len());
         let local_citizens: Vec<&Citizen> = self.agent_cell.values().collect();
+        let mut home_occupancy = grid.group_home_locations_by_occupancy(local_citizens.as_slice());
+        let mut office_occupancy = grid.group_office_locations_by_occupancy(local_citizens.as_slice());
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
         for traveller in incoming {
-            let house = grid.choose_house_with_free_space(local_citizens.as_slice(), rng);
+            let house = grid.choose_house_with_free_space(home_occupancy.clone(), rng);
             let office = if traveller.working {
-                grid.choose_office_with_free_space(local_citizens.as_slice(), rng)
+                grid.choose_office_with_free_space(office_occupancy.clone(), rng)
             } else {
                 house
             };
             let transport_location = house.get_random_point(rng); // Fixme
             new_citizens.push(Citizen::from_traveller(traveller, house, office, transport_location, grid.housing_area));
+            *home_occupancy.get_mut(&house).unwrap() += 1;
+            if traveller.working {
+                *office_occupancy.get_mut(&office).unwrap() += 1;
+            }
         }
         for c in new_citizens {
             match c.state_machine.state {

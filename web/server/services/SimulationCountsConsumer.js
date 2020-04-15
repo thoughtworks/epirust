@@ -40,6 +40,8 @@ class SimulationCountsConsumer {
         console.log("Consumed all counts for simulation id", simulationId);
         await simulation.exec()
 
+      } else if("intervention" in parsedMessage) {
+        //ignore this message for now to avoid breaking ui
       } else {
         parsedMessage["simulation_id"] = simulationId;
         const countInsertQuery = new Count(parsedMessage);

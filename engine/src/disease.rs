@@ -30,6 +30,9 @@ pub struct Disease {
     regular_transmission_rate: f64,
     high_transmission_rate: f64,
     death_rate: f64,
+    percentage_asymptomatic_population: f64,
+    percentage_severe_infected_population: f64,
+    exposed_duration: i32,
 }
 
 impl Disease {
@@ -46,7 +49,7 @@ impl Disease {
 
     #[cfg(test)]
     pub fn new(regular_transmission_start_day: i32, high_transmission_start_day: i32, last_day: i32,
-               regular_transmission_rate: f64, high_transmission_rate: f64, death_rate: f64) -> Disease {
+               regular_transmission_rate: f64, high_transmission_rate: f64, death_rate: f64, percentage_asymptomatic_population: f64, percentage_severe_infected_population: f64, exposed_duration: i32) -> Disease {
         Disease {
             regular_transmission_start_day,
             high_transmission_start_day,
@@ -54,6 +57,9 @@ impl Disease {
             regular_transmission_rate,
             high_transmission_rate,
             death_rate,
+            percentage_asymptomatic_population,
+            percentage_severe_infected_population,
+            exposed_duration
         }
     }
 
@@ -83,6 +89,18 @@ impl Disease {
             return true;
         }
         false
+    }
+
+    pub fn get_percentage_asymptomatic_population(&self) -> f64 {
+        self.percentage_asymptomatic_population
+    }
+
+    pub fn get_percentage_severe_infected_population(&self) -> f64 {
+        self.percentage_severe_infected_population
+    }
+
+    pub fn get_exposed_duration(&self) -> i32 {
+        self.exposed_duration
     }
 }
 
@@ -137,6 +155,9 @@ mod tests {
             regular_transmission_rate: 0.05,
             high_transmission_rate: 0.5,
             death_rate: 0.2,
+            percentage_asymptomatic_population: 0.0,
+            percentage_severe_infected_population: 1.0,
+            exposed_duration: 0
         };
         assert_eq!(expected, disease)
     }

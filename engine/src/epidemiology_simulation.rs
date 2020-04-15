@@ -396,7 +396,7 @@ mod tests {
             public_transport_percentage: 1.0,
             working_percentage: 1.0,
         };
-        let disease = Disease::new(0, 0, 0, 0.0, 0.0, 0.0);
+        let disease = Disease::new(0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0);
         let vac = VaccinateConfig {
             at_hour: 5000,
             percent: 0.2,

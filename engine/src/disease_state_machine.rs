@@ -20,7 +20,6 @@
 use crate::disease::Disease;
 use crate::random_wrapper::RandomWrapper;
 use rand::Rng;
-use crate::constants::{PERCENTAGE_ASYMPTOMATIC_POPULATION, PERCENTAGE_SEVERE_INFECTED_POPULATION, EXPOSED_DURATION};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum State {
@@ -71,12 +70,12 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn infect(&mut self, rng: &mut RandomWrapper, current_hour: i32) -> i32 {
+    pub fn infect(&mut self, rng: &mut RandomWrapper, current_hour: i32, disease: &Disease) -> i32 {
         match self.state {
             State::Exposed { at_hour } => {
-                if current_hour - at_hour >= EXPOSED_DURATION {
-                    let symptoms = rng.get().gen_bool(PERCENTAGE_ASYMPTOMATIC_POPULATION);
-                    let severe = rng.get().gen_bool(PERCENTAGE_SEVERE_INFECTED_POPULATION);
+                if current_hour - at_hour >= disease.get_exposed_duration() {
+                    let symptoms = rng.get().gen_bool(disease.get_percentage_asymptomatic_population());
+                    let severe = rng.get().gen_bool(disease.get_percentage_severe_infected_population());
                     let mut severity = InfectionSeverity::Mild {};
                     if severe {
                         severity = InfectionSeverity::Severe {};
@@ -188,8 +187,9 @@ mod tests {
     #[test]
     fn should_infect() {
         let mut machine = DiseaseStateMachine::new();
+        let disease = Disease::new(10, 20, 40, 0.025, 0.25, 0.02, 0.3, 0.3, 24);
         machine.expose(100);
-        machine.infect(&mut RandomWrapper::new(), 140);
+        machine.infect(&mut RandomWrapper::new(), 140, &disease);
 
         let result = match machine.state {
             State::Infected { .. } => true,
@@ -202,8 +202,10 @@ mod tests {
     #[test]
     fn should_not_infect() {
         let mut machine = DiseaseStateMachine::new();
+        let disease = Disease::new(10, 20, 40, 0.025, 0.25, 0.02, 0.3, 0.3, 24);
+
         machine.expose(100);
-        machine.infect(&mut RandomWrapper::new(), 110);
+        machine.infect(&mut RandomWrapper::new(), 110, &disease);
 
         let result = match machine.state {
             State::Exposed { .. } => true,

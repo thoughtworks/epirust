@@ -36,7 +36,3 @@ pub const IMMUNITY_RANGE: [i32; 5] = [-2, -1, 0, 1, 2];
 
 pub const HOME_SIZE: i32 = 2;
 pub const OFFICE_SIZE: i32 = 10;
-
-pub const EXPOSED_DURATION: i32 = 24;
-pub const PERCENTAGE_ASYMPTOMATIC_POPULATION: f64 = 0.3;
-pub const PERCENTAGE_SEVERE_INFECTED_POPULATION: f64 = 0.2;

@@ -208,19 +208,19 @@ impl Citizen {
                 new_cell = self.goto_area(grid.transport_area, map, cell, rng);
                 self.current_area = grid.transport_area;
                 self.update_exposure(cell, map, counts, rng, disease);
-                self.update_infection(counts, rng);
+                self.update_infection(counts, rng, &disease);
             }
             constants::ROUTINE_WORK_TIME => {
                 new_cell = self.goto_area(self.work_location, map, cell, rng);
                 self.current_area = grid.work_area;
                 self.update_exposure(cell, map, counts, rng, disease);
-                self.update_infection(counts, rng);
+                self.update_infection(counts, rng, &disease);
             }
             constants::ROUTINE_WORK_END_TIME => {
                 new_cell = self.goto_area(self.home_location, map, cell, rng);
                 self.current_area = grid.housing_area;
                 self.update_exposure(cell, map, counts, rng, disease);
-                self.update_infection(counts, rng);
+                self.update_infection(counts, rng, &disease);
             }
             constants::ROUTINE_END_TIME => {
                 new_cell = self.deceased(map, cell, counts, rng, disease)
@@ -228,7 +228,7 @@ impl Citizen {
             _ => {
                 new_cell = self.move_agent_from(map, cell, rng);
                 self.update_exposure(cell, map, counts, rng, disease);
-                self.update_infection(counts, rng);
+                self.update_infection(counts, rng, &disease);
             }
         }
         new_cell
@@ -258,9 +258,9 @@ impl Citizen {
         new_cell
     }
 
-    fn update_infection(&mut self, counts: &mut Counts, rng: &mut RandomWrapper) {
+    fn update_infection(&mut self, counts: &mut Counts, rng: &mut RandomWrapper, disease: &Disease) {
         if self.state_machine.is_exposed() {
-            let updated_infection_count = self.state_machine.infect(rng, counts.get_hour());
+            let updated_infection_count = self.state_machine.infect(rng, counts.get_hour(), &disease);
             if updated_infection_count == 1{
                 counts.update_infected(1);
                 counts.update_exposed(-1);

@@ -5,7 +5,6 @@ version: '3.7'
 
 services:
   mongodb_container:
-    container_name: db
     image: mongo:latest
     command: mongod --port 27018
     ports:
@@ -14,9 +13,7 @@ services:
       - ./mongo-data:/data/db
       
   zookeeper:
-    container_name: zookeeper
     image: zookeeper:3.4.9
-    hostname: zookeeper
     ports:
       - "12181:12181"
     environment:
@@ -28,13 +25,11 @@ services:
       - ./zookeeper/datalog:/datalog
 
   kafka:
-    container_name: kafka
     image: confluentinc/cp-kafka:5.4.1
-    hostname: kafka
     ports:
       - "29092:29092"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:29092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-kafka}:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:12181"

@@ -129,15 +129,19 @@ impl AgentLocationMap {
                 State::Recovered { .. } => { counts.update_recovered(1) }
                 State::Deceased { .. } => { panic!("Should not receive deceased agent!") }
             }
-            let p = self.get_vacant_cell(&mut grid.housing_area);
+            let p = self.random_starting_point(&grid.housing_area, rng);
             let result = self.agent_cell.insert(p, c);
             assert!(result.is_none());
         }
     }
 
-    pub fn get_vacant_cell(&self, area: &mut Area) -> Point {
-        area.iter().find(|point| !self.agent_cell.contains_key(point))
-            .expect("No vacant cell in area!")
+    fn random_starting_point(&self, area: &Area, rng: &mut RandomWrapper) -> Point {
+        loop {
+            let point = area.get_random_point(rng);
+            if !self.agent_cell.contains_key(&point) {
+                return point
+            }
+        }
     }
 
     pub fn current_population(&self) -> i32 {

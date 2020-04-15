@@ -29,6 +29,7 @@ use crate::listeners::events::citizen_state::CitizenStatesAtHr;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
 use crate::environment;
+use crate::interventions::intervention_type::InterventionType;
 
 pub struct EventsKafkaProducer {
     sim_id: String,
@@ -115,6 +116,22 @@ impl Listener for EventsKafkaProducer {
             }
         }
     }
+
+    fn intervention_applied(&self,
+                            _at_hour: i32,
+                            _intervention: &dyn InterventionType,
+    ) {
+        let formatted_message = format!(r#"{{"hour": {}, "intervention": "{}", "data": {}}}"#,
+                                        _at_hour,
+                                        _intervention.name(),
+                                        _intervention.json_data());
+
+        let record: FutureRecord<String, String> = FutureRecord::to(&self.count_updated_topic)
+            .key(&self.sim_id)
+            .payload(&formatted_message);
+        self.producer.send(record, 0);
+    }
+
 
     fn as_any(&self) -> &dyn Any {
         self

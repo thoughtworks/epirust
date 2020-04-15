@@ -67,11 +67,11 @@ impl BuildNewHospital {
 }
 
 impl InterventionType for BuildNewHospital {
-    fn name(&mut self) -> String {
+    fn name(&self) -> String {
         return "build_new_hospital".to_string();
     }
 
-    fn json_data(&mut self) -> String {
+    fn json_data(&self) -> String {
         return r#"{}"#.to_string();
     }
 }
@@ -119,14 +119,14 @@ mod tests {
 
     #[test]
     fn should_return_intervention_name_as_build_new_hospital() {
-        let mut build_new_hospital = get_test_hospital_intervention();
+        let build_new_hospital = get_test_hospital_intervention();
 
         assert_eq!(build_new_hospital.name(), "build_new_hospital")
     }
 
     #[test]
     fn should_return_json_data_as_empty() {
-        let mut build_new_hospital = get_test_hospital_intervention();
+        let build_new_hospital = get_test_hospital_intervention();
 
         assert_eq!(build_new_hospital.json_data(), "{}")
     }

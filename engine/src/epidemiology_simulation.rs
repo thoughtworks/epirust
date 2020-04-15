@@ -167,6 +167,7 @@ impl Epidemiology {
                 info!("Increasing the hospital size");
                 self.grid.increase_hospital_size(config.get_grid_size());
                 listeners.grid_updated(&self.grid);
+                listeners.intervention_applied(simulation_hour, &hospital_intervention);
             }
 
             let grid = &self.grid;
@@ -191,13 +192,22 @@ impl Epidemiology {
             if lock_down_details.should_apply(&counts_at_hr) {
                 lock_down_details.apply(&counts_at_hr);
                 Epidemiology::lock_city(&mut write_buffer_reference, &mut rng, &lock_down_details.get_config().unwrap());
+                listeners.intervention_applied(simulation_hour, &lock_down_details)
             }
 
             if lock_down_details.should_unlock(&counts_at_hr) {
                 Epidemiology::unlock_city(&mut write_buffer_reference);
+                listeners.intervention_applied(simulation_hour, &lock_down_details)
             }
 
-            Epidemiology::apply_vaccination_intervention(&vaccinations, &counts_at_hr, &mut write_buffer_reference, &mut rng);
+            Epidemiology::apply_vaccination_intervention(
+                &vaccinations,
+                &counts_at_hr,
+                &mut write_buffer_reference,
+                &mut rng,
+                &mut listeners,
+                simulation_hour
+            );
 
             if Epidemiology::stop_simulation(&run_mode, counts_at_hr) {
                 break;
@@ -297,11 +307,13 @@ impl Epidemiology {
     }
 
     fn apply_vaccination_intervention(vaccinations: &VaccinateIntervention, counts: &Counts,
-                                      write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
+                                      write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper,
+                                      listeners: &mut Listeners, simulation_hour: i32) {
         match vaccinations.get_vaccination_percentage(counts) {
             Some(vac_percent) => {
                 info!("Vaccination");
                 Epidemiology::vaccinate(*vac_percent, write_buffer_reference, rng);
+                listeners.intervention_applied(simulation_hour, vaccinations)
             }
             _ => {}
         };

@@ -81,16 +81,16 @@ impl LockdownIntervention {
 }
 
 impl InterventionType for LockdownIntervention {
-    fn name(&mut self) -> String {
+    fn name(&self) -> String {
         "lockdown".to_string()
     }
 
-    fn json_data(&mut self) -> String {
+    fn json_data(&self) -> String {
         if self.is_locked_down {
-            r#"{status: "locked_down"}"#.to_string()
+            r#"{"status": "locked_down"}"#.to_string()
         }
         else {
-            r#"{status: "lockdown_revoked"}"#.to_string()
+            r#"{"status": "lockdown_revoked"}"#.to_string()
         }
     }
 }
@@ -190,22 +190,22 @@ mod tests {
 
     #[test]
     fn should_return_intervention_name_as_lockdown() {
-        let mut lockdown_intervention = get_test_lockdown_intervention(false);
+        let lockdown_intervention = get_test_lockdown_intervention(false);
 
         assert_eq!(lockdown_intervention.name(), "lockdown")
     }
 
     #[test]
     fn should_return_json_data_with_lockdown_state_as_locked_down_when_city_is_locked_down() {
-        let mut lockdown_intervention = get_test_lockdown_intervention(true);
+        let lockdown_intervention = get_test_lockdown_intervention(true);
 
-        assert_eq!(lockdown_intervention.json_data(), r#"{status: "locked_down"}"#)
+        assert_eq!(lockdown_intervention.json_data(), r#"{"status": "locked_down"}"#)
     }
 
     #[test]
     fn should_return_json_data_with_lockdown_state_as_lockdown_revoked_when_city_is_not_locked_down() {
-        let mut lockdown_intervention = get_test_lockdown_intervention(false);
+        let lockdown_intervention = get_test_lockdown_intervention(false);
 
-        assert_eq!(lockdown_intervention.json_data(), r#"{status: "lockdown_revoked"}"#)
+        assert_eq!(lockdown_intervention.json_data(), r#"{"status": "lockdown_revoked"}"#)
     }
 }

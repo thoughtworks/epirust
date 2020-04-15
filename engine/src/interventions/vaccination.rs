@@ -67,11 +67,11 @@ impl VaccinateIntervention {
 }
 
 impl InterventionType for VaccinateIntervention {
-    fn name(&mut self) -> String {
+    fn name(&self) -> String {
         "vaccination".to_string()
     }
 
-    fn json_data(&mut self) -> String {
+    fn json_data(&self) -> String {
         "{}".to_string()
     }
 }
@@ -112,14 +112,14 @@ mod tests {
 
     #[test]
     fn should_return_intervention_name_as_vaccination() {
-        let mut vaccination_intervention = get_test_vaccination_intervention();
+        let vaccination_intervention = get_test_vaccination_intervention();
 
         assert_eq!(vaccination_intervention.name(), "vaccination")
     }
 
     #[test]
     fn should_return_empty_json_data() {
-        let mut vaccination_intervention = get_test_vaccination_intervention();
+        let vaccination_intervention = get_test_vaccination_intervention();
 
         assert_eq!(vaccination_intervention.json_data(), "{}")
     }

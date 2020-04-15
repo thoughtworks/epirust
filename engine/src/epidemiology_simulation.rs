@@ -138,13 +138,13 @@ impl Epidemiology {
             match &tick {
                 None => {}
                 Some(t) => {
-                    outgoing.clear();
                     if t.terminate() {
                         break;
                     }
                 }
             }
             engine_travel_plan.receive_tick(tick.clone());
+            outgoing.clear();
 
             counts_at_hr.increment_hour();
 
@@ -225,6 +225,9 @@ impl Epidemiology {
 
     async fn receive_tick(run_mode: &RunMode, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                           simulation_hour: i32) -> Option<Tick> {
+        if simulation_hour > 1 && simulation_hour % 24 != 0 {
+           return None;
+        }
         if let RunMode::MultiEngine { engine_id: _e } = run_mode {
             let msg = message_stream.next().await;
             let clock_tick = ticks_consumer::read(msg);
@@ -244,6 +247,9 @@ impl Epidemiology {
     }
 
     async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, counts: Counts, simulation_hour: i32) {
+        if simulation_hour > 1 && simulation_hour % 24 != 0 {
+            return
+        }
         if let RunMode::MultiEngine { engine_id } = run_mode {
             let ack = TickAck { engine_id: engine_id.to_string(), hour: simulation_hour, counts };
             match producer.send_ack(&ack).await.unwrap() {

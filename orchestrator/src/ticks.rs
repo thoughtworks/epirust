@@ -34,8 +34,11 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i32>) {
     let mut producer = KafkaProducer::new();
     let consumer = KafkaConsumer::new();
     let mut message_stream = consumer.start_message_stream();
+    let mut should_terminate = false;
     for h in hours {
-        let should_terminate = h > 1 && acks.should_terminate();
+        if h > 1 && h % 24 != 0 {
+            continue;
+        }
         acks.reset(h);
         let tick = Tick::new(h, travel_plan, should_terminate);
 
@@ -54,6 +57,7 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i32>) {
                         Ok(ack) => {
                             acks.push(ack);
                             if acks.all_received() {
+                                should_terminate = acks.should_terminate();
                                 break;
                             }
                         }

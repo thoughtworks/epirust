@@ -49,6 +49,9 @@ exports[`Job Details should not render the config if the config is not given 1`]
         </h4>
       </div>
     </div>
+    <div
+      class="job-details-content"
+    />
   </div>
 </div>
 `;
@@ -103,51 +106,55 @@ exports[`Job Details should not render time series mean comparison tab when a jo
       </div>
     </div>
     <div
-      class="graph-wrap"
+      class="job-details-content"
     >
       <div
-        class="graph-actions"
+        class="graph-wrap"
       >
-        <p
-          class="action"
+        <div
+          class="graph-actions"
         >
-          Zoom: 
-          <code
-            class="control"
+          <p
+            class="action"
           >
-            click-drag
-          </code>
-        </p>
-        <p
-          class="action"
-        >
-          Pan: 
-          <code
-            class="control"
+            Zoom: 
+            <code
+              class="control"
+            >
+              click-drag
+            </code>
+          </p>
+          <p
+            class="action"
           >
-            shift-click-drag
-          </code>
-        </p>
-        <p
-          class="action"
-        >
-          Restore: 
-          <code
-            class="control"
+            Pan: 
+            <code
+              class="control"
+            >
+              shift-click-drag
+            </code>
+          </p>
+          <p
+            class="action"
           >
-            double-click
-          </code>
-        </p>
-        <button
-          class="btn btn-sm btn-secondary"
-        >
-          Export graph data
-        </button>
+            Restore: 
+            <code
+              class="control"
+            >
+              double-click
+            </code>
+          </p>
+          <button
+            class="btn btn-sm btn-secondary"
+          >
+            Export graph data
+          </button>
+        </div>
+        <div
+          data-testid="visualization"
+          id="vis"
+        />
       </div>
-      <div
-        data-testid="visualization"
-        id="vis"
-      />
     </div>
   </div>
 </DocumentFragment>
@@ -213,26 +220,30 @@ exports[`Job Details should render grid if grid is enabled in config 1`] = `
       </div>
     </div>
     <div
-      class="multi-spinners"
+      class="job-details-content"
     >
       <div
-        class="spinner-grow text-dark"
-      />
-      <div
-        class="spinner-grow text-dark"
-      />
-      <div
-        class="spinner-grow text-dark"
-      />
-      <div
-        class="spinner-grow text-dark"
-      />
-      <div
-        class="spinner-grow text-dark"
-      />
-      <div
-        class="spinner-grow text-dark"
-      />
+        class="multi-spinners"
+      >
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+      </div>
     </div>
   </div>
 </div>
@@ -287,11 +298,15 @@ exports[`Job Details should render the config if the config is given 1`] = `
         </h4>
       </div>
     </div>
-    <pre>
-      {
+    <div
+      class="job-details-content"
+    >
+      <pre>
+        {
     "configKey": "configValue"
 }
-    </pre>
+      </pre>
+    </div>
   </div>
 </div>
 `;
@@ -346,52 +361,56 @@ exports[`Job Details should render the time series if the view is time-series 1`
       </div>
     </div>
     <div
-      class="graph-wrap"
+      class="job-details-content"
     >
       <div
-        class="graph-actions"
+        class="graph-wrap"
       >
-        <p
-          class="action"
+        <div
+          class="graph-actions"
         >
-          Zoom: 
-          <code
-            class="control"
+          <p
+            class="action"
           >
-            click-drag
-          </code>
-        </p>
-        <p
-          class="action"
-        >
-          Pan: 
-          <code
-            class="control"
+            Zoom: 
+            <code
+              class="control"
+            >
+              click-drag
+            </code>
+          </p>
+          <p
+            class="action"
           >
-            shift-click-drag
-          </code>
-        </p>
-        <p
-          class="action"
-        >
-          Restore: 
-          <code
-            class="control"
+            Pan: 
+            <code
+              class="control"
+            >
+              shift-click-drag
+            </code>
+          </p>
+          <p
+            class="action"
           >
-            double-click
-          </code>
-        </p>
-        <button
-          class="btn btn-sm btn-secondary"
-          disabled=""
-        >
-          Export graph data
-        </button>
+            Restore: 
+            <code
+              class="control"
+            >
+              double-click
+            </code>
+          </p>
+          <button
+            class="btn btn-sm btn-secondary"
+            disabled=""
+          >
+            Export graph data
+          </button>
+        </div>
+        <div
+          data-testid="visualization"
+          id="vis"
+        />
       </div>
-      <div
-        data-testid="visualization"
-        id="vis"
-      />
     </div>
   </div>
 </div>
@@ -457,51 +476,55 @@ exports[`Job Details should render time series mean comparison graph tab when a 
       </div>
     </div>
     <div
-      class="graph-wrap"
+      class="job-details-content"
     >
       <div
-        class="graph-actions"
+        class="graph-wrap"
       >
-        <p
-          class="action"
+        <div
+          class="graph-actions"
         >
-          Zoom: 
-          <code
-            class="control"
+          <p
+            class="action"
           >
-            click-drag
-          </code>
-        </p>
-        <p
-          class="action"
-        >
-          Pan: 
-          <code
-            class="control"
+            Zoom: 
+            <code
+              class="control"
+            >
+              click-drag
+            </code>
+          </p>
+          <p
+            class="action"
           >
-            shift-click-drag
-          </code>
-        </p>
-        <p
-          class="action"
-        >
-          Restore: 
-          <code
-            class="control"
+            Pan: 
+            <code
+              class="control"
+            >
+              shift-click-drag
+            </code>
+          </p>
+          <p
+            class="action"
           >
-            double-click
-          </code>
-        </p>
-        <button
-          class="btn btn-sm btn-secondary"
-        >
-          Export graph data
-        </button>
+            Restore: 
+            <code
+              class="control"
+            >
+              double-click
+            </code>
+          </p>
+          <button
+            class="btn btn-sm btn-secondary"
+          >
+            Export graph data
+          </button>
+        </div>
+        <div
+          data-testid="visualization"
+          id="vis"
+        />
       </div>
-      <div
-        data-testid="visualization"
-        id="vis"
-      />
     </div>
   </div>
 </DocumentFragment>
@@ -557,52 +580,56 @@ exports[`Job Details should render time-series if grid is disabled in config 1`]
       </div>
     </div>
     <div
-      class="graph-wrap"
+      class="job-details-content"
     >
       <div
-        class="graph-actions"
+        class="graph-wrap"
       >
-        <p
-          class="action"
+        <div
+          class="graph-actions"
         >
-          Zoom: 
-          <code
-            class="control"
+          <p
+            class="action"
           >
-            click-drag
-          </code>
-        </p>
-        <p
-          class="action"
-        >
-          Pan: 
-          <code
-            class="control"
+            Zoom: 
+            <code
+              class="control"
+            >
+              click-drag
+            </code>
+          </p>
+          <p
+            class="action"
           >
-            shift-click-drag
-          </code>
-        </p>
-        <p
-          class="action"
-        >
-          Restore: 
-          <code
-            class="control"
+            Pan: 
+            <code
+              class="control"
+            >
+              shift-click-drag
+            </code>
+          </p>
+          <p
+            class="action"
           >
-            double-click
-          </code>
-        </p>
-        <button
-          class="btn btn-sm btn-secondary"
-          disabled=""
-        >
-          Export graph data
-        </button>
+            Restore: 
+            <code
+              class="control"
+            >
+              double-click
+            </code>
+          </p>
+          <button
+            class="btn btn-sm btn-secondary"
+            disabled=""
+          >
+            Export graph data
+          </button>
+        </div>
+        <div
+          data-testid="visualization"
+          id="vis"
+        />
       </div>
-      <div
-        data-testid="visualization"
-        id="vis"
-      />
     </div>
   </div>
 </div>

@@ -20,6 +20,13 @@
 .job-details {
   color: black;
   box-sizing: content-box;
+  height: 100%;
+  display: flex;
+  flex-flow: column;
+}
+
+.job-details-content {
+  flex-grow : 1;
 }
 
 .simulation-id {

@@ -56,24 +56,26 @@ export const JobDetails = ({ simulationId, details }) => {
 
   function renderContentForTab() {
     return (
-      <Switch>
+        <div className='job-details-content'>
+            <Switch>
 
-        <Route exact path={"/jobs/:id/time-series"}>
-          <TimeSeries simulationId={simulationId} />
-        </Route>
+                <Route exact path={"/jobs/:id/time-series"}>
+                    <TimeSeries simulationId={simulationId}/>
+                </Route>
 
-        <Route exact path={"/jobs/:id/time-series-deviation"}>
-          <TimeSeriesDeviation simulationId={simulationId} />
-        </Route>
+                <Route exact path={"/jobs/:id/time-series-deviation"}>
+                    <TimeSeriesDeviation simulationId={simulationId}/>
+                </Route>
 
-        <Route exact path={"/jobs/:id/grid"}>
-          {isGridEnabled ? <GridPage /> : <Redirect to={`/jobs/${simulationId}/time-series`} />}
-        </Route>
+                <Route exact path={"/jobs/:id/grid"}>
+                    {isGridEnabled ? <GridPage/> : <Redirect to={`/jobs/${simulationId}/time-series`}/>}
+                </Route>
 
-        <Route exact path={"/jobs/:id/config"}>
-          {details && <pre>{JSON.stringify(details.config, undefined, 4)}</pre>}
-        </Route>
-      </Switch>
+                <Route exact path={"/jobs/:id/config"}>
+                    {details && <pre>{JSON.stringify(details.config, undefined, 4)}</pre>}
+                </Route>
+            </Switch>
+        </div>
     );
   }
 

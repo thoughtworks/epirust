@@ -124,9 +124,13 @@
 
   .graph-wrap {
     padding-top: 20px;
+    height: 95%;
+    display: flex;
+    flex-flow: column;
 
     #vis {
       padding: 10px 20px;
+      flex-grow: 1;
     }
 
     .graph-actions {

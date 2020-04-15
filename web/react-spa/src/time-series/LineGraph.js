@@ -21,13 +21,12 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
                 xlabel: 'Hours',
                 showRoller: true,
                 errorBars: errorBars,
-                height: 700,
-                width: 1300
             }
             if (labels) {
                 options = { ...options, labels: labels }
             }
-            let graphInstance = new Dygraph(document.getElementById("vis"), dataBuffer, options);
+            const visualisationDiv = document.getElementById("vis");
+            const graphInstance = new Dygraph(visualisationDiv, dataBuffer, options);
             setGraph(graphInstance)
         }
         else {
@@ -39,7 +38,7 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
         let filename = "export.json";
         let contentType = "application/json;charset=utf-8;";
 
-        var a = document.createElement('a');
+        const a = document.createElement('a');
         a.download = filename;
         a.href = 'data:' + contentType + ',' + encodeURIComponent(JSON.stringify(dataBuffer));
         a.target = '_blank';
@@ -58,7 +57,7 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
                 <button onClick={handleExportClick} className="btn btn-sm btn-secondary" disabled={!enableExport}>Export graph data</button>
             </div>
 
-            <div id="vis" data-testid="visualization"></div>
+            <div id="vis" data-testid="visualization"/>
 
         </div>
     );

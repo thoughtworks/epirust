@@ -55,9 +55,7 @@ test('should invoke dygraph when data buffer length is not 0 and graph is null',
         ylabel: 'Number of Agents',
         xlabel: 'Hours',
         showRoller: true,
-        errorBars: false,
-        height: 700,
-        width: 1300
+        errorBars: false
     }
     const dygraphMockFn = Dygraph.mockImplementationOnce(() => { graph: "mockGraph" })
     render(<Graph dataBuffer={simulationData} labels={labels} />)

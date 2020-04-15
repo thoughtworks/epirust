@@ -23,7 +23,7 @@ services:
     environment:
       DATABASE_URL: "mongodb://127.0.0.1:27018/local_database"
       KAFKA_URL: "localhost:29092"
-    working_dir: /web/server
+    working_dir: /web
     command: npm start
     ports:
       - "3000:3000"
@@ -39,17 +39,4 @@ services:
       context: ../web
     working_dir: /web/server  
     command: npm run start-consumers
-
-  react-spa:
-    image: epi-web:latest
-    network_mode: host
-    container_name: epi-react-spa
-    build:
-     context: ../web
-    working_dir: /web/react-spa 
-    command: sh -c "npm rebuild node-sass && npm start"
-    depends_on:
-      - server
-    ports:
-      - "3001:3001"
 

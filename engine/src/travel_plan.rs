@@ -61,7 +61,7 @@ impl TravelPlan {
 
     fn get_position(&self, engine_id: &String) -> usize {
         self.regions.iter().position(|i| i.eq(engine_id))
-            .expect(format!("Could not find region named {}", engine_id).as_str())
+            .expect("Could not find region with specified name")
     }
 
     fn column(&self, index: usize) -> impl Iterator<Item=i32> + '_ {

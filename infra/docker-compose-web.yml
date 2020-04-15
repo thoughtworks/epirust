@@ -27,7 +27,7 @@ services:
       - "3000:3000"
 
   kafka-consumer:
-    image: epi-web:latest
+    image: epi-consumer:latest
     container_name: epi-kafka-consumers
     environment:
       DATABASE_URL: "mongodb://mongodb_container:27018/local_database"

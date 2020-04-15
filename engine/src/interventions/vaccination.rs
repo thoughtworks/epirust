@@ -22,6 +22,7 @@ use std::collections::HashMap;
 use crate::config::Config;
 use crate::interventions::Intervention;
 use crate::listeners::events::counts::Counts;
+use crate::interventions::intervention_type::InterventionType;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct VaccinateConfig {
@@ -65,11 +66,26 @@ impl VaccinateIntervention {
     }
 }
 
+impl InterventionType for VaccinateIntervention {
+    fn name(&mut self) -> String {
+        "vaccination".to_string()
+    }
+
+    fn json_data(&mut self) -> String {
+        "{}".to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::config;
 
     use super::*;
+
+    fn get_test_vaccination_intervention() -> VaccinateIntervention {
+        let config = config::read("config/test/auto_pop.json".to_string()).unwrap();
+        return VaccinateIntervention::init(&config);
+    }
 
     #[test]
     fn should_parse_vaccinations_from_config() {
@@ -92,5 +108,19 @@ mod tests {
 
         let counts = Counts::new_test(5001, 10, 10, 10, 10, 10);
         assert_eq!(None, vaccinate_intervention.get_vaccination_percentage(&counts));
+    }
+
+    #[test]
+    fn should_return_intervention_name_as_vaccination() {
+        let mut vaccination_intervention = get_test_vaccination_intervention();
+
+        assert_eq!(vaccination_intervention.name(), "vaccination")
+    }
+
+    #[test]
+    fn should_return_empty_json_data() {
+        let mut vaccination_intervention = get_test_vaccination_intervention();
+
+        assert_eq!(vaccination_intervention.json_data(), "{}")
     }
 }

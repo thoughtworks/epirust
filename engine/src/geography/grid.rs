@@ -26,7 +26,6 @@ use crate::geography::{Area, area, Point};
 use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
 use std::collections::HashMap;
-use rand::seq::IteratorRandom;
 
 #[derive(Serialize)]
 pub struct Grid {
@@ -203,17 +202,15 @@ impl Grid {
         occupancy
     }
 
-    pub fn choose_house_with_free_space(&self, rng: &mut RandomWrapper) -> Area {
+    pub fn choose_house_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
-        *self.houses_occupancy.iter().filter(|(_house, occupants)| **occupants < house_capacity)
-            .choose(rng.get())
+        *self.houses_occupancy.iter().find(|(_house, occupants)| **occupants < house_capacity)
             .expect("Couldn't find any house with free space!").0
     }
 
-    pub fn choose_office_with_free_space(&self, rng: &mut RandomWrapper) -> Area {
+    pub fn choose_office_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
-        *self.offices_occupancy.iter().filter(|(_house, occupants)| **occupants < office_capacity)
-            .choose(rng.get())
+        *self.offices_occupancy.iter().find(|(_house, occupants)| **occupants < office_capacity)
             .expect("Couldn't find any offices with free space!").0
     }
 

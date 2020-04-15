@@ -45,6 +45,7 @@ use crate::random_wrapper::RandomWrapper;
 use rdkafka::consumer::{MessageStream, DefaultConsumerContext};
 use crate::ticks_consumer::Tick;
 use crate::travel_plan::{EngineTravelPlan, TravellersByRegion, Traveller};
+use futures::join;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -168,12 +169,17 @@ impl Epidemiology {
                 listeners.grid_updated(&self.grid);
             }
 
+            let grid = &self.grid;
+            let disease = &self.disease;
+
             let recv_travellers = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan);
-            Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
-                                   &self.grid, &mut listeners, &mut rng, &self.disease, &engine_travel_plan,
-                                   &mut outgoing);
-            Epidemiology::send_travellers(tick.clone(), &mut producer, engine_travel_plan.alloc_outgoing_to_regions(&outgoing));
-            let mut incoming = recv_travellers.await;
+            let sim = async {
+                Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
+                                       grid, &mut listeners, &mut rng, disease, &engine_travel_plan,
+                                       &mut outgoing);
+                Epidemiology::send_travellers(tick.clone(), &mut producer, engine_travel_plan.alloc_outgoing_to_regions(&outgoing));
+            };
+            let (mut incoming, ()) = join!(recv_travellers, sim);
             n_incoming += incoming.len();
             n_outgoing += outgoing.len();
             write_buffer_reference.remove_citizens(&outgoing, &mut counts_at_hr);

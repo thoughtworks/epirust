@@ -6,10 +6,9 @@ services:
   engine:
     container_name: epi-engine
     image: epi-engine:latest
+    network_mode: host
     build:
       context: ../engine
-    depends_on:
-      - kafka
     environment:
       RUST_LOG: INFO
       EPI_KAFKA_URL: "localhost:29092"
@@ -18,18 +17,20 @@ services:
   server:
     image: epi-web:latest
     container_name: epi-server
+    network_mode: host
     build:
      context: ../web
     environment:
       DATABASE_URL: "mongodb://127.0.0.1:27018/local_database"
       KAFKA_URL: "localhost:29092"
-    working_dir: /web/server    
+    working_dir: /web/server
     command: npm start
     ports:
       - "3000:3000"
 
   kafka-consumer:
     image: epi-web:latest
+    network_mode: host
     container_name: epi-kafka-consumers
     environment:
       DATABASE_URL: "mongodb://127.0.0.1:27018/local_database"
@@ -37,10 +38,11 @@ services:
     build:
       context: ../web
     working_dir: /web/server  
-    command: npm run start-consumers  
+    command: npm run start-consumers
 
   react-spa:
     image: epi-web:latest
+    network_mode: host
     container_name: epi-react-spa
     build:
      context: ../web

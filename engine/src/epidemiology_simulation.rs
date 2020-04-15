@@ -126,9 +126,9 @@ impl Epidemiology {
         };
         let mut engine_travel_plan = EngineTravelPlan::new(engine_id, population);
         let ticks_consumer = ticks_consumer::start(engine_id);
-        let mut ticks_stream = ticks_consumer.start_with(Duration::from_millis(10), false);
+        let mut ticks_stream = ticks_consumer.start_with(Duration::from_millis(1), false);
         let travellers_consumer = travellers_consumer::start(engine_id);
-        let mut travel_stream = travellers_consumer.start_with(Duration::from_millis(10), false);
+        let mut travel_stream = travellers_consumer.start_with(Duration::from_millis(1), false);
         let mut outgoing: Vec<(Point, Traveller)> = Vec::new();
         let mut n_incoming = 0;
         let mut n_outgoing = 0;

@@ -25,6 +25,6 @@ impl KafkaConsumer {
     }
 
     pub fn start_message_stream(&self) -> MessageStream<DefaultConsumerContext> {
-        self.consumer.start_with(Duration::from_millis(10), false)
+        self.consumer.start_with(Duration::from_millis(1), false)
     }
 }

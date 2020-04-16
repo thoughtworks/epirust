@@ -57,17 +57,21 @@ describe('Simulation Counts Consumer', () => {
   });
 
   it('should store counts if not ended message', async () => {
-    KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummyKey":"dummyValue"}', key: "123"}]});
-    let saveMock = jest.fn();
-    Count.mockReturnValueOnce({save: saveMock});
+    KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummyKey":"dummyValue", "hour": 12}', key: "123"}]});
+    let execMock = jest.fn();
+    Count.updateOne.mockReturnValueOnce({exec: execMock});
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
-    expect(Count).toHaveBeenCalledTimes(1);
-    expect(Count.mock.calls[0]).toEqual([{dummyKey: 'dummyValue', "simulation_id": 123}]);
-    expect(saveMock).toHaveBeenCalledTimes(1);
-    expect(saveMock.mock.calls[0]).toEqual([])
+    expect(Count.updateOne).toHaveBeenCalledTimes(1);
+    expect(Count.updateOne.mock.calls[0]).toEqual([
+      {simulation_id: 123, "hour": 12},
+      {dummyKey: "dummyValue", simulation_id: 123, hour: 12},
+      {upsert: true}
+    ]);
+    expect(execMock).toHaveBeenCalledTimes(1);
+    expect(execMock.mock.calls[0]).toEqual([]);
     expect(Simulation.updateOne).toHaveBeenCalledTimes(0);
   });
 
@@ -80,16 +84,11 @@ describe('Simulation Counts Consumer', () => {
     });
     const execMock = jest.fn();
     Simulation.updateOne.mockReturnValueOnce({exec: execMock});
-    const saveMock = jest.fn();
-    Count.mockReturnValueOnce({save: saveMock});
+    const countExecMock = jest.fn();
+    Count.updateOne.mockReturnValueOnce({exec: countExecMock});
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
-
-    expect(Count).toHaveBeenCalledTimes(1);
-    expect(Count.mock.calls[0]).toEqual([{dummyKey: 'dummyValue', hour: 1, simulation_id: 123}]);
-    expect(saveMock).toHaveBeenCalledTimes(1);
-    expect(saveMock.mock.calls[0]).toEqual([])
 
     expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
     expect(Simulation.updateOne.mock.calls[0]).toEqual([

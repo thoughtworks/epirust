@@ -36,12 +36,17 @@ class SimulationCountsConsumer {
       const query = {simulation_id: simulationId};
 
       const simulationEnded = "simulation_ended" in parsedMessage;
-      const interventionMessage = "intervention" in parsedMessage;
+      const isInterventionMessage = "intervention" in parsedMessage;
 
       if (simulationEnded) {
         await this.handleSimulationEnd(query, simulationId);
-      } else if (interventionMessage) {
-        //ignore this message for now to avoid breaking ui
+      } else if (isInterventionMessage) {
+        const {intervention, data} = parsedMessage;
+        const query = Count.updateOne(
+          {simulation_id: simulationId, hour: parsedMessage.hour},
+          {$push: {interventions: {intervention, data}}}
+        );
+        await query.exec()
       } else {
         await this.handleCountMessage(parsedMessage, simulationId, query);
       }

@@ -26,75 +26,106 @@ const {Simulation} = require('../../db/models/Simulation');
 const {Count} = require('../../db/models/Count');
 
 describe('Simulation Counts Consumer', () => {
-    beforeEach(() => {
-        jest.clearAllMocks()
+  beforeEach(() => {
+    jest.clearAllMocks()
+  });
+
+  it('should initiate the kafka group consumer with with correct config', () => {
+    new SimulationCountsConsumer();
+    let KafkaGroupConsumerConfig = ['localhost:9092', 'counts_updated', 'dev_server_consumer'];
+
+    expect(KafkaGroupConsumer).toHaveBeenCalledTimes(1);
+    expect(KafkaGroupConsumer.mock.calls[0]).toEqual(KafkaGroupConsumerConfig);
+  });
+
+  it('should updated the status of simulation to be finished', async () => {
+    KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"simulation_ended":true}', key: "123"}]});
+    const execMock = jest.fn();
+    Simulation.updateOne.mockReturnValueOnce({exec: execMock});
+    const simulationCountsConsumer = new SimulationCountsConsumer();
+
+    await simulationCountsConsumer.start();
+
+    expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
+    expect(Simulation.updateOne.mock.calls[0]).toEqual([
+      {simulation_id: 123},
+      {status: "finished"},
+      {"upsert": true},
+    ]);
+    expect(execMock).toHaveBeenCalledTimes(1);
+    expect(execMock.mock.calls[0]).toEqual([])
+  });
+
+  it('should store counts if not ended message', async () => {
+    KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummyKey":"dummyValue"}', key: "123"}]});
+    let saveMock = jest.fn();
+    Count.mockReturnValueOnce({save: saveMock});
+    const simulationCountsConsumer = new SimulationCountsConsumer();
+
+    await simulationCountsConsumer.start();
+
+    expect(Count).toHaveBeenCalledTimes(1);
+    expect(Count.mock.calls[0]).toEqual([{dummyKey: 'dummyValue', "simulation_id": 123}]);
+    expect(saveMock).toHaveBeenCalledTimes(1);
+    expect(saveMock.mock.calls[0]).toEqual([])
+    expect(Simulation.updateOne).toHaveBeenCalledTimes(0);
+  });
+
+  it('should update the status of simulation as running when the first count is recieved', async () => {
+    KafkaGroupConsumer.mockReturnValueOnce({
+      consumerStream: [{
+        value: '{"dummyKey":"dummyValue", "hour":1}',
+        key: "123"
+      }]
     });
+    const execMock = jest.fn();
+    Simulation.updateOne.mockReturnValueOnce({exec: execMock});
+    const saveMock = jest.fn();
+    Count.mockReturnValueOnce({save: saveMock});
+    const simulationCountsConsumer = new SimulationCountsConsumer();
 
-    it('should initiate the kafka group consumer with with correct config', () => {
-        new SimulationCountsConsumer();
-        let KafkaGroupConsumerConfig = ['localhost:9092', 'counts_updated', 'dev_server_consumer'];
+    await simulationCountsConsumer.start();
 
-        expect(KafkaGroupConsumer).toHaveBeenCalledTimes(1);
-        expect(KafkaGroupConsumer.mock.calls[0]).toEqual(KafkaGroupConsumerConfig);
+    expect(Count).toHaveBeenCalledTimes(1);
+    expect(Count.mock.calls[0]).toEqual([{dummyKey: 'dummyValue', hour: 1, simulation_id: 123}]);
+    expect(saveMock).toHaveBeenCalledTimes(1);
+    expect(saveMock.mock.calls[0]).toEqual([])
+
+    expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
+    expect(Simulation.updateOne.mock.calls[0]).toEqual([
+      {simulation_id: 123},
+      {status: "running"},
+      {"upsert": true},
+    ]);
+    expect(execMock).toHaveBeenCalledTimes(1);
+    expect(execMock.mock.calls[0]).toEqual([])
+  });
+
+  it('should write intervention in db', async () => {
+    KafkaGroupConsumer.mockReturnValueOnce({
+      consumerStream: [
+        {
+          value: '{"hour":12, "intervention": "lockdown", "data": {"status": "locked_down"}}',
+          key: "123"
+        }
+      ]
     });
+    const execMock = jest.fn();
+    Count.updateOne.mockReturnValueOnce({exec: execMock});
+    const simulationCountsConsumer = new SimulationCountsConsumer();
 
-    it('should updated the status of simulation to be finished', async () => {
-        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"simulation_ended":true}', key: "123"}]});
-        const execMock = jest.fn();
-        Simulation.updateOne.mockReturnValueOnce({exec: execMock});
-        const simulationCountsConsumer = new SimulationCountsConsumer();
+    await simulationCountsConsumer.start();
 
-        await simulationCountsConsumer.start();
-
-        expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
-        expect(Simulation.updateOne.mock.calls[0]).toEqual([
-            {simulation_id: 123},
-            {status: "finished"},
-            {"upsert": true},
-        ]);
-        expect(execMock).toHaveBeenCalledTimes(1);
-        expect(execMock.mock.calls[0]).toEqual([])
-    });
-
-    it('should store counts if not ended message', async () => {
-        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummyKey":"dummyValue"}', key: "123"}]});
-        let saveMock = jest.fn();
-        Count.mockReturnValueOnce({save: saveMock});
-        const simulationCountsConsumer = new SimulationCountsConsumer();
-
-        await simulationCountsConsumer.start();
-
-        expect(Count).toHaveBeenCalledTimes(1);
-        expect(Count.mock.calls[0]).toEqual([{dummyKey: 'dummyValue', "simulation_id": 123}]);
-        expect(saveMock).toHaveBeenCalledTimes(1);
-        expect(saveMock.mock.calls[0]).toEqual([])
-        expect(Simulation.updateOne).toHaveBeenCalledTimes(0);
-    });
-
-    it('should update the status of simulation as running when the first count is recieved', async () => {
-        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummyKey":"dummyValue", "hour":1}', key: "123"}]});
-        const execMock = jest.fn();
-        Simulation.updateOne.mockReturnValueOnce({exec: execMock});
-        const saveMock = jest.fn();
-        Count.mockReturnValueOnce({save: saveMock});
-        const simulationCountsConsumer = new SimulationCountsConsumer();
-
-        await simulationCountsConsumer.start();
-
-        expect(Count).toHaveBeenCalledTimes(1);
-        expect(Count.mock.calls[0]).toEqual([{dummyKey: 'dummyValue', hour:1, simulation_id: 123}]);
-        expect(saveMock).toHaveBeenCalledTimes(1);
-        expect(saveMock.mock.calls[0]).toEqual([])
-
-        expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
-        expect(Simulation.updateOne.mock.calls[0]).toEqual([
-            {simulation_id: 123},
-            {status: "running"},
-            {"upsert": true},
-        ]);
-        expect(execMock).toHaveBeenCalledTimes(1);
-        expect(execMock.mock.calls[0]).toEqual([])
-    });
+    expect(Count.updateOne).toHaveBeenCalledTimes(1);
+    expect(Count.updateOne).toHaveBeenCalledWith({
+        "hour": 12,
+        "simulation_id": 123,
+      },
+      {
+        "$push": {"interventions": {"data": {"status": "locked_down"}, "intervention": "lockdown"}}
+      });
+    expect(execMock).toHaveBeenCalledTimes(1)
+  })
 });
 
 

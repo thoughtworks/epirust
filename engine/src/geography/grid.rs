@@ -22,7 +22,7 @@ use plotters::prelude::*;
 use crate::{agent, constants};
 use crate::agent::{Citizen, PopulationRecord};
 use crate::config::{AutoPopulation, CsvPopulation};
-use crate::geography::{Area, area, Point};
+use crate::geography::{Area, Point};
 use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
 use std::collections::HashMap;
@@ -67,11 +67,18 @@ impl Grid {
     fn set_start_locations_and_occupancies(&mut self, rng: &mut RandomWrapper, agent_list: &Vec<Citizen>) -> (Vec<Point>, Vec<Citizen>) {
         let mut home_loc: Vec<Point> = Vec::new();
         let agents_by_home_locations = Grid::group_agents_by_home_locations(&agent_list);
+        let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
         debug!("Finished grouping agents by home locations");
         let mut agents_in_order: Vec<Citizen> = Vec::with_capacity(agent_list.len());
         for (home, agents) in agents_by_home_locations {
             trace!("home: {:?} {:?}", home.start_offset, home.end_offset);
             trace!("agents in home: {:?}", agents.len());
+
+            if agents.len() as i32 > house_capacity {
+                panic!("There are {} agents assigned to a house, but house capacity is {}",
+                       agents.len(), house_capacity)
+            }
+
             let mut random_points_within_home = home.random_points(agents.len() as i32, rng);
             self.houses_occupancy.insert(*home, agents.len() as i32);
 
@@ -128,18 +135,10 @@ impl Grid {
     pub fn read_population(&mut self, csv_pop: &CsvPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
         let file = File::open(&csv_pop.file).expect("Could not read population file");
         let mut rdr = csv::Reader::from_reader(file);
-        let homes = area::area_factory(self.housing_area.start_offset, self.housing_area.end_offset, constants::HOME_SIZE);
-        let mut homes_iter = homes.iter().cycle();
-        let scaling_factor = self.hospital_area.end_offset.x + 1;
-
-        let office_start_point = Point::new(self.hospital_area.end_offset.x + 1, self.housing_area.start_offset.y);
-        let office_end_point = Point::new(scaling_factor + self.housing_area.end_offset.x + 1, self.hospital_area.end_offset.y + 1);
-
-        let offices = area::area_factory(office_start_point, office_end_point, constants::OFFICE_SIZE);
-        let mut offices_iter = offices.iter().cycle();
+        let mut homes_iter = self.houses.iter().cycle();
+        let mut offices_iter = self.offices.iter().cycle();
 
         let mut citizens = Vec::new();
-
         for result in rdr.deserialize() {
             let record: PopulationRecord = result.expect("Could not deserialize population line");
 
@@ -149,11 +148,16 @@ impl Grid {
             let citizen = Citizen::from_record(record, home, office, home.get_random_point(rng), rng);
             citizens.push(citizen);
         }
+        let house_capacity = (constants::HOME_SIZE * constants::HOME_SIZE) as usize;
+        if citizens.len() > house_capacity * self.houses.len() {
+            panic!("Cannot accommodate citizens into homes! There are {} citizens, but {} home points",
+                   citizens.len(), house_capacity * self.houses.len());
+        }
 
         let (home_loc, mut agents_in_order) = self.set_start_locations_and_occupancies(rng, &citizens);
         agents_in_order.last_mut().as_mut().unwrap().state_machine.expose(0);
 
-        self.draw(&home_loc, &homes, &offices);
+        self.draw(&home_loc, &self.houses, &self.offices);
         (home_loc, agents_in_order)
     }
 

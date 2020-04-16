@@ -164,3 +164,24 @@
       right: 0;
     }
   }
+
+  .annotation {
+    height: unset !important;
+    width: 75px !important;
+    line-height: 1;
+    transform: translate(calc(-50% + 8px)) !important;
+    padding: 2px 0 !important;
+    border-width: 2px;
+    color: black !important;
+    font-size: 12px !important;
+
+    &.lockdown {
+      border-color: var(--orange) !important;
+    }
+    &.hospital {
+      border-color: var(--green) !important;
+    }
+    &.vaccination {
+      border-color: var(--purple) !important;
+    }
+}

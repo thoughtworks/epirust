@@ -3,7 +3,7 @@ import Dygraph from 'dygraphs';
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'
 
-export default function Graph({ dataBuffer, enableExport = false, labels, errorBars = false }) {
+export default function Graph({ dataBuffer, enableExport = false, labels, errorBars = false, annotations = [] }) {
     const [graph, setGraph] = useState(null);
 
     useEffect(() => {
@@ -34,6 +34,14 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
         }
     }, [graph, dataBuffer, labels, errorBars])
 
+    useEffect(() => {
+        if (!graph || !annotations.length)
+            return
+
+        graph.setAnnotations(annotations.map(modelAnnotation))
+
+    }, [graph, annotations])
+
     function handleExportClick() {
         let filename = "export.json";
         let contentType = "application/json;charset=utf-8;";
@@ -57,13 +65,26 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
                 <button onClick={handleExportClick} className="btn btn-sm btn-secondary" disabled={!enableExport}>Export graph data</button>
             </div>
 
-            <div id="vis" data-testid="visualization"/>
+            <div id="vis" data-testid="visualization" />
 
         </div>
     );
 }
 
 Graph.propTypes = {
-    enableExport: PropTypes.bool
+    enableExport: PropTypes.bool,
+    annotations: PropTypes.arrayOf(PropTypes.object)
 }
 
+function modelAnnotation({ x, label, className }, i) {
+    const newLocal = i % 2 === 0;
+    return {
+        series: 'susceptible',
+        x,
+        shortText: label,
+        text: `${label} at ${x}`,
+        tickHeight: newLocal ? 40 : 80,
+        attachAtBottom: true,
+        cssClass: `annotation ${className}`
+    }
+}

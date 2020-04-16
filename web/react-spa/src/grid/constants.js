@@ -42,3 +42,11 @@ export const AgentStateMapper = {
     'd': 'deceased'
 };
 
+export const Interventions = Object.freeze({
+    LOCKDOWN: 'lockdown',
+    BUILD_NEW_HOSPITAL: 'build_new_hospital',
+    VACCINATION: 'vaccination',
+    status: {
+        LOCKDOWN_START: 'locked_down',
+    }
+});

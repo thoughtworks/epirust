@@ -31,29 +31,41 @@ class SimulationCountsConsumer {
   async start() {
     for await (const data of this.kafkaConsumer.consumerStream) {
       const parsedMessage = JSON.parse(data.value);
+
       let simulationId = parseInt(data.key.toString());
       const query = {simulation_id: simulationId};
-      if ("simulation_ended" in parsedMessage) {
-        const update = {status: SimulationStatus.FINISHED};
-        const simulation = Simulation.updateOne(query, update, {upsert: true});
 
-        console.log("Consumed all counts for simulation id", simulationId);
-        await simulation.exec()
+      const simulationEnded = "simulation_ended" in parsedMessage;
+      const interventionMessage = "intervention" in parsedMessage;
 
-      } else if("intervention" in parsedMessage) {
+      if (simulationEnded) {
+        await this.handleSimulationEnd(query, simulationId);
+      } else if (interventionMessage) {
         //ignore this message for now to avoid breaking ui
       } else {
-        parsedMessage["simulation_id"] = simulationId;
-        const countInsertQuery = new Count(parsedMessage);
-
-        if (parsedMessage.hour === 1) {
-          const update = {status: SimulationStatus.RUNNING};
-          Simulation.updateOne(query, update, {upsert: true}).exec();
-        }
-
-        await countInsertQuery.save()
+        await this.handleCountMessage(parsedMessage, simulationId, query);
       }
     }
+  }
+
+  async handleCountMessage(parsedMessage, simulationId, query) {
+    parsedMessage["simulation_id"] = simulationId;
+    const countInsertQuery = new Count(parsedMessage);
+
+    if (parsedMessage.hour === 1) {
+      const update = {status: SimulationStatus.RUNNING};
+      Simulation.updateOne(query, update, {upsert: true}).exec();
+    }
+
+    await countInsertQuery.save()
+  }
+
+  async handleSimulationEnd(query, simulationId) {
+    const update = {status: SimulationStatus.FINISHED};
+    const simulation = Simulation.updateOne(query, update, {upsert: true});
+
+    console.log("Consumed all counts for simulation id", simulationId);
+    await simulation.exec()
   }
 }
 

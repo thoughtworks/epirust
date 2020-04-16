@@ -9,6 +9,7 @@ small_pox:
   percentage_asymptomatic_population: 0.0
   percentage_severe_infected_population: 1.0
   exposed_duration: 0
+  pre_symptomatic_duration: 0
 
 sars: #Guesstimated
   regular_transmission_start_day: 5
@@ -20,6 +21,7 @@ sars: #Guesstimated
   percentage_asymptomatic_population: 0.0
   percentage_severe_infected_population: 1.0
   exposed_duration: 0
+  pre_symptomatic_duration: 0
 
 covid_19: #Guesstimated
   regular_transmission_start_day: 5
@@ -31,3 +33,4 @@ covid_19: #Guesstimated
   percentage_asymptomatic_population: 0.3
   percentage_severe_infected_population: 0.3
   exposed_duration: 48
+  pre_symptomatic_duration: 48

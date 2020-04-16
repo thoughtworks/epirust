@@ -209,18 +209,21 @@ impl Citizen {
                 self.current_area = grid.transport_area;
                 self.update_exposure(cell, map, counts, rng, disease);
                 self.update_infection(counts, rng, &disease);
+                self.update_infection_severity(counts, rng, disease);
             }
             constants::ROUTINE_WORK_TIME => {
                 new_cell = self.goto_area(self.work_location, map, cell, rng);
                 self.current_area = grid.work_area;
                 self.update_exposure(cell, map, counts, rng, disease);
                 self.update_infection(counts, rng, &disease);
+                self.update_infection_severity(counts, rng, disease);
             }
             constants::ROUTINE_WORK_END_TIME => {
                 new_cell = self.goto_area(self.home_location, map, cell, rng);
                 self.current_area = grid.housing_area;
                 self.update_exposure(cell, map, counts, rng, disease);
                 self.update_infection(counts, rng, &disease);
+                self.update_infection_severity(counts, rng, disease);
             }
             constants::ROUTINE_END_TIME => {
                 new_cell = self.deceased(map, cell, counts, rng, disease)
@@ -229,6 +232,7 @@ impl Citizen {
                 new_cell = self.move_agent_from(map, cell, rng);
                 self.update_exposure(cell, map, counts, rng, disease);
                 self.update_infection(counts, rng, &disease);
+                self.update_infection_severity(counts, rng, disease);
             }
         }
         new_cell
@@ -256,6 +260,12 @@ impl Citizen {
             }
         }
         new_cell
+    }
+
+    fn update_infection_severity(&mut self, counts: &mut Counts, rng: &mut RandomWrapper, disease: &Disease) {
+        if self.state_machine.is_pre_symptomatic(){
+            self.state_machine.change_infection_severity(counts.get_hour(), rng, disease);
+        }
     }
 
     fn update_infection(&mut self, counts: &mut Counts, rng: &mut RandomWrapper, disease: &Disease) {

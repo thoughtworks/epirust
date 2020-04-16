@@ -44,7 +44,8 @@ class SimulationCountsConsumer {
         const {intervention, data} = parsedMessage;
         const query = Count.updateOne(
           {simulation_id: simulationId, hour: parsedMessage.hour},
-          {$push: {interventions: {intervention, data}}}
+          {$push: {interventions: {intervention, data}}},
+          {upsert: true}
         );
         await query.exec()
       } else {

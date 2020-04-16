@@ -123,7 +123,9 @@ describe('Simulation Counts Consumer', () => {
       },
       {
         "$push": {"interventions": {"data": {"status": "locked_down"}, "intervention": "lockdown"}}
-      });
+      },
+      {"upsert": true}
+      );
     expect(execMock).toHaveBeenCalledTimes(1)
   })
 });

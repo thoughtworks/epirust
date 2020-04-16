@@ -22,7 +22,11 @@ const {Count} = require("../db/models/Count");
 
 async function sendCountsData(simulationId, socket, totalConsumedRecords) {
   let cursor = Count
-    .find({simulation_id: simulationId, hour: {$mod: [24, 1]}}, {}, {sort: {'hour': 1}})
+    .find({
+      $and: [
+        {simulation_id: simulationId},
+        {$or: [{hour: {$mod: [24, 1]}}, {interventions: {$exists: true}}]}]},
+      {}, {$sort: 1})
     .skip(totalConsumedRecords)
     .cursor();
 

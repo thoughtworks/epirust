@@ -199,6 +199,7 @@ impl Epidemiology {
 
             if lock_down_details.should_unlock(&counts_at_hr) {
                 Epidemiology::unlock_city(&mut write_buffer_reference);
+                lock_down_details.unapply();
                 listeners.intervention_applied(simulation_hour, &lock_down_details)
             }
 

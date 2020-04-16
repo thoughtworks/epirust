@@ -75,6 +75,10 @@ impl LockdownIntervention {
         }
     }
 
+    pub fn unapply(&mut self) {
+        self.is_locked_down = false;
+    }
+
     pub fn get_config(&self) -> &Option<LockdownConfig> {
         &self.intervention
     }
@@ -207,5 +211,14 @@ mod tests {
         let lockdown_intervention = get_test_lockdown_intervention(false);
 
         assert_eq!(lockdown_intervention.json_data(), r#"{"status": "lockdown_revoked"}"#)
+    }
+
+    #[test]
+    fn unapply_should_set_is_locked_down_to_false() {
+        let mut intervention = get_test_lockdown_intervention(true);
+
+        intervention.unapply();
+
+        assert_eq!(intervention.is_locked_down, false);
     }
 }

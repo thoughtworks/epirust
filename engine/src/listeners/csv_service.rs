@@ -38,23 +38,23 @@ impl CsvListener {
     pub fn new(output_file_name: String) -> CsvListener {
         CsvListener { output_file_name, counts: Vec::new() }
     }
+}
 
-    pub fn write(file_path: &PathBuf, data: &Vec<Counts>) -> Result<(), Box<dyn Error>> {
-        let mut wtr = Writer::from_path(file_path)?;
+pub fn write(file_path: &PathBuf, data: &Vec<Counts>) -> Result<(), Box<dyn Error>> {
+    let mut wtr = Writer::from_path(file_path)?;
 
-        for row in data {
-            let result = wtr.serialize(row);
-            match result {
-                Ok(_) => {}
-                Err(e) => {
-                    error!("Error occurred while serializing! {:?}", e);
-                }
+    for row in data {
+        let result = wtr.serialize(row);
+        match result {
+            Ok(_) => {}
+            Err(e) => {
+                error!("Error occurred while serializing! {:?}", e);
             }
         }
-
-        wtr.flush()?;
-        Ok(())
     }
+
+    wtr.flush()?;
+    Ok(())
 }
 
 impl Listener for CsvListener {
@@ -66,7 +66,7 @@ impl Listener for CsvListener {
         let mut output_path = environment::output_dir();
         output_path.push(&self.output_file_name);
 
-        CsvListener::write(&output_path, &self.counts)
+        write(&output_path, &self.counts)
             .expect("Failed to write to file");
     }
 

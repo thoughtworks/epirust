@@ -31,7 +31,7 @@ pub enum State {
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
-enum InfectionSeverity {
+pub enum InfectionSeverity {
     Mild {},
     Severe {},
 }

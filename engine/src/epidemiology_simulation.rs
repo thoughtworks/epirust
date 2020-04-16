@@ -40,12 +40,13 @@ use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
-use crate::listeners::listener::Listeners;
+use crate::listeners::listener::{Listeners, Listener};
 use crate::random_wrapper::RandomWrapper;
 use rdkafka::consumer::{MessageStream, DefaultConsumerContext};
 use crate::ticks_consumer::Tick;
 use crate::travel_plan::{EngineTravelPlan, TravellersByRegion, Traveller};
 use futures::join;
+use crate::listeners::travel_counter::TravelCounter;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -81,23 +82,35 @@ impl Epidemiology {
         }
     }
 
-    fn output_file_name(config: &Config, run_mode: &RunMode) -> String {
+    fn output_file_format(config: &Config, run_mode: &RunMode) -> String {
         let now: DateTime<Local> = SystemTime::now().into();
         let mut output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
         if let RunMode::MultiEngine { engine_id } = run_mode {
             output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
         }
-        format!("{}_{}.csv", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"))
+        format!("{}_{}", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"))
     }
 
     fn create_listeners(&self, config: &Config, run_mode: &RunMode) -> Listeners {
-        let output_file_name = Epidemiology::output_file_name(config, run_mode);
-        let csv_listener = CsvListener::new(output_file_name);
+        let output_file_format = Epidemiology::output_file_format(config, run_mode);
+        let counts_file_name = format!("{}.csv", output_file_format);
+
+        let csv_listener = CsvListener::new(counts_file_name);
         let population = self.agent_location_map.current_population();
         let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), population as usize,
                                                       config.enable_citizen_state_messages());
         let hotspot_tracker = Hotspot::new();
-        Listeners::from(vec![Box::new(csv_listener), Box::new(kafka_listener), Box::new(hotspot_tracker)])
+        let mut listeners_vec: Vec<Box<dyn Listener>> = vec![Box::new(csv_listener),
+                                                             Box::new(kafka_listener),
+                                                             Box::new(hotspot_tracker)];
+
+        if let RunMode::MultiEngine { engine_id: _e} = run_mode {
+            let travels_file_name = format!("{}_outgoing_travels.csv", output_file_format);
+            let travel_counter = TravelCounter::new(travels_file_name);
+            listeners_vec.push(Box::new(travel_counter));
+        }
+
+        Listeners::from(listeners_vec)
     }
 
     pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
@@ -352,7 +365,9 @@ impl Epidemiology {
 
             if simulation_hour % 24 == 0 && current_agent.can_move()
                 && rng.get().gen_bool(engine_travel_plan.percent_outgoing()) {
-                outgoing.push((*new_location, Traveller::from(&current_agent)));
+                let traveller = Traveller::from(&current_agent);
+                listeners.outgoing_traveller_added(simulation_hour, &traveller);
+                outgoing.push((*new_location, traveller));
             }
 
             write_buffer.agent_cell.insert(*new_location, current_agent);

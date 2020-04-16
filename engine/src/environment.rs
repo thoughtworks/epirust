@@ -20,15 +20,18 @@
 use std::env;
 use std::path::PathBuf;
 
+pub const EPI_KAFKA_URL: &str = "EPI_KAFKA_URL";
+pub const EPI_OUTPUT_DIR: &str = "EPI_OUTPUT_DIR";
+
 pub fn kafka_url() -> String {
-    match env::var("EPI_KAFKA_URL") {
+    match env::var(EPI_KAFKA_URL) {
         Ok(val) => val,
         Err(_) => "localhost:9092".to_string(),
     }
 }
 
 pub fn output_dir() -> PathBuf {
-    match env::var("EPI_OUTPUT_DIR") {
+    match env::var(EPI_OUTPUT_DIR) {
         Ok(val) => PathBuf::from(val),
         Err(_) => PathBuf::from("."),
     }

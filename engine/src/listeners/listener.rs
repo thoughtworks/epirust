@@ -23,14 +23,16 @@ use crate::agent::Citizen;
 use crate::geography::{Point, Grid};
 use crate::listeners::events::counts::Counts;
 use crate::interventions::intervention_type::InterventionType;
+use crate::travel_plan::Traveller;
 
 pub trait Listener {
-    fn counts_updated(&mut self, counts: Counts);
-    fn simulation_ended(&mut self);
+    fn counts_updated(&mut self, _counts: Counts) {}
+    fn simulation_ended(&mut self) {}
     fn citizen_got_infected(&mut self, _cell: &Point) {}
     fn citizen_state_updated(&mut self, _hr: i32, _citizen: &Citizen, _location: &Point) {}
     fn grid_updated(&self, _grid: &Grid) {}
     fn intervention_applied(&self, _at_hour: i32, _intervention: &dyn InterventionType) {}
+    fn outgoing_traveller_added(&mut self, _hr: i32, _traveller: &Traveller) {}
     fn as_any(&self) -> &dyn Any;
 }
 
@@ -72,6 +74,10 @@ impl Listeners {
                                 _intervention: &dyn InterventionType,
     ) {
         self.listeners.iter().for_each(|l| { l.intervention_applied(_at_hour, _intervention) })
+    }
+
+    pub fn outgoing_traveller_added(&mut self, hr: i32, traveller: &Traveller) {
+        self.listeners.iter_mut().for_each(|l| l.outgoing_traveller_added(hr, traveller));
     }
 }
 

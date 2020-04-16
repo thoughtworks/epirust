@@ -17,7 +17,7 @@
  *
  */
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq)]
 pub struct Counts {
     hour: i32,
     susceptible: i32,
@@ -92,6 +92,10 @@ impl Counts {
 
     pub fn increment_hour(&mut self) {
         self.hour += 1;
+    }
+
+    pub fn set_hour(&mut self, hour: i32) {
+        self.hour = hour;
     }
 }
 

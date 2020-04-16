@@ -22,3 +22,4 @@ pub mod csv_service;
 pub mod disease_tracker;
 pub mod listener;
 pub mod events;
+pub mod travel_counter;

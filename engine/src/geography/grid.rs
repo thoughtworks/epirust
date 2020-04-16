@@ -48,7 +48,6 @@ impl Grid {
         let number_of_agents = auto_pop.number_of_agents;
         let working_percentage = auto_pop.working_percentage;
         let public_transport_percentage = auto_pop.public_transport_percentage;
-        let mut home_loc:Vec<Point> = Vec::new();
 
         //        TODO: fix the hack
         let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
@@ -59,26 +58,30 @@ impl Grid {
         let agent_list = agent::citizen_factory(number_of_agents, &self.houses, &self.offices, &transport_locations, public_transport_percentage, working_percentage, rng);
         debug!("Finished creating agent list");
 
+        let (home_loc, agents_in_order) = self.set_start_locations_and_occupancies(rng, &agent_list);
+
+        self.draw(&home_loc, &self.houses, &self.offices);
+        (home_loc, agents_in_order)
+    }
+
+    fn set_start_locations_and_occupancies(&mut self, rng: &mut RandomWrapper, agent_list: &Vec<Citizen>) -> (Vec<Point>, Vec<Citizen>) {
+        let mut home_loc: Vec<Point> = Vec::new();
         let agents_by_home_locations = Grid::group_agents_by_home_locations(&agent_list);
         debug!("Finished grouping agents by home locations");
-        let mut agents_in_order:Vec<Citizen> = Vec::with_capacity(agent_list.len());
-
-        for(home, agents) in agents_by_home_locations{
+        let mut agents_in_order: Vec<Citizen> = Vec::with_capacity(agent_list.len());
+        for (home, agents) in agents_by_home_locations {
             trace!("home: {:?} {:?}", home.start_offset, home.end_offset);
             trace!("agents in home: {:?}", agents.len());
             let mut random_points_within_home = home.random_points(agents.len() as i32, rng);
             self.houses_occupancy.insert(*home, agents.len() as i32);
 
-            for agent in agents{
+            for agent in agents {
                 agents_in_order.push(*agent);
             }
             home_loc.append(&mut random_points_within_home);
         }
         debug!("Assigned starting location to agents");
-
         self.offices_occupancy = self.group_office_locations_by_occupancy(agents_in_order.as_slice());
-
-        self.draw(&home_loc, &self.houses, &self.offices);
         (home_loc, agents_in_order)
     }
 
@@ -122,7 +125,7 @@ impl Grid {
                       style, true).unwrap();
     }
 
-    pub fn read_population(&self, csv_pop: &CsvPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
+    pub fn read_population(&mut self, csv_pop: &CsvPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
         let file = File::open(&csv_pop.file).expect("Could not read population file");
         let mut rdr = csv::Reader::from_reader(file);
         let homes = area::area_factory(self.housing_area.start_offset, self.housing_area.end_offset, constants::HOME_SIZE);
@@ -136,7 +139,6 @@ impl Grid {
         let mut offices_iter = offices.iter().cycle();
 
         let mut citizens = Vec::new();
-        let mut home_loc = Vec::new();
 
         for result in rdr.deserialize() {
             let record: PopulationRecord = result.expect("Could not deserialize population line");
@@ -148,22 +150,7 @@ impl Grid {
             citizens.push(citizen);
         }
 
-        //TODO remove duplication
-        let agents_by_home_locations = Grid::group_agents_by_home_locations(&citizens);
-        debug!("Finished grouping agents by home locations");
-        let mut agents_in_order:Vec<Citizen> = Vec::with_capacity(citizens.len());
-
-        for(home, agents) in agents_by_home_locations {
-            trace!("home: {:?} {:?}", home.start_offset, home.end_offset);
-            trace!("agents in home: {:?}", agents.len());
-            let mut random_points_within_home = home.random_points(agents.len() as i32, rng);
-
-            for agent in agents {
-                agents_in_order.push(*agent);
-            }
-            home_loc.append(&mut random_points_within_home);
-        }
-        debug!("Assigned starting location to agents");
+        let (home_loc, mut agents_in_order) = self.set_start_locations_and_occupancies(rng, &citizens);
         agents_in_order.last_mut().as_mut().unwrap().state_machine.expose(0);
 
         self.draw(&home_loc, &homes, &offices);

@@ -33,7 +33,7 @@ const countSchema = new Schema({
   quarantined: Number,
   recovered: Number,
   deceased: Number,
-  interventions: [interventionSchema]
+  interventions: {type: [interventionSchema], default: undefined}
 });
 
 const Count = mongoose.model('Count', countSchema, "counts");

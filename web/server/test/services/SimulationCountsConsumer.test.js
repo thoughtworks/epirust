@@ -110,13 +110,13 @@ describe('Simulation Counts Consumer', () => {
       ]
     });
     const execMock = jest.fn();
-    Count.updateOne.mockReturnValueOnce({exec: execMock});
+    Count.findOneAndUpdate.mockReturnValueOnce({exec: execMock});
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
-    expect(Count.updateOne).toHaveBeenCalledTimes(1);
-    expect(Count.updateOne).toHaveBeenCalledWith({
+    expect(Count.findOneAndUpdate).toHaveBeenCalledTimes(1);
+    expect(Count.findOneAndUpdate).toHaveBeenCalledWith({
         "hour": 12,
         "simulation_id": 123,
       },

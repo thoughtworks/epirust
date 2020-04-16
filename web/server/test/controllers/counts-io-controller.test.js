@@ -21,7 +21,7 @@ const {handleRequest: handleCountsRequest} = require("../../controllers/counts-i
 jest.mock("../../db/models/Simulation");
 jest.mock("../../db/models/Count");
 const {Simulation} = require("../../db/models/Simulation");
-const Count = require("../../db/models/Count");
+const {Count} = require("../../db/models/Count");
 
 describe("Count controller", () => {
   let mockSocket;

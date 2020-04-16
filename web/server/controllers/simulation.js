@@ -18,7 +18,7 @@
  */
 
 /* GET simulation listing. */
-const Count = require("../db/models/Count");
+const {Count} = require("../db/models/Count");
 
 const express = require('express');
 const router = express.Router();

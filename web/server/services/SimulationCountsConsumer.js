@@ -20,7 +20,7 @@
 const KafkaServices = require('../services/kafka');
 const config = require("../config");
 const {Simulation, SimulationStatus} = require("../db/models/Simulation");
-const Count = require("../db/models/Count");
+const {Count} = require("../db/models/Count");
 
 class SimulationCountsConsumer {
   constructor() {

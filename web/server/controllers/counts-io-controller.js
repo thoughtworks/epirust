@@ -18,7 +18,7 @@
  */
 
 const {Simulation, SimulationStatus} = require("../db/models/Simulation");
-const Count = require("../db/models/Count");
+const {Count} = require("../db/models/Count");
 
 async function sendCountsData(simulationId, socket, totalConsumedRecords) {
   let cursor = Count

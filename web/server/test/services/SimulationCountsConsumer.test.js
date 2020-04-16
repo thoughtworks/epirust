@@ -23,7 +23,7 @@ jest.mock("../../db/models/Simulation");
 jest.mock("../../db/models/Count");
 const {KafkaGroupConsumer} = require('../../services/kafka');
 const {Simulation} = require('../../db/models/Simulation');
-const Count = require('../../db/models/Count');
+const {Count} = require('../../db/models/Count');
 
 describe('Simulation Counts Consumer', () => {
     beforeEach(() => {

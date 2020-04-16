@@ -20,6 +20,11 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const interventionSchema = new Schema({
+  intervention: String,
+  data: Object
+});
+
 const countSchema = new Schema({
   simulation_id: {type: Number, required: true},
   hour: Number,
@@ -27,8 +32,10 @@ const countSchema = new Schema({
   infected: Number,
   quarantined: Number,
   recovered: Number,
-  deceased: Number
+  deceased: Number,
+  interventions: [interventionSchema]
 });
 
-const Count = mongoose.model('Count', countSchema);
-module.exports = Count;
+const Count = mongoose.model('Count', countSchema, "counts");
+module.exports = {Count};
+

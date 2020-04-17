@@ -75,7 +75,7 @@ impl DiseaseStateMachine {
         match self.state {
             State::Exposed { at_hour } => {
                 if current_hour - at_hour >= disease.get_exposed_duration() {
-                    let symptoms = rng.get().gen_bool(disease.get_percentage_asymptomatic_population());
+                    let symptoms = rng.get().gen_bool(1.0 - disease.get_percentage_asymptomatic_population());
                     let mut severity = InfectionSeverity::Pre {at_hour: current_hour};
                     if !symptoms {
                         severity = InfectionSeverity::Mild {};

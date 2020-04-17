@@ -73,7 +73,7 @@ class EpiCurves:
         for curve in self.curves:
             curve.plot(axes)
         plt.legend()
-        plt.xlabel('hour')
+        plt.xlabel('Days')
         plt.ylabel('No. of individuals')
         plt.show()
 

@@ -22,10 +22,11 @@ jest.mock("../../services/kafka");
 jest.mock("../../db/models/Simulation");
 jest.mock("../../db/models/Grid");
 jest.mock("../../db/services/SimulationService");
+jest.mock("../../db/services/GridService");
 const {KafkaGroupConsumer} = require('../../services/kafka');
-const {Simulation} = require('../../db/models/Simulation');
-const {Grid, CitizenState} = require('../../db/models/Grid');
+const {CitizenState} = require('../../db/models/Grid');
 const SimulationService = require('../../db/services/SimulationService');
+const GridService = require('../../db/services/GridService');
 
 describe('Simulation Grid Consumer', () => {
     beforeEach(() => {
@@ -52,16 +53,12 @@ describe('Simulation Grid Consumer', () => {
 
     it('should store grid layout when grid layout message is sent', async () => {
         KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"grid_size":2}', key: "123"}]});
-        let saveMock = jest.fn();
-        Grid.mockReturnValueOnce({save: saveMock});
         const simulationConsumerGrid = new SimulationGridConsumer();
 
         await simulationConsumerGrid.start();
 
-        expect(Grid).toHaveBeenCalledTimes(1);
-        expect(Grid.mock.calls[0]).toEqual([{"grid_size":2, "simulation_id": 123}]);
-        expect(saveMock).toHaveBeenCalledTimes(1);
-        expect(saveMock.mock.calls[0]).toEqual([])
+        expect(GridService.saveGridLayout).toHaveBeenCalledTimes(1);
+        expect(GridService.saveGridLayout).toHaveBeenCalledWith({"grid_size":2, "simulation_id": 123});
     });
 
     it('should store citizen state when citizen state message is sent', async () => {

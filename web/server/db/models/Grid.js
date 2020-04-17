@@ -24,7 +24,7 @@ const AreaSchema = new Schema({
   start_offset: {x: Number, y: Number},
   end_offset: {x: Number, y: Number},
   iter_index: {x: Number, y: Number}
-});
+}, {_id: false});
 
 const citizenStateSchema = new Schema({
   simulation_id: {type: Number, required: true},

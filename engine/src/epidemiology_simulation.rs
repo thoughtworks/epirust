@@ -191,10 +191,11 @@ impl Epidemiology {
             let grid = &self.grid;
             let disease = &self.disease;
 
+            let percent_outgoing = engine_travel_plan.percent_outgoing();
             let recv_travellers = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan);
             let sim = async {
                 Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
-                                       grid, &mut listeners, &mut rng, disease, &engine_travel_plan,
+                                       grid, &mut listeners, &mut rng, disease, percent_outgoing,
                                        &mut outgoing, config.enable_citizen_state_messages());
                 let outgoing_travellers_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
                 if simulation_hour % 24 == 0 {
@@ -352,7 +353,7 @@ impl Epidemiology {
 
     fn simulate(mut csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
-                rng: &mut RandomWrapper, disease: &Disease, engine_travel_plan: &EngineTravelPlan,
+                rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
@@ -371,7 +372,7 @@ impl Epidemiology {
             };
 
             if simulation_hour % 24 == 0 && current_agent.can_move()
-                && rng.get().gen_bool(engine_travel_plan.percent_outgoing()) {
+                && rng.get().gen_bool(percent_outgoing) {
                 let traveller = Traveller::from(&current_agent);
                 outgoing.push((*new_location, traveller));
             }

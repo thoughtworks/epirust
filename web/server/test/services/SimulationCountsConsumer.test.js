@@ -110,18 +110,18 @@ describe('Simulation Counts Consumer', () => {
       ]
     });
     const execMock = jest.fn();
-    Count.findOneAndUpdate.mockReturnValueOnce({exec: execMock});
+    Count.updateOne.mockReturnValueOnce({exec: execMock});
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
-    expect(Count.findOneAndUpdate).toHaveBeenCalledTimes(1);
-    expect(Count.findOneAndUpdate).toHaveBeenCalledWith({
+    expect(Count.updateOne).toHaveBeenCalledTimes(1);
+    expect(Count.updateOne).toHaveBeenCalledWith({
         "hour": 12,
         "simulation_id": 123,
       },
       {
-        "$push": {"interventions": {"data": {"status": "locked_down"}, "intervention": "lockdown"}}
+        "$addToSet": {"interventions": {"data": {"status": "locked_down"}, "intervention": "lockdown"}}
       },
       {"upsert": true}
       );

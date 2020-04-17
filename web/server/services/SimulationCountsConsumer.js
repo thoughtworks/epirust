@@ -42,9 +42,9 @@ class SimulationCountsConsumer {
         await this.handleSimulationEnd(query, simulationId);
       } else if (isInterventionMessage) {
         const {intervention, data} = parsedMessage;
-        const query = Count.findOneAndUpdate(
+        const query = Count.updateOne(
           {simulation_id: simulationId, hour: parsedMessage.hour},
-          {$push: {interventions: {intervention, data}}},
+          {$addToSet: {interventions: {intervention, data}}},
           {upsert: true}
         );
         await query.exec()

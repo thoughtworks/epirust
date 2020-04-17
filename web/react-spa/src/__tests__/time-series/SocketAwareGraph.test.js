@@ -29,6 +29,21 @@ jest.useFakeTimers();
 
 const simulationId = 1231231231
 
+function emitNMessages(socket, n, hourStatistics) {
+    for (let index = 0; index < n; index++) {
+        socket.emit("epidemicStats", hourStatistics)
+    }
+}
+
+const hourStatisticsFor100thHour = {
+    hour: 100,
+    susceptible: 9,
+    infected: 2,
+    quarantined: 1,
+    recovered: 0,
+    deceased: 0
+}
+
 test('should render SocketAwareGraph', () => {
     const { asFragment } = render(<SocketAwareGraph simulationId={simulationId} socket={null} />)
     expect(asFragment()).toMatchSnapshot()
@@ -40,14 +55,7 @@ test('should recieve data sent on socket and parse & set graph to empty', () => 
     const closeSpy = jest.fn()
     socket.socketClient.close = closeSpy
 
-    const hourStatistics = {
-        hour: 10,
-        susceptible: 9,
-        infected: 2,
-        quarantined: 1,
-        recovered: 0,
-        deceased: 0
-    }
+    const hourStatistics = { ...hourStatisticsFor100thHour, hour: 10 }
 
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
 
@@ -64,21 +72,12 @@ test('should set dataBuffer and render graph and plot graph', () => {
     const closeSpy = jest.fn()
     socket.socketClient.close = closeSpy
 
-    const hourStatistics = {
-        hour: 0,
-        susceptible: 9,
-        infected: 2,
-        quarantined: 1,
-        recovered: 0,
-        deceased: 0
-    }
+    const hourStatistics = { ...hourStatisticsFor100thHour, hour: 0 }
 
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
 
     act(() => {
-        for (let index = 0; index < 10; index++) {
-            socket.emit("epidemicStats", hourStatistics)
-        }
+        emitNMessages(socket, 10, hourStatistics)
         jest.runAllTimers();
     })
 
@@ -97,14 +96,7 @@ test('should set residue also into data buffer when simulation ended flag is tru
 
     const closeSpy = jest.fn()
     socket.socketClient.close = closeSpy
-    const hourStatistics = {
-        hour: 100,
-        susceptible: 9,
-        infected: 2,
-        quarantined: 1,
-        recovered: 0,
-        deceased: 0
-    }
+    const hourStatistics = { ...hourStatisticsFor100thHour }
     const hourStatistics101 = { ...hourStatistics, hour: 101 }
 
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
@@ -150,15 +142,8 @@ test("should close the socket on receiving simulation ended message", () => {
     expect(closeSpy).toHaveBeenCalledTimes(1)
 });
 
-test("should render the annotations for interventions", () => {
-    const hourStatistics = {
-        hour: 100,
-        susceptible: 9,
-        infected: 2,
-        quarantined: 1,
-        recovered: 0,
-        deceased: 0
-    }
+test("should render the annotations for lockdown applied intervention ", () => {
+    const hourStatistics = { ...hourStatisticsFor100thHour }
 
     let socket = new MockSocket();
     socket.socketClient.close = jest.fn();
@@ -173,9 +158,45 @@ test("should render the annotations for interventions", () => {
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        for (let index = 0; index < 10; index++) {
-            socket.emit("epidemicStats", hourStatistics)
-        }
+        emitNMessages(socket, 10, hourStatistics)
+
+        socket.emit("epidemicStats", {
+            ...hourStatistics, interventions: [{
+                intervention: "lockdown",
+                data: { status: "locked_down" }
+            }]
+        });
+        jest.runAllTimers();
+    })
+    expect(setAnnotationSpy).toHaveBeenCalledTimes(1)
+    expect(setAnnotationSpy).toHaveBeenCalledWith([{
+        "attachAtBottom": true,
+        "cssClass": "annotation lockdown",
+        "series": "susceptible",
+        "shortText": "Lockdown start",
+        "text": "Lockdown start at 100",
+        "tickHeight": 40,
+        "x": 100
+    }])
+});
+
+test("should render the annotations for lockdown revoked intervention ", () => {
+    const hourStatistics = { ...hourStatisticsFor100thHour }
+
+    let socket = new MockSocket();
+    socket.socketClient.close = jest.fn();
+
+    const setAnnotationSpy = jest.fn()
+
+    Dygraph.mockImplementation(() => ({
+        setAnnotations: setAnnotationSpy,
+        updateOptions: jest.fn()
+    }))
+
+    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+
+    act(() => {
+        emitNMessages(socket, 10, hourStatistics)
 
         socket.emit("epidemicStats", {
             ...hourStatistics, interventions: [{
@@ -187,6 +208,146 @@ test("should render the annotations for interventions", () => {
     })
     expect(setAnnotationSpy).toHaveBeenCalledTimes(1)
     expect(setAnnotationSpy).toHaveBeenCalledWith([{
+        "attachAtBottom": true,
+        "cssClass": "annotation lockdown",
+        "series": "susceptible",
+        "shortText": "Lockdown end",
+        "text": "Lockdown end at 100",
+        "tickHeight": 40,
+        "x": 100
+    }])
+});
+
+test("should render the annotations for interventions for BuildNewHospital", () => {
+    const hourStatistics = { ...hourStatisticsFor100thHour }
+
+    let socket = new MockSocket();
+    socket.socketClient.close = jest.fn;
+
+    const setAnnotationSpy = jest.fn()
+
+    Dygraph.mockImplementation(() => ({
+        setAnnotations: setAnnotationSpy,
+        updateOptions: jest.fn()
+    }))
+
+    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+
+    act(() => {
+        emitNMessages(socket, 10, hourStatistics)
+        socket.emit("epidemicStats", {
+            ...hourStatistics, interventions: [{
+                intervention: "build_new_hospital",
+                data: {}
+            }]
+        });
+        jest.runAllTimers();
+    })
+    expect(setAnnotationSpy).toHaveBeenCalledTimes(1)
+    expect(setAnnotationSpy).toHaveBeenCalledWith([{
+        "attachAtBottom": true,
+        "cssClass": "annotation hospital",
+        "series": "susceptible",
+        "shortText": "Build Hospitals",
+        "text": "Build Hospitals at 100",
+        "tickHeight": 40,
+        "x": 100
+    }])
+});
+
+test("should render the annotations for interventions for Vaccination", () => {
+    let socket = new MockSocket();
+    socket.socketClient.close = jest.fn;
+
+    const setAnnotationSpy = jest.fn()
+
+    Dygraph.mockImplementation(() => ({
+        setAnnotations: setAnnotationSpy,
+        updateOptions: jest.fn()
+    }))
+
+    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+
+    act(() => {
+        emitNMessages(socket, 10, hourStatisticsFor100thHour)
+        socket.emit("epidemicStats", {
+            ...hourStatisticsFor100thHour, interventions: [{
+                intervention: "vaccination",
+                data: {}
+            }]
+        });
+        jest.runAllTimers();
+    })
+    expect(setAnnotationSpy).toHaveBeenCalledTimes(1)
+    expect(setAnnotationSpy).toHaveBeenCalledWith([{
+        "attachAtBottom": true,
+        "cssClass": "annotation vaccination",
+        "series": "susceptible",
+        "shortText": "Vaccination",
+        "text": "Vaccination at 100",
+        "tickHeight": 40,
+        "x": 100
+    }])
+});
+
+
+test("should render the annotations for interventions and apply height to the tick alternatively", () => {
+    let socket = new MockSocket();
+    socket.socketClient.close = jest.fn;
+
+    const setAnnotationSpy = jest.fn()
+
+    Dygraph.mockImplementation(() => ({
+        setAnnotations: setAnnotationSpy,
+        updateOptions: jest.fn()
+    }))
+
+    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+
+    act(() => {
+        emitNMessages(socket, 10, hourStatisticsFor100thHour)
+        socket.emit("epidemicStats", {
+            ...hourStatisticsFor100thHour, interventions: [{
+                intervention: "vaccination",
+                data: {}
+            }]
+        });
+
+        socket.emit("epidemicStats", {
+            ...hourStatisticsFor100thHour, interventions: [{
+                intervention: "lockdown",
+                data: { status: "locked_down" }
+            }]
+        });
+
+        socket.emit("epidemicStats", {
+            ...hourStatisticsFor100thHour, interventions: [{
+                intervention: "lockdown",
+                data: { status: "lockdown_revoked" }
+            }]
+        });
+        jest.runAllTimers();
+    })
+    expect(setAnnotationSpy).toHaveBeenCalledTimes(1)
+    expect(setAnnotationSpy).toHaveBeenCalledWith([{
+        "attachAtBottom": true,
+        "cssClass": "annotation vaccination",
+        "series": "susceptible",
+        "shortText": "Vaccination",
+        "text": "Vaccination at 100",
+        "tickHeight": 40,
+        "x": 100
+    },
+    {
+        "attachAtBottom": true,
+        "cssClass": "annotation lockdown",
+        "series": "susceptible",
+        "shortText": "Lockdown start",
+        "text": "Lockdown start at 100",
+        "tickHeight": 80,
+        "x": 100
+    },
+    {
         "attachAtBottom": true,
         "cssClass": "annotation lockdown",
         "series": "susceptible",

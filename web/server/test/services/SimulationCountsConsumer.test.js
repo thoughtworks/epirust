@@ -48,8 +48,8 @@ describe('Simulation Counts Consumer', () => {
 
     await simulationCountsConsumer.start();
 
-    expect(SimulationService.markSimulationEnd).toHaveBeenCalledTimes(1);
-    expect(SimulationService.markSimulationEnd).toHaveBeenCalledWith(123);
+    expect(SimulationService.updateSimulationStatus).toHaveBeenCalledTimes(1);
+    expect(SimulationService.updateSimulationStatus).toHaveBeenCalledWith(123);
   });
 
   it('should store counts if not ended message', async () => {

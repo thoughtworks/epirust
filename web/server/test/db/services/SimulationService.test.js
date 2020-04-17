@@ -26,15 +26,15 @@ describe('Simulation Service', function () {
   afterEach(async () => await dbHandler.clearDatabase());
   afterAll(async () => await dbHandler.closeDatabase());
 
-  describe('markSimulationEnd', function () {
+  describe('updateSimulationStatus', function () {
     it('should set simulation status to ended', async function () {
       const testSimulationId = 1234;
       await new Simulation({simulation_id: testSimulationId, status: SimulationStatus.RUNNING}).save();
 
-      await SimulationService.markSimulationEnd(testSimulationId);
+      await SimulationService.updateSimulationStatus(testSimulationId, SimulationStatus.FAILED);
 
       const s = await Simulation.findOne({simulation_id: testSimulationId}).exec();
-      expect(s.toObject().status).toBe(SimulationStatus.FINISHED);
+      expect(s.toObject().status).toBe(SimulationStatus.FAILED);
     });
   });
 

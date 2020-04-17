@@ -17,11 +17,11 @@
  *
  */
 
-const {Simulation, SimulationStatus} = require("../models/Simulation");
+const {Simulation} = require("../models/Simulation");
 
-const markSimulationEnd = async (simulationId) => {
+const updateSimulationStatus = async (simulationId, status) => {
   const query = {simulation_id: simulationId};
-  const update = {status: SimulationStatus.FINISHED};
+  const update = {status};
   await Simulation.updateOne(query, update, {upsert: true})
 };
 
@@ -32,4 +32,4 @@ const markGridConsumptionFinished = async (simulationId) => {
   await simulationUpdate.exec()
 };
 
-module.exports = {markSimulationEnd, markGridConsumptionFinished};
+module.exports = {updateSimulationStatus, markGridConsumptionFinished};

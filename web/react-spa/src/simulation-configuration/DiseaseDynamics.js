@@ -6,7 +6,7 @@ export default function DiseaseDynamics() {
 
     function handleDiseaseSelect(event) {
         const diseaseSelected = diseases[event.target.value]
-        const diseaseDynamics = ["regular_transmission_start_day", "high_transmission_start_day", "last_day", "regular_transmission_rate", "high_transmission_rate", "death_rate", "percentage_asymptomatic_population", "percentage_severe_infected_population", "exposed_duration"]
+        const diseaseDynamics = ["regular_transmission_start_day", "high_transmission_start_day", "last_day", "regular_transmission_rate", "high_transmission_rate", "death_rate", "percentage_asymptomatic_population", "percentage_severe_infected_population", "exposed_duration", "pre_symptomatic_duration"]
 
         diseaseDynamics.forEach(field => {
             document.getElementById(field).value = diseaseSelected[field]
@@ -68,6 +68,11 @@ export default function DiseaseDynamics() {
             <div className="input-control d-none">
                 <label className="col-form-label-sm" htmlFor="exposed_duration">Exposed Duration</label>
                 <input type="text" name="exposed_duration" className="form-control form-control-sm" id="exposed_duration" aria-describedby="exposed_duration" placeholder="Exposed Duration" defaultValue={disease["exposed_duration"]} />
+            </div>
+
+            <div className="input-control d-none">
+                <label className="col-form-label-sm" htmlFor="pre_symptomatic_duration">Pre symptomatic Duration</label>
+                <input type="text" name="pre_symptomatic_duration" className="form-control form-control-sm" id="pre_symptomatic_duration" aria-describedby="pre_symptomatic_duration" placeholder="Pre symptomatic Duration" defaultValue={disease["pre_symptomatic_duration"]} />
             </div>
         </fieldset>
     )

@@ -355,6 +355,25 @@ exports[`ParametersForm should disable submit button and show loading animation 
                 value="0"
               />
             </div>
+            <div
+              class="input-control d-none"
+            >
+              <label
+                class="col-form-label-sm"
+                for="pre_symptomatic_duration"
+              >
+                Pre symptomatic Duration
+              </label>
+              <input
+                aria-describedby="pre_symptomatic_duration"
+                class="form-control form-control-sm"
+                id="pre_symptomatic_duration"
+                name="pre_symptomatic_duration"
+                placeholder="Pre symptomatic Duration"
+                type="text"
+                value="0"
+              />
+            </div>
           </fieldset>
           <fieldset>
             <legend>
@@ -556,6 +575,7 @@ Object {
   "number_of_agents": 10000,
   "percentage_asymptomatic_population": 0,
   "percentage_severe_infected_population": 1,
+  "pre_symptomatic_duration": 0,
   "public_transport_percentage": 0.2,
   "regular_transmission_rate": 0.05,
   "regular_transmission_start_day": 10,
@@ -922,6 +942,25 @@ exports[`ParametersForm should render ParametersForm with defaults 1`] = `
               id="exposed_duration"
               name="exposed_duration"
               placeholder="Exposed Duration"
+              type="text"
+            />
+          </div>
+          <div
+            className="input-control d-none"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="pre_symptomatic_duration"
+            >
+              Pre symptomatic Duration
+            </label>
+            <input
+              aria-describedby="pre_symptomatic_duration"
+              className="form-control form-control-sm"
+              defaultValue={0}
+              id="pre_symptomatic_duration"
+              name="pre_symptomatic_duration"
+              placeholder="Pre symptomatic Duration"
               type="text"
             />
           </div>

@@ -39,6 +39,7 @@ const configMatch = {
   "config.percentage_asymptomatic_population": 0.3,
   "config.percentage_severe_infected_population": 0.3,
   "config.exposed_duration": 48,
+  "config.pre_symptomatic_duration": 48,
 
   "config.hours": 10000,
   "config.grid_size": 250,
@@ -63,6 +64,7 @@ router.post('/init', (req, res, next) => {
     percentage_asymptomatic_population,
     percentage_severe_infected_population,
     exposed_duration,
+    pre_symptomatic_duration,
   } = message;
 
   let simulationId = Date.now();
@@ -85,7 +87,8 @@ router.post('/init', (req, res, next) => {
       "death_rate": death_rate,
       "percentage_asymptomatic_population": percentage_asymptomatic_population,
       "percentage_severe_infected_population": percentage_severe_infected_population,
-      "exposed_duration": exposed_duration
+      "exposed_duration": exposed_duration,
+      "pre_symptomatic_duration": pre_symptomatic_duration
     },
     "grid_size": grid_size,
     "hours": simulation_hrs,

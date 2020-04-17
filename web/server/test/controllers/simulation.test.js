@@ -52,7 +52,8 @@ describe('simulation controller', () => {
         "enable_citizen_state_messages": false,
         "percentage_asymptomatic_population": 0.3,
         "percentage_severe_infected_population": 0.3,
-        "exposed_duration": 48
+        "exposed_duration": 48,
+        "pre_symptomatic_duration": 0
     };
 
     let kafkaService;
@@ -141,7 +142,8 @@ describe('simulation controller', () => {
                 death_rate: 0.2,
                 percentage_asymptomatic_population: 0.3,
                 percentage_severe_infected_population: 0.3,
-                exposed_duration: 48
+                exposed_duration: 48,
+                pre_symptomatic_duration: 0
             },
             grid_size: 250,
             hours: 10000,
@@ -212,7 +214,8 @@ describe('simulation controller', () => {
                 death_rate: 0.2,
                 percentage_asymptomatic_population: 0.3,
                 percentage_severe_infected_population: 0.3,
-                exposed_duration: 48
+                exposed_duration: 48,
+                pre_symptomatic_duration: 0
             },
             grid_size: 250,
             hours: 10000,

@@ -65,7 +65,8 @@ export default function SimulationConfiguration() {
         "hospital_spread_rate_threshold",
         "percentage_asymptomatic_population",
         "percentage_severe_infected_population",
-        "exposed_duration"
+        "exposed_duration",
+        "pre_symptomatic_duration"
       ].includes(key)) {
         value = Number(value);
       }

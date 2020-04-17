@@ -9,7 +9,8 @@ export const diseases = {
       "death_rate": 0.2,
       "percentage_asymptomatic_population": 0,
       "percentage_severe_infected_population": 1,
-      "exposed_duration": 0
+      "exposed_duration": 0,
+      "pre_symptomatic_duration": 0
     },
     "sars": {
       "label": "SARS", 
@@ -21,7 +22,8 @@ export const diseases = {
       "death_rate": 0.1,
       "percentage_asymptomatic_population": 0,
       "percentage_severe_infected_population": 1,
-      "exposed_duration": 0
+      "exposed_duration": 0,
+      "pre_symptomatic_duration": 0
     },
     "covid_19": {
       "label": "COVID-19", 
@@ -33,6 +35,7 @@ export const diseases = {
       "death_rate": 0.2,
       "percentage_asymptomatic_population": 0.3,
       "percentage_severe_infected_population": 0.3,
-      "exposed_duration": 48
+      "exposed_duration": 48,
+      "pre_symptomatic_duration": 48
     }
   }

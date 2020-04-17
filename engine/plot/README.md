@@ -15,7 +15,7 @@ python plot.py --data-path <PATH_TO_CSV_FILE>
 ```
 
 Sample output:
-![Epicurves plot](https://user-images.githubusercontent.com/16804955/77611863-789d6500-6f4c-11ea-9a8d-5cc130f54abd.png)
+![Epicurves plot](https://user-images.githubusercontent.com/16804955/79537240-79cf3700-809f-11ea-911e-dd7bc4d047e3.png)
 
 # Plot the average of all simulations
 
@@ -36,7 +36,7 @@ python collate_all_simulations.py --data-path ./simulation1.csv ./simulation2.cs
 ```
 
 Sample output:
-![Epicurves plot](https://user-images.githubusercontent.com/16804955/77741322-b8427a80-703a-11ea-896f-9d0235927b94.png)
+![Mean and deviation plot](https://user-images.githubusercontent.com/16804955/79537230-76d44680-809f-11ea-88b3-d868118b3c5d.png)
 
 The shaded region represents the standard deviation around the mean of the curve at one particular time
 

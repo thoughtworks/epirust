@@ -18,4 +18,16 @@ describe('Simulation Service', function () {
       expect(s.toObject().status).toBe(SimulationStatus.FINISHED);
     });
   });
+
+  describe('markSimulationEnd', function () {
+    it('should set simulation status to ended', async function () {
+      const testSimulationId = 1234;
+      await new Simulation({simulation_id: testSimulationId, status: SimulationStatus.RUNNING}).save();
+
+      await SimulationService.markGridConsumptionFinished(testSimulationId);
+
+      const s = await Simulation.findOne({simulation_id: testSimulationId}).exec();
+      expect(s.grid_consumption_finished).toEqual(true);
+    });
+  });
 });

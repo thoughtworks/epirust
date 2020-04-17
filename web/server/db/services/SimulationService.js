@@ -25,4 +25,11 @@ const markSimulationEnd = async (simulationId) => {
   await Simulation.updateOne(query, update, {upsert: true})
 };
 
-module.exports = {markSimulationEnd};
+const markGridConsumptionFinished = async (simulationId) => {
+  const query = {simulation_id: simulationId};
+  const update = {simulation_id: simulationId, grid_consumption_finished: true};
+  const simulationUpdate = Simulation.updateOne(query, update, {upsert: true});
+  await simulationUpdate.exec()
+};
+
+module.exports = {markSimulationEnd, markGridConsumptionFinished};

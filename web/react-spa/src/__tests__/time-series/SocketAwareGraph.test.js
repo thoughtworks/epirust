@@ -149,3 +149,50 @@ test("should close the socket on receiving simulation ended message", () => {
 
     expect(closeCall).toBe(1);
 });
+
+test("should render the annotations for interventions", () => {
+    const hourStatistics = {
+        hour: 100,
+        susceptible: 9,
+        infected: 2,
+        quarantined: 1,
+        recovered: 0,
+        deceased: 0
+    }
+
+    let socket = new MockSocket();
+    socket.socketClient.close = () => { };
+
+    const setAnnotationSpy = jest.fn()
+
+    Dygraph.mockImplementation(() => ({
+        setAnnotations: setAnnotationSpy,
+        updateOptions: jest.fn()
+    }))
+
+    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+
+    act(() => {
+        for (let index = 0; index < 10; index++) {
+            socket.emit("epidemicStats", hourStatistics)
+        }
+
+        socket.emit("epidemicStats", {
+            ...hourStatistics, interventions: [{
+                intervention: "lockdown",
+                data: { status: "lockdown_revoked" }
+            }]
+        });
+        jest.runAllTimers();
+    })
+    expect(setAnnotationSpy).toHaveBeenCalledTimes(1)
+    expect(setAnnotationSpy).toHaveBeenCalledWith([{
+        "attachAtBottom": true,
+        "cssClass": "annotation lockdown",
+        "series": "susceptible",
+        "shortText": "Lockdown end",
+        "text": "Lockdown end at 100",
+        "tickHeight": 40,
+        "x": 100
+    }])
+});

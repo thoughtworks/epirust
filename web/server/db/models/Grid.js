@@ -26,18 +26,20 @@ const AreaSchema = new Schema({
   iter_index: {x: Number, y: Number}
 }, {_id: false});
 
+const citizenStatesSchema = new Schema({
+  citizen_id: String,
+  state: String,
+  location: {
+    x: Number,
+    y: Number
+  }
+}, {_id: false})
+
 const citizenStateSchema = new Schema({
   simulation_id: {type: Number, required: true},
 
   hr: {type: Number},
-  citizen_states: [{
-    citizen_id: String,
-    state: String,
-    location: {
-      x: Number,
-      y: Number
-    }
-  }]
+  citizen_states: [citizenStatesSchema]
 });
 
 const gridSchema = new Schema({

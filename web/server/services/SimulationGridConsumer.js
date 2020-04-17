@@ -20,7 +20,6 @@
 
 const KafkaServices = require('../services/kafka');
 const config = require("../config");
-const {Grid, CitizenState} = require("../db/models/Grid");
 const SimulationService = require('../db/services/SimulationService')
 const GridService = require('../db/services/GridService')
 
@@ -48,8 +47,7 @@ class SimulationGridConsumer {
       else if('grid_size' in parsedMessage) {
         await GridService.saveGridLayout(parsedMessage)
       } else {
-        const updateQuery = CitizenState.updateOne({simulation_id: simulationId, hr: parsedMessage.hr}, parsedMessage, {upsert: true});
-        await updateQuery.exec()
+        await GridService.saveCitizenState(parsedMessage)
       }
     }
   }

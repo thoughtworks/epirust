@@ -19,12 +19,9 @@
 
 const {SimulationGridConsumer} = require('../../services/SimulationGridConsumer');
 jest.mock("../../services/kafka");
-jest.mock("../../db/models/Simulation");
-jest.mock("../../db/models/Grid");
 jest.mock("../../db/services/SimulationService");
 jest.mock("../../db/services/GridService");
 const {KafkaGroupConsumer} = require('../../services/kafka');
-const {CitizenState} = require('../../db/models/Grid');
 const SimulationService = require('../../db/services/SimulationService');
 const GridService = require('../../db/services/GridService');
 
@@ -63,20 +60,12 @@ describe('Simulation Grid Consumer', () => {
 
     it('should store citizen state when citizen state message is sent', async () => {
         KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummy_key":1, "hr":1}', key: "123"}]});
-        const execMock = jest.fn();
-        CitizenState.updateOne.mockReturnValueOnce({exec: execMock});
         const simulationConsumerGrid = new SimulationGridConsumer();
 
         await simulationConsumerGrid.start();
 
-        expect(CitizenState.updateOne).toHaveBeenCalledTimes(1);
-        expect(CitizenState.updateOne).toHaveBeenCalledWith(
-            {hr:1, simulation_id: 123},
-            {dummy_key:1, hr:1, simulation_id: 123},
-            {upsert: true}
-        );
-        expect(execMock).toHaveBeenCalledTimes(1);
-        expect(execMock.mock.calls[0]).toEqual([])
+        expect(GridService.saveCitizenState).toHaveBeenCalledTimes(1);
+        expect(GridService.saveCitizenState).toHaveBeenCalledWith({dummy_key:1, hr:1, simulation_id: 123});
     });
 });
 

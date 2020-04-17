@@ -17,11 +17,17 @@
  *
  */
 
-const {Grid} = require("../models/Grid")
+const {Grid, CitizenState} = require("../models/Grid")
 
 async function saveGridLayout(gridLayout) {
     const grid = new Grid(gridLayout);
     await grid.save();
 }
 
-module.exports = {saveGridLayout};
+async function saveCitizenState(citizenState) {
+    let query = {simulation_id: citizenState.simulation_id, hr: citizenState.hr};
+    const updateQuery = CitizenState.updateOne(query, citizenState, {upsert: true});
+    await updateQuery.exec()
+}
+
+module.exports = {saveGridLayout, saveCitizenState};

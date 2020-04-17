@@ -18,7 +18,7 @@
  */
 const dbHandler = require("../db-handler")
 const GridService = require("../../../db/services/GridService")
-const {Grid} = require("../../../db/models/Grid")
+const {Grid, CitizenState} = require("../../../db/models/Grid")
 
 describe('Grid Service', function () {
     beforeAll(async () => await dbHandler.connect());
@@ -27,7 +27,7 @@ describe('Grid Service', function () {
 
     describe('saveGridLayout', function () {
         it('should save grid layout', async function () {
-            let testSimulationId = 123;
+            const testSimulationId = 123;
             const gridLayoutToCreate = {
                 simulation_id: testSimulationId,
 
@@ -66,10 +66,59 @@ describe('Grid Service', function () {
 
             await GridService.saveGridLayout(gridLayoutToCreate)
 
-            const gridLayoutInDb = (await Grid.findOne({simulation_id: testSimulationId}, {_id: 0, __v:0}).exec()).toObject();
+            const gridLayoutInDb = (await Grid.findOne({}, {_id: 0, __v:0}).exec()).toObject();
 
             expect(gridLayoutInDb).toEqual(gridLayoutToCreate)
 
+        });
+    });
+
+    describe('saveCitizenState', function () {
+        it('should save a new citizen state if it does not exist in db', async function () {
+            const testSimulationId = 123;
+            const citizenStateToCreate = {
+                simulation_id: testSimulationId,
+                hr: 2,
+                citizen_states: [{
+                    citizen_id: "123",
+                    state: 's',
+                    location: {
+                        x: 3,
+                        y: 4
+                    }
+                }]
+            }
+            await GridService.saveCitizenState({...citizenStateToCreate})
+
+            const citizenState = (await CitizenState.findOne({}, {_id: 0, __v:0}).exec()).toObject();
+
+            expect(citizenState).toEqual(citizenStateToCreate)
+
+        });
+
+        it('should update citizen state if it already exist in db', async function () {
+            const testSimulationId = 123;
+            await new CitizenState({simulation_id: testSimulationId, hr: 2}).save()
+
+            const citizenStateToCreate = {
+                simulation_id: testSimulationId,
+                hr: 2,
+                citizen_states: [{
+                    citizen_id: "123",
+                    state: 's',
+                    location: {
+                        x: 3,
+                        y: 4
+                    }
+                }]
+            }
+            await GridService.saveCitizenState({...citizenStateToCreate})
+
+            const citizenStateInDb = (await CitizenState.findOne({}, {_id: 0, __v:0}).exec()).toObject();
+            const numberOfCitizenStateInDb = await CitizenState.count().exec();
+
+            expect(citizenStateInDb).toEqual(citizenStateToCreate)
+            expect(numberOfCitizenStateInDb).toEqual(1)
         });
     });
 });

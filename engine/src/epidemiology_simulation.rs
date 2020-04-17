@@ -195,7 +195,7 @@ impl Epidemiology {
             let sim = async {
                 Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                        grid, &mut listeners, &mut rng, disease, &engine_travel_plan,
-                                       &mut outgoing);
+                                       &mut outgoing, config.enable_citizen_state_messages());
                 let outgoing_travellers_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
                 if simulation_hour % 24 == 0 {
                     listeners.outgoing_travellers_added(simulation_hour, &outgoing_travellers_by_region);
@@ -353,7 +353,7 @@ impl Epidemiology {
     fn simulate(mut csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, engine_travel_plan: &EngineTravelPlan,
-                outgoing: &mut Vec<(Point, Traveller)>) {
+                outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
         write_buffer.agent_cell.clear();
         for (cell, agent) in read_buffer.agent_cell.iter() {
             let mut current_agent = *agent;
@@ -377,7 +377,9 @@ impl Epidemiology {
             }
 
             write_buffer.agent_cell.insert(*new_location, current_agent);
-            listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
+            if publish_citizen_state {
+                listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
+            }
         }
     }
 

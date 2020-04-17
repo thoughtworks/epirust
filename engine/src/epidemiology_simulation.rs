@@ -23,7 +23,6 @@ use std::time::{Duration, Instant, SystemTime};
 
 use chrono::{DateTime, Local};
 use futures::StreamExt;
-use fxhash::{FxBuildHasher, FxHashMap};
 use rand::Rng;
 
 use crate::{allocation_map, RunMode, ticks_consumer, travellers_consumer};
@@ -123,8 +122,7 @@ impl Epidemiology {
         let mut rng = RandomWrapper::new();
         let start_time = Instant::now();
 
-        self.write_agent_location_map.agent_cell = FxHashMap::with_capacity_and_hasher(population as usize,
-                                                                                       FxBuildHasher::default());
+        self.write_agent_location_map.init_with_capacity(population as usize);
 
         let vaccinations = VaccinateIntervention::init(config);
         let mut lock_down_details = LockdownIntervention::init(config);
@@ -344,7 +342,7 @@ impl Epidemiology {
     }
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
-        for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
+        for (_v, agent) in write_buffer_reference.iter_mut() {
             if agent.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
                 agent.set_vaccination(true);
             }
@@ -355,8 +353,8 @@ impl Epidemiology {
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
-        write_buffer.agent_cell.clear();
-        for (cell, agent) in read_buffer.agent_cell.iter() {
+        write_buffer.clear();
+        for (cell, agent) in read_buffer.iter() {
             let mut current_agent = *agent;
             let infection_status = current_agent.state_machine.is_infected();
             let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut csv_record, rng, disease);
@@ -365,7 +363,7 @@ impl Epidemiology {
                 listeners.citizen_got_infected(&cell);
             }
 
-            let agent_option = write_buffer.agent_cell.get(&point);
+            let agent_option = write_buffer.get(&point);
             let new_location = match agent_option {
                 Some(mut _agent) => cell, //occupied
                 _ => &point
@@ -377,7 +375,7 @@ impl Epidemiology {
                 outgoing.push((*new_location, traveller));
             }
 
-            write_buffer.agent_cell.insert(*new_location, current_agent);
+            write_buffer.insert(*new_location, current_agent);
             if publish_citizen_state {
                 listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
             }
@@ -386,7 +384,7 @@ impl Epidemiology {
 
     fn lock_city(write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper, lockdown_details: &LockdownConfig) {
         info!("Locking the city");
-        for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
+        for (_v, agent) in write_buffer_reference.iter_mut() {
             if rng.get().gen_bool(1.0 - lockdown_details.essential_workers_population) {
                 agent.set_isolation(true);
             }
@@ -395,7 +393,7 @@ impl Epidemiology {
 
     fn unlock_city(write_buffer_reference: &mut AgentLocationMap) {
         info!("unlocking city");
-        for (_v, agent) in write_buffer_reference.agent_cell.iter_mut() {
+        for (_v, agent) in write_buffer_reference.iter_mut() {
             if agent.is_isolated() {
                 agent.set_isolation(false);
             }

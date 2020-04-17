@@ -17,7 +17,7 @@
  *
  */
 
-use fxhash::FxHashMap;
+use fxhash::{FxHashMap, FxBuildHasher};
 
 use crate::agent;
 use crate::geography::{Area, Grid};
@@ -27,14 +27,19 @@ use crate::agent::Citizen;
 use crate::disease_state_machine::State;
 use crate::listeners::events::counts::Counts;
 use crate::travel_plan::Traveller;
+use std::collections::hash_map::{IterMut, Iter};
 
 #[derive(Clone)]
 pub struct AgentLocationMap {
-    pub grid_size: i32,
-    pub agent_cell: FxHashMap<Point, agent::Citizen>,
+    grid_size: i32,
+    agent_cell: FxHashMap<Point, agent::Citizen>,
 }
 
 impl AgentLocationMap {
+    pub fn init_with_capacity(&mut self, size: usize) {
+        self.agent_cell = FxHashMap::with_capacity_and_hasher(size, FxBuildHasher::default());
+    }
+
     pub fn new(grid_size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
         let mut map: FxHashMap<Point, agent::Citizen> = FxHashMap::default();
@@ -148,6 +153,26 @@ impl AgentLocationMap {
 
     pub fn current_population(&self) -> i32 {
         self.agent_cell.len() as i32
+    }
+
+    pub fn iter(&self) -> Iter<'_, Point, Citizen> {
+        self.agent_cell.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<'_, Point, Citizen> {
+        self.agent_cell.iter_mut()
+    }
+
+    pub fn clear(&mut self) {
+        self.agent_cell.clear();
+    }
+
+    pub fn get(&self, point: &Point) -> Option<&Citizen> {
+        self.agent_cell.get(point)
+    }
+
+    pub fn insert(&mut self, point: Point, citizen: Citizen) -> Option<Citizen> {
+        self.agent_cell.insert(point, citizen)
     }
 }
 

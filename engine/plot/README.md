@@ -78,7 +78,7 @@ python collate_all_simulations.py --data-path ./simulation*.csv --compare-with .
 ```
 
 Sample output:
-![Comparison plot](https://user-images.githubusercontent.com/16804955/79537646-4f31ae00-80a0-11ea-99d8-a75898d218b9.png)
+![Comparison plot](https://user-images.githubusercontent.com/16804955/79548791-9d9c7800-80b3-11ea-9596-ad71633bb5e0.png)
 
 In this plot:
 * We can disable certain lines using the legend (by clicking the line we want to enable/disable)

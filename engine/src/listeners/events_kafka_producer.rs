@@ -117,7 +117,7 @@ impl Listener for EventsKafkaProducer {
         }
     }
 
-    fn intervention_applied(&self,
+    fn intervention_applied(&mut self,
                             _at_hour: i32,
                             _intervention: &dyn InterventionType,
     ) {

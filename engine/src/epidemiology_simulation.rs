@@ -47,6 +47,7 @@ use crate::ticks_consumer::Tick;
 use crate::travel_plan::{EngineTravelPlan, TravellersByRegion, Traveller};
 use futures::join;
 use crate::listeners::travel_counter::TravelCounter;
+use crate::listeners::intervention_reporter::InterventionReporter;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -100,11 +101,13 @@ impl Epidemiology {
         let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), population as usize,
                                                       config.enable_citizen_state_messages());
         let hotspot_tracker = Hotspot::new();
+        let intervention_reporter = InterventionReporter::new(format!("{}_interventions.json", output_file_format));
         let mut listeners_vec: Vec<Box<dyn Listener>> = vec![Box::new(csv_listener),
                                                              Box::new(kafka_listener),
-                                                             Box::new(hotspot_tracker)];
+                                                             Box::new(hotspot_tracker),
+                                                             Box::new(intervention_reporter)];
 
-        if let RunMode::MultiEngine { engine_id: _e} = run_mode {
+        if let RunMode::MultiEngine { engine_id: _e } = run_mode {
             let travels_file_name = format!("{}_outgoing_travels.csv", output_file_format);
             let travel_counter = TravelCounter::new(travels_file_name);
             listeners_vec.push(Box::new(travel_counter));

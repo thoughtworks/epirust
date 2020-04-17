@@ -31,7 +31,7 @@ pub trait Listener {
     fn citizen_got_infected(&mut self, _cell: &Point) {}
     fn citizen_state_updated(&mut self, _hr: i32, _citizen: &Citizen, _location: &Point) {}
     fn grid_updated(&self, _grid: &Grid) {}
-    fn intervention_applied(&self, _at_hour: i32, _intervention: &dyn InterventionType) {}
+    fn intervention_applied(&mut self, _at_hour: i32, _intervention: &dyn InterventionType) {}
     fn outgoing_travellers_added(&mut self, _hr: i32, _travellers: &Vec<TravellersByRegion>) {}
     fn as_any(&self) -> &dyn Any;
 }
@@ -69,11 +69,11 @@ impl Listeners {
         self.listeners.iter().for_each(|l| { l.grid_updated(grid) })
     }
 
-    pub fn intervention_applied(&self,
+    pub fn intervention_applied(&mut self,
                                 _at_hour: i32,
                                 _intervention: &dyn InterventionType,
     ) {
-        self.listeners.iter().for_each(|l| { l.intervention_applied(_at_hour, _intervention) })
+        self.listeners.iter_mut().for_each(|l| { l.intervention_applied(_at_hour, _intervention) })
     }
 
     pub fn outgoing_travellers_added(&mut self, hr: i32, travellers: &Vec<TravellersByRegion>) {

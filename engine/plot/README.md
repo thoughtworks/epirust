@@ -63,3 +63,24 @@ Example:
 ```bash
 python collate_all_simulations.py --collated-csv ./mean_simulation.csv
 ```
+
+
+# Plot comparison of a particular simulation to the baseline simulations  
+
+To visualise already generated average and standard deviation calculated csv:
+```bash
+python collate_all_simulations.py --data-path <PATTERN_TO_CSVS> --compare-with <PATH_TO_CSV_To_COMPARE>
+```
+
+Example:
+```bash
+python collate_all_simulations.py --data-path ./simulation*.csv --compare-with ./simulation_to_compare.csv
+```
+
+Sample output:
+![Comparison plot](https://user-images.githubusercontent.com/16804955/79537646-4f31ae00-80a0-11ea-99d8-a75898d218b9.png)
+
+In this plot:
+* We can disable certain lines using the legend (by clicking the line we want to enable/disable)
+* The lockdown is shown according to the simulation that is being compared(not baseline).
+* The lockdown starts when number of infected reach above 100 and remains for 21 days

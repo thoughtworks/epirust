@@ -73,7 +73,7 @@ describe('CountService', () => {
 
     it('should not create multiple count objects with same simulationId and hour on multiple inserts', async () => {
       const simulationId = randomId();
-      const countObject = {simulation_id: simulationId, hour: 12, infected: 67};
+      const countObject = {hour: 12, infected: 67};
 
       await CountService.upsertCount(simulationId, countObject);
       await CountService.upsertCount(simulationId, countObject);

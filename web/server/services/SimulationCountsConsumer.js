@@ -52,18 +52,12 @@ class SimulationCountsConsumer {
   }
 
   async handleCountMessage(parsedMessage, simulationId, query) {
-    parsedMessage["simulation_id"] = simulationId;
-    const countInsertQuery = Count.updateOne(
-      {simulation_id: simulationId, hour: parsedMessage.hour},
-      parsedMessage,
-      {upsert: true});
-
     if (parsedMessage.hour === 1) {
       const update = {status: SimulationStatus.RUNNING};
       Simulation.updateOne(query, update, {upsert: true}).exec();
     }
 
-    await countInsertQuery.exec()
+    await CountService.upsertCount(simulationId, parsedMessage);
   }
 }
 

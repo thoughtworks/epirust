@@ -53,27 +53,16 @@ describe('Simulation Counts Consumer', () => {
   });
 
   it('should store counts if not ended message', async () => {
+    const countMessage = {"infected":78, "hour": 12};
     KafkaGroupConsumer.mockReturnValueOnce({
-      consumerStream: [{
-        value: '{"dummyKey":"dummyValue", "hour": 12}',
-        key: "123"
-      }]
+      consumerStream: [{value: JSON.stringify(countMessage), key: "123"}]
     });
-    let execMock = jest.fn();
-    Count.updateOne.mockReturnValueOnce({exec: execMock});
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
-    expect(Count.updateOne).toHaveBeenCalledTimes(1);
-    expect(Count.updateOne.mock.calls[0]).toEqual([
-      {simulation_id: 123, "hour": 12},
-      {dummyKey: "dummyValue", simulation_id: 123, hour: 12},
-      {upsert: true}
-    ]);
-    expect(execMock).toHaveBeenCalledTimes(1);
-    expect(execMock.mock.calls[0]).toEqual([]);
-    expect(Simulation.updateOne).toHaveBeenCalledTimes(0);
+    expect(CountService.upsertCount).toHaveBeenCalledTimes(1);
+    expect(CountService.upsertCount).toHaveBeenCalledWith(123, countMessage)
   });
 
   it('should update the status of simulation as running when the first count is recieved', async (done) => {

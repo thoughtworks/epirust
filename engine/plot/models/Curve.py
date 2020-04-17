@@ -25,9 +25,12 @@ class Curve:
         self.curve_std = curve_std
 
     def plot(self, axes):
-        time_steps = np.arange(self.curve_mean.size)
-        axes.plot(time_steps, self.curve_mean, label=self.name)
-        axes.fill_between(time_steps, self.curve_mean - self.curve_std, self.curve_mean + self.curve_std, alpha=0.5)
+        time_steps = np.arange(0, self.curve_mean.size, 24)
+        plot_mean = self.curve_mean[time_steps]
+        plot_std = self.curve_std[time_steps]
+        x = np.arange(plot_mean.size)
+        axes.plot(x, plot_mean, label=self.name)
+        axes.fill_between(x, plot_mean - plot_std, plot_mean + plot_std, alpha=0.5)
 
     def to_dictionary(self):
         return {

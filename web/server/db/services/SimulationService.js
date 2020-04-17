@@ -22,7 +22,7 @@ const {Simulation} = require("../models/Simulation");
 const updateSimulationStatus = async (simulationId, status) => {
   const query = {simulation_id: simulationId};
   const update = {status};
-  await Simulation.updateOne(query, update, {upsert: true})
+  await Simulation.updateOne(query, update, {upsert: true}).exec()
 };
 
 const markGridConsumptionFinished = async (simulationId) => {

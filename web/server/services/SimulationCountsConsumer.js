@@ -22,6 +22,7 @@ const config = require("../config");
 const {Simulation, SimulationStatus} = require("../db/models/Simulation");
 const {Count} = require("../db/models/Count");
 const SimulationService = require('../db/services/SimulationService');
+const CountService = require('../db/services/CountService');
 
 class SimulationCountsConsumer {
   constructor() {
@@ -43,13 +44,7 @@ class SimulationCountsConsumer {
         await SimulationService.markSimulationEnd(simulationId);
         console.log("Consumed all messages for ", simulationId);
       } else if (isInterventionMessage) {
-        const {intervention, data} = parsedMessage;
-        const query = Count.updateOne(
-          {simulation_id: simulationId, hour: parsedMessage.hour},
-          {$addToSet: {interventions: {intervention, data}}},
-          {upsert: true}
-        );
-        await query.exec()
+        await CountService.addIntervention(simulationId, parsedMessage);
       } else {
         await this.handleCountMessage(parsedMessage, simulationId, query);
       }

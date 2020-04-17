@@ -22,10 +22,12 @@ jest.mock("../../services/kafka");
 jest.mock("../../db/models/Simulation");
 jest.mock("../../db/models/Count");
 jest.mock('../../db/services/SimulationService');
+jest.mock('../../db/services/CountService');
 const {KafkaGroupConsumer} = require('../../services/kafka');
 const {Simulation} = require('../../db/models/Simulation');
 const {Count} = require('../../db/models/Count');
 const SimulationService = require('../../db/services/SimulationService');
+const CountService = require('../../db/services/CountService');
 
 describe('Simulation Counts Consumer', () => {
   beforeEach(() => {
@@ -51,7 +53,12 @@ describe('Simulation Counts Consumer', () => {
   });
 
   it('should store counts if not ended message', async () => {
-    KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummyKey":"dummyValue", "hour": 12}', key: "123"}]});
+    KafkaGroupConsumer.mockReturnValueOnce({
+      consumerStream: [{
+        value: '{"dummyKey":"dummyValue", "hour": 12}',
+        key: "123"
+      }]
+    });
     let execMock = jest.fn();
     Count.updateOne.mockReturnValueOnce({exec: execMock});
     const simulationCountsConsumer = new SimulationCountsConsumer();
@@ -97,31 +104,16 @@ describe('Simulation Counts Consumer', () => {
   });
 
   it('should write intervention in db', async () => {
+    const intervention = {"hour": 12, "intervention": "lockdown", "data": {"status": "locked_down"}}
     KafkaGroupConsumer.mockReturnValueOnce({
-      consumerStream: [
-        {
-          value: '{"hour":12, "intervention": "lockdown", "data": {"status": "locked_down"}}',
-          key: "123"
-        }
-      ]
+      consumerStream: [{value: JSON.stringify(intervention), key: "123"}]
     });
-    const execMock = jest.fn();
-    Count.updateOne.mockReturnValueOnce({exec: execMock});
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
-    expect(Count.updateOne).toHaveBeenCalledTimes(1);
-    expect(Count.updateOne).toHaveBeenCalledWith({
-        "hour": 12,
-        "simulation_id": 123,
-      },
-      {
-        "$addToSet": {"interventions": {"data": {"status": "locked_down"}, "intervention": "lockdown"}}
-      },
-      {"upsert": true}
-      );
-    expect(execMock).toHaveBeenCalledTimes(1)
+    expect(CountService.addIntervention).toHaveBeenCalledTimes(1);
+    expect(CountService.addIntervention).toHaveBeenCalledWith(123, intervention);
   })
 });
 

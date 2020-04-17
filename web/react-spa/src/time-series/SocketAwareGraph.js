@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
+import { Interventions } from '../grid/constants';
 import Graph from './LineGraph';
-import PropTypes from 'prop-types'
-import { Interventions } from '../grid/constants'
 
 export default function SocketAwareGraph({ socket, simulationId }) {
     const [dataBuffer, setDataBuffer] = useState([]);
@@ -36,12 +36,9 @@ export default function SocketAwareGraph({ socket, simulationId }) {
                     )
                 }
             }
-            if (message.hour % 100 === 0 || simulationEndedTemp) {
-                setDataBuffer(buffer => {
-                    let total = [...buffer, ...buff];
-                    buff = [];
-                    return total;
-                });
+            if (buff.length === 10 || simulationEndedTemp) {
+                setDataBuffer(buffer => [...buffer, ...buff]);
+                buff = [];
             }
             if (simulationEndedTemp) {
                 setSimulationEnded(true)

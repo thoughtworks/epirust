@@ -65,7 +65,7 @@ test('should set dataBuffer and render graph and plot graph', () => {
     socket.socketClient.close = closeSpy
 
     const hourStatistics = {
-        hour: 100,
+        hour: 0,
         susceptible: 9,
         infected: 2,
         quarantined: 1,
@@ -76,11 +76,14 @@ test('should set dataBuffer and render graph and plot graph', () => {
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
 
     act(() => {
-        socket.emit("epidemicStats", hourStatistics)
+        for (let index = 0; index < 10; index++) {
+            socket.emit("epidemicStats", hourStatistics)
+        }
         jest.runAllTimers();
     })
 
-    expect(mockDygraphfn).toHaveBeenCalledWith(expect.anything(), [Object.values(hourStatistics)], expect.anything())
+    expect(mockDygraphfn).toHaveBeenCalledTimes(1)
+    expect(mockDygraphfn.mock.calls[0][1].length).toBe(10);
     jest.clearAllMocks()
 })
 

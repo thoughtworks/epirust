@@ -95,7 +95,8 @@ class EpiCurves:
             'recovered': '#2ca02c',
             'susceptible': '#ff7f0e',
             'deceased': '#9467bd',
-            'quarantined': '#1f77b4'
+            'quarantined': '#1f77b4',
+            'exposed': 'purple'
         }
         fig, axes = plt.subplots()
 
@@ -112,11 +113,16 @@ class EpiCurves:
             line_plot, = axes.plot(np.array(data_frame[curve.name])[time_steps], label=curve.name, color=color)
             plot_lines.append([line_plot])
 
+        lock_down_start = data_frame[data_frame.infected >= 100].hour.min() / 24
+        start_line = plt.axvline(lock_down_start, 0, 1, label='lockdown start/end')
+        end_line = plt.axvline(lock_down_start + 21, 0, 1)
+        plot_lines.append([start_line, end_line])
+
         legend = plt.legend()
 
         lined = dict()
         for legend_line, plot_line in zip(legend.get_lines(), plot_lines):
-            legend_line.set_picker(5)  # 5 pts tolerance
+            legend_line.set_picker(5)
             lined[legend_line] = plot_line
             toggle_visibility(fig, legend_line, plot_line)
 
@@ -124,8 +130,3 @@ class EpiCurves:
         plt.xlabel('Days')
         plt.ylabel('No. of individuals')
         plt.show()
-
-
-
-
-

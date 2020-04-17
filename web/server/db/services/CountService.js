@@ -29,4 +29,11 @@ const addIntervention = async (simulationId, intervention) => {
   await query.exec()
 };
 
-module.exports = {addIntervention};
+const upsertCount = async (simulationId, count) => {
+  const query = Count.updateOne({simulation_id: simulationId, hour: count.hour},
+    count, {upsert: true});
+
+  await query.exec();
+};
+
+module.exports = {addIntervention, upsertCount};

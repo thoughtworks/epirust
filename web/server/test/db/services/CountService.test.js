@@ -21,9 +21,9 @@ const dbHandler = require('../db-handler');
 const CountService = require("../../../db/services/CountService");
 const {Count} = require('../../../db/models/Count');
 
-describe('CountService', function () {
-  describe('addIntervention', function () {
-    it('should add intervention to the count', async function () {
+describe('CountService', () => {
+  describe('addIntervention', () => {
+    it('should add intervention to the count', async () => {
       const simulationId = randomId();
       const interventionObject = buildTestIntervention();
       await new Count({simulation_id: simulationId, hour: 12}).save();
@@ -39,7 +39,7 @@ describe('CountService', function () {
       });
     });
 
-    it('should not duplicate interventions if same added twice', async function () {
+    it('should not duplicate interventions if same added twice', async () => {
       const simulationId = randomId();
       const interventionObject = buildTestIntervention();
       await new Count({simulation_id: simulationId, hour: 12}).save();
@@ -54,6 +54,36 @@ describe('CountService', function () {
         intervention: interventionObject.intervention,
         data: interventionObject.data
       });
+    });
+  });
+
+  describe('upsertCount', () => {
+    it('should insert new count in the collection', async () => {
+      const simulationId = randomId();
+      const countObject = {simulation_id: simulationId, hour: 12, infected: 67};
+
+      await CountService.upsertCount(simulationId, countObject);
+
+      const receivedCount = (await Count.findOne({simulation_id: simulationId, hour: 12}).exec()).toObject();
+      expect(receivedCount).toBeDefined();
+      expect(receivedCount.simulation_id).toBe(simulationId);
+      expect(receivedCount.hour).toBe(12);
+      expect(receivedCount.infected).toBe(67);
+    });
+
+    it('should not create multiple count objects with same simulationId and hour on multiple inserts', async () => {
+      const simulationId = randomId();
+      const countObject = {simulation_id: simulationId, hour: 12, infected: 67};
+
+      await CountService.upsertCount(simulationId, countObject);
+      await CountService.upsertCount(simulationId, countObject);
+
+      const receivedCounts = await Count.find({simulation_id: simulationId, hour: 12}).exec();
+      expect(receivedCounts).toHaveLength(1);
+      const count = receivedCounts[0].toObject();
+      expect(count.simulation_id).toBe(simulationId);
+      expect(count.hour).toBe(12);
+      expect(count.infected).toBe(67);
     });
   });
 

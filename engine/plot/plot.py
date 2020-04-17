@@ -29,12 +29,13 @@ def arg_parser():
 
 def plot(data_frame, time_column):
     columns = filter(lambda c: c != time_column, data_frame.columns)
+    daily_basis = data_frame[data_frame[time_column] % 24 == 1]
 
     for column in columns:
-        plt.plot(data_frame[time_column], data_frame[column], label=column)
+        plt.plot(daily_basis[time_column], daily_basis[column], label=column)
 
     plt.legend()
-    plt.xlabel(time_column)
+    plt.xlabel('Days')
     plt.ylabel('No. of individuals')
     plt.grid(True)
     plt.show()

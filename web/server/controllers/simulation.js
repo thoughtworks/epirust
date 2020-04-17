@@ -65,10 +65,6 @@ router.post('/init', (req, res, next) => {
     exposed_duration,
   } = message;
 
-  console.log(typeof percentage_asymptomatic_population, percentage_asymptomatic_population)
-  console.log(typeof percentage_severe_infected_population, percentage_severe_infected_population)
-  console.log(typeof exposed_duration, exposed_duration)
-
   let simulationId = Date.now();
   const simulation_config = {
     "sim_id": `${simulationId}`,

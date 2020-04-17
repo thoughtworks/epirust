@@ -21,6 +21,7 @@ const KafkaServices = require('../services/kafka');
 const config = require("../config");
 const {Simulation, SimulationStatus} = require("../db/models/Simulation");
 const {Count} = require("../db/models/Count");
+const SimulationService = require('../db/services/SimulationService');
 
 class SimulationCountsConsumer {
   constructor() {
@@ -39,7 +40,8 @@ class SimulationCountsConsumer {
       const isInterventionMessage = "intervention" in parsedMessage;
 
       if (simulationEnded) {
-        await this.handleSimulationEnd(query, simulationId);
+        await SimulationService.markSimulationEnd(simulationId);
+        console.log("Consumed all messages for ", simulationId);
       } else if (isInterventionMessage) {
         const {intervention, data} = parsedMessage;
         const query = Count.updateOne(
@@ -67,14 +69,6 @@ class SimulationCountsConsumer {
     }
 
     await countInsertQuery.exec()
-  }
-
-  async handleSimulationEnd(query, simulationId) {
-    const update = {status: SimulationStatus.FINISHED};
-    const simulation = Simulation.updateOne(query, update, {upsert: true});
-
-    console.log("Consumed all counts for simulation id", simulationId);
-    await simulation.exec()
   }
 }
 

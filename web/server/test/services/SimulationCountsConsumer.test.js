@@ -21,9 +21,11 @@ const {SimulationCountsConsumer} = require('../../services/SimulationCountsConsu
 jest.mock("../../services/kafka");
 jest.mock("../../db/models/Simulation");
 jest.mock("../../db/models/Count");
+jest.mock('../../db/services/SimulationService');
 const {KafkaGroupConsumer} = require('../../services/kafka');
 const {Simulation} = require('../../db/models/Simulation');
 const {Count} = require('../../db/models/Count');
+const SimulationService = require('../../db/services/SimulationService');
 
 describe('Simulation Counts Consumer', () => {
   beforeEach(() => {
@@ -40,20 +42,12 @@ describe('Simulation Counts Consumer', () => {
 
   it('should updated the status of simulation to be finished', async () => {
     KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"simulation_ended":true}', key: "123"}]});
-    const execMock = jest.fn();
-    Simulation.updateOne.mockReturnValueOnce({exec: execMock});
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
-    expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
-    expect(Simulation.updateOne.mock.calls[0]).toEqual([
-      {simulation_id: 123},
-      {status: "finished"},
-      {"upsert": true},
-    ]);
-    expect(execMock).toHaveBeenCalledTimes(1);
-    expect(execMock.mock.calls[0]).toEqual([])
+    expect(SimulationService.markSimulationEnd).toHaveBeenCalledTimes(1);
+    expect(SimulationService.markSimulationEnd).toHaveBeenCalledWith(123);
   });
 
   it('should store counts if not ended message', async () => {
@@ -75,7 +69,7 @@ describe('Simulation Counts Consumer', () => {
     expect(Simulation.updateOne).toHaveBeenCalledTimes(0);
   });
 
-  it('should update the status of simulation as running when the first count is recieved', async () => {
+  it('should update the status of simulation as running when the first count is recieved', async (done) => {
     KafkaGroupConsumer.mockReturnValueOnce({
       consumerStream: [{
         value: '{"dummyKey":"dummyValue", "hour":1}',
@@ -96,8 +90,10 @@ describe('Simulation Counts Consumer', () => {
       {status: "running"},
       {"upsert": true},
     ]);
-    expect(execMock).toHaveBeenCalledTimes(1);
-    expect(execMock.mock.calls[0]).toEqual([])
+    process.nextTick(() => {
+      expect(execMock).toHaveBeenCalledTimes(1);
+      done();
+    });
   });
 
   it('should write intervention in db', async () => {

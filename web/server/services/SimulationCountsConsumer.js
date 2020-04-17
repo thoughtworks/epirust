@@ -19,8 +19,7 @@
 
 const KafkaServices = require('../services/kafka');
 const config = require("../config");
-const {Simulation, SimulationStatus} = require("../db/models/Simulation");
-const {Count} = require("../db/models/Count");
+const {SimulationStatus} = require("../db/models/Simulation");
 const SimulationService = require('../db/services/SimulationService');
 const CountService = require('../db/services/CountService');
 
@@ -35,7 +34,6 @@ class SimulationCountsConsumer {
       const parsedMessage = JSON.parse(data.value);
 
       let simulationId = parseInt(data.key.toString());
-      const query = {simulation_id: simulationId};
 
       const simulationEnded = "simulation_ended" in parsedMessage;
       const isInterventionMessage = "intervention" in parsedMessage;
@@ -46,15 +44,14 @@ class SimulationCountsConsumer {
       } else if (isInterventionMessage) {
         await CountService.addIntervention(simulationId, parsedMessage);
       } else {
-        await this.handleCountMessage(parsedMessage, simulationId, query);
+        await this.handleCountMessage(parsedMessage, simulationId);
       }
     }
   }
 
-  async handleCountMessage(parsedMessage, simulationId, query) {
+  async handleCountMessage(parsedMessage, simulationId) {
     if (parsedMessage.hour === 1) {
-      const update = {status: SimulationStatus.RUNNING};
-      Simulation.updateOne(query, update, {upsert: true}).exec();
+      SimulationService.updateSimulationStatus(simulationId, SimulationStatus.RUNNING)
     }
 
     await CountService.upsertCount(simulationId, parsedMessage);

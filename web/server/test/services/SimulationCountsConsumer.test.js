@@ -24,8 +24,7 @@ jest.mock("../../db/models/Count");
 jest.mock('../../db/services/SimulationService');
 jest.mock('../../db/services/CountService');
 const {KafkaGroupConsumer} = require('../../services/kafka');
-const {Simulation} = require('../../db/models/Simulation');
-const {Count} = require('../../db/models/Count');
+const {SimulationStatus} = require('../../db/models/Simulation');
 const SimulationService = require('../../db/services/SimulationService');
 const CountService = require('../../db/services/CountService');
 
@@ -72,22 +71,13 @@ describe('Simulation Counts Consumer', () => {
         key: "123"
       }]
     });
-    const execMock = jest.fn();
-    Simulation.updateOne.mockReturnValueOnce({exec: execMock});
-    const countExecMock = jest.fn();
-    Count.updateOne.mockReturnValueOnce({exec: countExecMock});
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
-    expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
-    expect(Simulation.updateOne.mock.calls[0]).toEqual([
-      {simulation_id: 123},
-      {status: "running"},
-      {"upsert": true},
-    ]);
     process.nextTick(() => {
-      expect(execMock).toHaveBeenCalledTimes(1);
+      expect(SimulationService.updateSimulationStatus).toHaveBeenCalledTimes(1);
+      expect(SimulationService.updateSimulationStatus).toHaveBeenCalledWith(123, SimulationStatus.RUNNING);
       done();
     });
   });

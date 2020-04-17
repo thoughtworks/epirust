@@ -114,9 +114,8 @@ class EpiCurves:
             plot_lines.append([line_plot])
 
         lock_down_start = data_frame[data_frame.infected >= 100].hour.min() / 24
-        start_line = plt.axvline(lock_down_start, 0, 1, label='lockdown start/end')
-        end_line = plt.axvline(lock_down_start + 21, 0, 1)
-        plot_lines.append([start_line, end_line])
+        plt.axvspan(lock_down_start, lock_down_start + 21, alpha=0.3)
+        plt.text(lock_down_start + 8, data_frame['susceptible'].max()/3, 'Lockdown Period', rotation=90)
 
         legend = plt.legend()
 

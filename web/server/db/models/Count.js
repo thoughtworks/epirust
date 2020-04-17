@@ -23,7 +23,7 @@ const Schema = mongoose.Schema;
 const interventionSchema = new Schema({
   intervention: String,
   data: Object
-});
+}, {_id: false});
 
 const countSchema = new Schema({
   simulation_id: {type: Number, required: true},

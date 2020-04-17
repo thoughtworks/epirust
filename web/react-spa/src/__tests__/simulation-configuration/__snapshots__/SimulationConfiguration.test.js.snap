@@ -298,6 +298,63 @@ exports[`ParametersForm should disable submit button and show loading animation 
                 value="0.2"
               />
             </div>
+            <div
+              class="input-control d-none"
+            >
+              <label
+                class="col-form-label-sm"
+                for="percentage_asymptomatic_population"
+              >
+                Asymptomatic percentage
+              </label>
+              <input
+                aria-describedby="percentage_asymptomatic_population"
+                class="form-control form-control-sm"
+                id="percentage_asymptomatic_population"
+                name="percentage_asymptomatic_population"
+                placeholder="Asymptomatic percentage"
+                type="text"
+                value="0"
+              />
+            </div>
+            <div
+              class="input-control d-none"
+            >
+              <label
+                class="col-form-label-sm"
+                for="percentage_severe_infected_population"
+              >
+                % Severe Infected Population
+              </label>
+              <input
+                aria-describedby="percentage_severe_infected_population"
+                class="form-control form-control-sm"
+                id="percentage_severe_infected_population"
+                name="percentage_severe_infected_population"
+                placeholder="Percentage Severe Infected Population"
+                type="text"
+                value="1"
+              />
+            </div>
+            <div
+              class="input-control d-none"
+            >
+              <label
+                class="col-form-label-sm"
+                for="exposed_duration"
+              >
+                Exposed Duration
+              </label>
+              <input
+                aria-describedby="exposed_duration"
+                class="form-control form-control-sm"
+                id="exposed_duration"
+                name="exposed_duration"
+                placeholder="Exposed Duration"
+                type="text"
+                value="0"
+              />
+            </div>
           </fieldset>
           <fieldset>
             <legend>
@@ -489,6 +546,7 @@ Object {
   "disease_name": "small_pox",
   "enable_citizen_state_messages": false,
   "essential_workers_population": 0.1,
+  "exposed_duration": 0,
   "grid_size": 250,
   "high_transmission_rate": 0.5,
   "high_transmission_start_day": 16,
@@ -496,6 +554,8 @@ Object {
   "last_day": 22,
   "lockdown_at_number_of_infections": 100,
   "number_of_agents": 10000,
+  "percentage_asymptomatic_population": 0,
+  "percentage_severe_infected_population": 1,
   "public_transport_percentage": 0.2,
   "regular_transmission_rate": 0.05,
   "regular_transmission_start_day": 10,
@@ -805,6 +865,63 @@ exports[`ParametersForm should render ParametersForm with defaults 1`] = `
               id="death_rate"
               name="death_rate"
               placeholder="Death Rate"
+              type="text"
+            />
+          </div>
+          <div
+            className="input-control d-none"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="percentage_asymptomatic_population"
+            >
+              Asymptomatic percentage
+            </label>
+            <input
+              aria-describedby="percentage_asymptomatic_population"
+              className="form-control form-control-sm"
+              defaultValue={0}
+              id="percentage_asymptomatic_population"
+              name="percentage_asymptomatic_population"
+              placeholder="Asymptomatic percentage"
+              type="text"
+            />
+          </div>
+          <div
+            className="input-control d-none"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="percentage_severe_infected_population"
+            >
+              % Severe Infected Population
+            </label>
+            <input
+              aria-describedby="percentage_severe_infected_population"
+              className="form-control form-control-sm"
+              defaultValue={1}
+              id="percentage_severe_infected_population"
+              name="percentage_severe_infected_population"
+              placeholder="Percentage Severe Infected Population"
+              type="text"
+            />
+          </div>
+          <div
+            className="input-control d-none"
+          >
+            <label
+              className="col-form-label-sm"
+              htmlFor="exposed_duration"
+            >
+              Exposed Duration
+            </label>
+            <input
+              aria-describedby="exposed_duration"
+              className="form-control form-control-sm"
+              defaultValue={0}
+              id="exposed_duration"
+              name="exposed_duration"
+              placeholder="Exposed Duration"
               type="text"
             />
           </div>

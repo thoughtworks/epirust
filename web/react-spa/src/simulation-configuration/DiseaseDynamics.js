@@ -6,7 +6,7 @@ export default function DiseaseDynamics() {
 
     function handleDiseaseSelect(event) {
         const diseaseSelected = diseases[event.target.value]
-        const diseaseDynamics = ["regular_transmission_start_day", "high_transmission_start_day", "last_day", "regular_transmission_rate", "high_transmission_rate", "death_rate"]
+        const diseaseDynamics = ["regular_transmission_start_day", "high_transmission_start_day", "last_day", "regular_transmission_rate", "high_transmission_rate", "death_rate", "percentage_asymptomatic_population", "percentage_severe_infected_population", "exposed_duration"]
 
         diseaseDynamics.forEach(field => {
             document.getElementById(field).value = diseaseSelected[field]
@@ -53,6 +53,21 @@ export default function DiseaseDynamics() {
             <div className="input-control">
                 <label className="col-form-label-sm" htmlFor="death_rate">Death Rate</label>
                 <input type="text" name="death_rate" className="form-control form-control-sm" id="death_rate" aria-describedby="death_rate" placeholder="Death Rate" defaultValue={disease["death_rate"]} />
+            </div>
+
+            <div className="input-control d-none">
+                <label className="col-form-label-sm" htmlFor="percentage_asymptomatic_population">Asymptomatic percentage</label>
+                <input type="text" name="percentage_asymptomatic_population" className="form-control form-control-sm" id="percentage_asymptomatic_population" aria-describedby="percentage_asymptomatic_population" placeholder="Asymptomatic percentage" defaultValue={disease["percentage_asymptomatic_population"]} />
+            </div>
+
+            <div className="input-control d-none">
+                <label className="col-form-label-sm" htmlFor="percentage_severe_infected_population">% Severe Infected Population</label>
+                <input type="text" name="percentage_severe_infected_population" className="form-control form-control-sm" id="percentage_severe_infected_population" aria-describedby="percentage_severe_infected_population" placeholder="Percentage Severe Infected Population" defaultValue={disease["percentage_severe_infected_population"]} />
+            </div>
+
+            <div className="input-control d-none">
+                <label className="col-form-label-sm" htmlFor="exposed_duration">Exposed Duration</label>
+                <input type="text" name="exposed_duration" className="form-control form-control-sm" id="exposed_duration" aria-describedby="exposed_duration" placeholder="Exposed Duration" defaultValue={disease["exposed_duration"]} />
             </div>
         </fieldset>
     )

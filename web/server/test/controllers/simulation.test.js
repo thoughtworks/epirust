@@ -27,7 +27,7 @@ jest.mock("../../services/kafka");
 
 const KafkaServices = require("../../services/kafka");
 
-const {Simulation} = require('../../db/models/Simulation');
+const { Simulation } = require('../../db/models/Simulation');
 
 describe('simulation controller', () => {
 
@@ -49,7 +49,10 @@ describe('simulation controller', () => {
         "regular_transmission_rate": 0.05,
         "high_transmission_rate": 0.5,
         "death_rate": 0.2,
-        "enable_citizen_state_messages": false
+        "enable_citizen_state_messages": false,
+        "percentage_asymptomatic_population": 0.3,
+        "percentage_severe_infected_population": 0.3,
+        "exposed_duration": 48
     };
 
     let kafkaService;
@@ -65,9 +68,9 @@ describe('simulation controller', () => {
 
     it('should insert simulation in db', async () => {
         const mockSave = jest.fn().mockReturnValueOnce(Promise.resolve());
-        Simulation.mockReturnValueOnce({save: mockSave});
+        Simulation.mockReturnValueOnce({ save: mockSave });
         const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
-        KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
+        KafkaServices.KafkaProducerService.mockReturnValueOnce({ send: mockKafkaSend });
 
         const response = await request
             .post('/simulation/init')
@@ -84,11 +87,11 @@ describe('simulation controller', () => {
 
     it('should update simulation has failed when sending message on kafka has failed', async () => {
         const mockSave = jest.fn().mockReturnValueOnce(Promise.resolve());
-        Simulation.mockReturnValueOnce({save: mockSave});
+        Simulation.mockReturnValueOnce({ save: mockSave });
         let mockFailingSend = jest.fn().mockRejectedValue(new Error("because we want to"));
-        KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockFailingSend});
+        KafkaServices.KafkaProducerService.mockReturnValueOnce({ send: mockFailingSend });
         const mockExec = jest.fn().mockResolvedValue();
-        Simulation.updateOne.mockReturnValueOnce({exec: mockExec});
+        Simulation.updateOne.mockReturnValueOnce({ exec: mockExec });
 
         const response = await request
             .post('/simulation/init')
@@ -100,7 +103,7 @@ describe('simulation controller', () => {
         expect(simulationDocument.config).toMatchSnapshot();
         expect(simulationDocument.status).toEqual('in-queue');
         expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
-        expect(Simulation.updateOne.mock.calls[0][1]).toEqual({status: "failed"});
+        expect(Simulation.updateOne.mock.calls[0][1]).toEqual({ status: "failed" });
         expect(Simulation.updateOne.mock.calls[0][0]).toHaveProperty('simulation_id');
         expect(mockExec).toHaveBeenCalledTimes(1);
         expect(mockExec.mock.calls[0]).toEqual([]);
@@ -109,9 +112,9 @@ describe('simulation controller', () => {
 
     it('should write simulation start request on kafka topic after simulation db insert', async done => {
         kafkaService = require('../../services/kafka');
-        Simulation.mockReturnValueOnce({save: jest.fn().mockReturnValueOnce(Promise.resolve())});
+        Simulation.mockReturnValueOnce({ save: jest.fn().mockReturnValueOnce(Promise.resolve()) });
         const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
-        kafkaService.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
+        kafkaService.KafkaProducerService.mockReturnValueOnce({ send: mockKafkaSend });
 
         const response = await request
             .post('/simulation/init')
@@ -135,7 +138,10 @@ describe('simulation controller', () => {
                 last_day: 22,
                 regular_transmission_rate: 0.05,
                 high_transmission_rate: 0.5,
-                death_rate: 0.2
+                death_rate: 0.2,
+                percentage_asymptomatic_population: 0.3,
+                percentage_severe_infected_population: 0.3,
+                exposed_duration: 48
             },
             grid_size: 250,
             hours: 10000,
@@ -174,9 +180,9 @@ describe('simulation controller', () => {
 
     it('should not put vaccination intervention in kafka topic if params not available in /init POST request', async done => {
         kafkaService = require('../../services/kafka');
-        Simulation.mockReturnValueOnce({save: jest.fn().mockReturnValueOnce(Promise.resolve())});
+        Simulation.mockReturnValueOnce({ save: jest.fn().mockReturnValueOnce(Promise.resolve()) });
         const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
-        kafkaService.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
+        kafkaService.KafkaProducerService.mockReturnValueOnce({ send: mockKafkaSend });
 
 
         const { vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention } = { ...postData };
@@ -203,7 +209,10 @@ describe('simulation controller', () => {
                 last_day: 22,
                 regular_transmission_rate: 0.05,
                 high_transmission_rate: 0.5,
-                death_rate: 0.2
+                death_rate: 0.2,
+                percentage_asymptomatic_population: 0.3,
+                percentage_severe_infected_population: 0.3,
+                exposed_duration: 48
             },
             grid_size: 250,
             hours: 10000,

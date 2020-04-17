@@ -4,9 +4,12 @@ exports[`simulation controller should insert simulation in db 1`] = `
 Object {
   "disease": Object {
     "death_rate": 0.2,
+    "exposed_duration": 48,
     "high_transmission_rate": 0.5,
     "high_transmission_start_day": 16,
     "last_day": 22,
+    "percentage_asymptomatic_population": 0.3,
+    "percentage_severe_infected_population": 0.3,
     "regular_transmission_rate": 0.05,
     "regular_transmission_start_day": 10,
   },
@@ -47,9 +50,12 @@ exports[`simulation controller should update simulation has failed when sending 
 Object {
   "disease": Object {
     "death_rate": 0.2,
+    "exposed_duration": 48,
     "high_transmission_rate": 0.5,
     "high_transmission_start_day": 16,
     "last_day": 22,
+    "percentage_asymptomatic_population": 0.3,
+    "percentage_severe_infected_population": 0.3,
     "regular_transmission_rate": 0.05,
     "regular_transmission_start_day": 10,
   },

@@ -18,12 +18,12 @@
  */
 
 /* GET simulation listing. */
-const {Count} = require("../db/models/Count");
+const { Count } = require("../db/models/Count");
 
 const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
-const {Simulation, SimulationStatus} = require("../db/models/Simulation");
+const { Simulation, SimulationStatus } = require("../db/models/Simulation");
 
 const configMatch = {
   "config.population.Auto.number_of_agents": 10000,
@@ -36,10 +36,13 @@ const configMatch = {
   "config.disease.regular_transmission_rate": 0.025,
   "config.disease.high_transmission_rate": 0.25,
   "config.disease.death_rate": 0.2,
+  "config.percentage_asymptomatic_population": 0.3,
+  "config.percentage_severe_infected_population": 0.3,
+  "config.exposed_duration": 48,
 
   "config.hours": 10000,
   "config.grid_size": 250,
-  "config.interventions": {$size: 0}
+  "config.interventions": { $size: 0 }
 };
 
 router.post('/init', (req, res, next) => {
@@ -56,8 +59,15 @@ router.post('/init', (req, res, next) => {
     death_rate,
     grid_size,
     simulation_hrs,
-    enable_citizen_state_messages
+    enable_citizen_state_messages,
+    percentage_asymptomatic_population,
+    percentage_severe_infected_population,
+    exposed_duration,
   } = message;
+
+  console.log(typeof percentage_asymptomatic_population, percentage_asymptomatic_population)
+  console.log(typeof percentage_severe_infected_population, percentage_severe_infected_population)
+  console.log(typeof exposed_duration, exposed_duration)
 
   let simulationId = Date.now();
   const simulation_config = {
@@ -76,13 +86,16 @@ router.post('/init', (req, res, next) => {
       "last_day": last_day,
       "regular_transmission_rate": regular_transmission_rate,
       "high_transmission_rate": high_transmission_rate,
-      "death_rate": death_rate
+      "death_rate": death_rate,
+      "percentage_asymptomatic_population": percentage_asymptomatic_population,
+      "percentage_severe_infected_population": percentage_severe_infected_population,
+      "exposed_duration": exposed_duration
     },
     "grid_size": grid_size,
     "hours": simulation_hrs,
     "interventions": modelInterventions(message)
   };
-  const {sim_id, ...configToStore} = simulation_config;
+  const { sim_id, ...configToStore } = simulation_config;
   const updateQuery = {
     simulation_id: simulationId,
     status: SimulationStatus.INQUEUE,
@@ -94,7 +107,7 @@ router.post('/init', (req, res, next) => {
       const kafkaProducer = new KafkaServices.KafkaProducerService();
       return kafkaProducer.send('simulation_requests', simulation_config).catch(err => {
         console.error("Error occurred while sending kafka message", err);
-        return Simulation.updateOne({simulation_id: simulationId}, {status: SimulationStatus.FAILED})
+        return Simulation.updateOne({ simulation_id: simulationId }, { status: SimulationStatus.FAILED })
           .exec().then(() => {
             throw new Error(err.message)
           });
@@ -102,18 +115,18 @@ router.post('/init', (req, res, next) => {
     })
     .then(() => {
       res.status(201);
-      res.send({status: "Simulation started", simulationId});
+      res.send({ status: "Simulation started", simulationId });
     })
     .catch((err) => {
       res.status(500);
-      res.send({message: err.message});
+      res.send({ message: err.message });
       console.error("Failed to create Simulation entry ", err);
     });
 });
 
 router.get('/', async (req, res, next) => {
   if (req.query.simulation_id) {
-    Simulation.find({"simulation_id": req.query.simulation_id}, function (err, simulation) {
+    Simulation.find({ "simulation_id": req.query.simulation_id }, function (err, simulation) {
       res.json(simulation)
     })
   } else {
@@ -133,43 +146,43 @@ async function extractFromCursor(stream) {
 
 router.get("/:simulation_id/time-series-deviation", async (req, res, next) => {
 
-  const simulationToAggregate = Simulation.find(configMatch, {simulation_id: 1})
+  const simulationToAggregate = Simulation.find(configMatch, { simulation_id: 1 })
     .exec()
     .then(async (docs) => {
       let simulationIds = docs.map(a => a.simulation_id);
 
       const aggregateStream = Count
         .aggregate([
-          {$match: {simulation_id: {$in: simulationIds}}},
+          { $match: { simulation_id: { $in: simulationIds } } },
           {
             $group: {
               _id: '$hour',
-              infected_mean: {$avg: '$infected'},
-              susceptible_mean: {$avg: '$susceptible'},
-              quarantined_mean: {$avg: '$quarantined'},
-              recovered_mean: {$avg: '$recovered'},
-              deceased_mean: {$avg: '$deceased'},
-              infected_std: {$stdDevPop: '$infected'},
-              susceptible_std: {$stdDevPop: '$susceptible'},
-              quarantined_std: {$stdDevPop: '$quarantined'},
-              recovered_std: {$stdDevPop: '$recovered'},
-              deceased_std: {$stdDevPop: '$deceased'},
+              infected_mean: { $avg: '$infected' },
+              susceptible_mean: { $avg: '$susceptible' },
+              quarantined_mean: { $avg: '$quarantined' },
+              recovered_mean: { $avg: '$recovered' },
+              deceased_mean: { $avg: '$deceased' },
+              infected_std: { $stdDevPop: '$infected' },
+              susceptible_std: { $stdDevPop: '$susceptible' },
+              quarantined_std: { $stdDevPop: '$quarantined' },
+              recovered_std: { $stdDevPop: '$recovered' },
+              deceased_std: { $stdDevPop: '$deceased' },
             }
           },
-          {$sort: {_id: 1}}
+          { $sort: { _id: 1 } }
         ]);
 
       const aggregate = await extractFromCursor(aggregateStream);
 
-      const countsCursor = Count.find({simulation_id: parseInt(req.params.simulation_id)}, {}, {sort: {hour: 1}})
+      const countsCursor = Count.find({ simulation_id: parseInt(req.params.simulation_id) }, {}, { sort: { hour: 1 } })
         .cursor();
 
       const counts = await extractFromCursor(countsCursor);
 
       if (counts.length < aggregate.length) {
-        res.json(counts.map((c, i) => ({...c.toObject(), ...aggregate[i]})));
+        res.json(counts.map((c, i) => ({ ...c.toObject(), ...aggregate[i] })));
       } else {
-        res.json(aggregate.map((a, i) => ({...a, ...counts[i].toObject()})));
+        res.json(aggregate.map((a, i) => ({ ...a, ...counts[i].toObject() })));
       }
     })
 
@@ -178,7 +191,7 @@ router.get("/:simulation_id/time-series-deviation", async (req, res, next) => {
 module.exports = router;
 
 function modelInterventions(message) {
-  const {vaccinate_at, vaccinate_percentage, lockdown_at_number_of_infections, essential_workers_population, hospital_spread_rate_threshold} = message;
+  const { vaccinate_at, vaccinate_percentage, lockdown_at_number_of_infections, essential_workers_population, hospital_spread_rate_threshold } = message;
 
   const areVaccinationParamsPresent = vaccinate_at && vaccinate_percentage,
     vaccinationIntervention = {

@@ -39,7 +39,7 @@ class SimulationCountsConsumer {
       const isInterventionMessage = "intervention" in parsedMessage;
 
       if (simulationEnded) {
-        await SimulationService.updateSimulationStatus(simulationId);
+        await SimulationService.updateSimulationStatus(simulationId, SimulationStatus.FINISHED);
         console.log("Consumed all messages for ", simulationId);
       } else if (isInterventionMessage) {
         await CountService.addIntervention(simulationId, parsedMessage);

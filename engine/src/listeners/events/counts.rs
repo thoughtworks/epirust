@@ -93,10 +93,6 @@ impl Counts {
     pub fn increment_hour(&mut self) {
         self.hour += 1;
     }
-
-    pub fn set_hour(&mut self, hour: i32) {
-        self.hour = hour;
-    }
 }
 
 

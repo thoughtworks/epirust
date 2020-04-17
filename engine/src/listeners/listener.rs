@@ -23,7 +23,7 @@ use crate::agent::Citizen;
 use crate::geography::{Point, Grid};
 use crate::listeners::events::counts::Counts;
 use crate::interventions::intervention_type::InterventionType;
-use crate::travel_plan::Traveller;
+use crate::travel_plan::TravellersByRegion;
 
 pub trait Listener {
     fn counts_updated(&mut self, _counts: Counts) {}
@@ -32,7 +32,7 @@ pub trait Listener {
     fn citizen_state_updated(&mut self, _hr: i32, _citizen: &Citizen, _location: &Point) {}
     fn grid_updated(&self, _grid: &Grid) {}
     fn intervention_applied(&self, _at_hour: i32, _intervention: &dyn InterventionType) {}
-    fn outgoing_traveller_added(&mut self, _hr: i32, _traveller: &Traveller) {}
+    fn outgoing_travellers_added(&mut self, _hr: i32, _travellers: &Vec<TravellersByRegion>) {}
     fn as_any(&self) -> &dyn Any;
 }
 
@@ -76,8 +76,8 @@ impl Listeners {
         self.listeners.iter().for_each(|l| { l.intervention_applied(_at_hour, _intervention) })
     }
 
-    pub fn outgoing_traveller_added(&mut self, hr: i32, traveller: &Traveller) {
-        self.listeners.iter_mut().for_each(|l| l.outgoing_traveller_added(hr, traveller));
+    pub fn outgoing_travellers_added(&mut self, hr: i32, travellers: &Vec<TravellersByRegion>) {
+        self.listeners.iter_mut().for_each(|l| l.outgoing_travellers_added(hr, travellers));
     }
 }
 

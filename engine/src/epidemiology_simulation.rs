@@ -193,7 +193,11 @@ impl Epidemiology {
                 Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                        grid, &mut listeners, &mut rng, disease, &engine_travel_plan,
                                        &mut outgoing);
-                Epidemiology::send_travellers(tick.clone(), &mut producer, engine_travel_plan.alloc_outgoing_to_regions(&outgoing));
+                let outgoing_travellers_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
+                if simulation_hour % 24 == 0 {
+                    listeners.outgoing_travellers_added(simulation_hour, &outgoing_travellers_by_region);
+                }
+                Epidemiology::send_travellers(tick.clone(), &mut producer, outgoing_travellers_by_region);
             };
             let (mut incoming, ()) = join!(recv_travellers, sim);
             n_incoming += incoming.len();
@@ -366,7 +370,6 @@ impl Epidemiology {
             if simulation_hour % 24 == 0 && current_agent.can_move()
                 && rng.get().gen_bool(engine_travel_plan.percent_outgoing()) {
                 let traveller = Traveller::from(&current_agent);
-                listeners.outgoing_traveller_added(simulation_hour, &traveller);
                 outgoing.push((*new_location, traveller));
             }
 

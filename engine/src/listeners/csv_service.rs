@@ -28,6 +28,7 @@ use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
 use crate::environment;
 use std::path::PathBuf;
+use serde::Serialize;
 
 pub struct CsvListener {
     output_file_name: String,
@@ -40,7 +41,7 @@ impl CsvListener {
     }
 }
 
-pub fn write(file_path: &PathBuf, data: &Vec<Counts>) -> Result<(), Box<dyn Error>> {
+pub fn write(file_path: &PathBuf, data: &Vec<impl Serialize>) -> Result<(), Box<dyn Error>> {
     let mut wtr = Writer::from_path(file_path)?;
 
     for row in data {

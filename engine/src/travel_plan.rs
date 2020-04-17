@@ -191,6 +191,10 @@ impl TravellersByRegion {
     pub fn get_travellers(self) -> Vec<Traveller> {
         self.travellers
     }
+
+    pub fn get_travellers_slice(&self) -> &[Traveller] {
+        self.travellers.as_slice()
+    }
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]

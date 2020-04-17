@@ -137,8 +137,8 @@ test("should enable export in graph if simulation has ended", () => {
 
 test("should close the socket on receiving simulation ended message", () => {
     let socket = new MockSocket();
-    let closeCall = 0;
-    socket.socketClient.close = () => { closeCall += 1 };
+    const closeSpy = jest.fn()
+    socket.socketClient.close = closeSpy;
 
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
@@ -147,7 +147,7 @@ test("should close the socket on receiving simulation ended message", () => {
         jest.runAllTimers();
     })
 
-    expect(closeCall).toBe(1);
+    expect(closeSpy).toHaveBeenCalledTimes(1)
 });
 
 test("should render the annotations for interventions", () => {
@@ -161,7 +161,7 @@ test("should render the annotations for interventions", () => {
     }
 
     let socket = new MockSocket();
-    socket.socketClient.close = () => { };
+    socket.socketClient.close = jest.fn();
 
     const setAnnotationSpy = jest.fn()
 

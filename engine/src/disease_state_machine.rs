@@ -116,7 +116,7 @@ impl DiseaseStateMachine {
 
     pub fn quarantine(&mut self, disease: &Disease, immunity: i32) -> bool {
         match self.state {
-            State::Infected { symptoms: true, severity: InfectionSeverity::Severe {} } =>
+            State::Infected { symptoms: true, .. } =>
                 return disease.to_be_quarantined(self.infection_day + immunity),
             State::Infected { .. } => { false }
             _ => {
@@ -172,6 +172,20 @@ impl DiseaseStateMachine {
         match self.state {
             State::Infected { .. } => {
                 true
+            }
+            _ => false
+        }
+    }
+
+    pub fn is_severely_infected(&self) -> bool {
+        match self.state {
+            State::Infected { symptoms:_, severity } => {
+                match severity {
+                    InfectionSeverity::Severe {} => {
+                        true
+                    }
+                    _ => false
+                }
             }
             _ => false
         }

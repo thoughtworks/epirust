@@ -207,35 +207,34 @@ impl Citizen {
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
                 new_cell = self.goto_area(grid.transport_area, map, cell, rng);
                 self.current_area = grid.transport_area;
-                self.update_exposure(cell, map, counts, rng, disease);
-                self.update_infection(counts, rng, &disease);
-                self.update_infection_severity(counts, rng, disease);
+                self.update_infection_dynamics(cell, &map, counts, rng, &disease);
             }
             constants::ROUTINE_WORK_TIME => {
                 new_cell = self.goto_area(self.work_location, map, cell, rng);
                 self.current_area = grid.work_area;
-                self.update_exposure(cell, map, counts, rng, disease);
-                self.update_infection(counts, rng, &disease);
-                self.update_infection_severity(counts, rng, disease);
+                self.update_infection_dynamics(cell, &map, counts, rng, &disease);
             }
             constants::ROUTINE_WORK_END_TIME => {
                 new_cell = self.goto_area(self.home_location, map, cell, rng);
                 self.current_area = grid.housing_area;
-                self.update_exposure(cell, map, counts, rng, disease);
-                self.update_infection(counts, rng, &disease);
-                self.update_infection_severity(counts, rng, disease);
+                self.update_infection_dynamics(cell, &map, counts, rng, &disease);
             }
             constants::ROUTINE_END_TIME => {
                 new_cell = self.deceased(map, cell, counts, rng, disease)
             }
             _ => {
                 new_cell = self.move_agent_from(map, cell, rng);
-                self.update_exposure(cell, map, counts, rng, disease);
-                self.update_infection(counts, rng, &disease);
-                self.update_infection_severity(counts, rng, disease);
+                self.update_infection_dynamics(cell, &map, counts, rng, &disease);
             }
         }
         new_cell
+    }
+
+    fn update_infection_dynamics(&mut self, cell: Point, map: &AgentLocationMap, counts: &mut Counts,
+                                 rng: &mut RandomWrapper, disease: &Disease) {
+        self.update_exposure(cell, map, counts, rng, disease);
+        self.update_infection(counts, rng, &disease);
+        self.update_infection_severity(counts, rng, disease);
     }
 
     fn update_infection_day(&mut self) {
@@ -251,9 +250,11 @@ impl Citizen {
             let to_be_quarantined = self.state_machine.quarantine(disease, self.immunity);
             if to_be_quarantined {
                 self.quarantined = true;
-                new_cell = AgentLocationMap::goto_hospital(map, hospital, cell, self);
-                if new_cell != cell {
-                    self.hospitalized = true;
+                if self.state_machine.is_severely_infected() {
+                    new_cell = AgentLocationMap::goto_hospital(map, hospital, cell, self);
+                    if new_cell != cell {
+                        self.hospitalized = true;
+                    }
                 }
                 counts.update_quarantined(1);
                 counts.update_infected(-1);

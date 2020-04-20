@@ -24,6 +24,7 @@ const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
 const { Simulation, SimulationStatus } = require("../db/models/Simulation");
+const {updateSimulationStatus} = require('../db/services/SimulationService')
 
 const configMatch = {
   "config.population.Auto.number_of_agents": 10000,
@@ -106,10 +107,8 @@ router.post('/init', (req, res, next) => {
       const kafkaProducer = new KafkaServices.KafkaProducerService();
       return kafkaProducer.send('simulation_requests', simulation_config).catch(err => {
         console.error("Error occurred while sending kafka message", err);
-        return Simulation.updateOne({ simulation_id: simulationId }, { status: SimulationStatus.FAILED })
-          .exec().then(() => {
-            throw new Error(err.message)
-          });
+        return updateSimulationStatus(simulationId, SimulationStatus.FAILED)
+            .then(() => {throw new Error(err.message)});
       })
     })
     .then(() => {

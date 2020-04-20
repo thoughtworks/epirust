@@ -24,10 +24,12 @@ const request = supertest(app);
 jest.mock('../../services/kafka');
 jest.mock('../../db/models/Simulation');
 jest.mock("../../services/kafka");
+jest.mock("../../db/services/SimulationService");
 
 const KafkaServices = require("../../services/kafka");
 
 const { Simulation } = require('../../db/models/Simulation');
+const { updateSimulationStatus } = require('../../db/services/SimulationService');
 
 describe('simulation controller', () => {
 
@@ -89,10 +91,8 @@ describe('simulation controller', () => {
     it('should update simulation has failed when sending message on kafka has failed', async () => {
         const mockSave = jest.fn().mockReturnValueOnce(Promise.resolve());
         Simulation.mockReturnValueOnce({ save: mockSave });
-        let mockFailingSend = jest.fn().mockRejectedValue(new Error("because we want to"));
+        const mockFailingSend = jest.fn().mockRejectedValue(new Error("because we want to"));
         KafkaServices.KafkaProducerService.mockReturnValueOnce({ send: mockFailingSend });
-        const mockExec = jest.fn().mockResolvedValue();
-        Simulation.updateOne.mockReturnValueOnce({ exec: mockExec });
 
         const response = await request
             .post('/simulation/init')
@@ -103,11 +103,9 @@ describe('simulation controller', () => {
         expect(simulationDocument.simulation_id).toBeTruthy();
         expect(simulationDocument.config).toMatchSnapshot();
         expect(simulationDocument.status).toEqual('in-queue');
-        expect(Simulation.updateOne).toHaveBeenCalledTimes(1);
-        expect(Simulation.updateOne.mock.calls[0][1]).toEqual({ status: "failed" });
-        expect(Simulation.updateOne.mock.calls[0][0]).toHaveProperty('simulation_id');
-        expect(mockExec).toHaveBeenCalledTimes(1);
-        expect(mockExec.mock.calls[0]).toEqual([]);
+        expect(updateSimulationStatus).toHaveBeenCalledTimes(1);
+        expect(updateSimulationStatus.mock.calls[0][1]).toEqual("failed");
+        expect(typeof updateSimulationStatus.mock.calls[0][0]).toEqual('number');
         expect(response.status).toBe(500);
     });
 

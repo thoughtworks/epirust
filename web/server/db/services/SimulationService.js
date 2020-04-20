@@ -32,4 +32,14 @@ const markGridConsumptionFinished = (simulationId) => {
   return simulationUpdate.exec()
 };
 
-module.exports = {updateSimulationStatus, markGridConsumptionFinished};
+const fetchSimulationStatus = (simulationId) => {
+  return Simulation.findOne({simulation_id: simulationId}, {status: 1}).exec()
+    .then((doc) => {
+      if(!doc) {
+        throw Error(`Simulation with id: ${simulationId} not found`)
+      }
+      return doc
+    })
+};
+
+module.exports = {updateSimulationStatus, markGridConsumptionFinished, fetchSimulationStatus};

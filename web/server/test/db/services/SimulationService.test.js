@@ -49,4 +49,30 @@ describe('Simulation Service', function () {
       expect(s.grid_consumption_finished).toEqual(true);
     });
   });
+
+  describe('fetchSimulationStatus', function () {
+    it('should return a simulation with its status if available in db', async function () {
+      const simulationId = randomId();
+      await (new Simulation({simulation_id: simulationId, status: SimulationStatus.RUNNING})).save()
+
+      await SimulationService.fetchSimulationStatus(simulationId);
+
+      const receivedSimulation = (await Simulation.findOne({simulation_id: simulationId}).exec()).toObject();
+      expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
+      expect(receivedSimulation.simulation_id).toBe(simulationId)
+    });
+
+    it('should throw error with error message if no simulation exists',  function (done) {
+      const simulationId = randomId();
+      const expectedError = `Simulation with id: ${simulationId} not found`
+
+      SimulationService.fetchSimulationStatus(simulationId)
+        .catch(err => {
+          expect(err.message).toBe(expectedError);
+          done();
+        })
+    });
+  });
+
+  const randomId = () => Math.random()
 });

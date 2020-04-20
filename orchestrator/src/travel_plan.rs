@@ -20,7 +20,7 @@
 
 use std::collections::HashMap;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct TravelPlan {
     regions: Vec<String>,
     matrix: Vec<Vec<i32>>,
@@ -37,7 +37,7 @@ impl TravelPlan {
         &self.regions
     }
 
-    pub fn update_with_lockdowns(self, lockdown_status: &HashMap<String, bool>) -> TravelPlan {
+    pub fn update_with_lockdowns(&self, lockdown_status: &HashMap<String, bool>) -> TravelPlan {
         let locked_regions: Vec<&String> = lockdown_status.iter().filter(|(_k, v)| **v).map(|(k, _v)| k)
             .collect();
         let mut new_travel_plan = self.clone();

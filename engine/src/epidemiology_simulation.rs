@@ -212,12 +212,12 @@ impl Epidemiology {
 
             if lock_down_details.should_apply(&counts_at_hr) {
                 lock_down_details.apply(&counts_at_hr);
-                Epidemiology::lock_city(&mut write_buffer_reference, &mut rng, &lock_down_details.get_config().unwrap());
+                Epidemiology::lock_city(simulation_hour, &mut write_buffer_reference, &mut rng, &lock_down_details.get_config().unwrap());
                 listeners.intervention_applied(simulation_hour, &lock_down_details)
             }
 
             if lock_down_details.should_unlock(&counts_at_hr) {
-                Epidemiology::unlock_city(&mut write_buffer_reference);
+                Epidemiology::unlock_city(simulation_hour, &mut write_buffer_reference);
                 lock_down_details.unapply();
                 listeners.intervention_applied(simulation_hour, &lock_down_details)
             }
@@ -388,8 +388,8 @@ impl Epidemiology {
         }
     }
 
-    fn lock_city(write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper, lockdown_details: &LockdownConfig) {
-        info!("Locking the city");
+    fn lock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper, lockdown_details: &LockdownConfig) {
+        info!("Locking the city. Hour: {}", hr);
         for (_v, agent) in write_buffer_reference.iter_mut() {
             if rng.get().gen_bool(1.0 - lockdown_details.essential_workers_population) {
                 agent.set_isolation(true);
@@ -397,8 +397,8 @@ impl Epidemiology {
         }
     }
 
-    fn unlock_city(write_buffer_reference: &mut AgentLocationMap) {
-        info!("unlocking city");
+    fn unlock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
+        info!("Unlocking city. Hour: {}", hr);
         for (_v, agent) in write_buffer_reference.iter_mut() {
             if agent.is_isolated() {
                 agent.set_isolation(false);

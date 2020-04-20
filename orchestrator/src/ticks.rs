@@ -26,6 +26,7 @@ use std::error::Error;
 use rdkafka::Message;
 use futures::StreamExt;
 use crate::travel_plan::TravelPlan;
+use std::borrow::Borrow;
 
 //Note: these ticks are safe, they don't cause Lyme disease
 
@@ -40,7 +41,9 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i32>) {
             continue;
         }
         acks.reset(h);
-        let tick = Tick::new(h, travel_plan, should_terminate);
+        let current_travel_plan = travel_plan.borrow().update_with_lockdowns(&acks.lockdown_status_by_engine);
+
+        let tick = Tick::new(h, Some(&current_travel_plan), should_terminate);
 
         match producer.send_tick(&tick).await.unwrap() {
             Ok(_) => {
@@ -78,15 +81,10 @@ pub struct Tick<'a> {
 }
 
 impl Tick<'_> {
-    pub fn new(hour: i32, travel_plan: &TravelPlan, terminate: bool) -> Tick {
-        let travel = if hour == 1 {
-            Some(travel_plan)
-        } else {
-            None
-        };
+    pub fn new(hour: i32, travel_plan: Option<&TravelPlan>, terminate: bool) -> Tick {
         return Tick {
             hour,
-            travel_plan: travel,
+            travel_plan,
             terminate
         };
     }
@@ -191,7 +189,6 @@ impl TickAcks {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::Config;
 
     #[test]
     fn should_push_ack() {
@@ -213,17 +210,6 @@ mod tests {
         assert_eq!(acks.current_hour, 0);
         acks.reset(22);
         assert_eq!(acks.current_hour, 22);
-    }
-
-    #[test]
-    fn should_add_travel_payload_at_first_hour() {
-        let config = Config::read("config/test/travel_plan.json").unwrap();
-        let travel_plan = config.get_travel_plan();
-        let tick = Tick::new(1, travel_plan, false);
-        assert!(tick.travel_plan.is_some());
-
-        let tick = Tick::new(2, &travel_plan, false);
-        assert!(tick.travel_plan.is_none());
     }
 
     #[test]

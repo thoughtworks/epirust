@@ -114,6 +114,7 @@ impl EngineTravelPlan {
             Some(tp) => {
                 tp.regions.iter()
                     .filter(|region| !self.engine_id.eq(*region))
+                    .filter(|region| tp.get_outgoing(self.engine_id(), region) > 0)
                     .map(|region| {
                         let mut outgoing_by_region = TravellersByRegion::create(region);
                         outgoing_by_region.alloc_citizens(&mut travellers, tp, &self.engine_id, total_outgoing as i32);
@@ -338,6 +339,31 @@ mod tests {
         assert_eq!(2, outgoing_by_region.len());
         assert_eq!(175, outgoing_by_region.get(0).unwrap().travellers.len());
         assert_eq!(27, outgoing_by_region.get(1).unwrap().travellers.len());
+    }
+
+    #[test]
+    fn should_not_alloc_citizens_where_planned_travel_is_zero() {
+        let travel_plan = TravelPlan {
+            regions: vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()],
+            matrix: vec![
+                vec![0, 0, 24],
+                vec![0, 0, 0],
+                vec![97, 0, 0],
+            ],
+        };
+        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
+        let tick = Tick::new(1, Some(travel_plan), false);
+        engine_travel_plan.receive_tick(Some(tick));
+
+        let mut outgoing = Vec::new();
+
+        for _i in 0..24 {
+            outgoing.push((Point::new(1, 1), create_traveller()));
+        }
+        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
+
+        assert_eq!(1, outgoing_by_region.len());
+        assert_eq!(24, outgoing_by_region.get(0).unwrap().travellers.len());
     }
 
     fn create_travel_plan() -> TravelPlan {

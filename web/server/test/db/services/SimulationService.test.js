@@ -122,5 +122,25 @@ describe('Simulation Service', function () {
     });
   });
 
+  describe('saveSimulation', function () {
+    it('should save simulation in database', async function () {
+      const simulationId = randomId();
+
+      const simulation = {
+        simulation_id: simulationId,
+        status: SimulationStatus.RUNNING,
+        config: {
+          dummyField1: 'dummyValue1',
+          dummyField2: 'dummyValue2'
+        }
+      };
+
+      await SimulationService.saveSimulation(simulation);
+
+      const savedSimulation = await Simulation.findOne({}, {__v: 0, _id: 0}).exec();
+      expect(savedSimulation.toObject()).toEqual(simulation);
+    });
+  });
+
   const randomId = () => Math.random()
 });

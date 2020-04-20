@@ -24,7 +24,7 @@ const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
 const { Simulation, SimulationStatus } = require("../db/models/Simulation");
-const {updateSimulationStatus} = require('../db/services/SimulationService')
+const {updateSimulationStatus, saveSimulation} = require('../db/services/SimulationService')
 
 const configMatch = {
   "config.population.Auto.number_of_agents": 10000,
@@ -68,7 +68,7 @@ router.post('/init', (req, res, next) => {
     pre_symptomatic_duration,
   } = message;
 
-  let simulationId = Date.now();
+  const simulationId = Date.now();
   const simulation_config = {
     "sim_id": `${simulationId}`,
     "enable_citizen_state_messages": enable_citizen_state_messages,
@@ -96,13 +96,13 @@ router.post('/init', (req, res, next) => {
     "interventions": modelInterventions(message)
   };
   const { sim_id, ...configToStore } = simulation_config;
-  const updateQuery = {
+  const simulation = {
     simulation_id: simulationId,
     status: SimulationStatus.INQUEUE,
     config: configToStore
   };
-  const simulation = new Simulation(updateQuery);
-  simulation.save()
+
+  saveSimulation(simulation)
     .then(() => {
       const kafkaProducer = new KafkaServices.KafkaProducerService();
       return kafkaProducer.send('simulation_requests', simulation_config).catch(err => {

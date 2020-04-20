@@ -54,4 +54,14 @@ const fetchSimulation = (simulationId, projectionFields = []) => {
         })
 };
 
-module.exports = {updateSimulationStatus, markGridConsumptionFinished, fetchSimulationStatus, fetchSimulation};
+const saveSimulation = (simulation) => {
+    return Simulation(simulation).save()
+}
+
+module.exports = {
+    updateSimulationStatus,
+    markGridConsumptionFinished,
+    fetchSimulationStatus,
+    fetchSimulation,
+    saveSimulation
+};

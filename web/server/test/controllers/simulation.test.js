@@ -22,14 +22,12 @@ const supertest = require('supertest');
 const request = supertest(app);
 
 jest.mock('../../services/kafka');
-jest.mock('../../db/models/Simulation');
 jest.mock("../../services/kafka");
 jest.mock("../../db/services/SimulationService");
 
 const KafkaServices = require("../../services/kafka");
 
-const { Simulation } = require('../../db/models/Simulation');
-const { updateSimulationStatus } = require('../../db/services/SimulationService');
+const { updateSimulationStatus, saveSimulation } = require('../../db/services/SimulationService');
 
 describe('simulation controller', () => {
 
@@ -70,8 +68,7 @@ describe('simulation controller', () => {
 
 
     it('should insert simulation in db', async () => {
-        const mockSave = jest.fn().mockReturnValueOnce(Promise.resolve());
-        Simulation.mockReturnValueOnce({ save: mockSave });
+        saveSimulation.mockResolvedValue();
         const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
         KafkaServices.KafkaProducerService.mockReturnValueOnce({ send: mockKafkaSend });
 
@@ -79,8 +76,8 @@ describe('simulation controller', () => {
             .post('/simulation/init')
             .send({ ...postData });
 
-        const simulationDocument = Simulation.mock.calls[0][0];
-        expect(Simulation).toHaveBeenCalledTimes(1);
+        const simulationDocument = saveSimulation.mock.calls[0][0];
+        expect(saveSimulation).toHaveBeenCalledTimes(1);
         expect(simulationDocument.simulation_id).toBeTruthy();
         expect(simulationDocument.config).toMatchSnapshot();
         expect(simulationDocument.status).toEqual('in-queue');
@@ -89,8 +86,7 @@ describe('simulation controller', () => {
     });
 
     it('should update simulation has failed when sending message on kafka has failed', async () => {
-        const mockSave = jest.fn().mockReturnValueOnce(Promise.resolve());
-        Simulation.mockReturnValueOnce({ save: mockSave });
+        saveSimulation.mockResolvedValue();
         const mockFailingSend = jest.fn().mockRejectedValue(new Error("because we want to"));
         KafkaServices.KafkaProducerService.mockReturnValueOnce({ send: mockFailingSend });
 
@@ -98,8 +94,8 @@ describe('simulation controller', () => {
             .post('/simulation/init')
             .send({ ...postData });
 
-        const simulationDocument = Simulation.mock.calls[0][0];
-        expect(Simulation).toHaveBeenCalledTimes(1);
+        const simulationDocument = saveSimulation.mock.calls[0][0];
+        expect(saveSimulation).toHaveBeenCalledTimes(1);
         expect(simulationDocument.simulation_id).toBeTruthy();
         expect(simulationDocument.config).toMatchSnapshot();
         expect(simulationDocument.status).toEqual('in-queue');
@@ -111,7 +107,7 @@ describe('simulation controller', () => {
 
     it('should write simulation start request on kafka topic after simulation db insert', async done => {
         kafkaService = require('../../services/kafka');
-        Simulation.mockReturnValueOnce({ save: jest.fn().mockReturnValueOnce(Promise.resolve()) });
+        saveSimulation.mockResolvedValue();
         const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
         kafkaService.KafkaProducerService.mockReturnValueOnce({ send: mockKafkaSend });
 
@@ -166,9 +162,9 @@ describe('simulation controller', () => {
                 }]
         }
 
-        expect(kafkaService.KafkaProducerService).toHaveBeenCalled();
+        expect(kafkaService.KafkaProducerService).toHaveBeenCalledTimes(1);
 
-        expect(mockKafkaSend).toHaveBeenCalled();
+        expect(mockKafkaSend).toHaveBeenCalledTimes(1);
         expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
         const payload = mockKafkaSend.mock.calls[0][1];
         delete payload["sim_id"]; //it is a timestamp, cannot test
@@ -180,7 +176,7 @@ describe('simulation controller', () => {
 
     it('should not put vaccination intervention in kafka topic if params not available in /init POST request', async done => {
         kafkaService = require('../../services/kafka');
-        Simulation.mockReturnValueOnce({ save: jest.fn().mockReturnValueOnce(Promise.resolve()) });
+        saveSimulation.mockResolvedValue();
         const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
         kafkaService.KafkaProducerService.mockReturnValueOnce({ send: mockKafkaSend });
 

@@ -21,7 +21,8 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import App from '../App';
 
-test('renders App', () => { //TODO: test child components are rendered, preferably convert to snapshot
+test('renders App', () => {
   const { getByText , container} = render(<App />);
   expect(getByText('EpiViz')).toBeInTheDocument();
+  expect(container).toMatchSnapshot()
 });

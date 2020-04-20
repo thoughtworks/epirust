@@ -21,8 +21,9 @@ const {handleRequest: handleGridRequest} = require("../../controllers/grid-io-co
 jest.mock("../../db/models/Simulation");
 jest.mock("../../db/models/Grid");
 jest.mock("../../db/services/SimulationService");
-const {Grid} = require("../../db/models/Grid");
+jest.mock("../../db/services/GridService");
 const {fetchSimulation} = require("../../db/services/SimulationService");
+const {findSortedById} = require("../../db/services/GridService")
 
 describe("Grid controller", () => {
     let mockSocket;
@@ -47,18 +48,19 @@ describe("Grid controller", () => {
         };
     }
 
-    it('should emit all grid if simulation has ended', (done) => {
-        fetchSimulation.mockResolvedValue(mockSimulationPromise(true, "", true))
-        const mockCursor = jest.fn().mockReturnValueOnce([{dummyKey: 'dummyValue', hour:1}]);
-        const mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
-        Grid.find.mockReturnValueOnce({skip: mockSkip});
-
+    const verifyRequestHandler = function () {
         handleGridRequest(mockSocket);
         expect(mockSocket.on).toHaveBeenCalledTimes(2);
         expect(mockSocket.on.mock.calls[0]).toHaveLength(2);
         expect(mockSocket.on.mock.calls[0][0]).toBe('simulation_id');
-        const testSimId = "1234";
-        mockSocket.on.mock.calls[0][1](testSimId);
+        mockSocket.on.mock.calls[0][1]("1234");
+    };
+
+    it('should emit all grid if simulation has ended', (done) => {
+        fetchSimulation.mockResolvedValue(mockSimulationPromise(true, "", true))
+        findSortedById.mockReturnValueOnce([{dummyKey: 'dummyValue', hour:1}]);
+
+        verifyRequestHandler();
 
         process.nextTick(() => {
             expect(mockSocket.emit).toHaveBeenCalledTimes(2);
@@ -72,15 +74,8 @@ describe("Grid controller", () => {
                 1234,
                 ["status", "grid_consumption_finished", "config.enable_citizen_state_messages"]
             );
-            expect(Grid.find).toHaveBeenCalledTimes(1);
-            expect(Grid.find.mock.calls[0]).toEqual([
-                {simulation_id: 1234},
-                {},
-                {sort: {_id: 1}}
-            ]);
-            expect(mockSkip).toHaveBeenCalledTimes(1);
-            expect(mockSkip).toHaveBeenCalledWith(0);
-
+            expect(findSortedById).toHaveBeenCalledTimes(1);
+            expect(findSortedById).toHaveBeenCalledWith(1234, 0);
             done();
         })
     });
@@ -92,16 +87,9 @@ describe("Grid controller", () => {
         ];
         fetchSimulation.mockImplementation(() => Promise.resolve(docPromises.shift()))
         const cursors = [[{dummyKey: 'dummyValue', _id:1}], [{dummyKey: 'dummyValue2', _id:2}]];
-        const mockCursor = jest.fn(() => cursors.shift());
-        const mockSkip = jest.fn().mockReturnValue({cursor: mockCursor});
-        Grid.find.mockReturnValue({skip: mockSkip});
+        findSortedById.mockImplementation(() => cursors.shift());
 
-        handleGridRequest(mockSocket);
-        expect(mockSocket.on).toHaveBeenCalledTimes(2);
-        expect(mockSocket.on.mock.calls[0]).toHaveLength(2);
-        expect(mockSocket.on.mock.calls[0][0]).toBe('simulation_id');
-        const testSimId = "1234";
-        mockSocket.on.mock.calls[0][1](testSimId);
+        verifyRequestHandler()
 
         process.nextTick(() => {
             expect(mockSocket.emit).toHaveBeenCalledTimes(3);
@@ -123,36 +111,18 @@ describe("Grid controller", () => {
                 1234,
                 ["status", "grid_consumption_finished", "config.enable_citizen_state_messages"]
             ]);
-            expect(Grid.find).toHaveBeenCalledTimes(2);
-            expect(Grid.find.mock.calls[0]).toEqual([
-                {simulation_id: 1234},
-                {},
-                {sort: {'_id': 1}}
-            ]);
-            expect(Grid.find.mock.calls[1]).toEqual([
-                {simulation_id: 1234},
-                {},
-                {sort: {'_id': 1}}
-            ]);
-            expect(mockSkip).toHaveBeenCalledTimes(2);
-            expect(mockSkip).toHaveBeenNthCalledWith(1, 0);
-            expect(mockSkip).toHaveBeenNthCalledWith(2, 1);
+            expect(findSortedById).toHaveBeenCalledTimes(2);
+            expect(findSortedById.mock.calls[0]).toEqual([1234, 0]);
+            expect(findSortedById.mock.calls[1]).toEqual([1234, 1]);
             done();
         });
     });
 
     it('should not send simulation ended if simulation status is failed', (done) => {
         fetchSimulation.mockResolvedValue(mockSimulationPromise(false, 'failed', true))
-        const mockCursor = jest.fn().mockReturnValueOnce([{dummyKey: 'dummyValue', hour:1}]);
-        const mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
-        Grid.find.mockReturnValueOnce({skip: mockSkip});
+        findSortedById.mockReturnValueOnce([{dummyKey: 'dummyValue', hour:1}]);
 
-        handleGridRequest(mockSocket);
-        expect(mockSocket.on).toHaveBeenCalledTimes(2);
-        expect(mockSocket.on.mock.calls[0]).toHaveLength(2);
-        expect(mockSocket.on.mock.calls[0][0]).toBe('simulation_id');
-        let testSimId = "1234";
-        mockSocket.on.mock.calls[0][1](testSimId);
+        verifyRequestHandler();
 
         process.nextTick(() => {
             expect(mockSocket.emit).toHaveBeenCalledTimes(2);
@@ -166,15 +136,8 @@ describe("Grid controller", () => {
                 1234,
                 ["status", "grid_consumption_finished", "config.enable_citizen_state_messages"]
             );
-            expect(Grid.find).toHaveBeenCalledTimes(1);
-            expect(Grid.find.mock.calls[0]).toEqual([
-                {simulation_id: 1234},
-                {},
-                {sort: {_id: 1}}
-            ]);
-            expect(mockSkip).toHaveBeenCalledTimes(1);
-            expect(mockSkip).toHaveBeenCalledWith(0);
-
+            expect(findSortedById).toHaveBeenCalledTimes(1);
+            expect(findSortedById).toHaveBeenCalledWith(1234, 0);
             done();
         })
     });
@@ -187,21 +150,14 @@ describe("Grid controller", () => {
         const mockCursorClose = jest.fn()
         const cursors = [[{dummyKey: 'dummyValue', _id:1}], [{dummyKey: 'dummyValue2', _id:2}]];
         fetchSimulation.mockImplementation(() => Promise.resolve(docPromises.shift()))
-        const mockCursor = jest.fn(() => {
+        findSortedById.mockImplementation(() => {
             const d = cursors.shift();
             mockSocket.disconnected = d[0]._id!==1;
             d.close = mockCursorClose
             return d;
         });
-        const mockSkip = jest.fn().mockReturnValue({cursor: mockCursor});
-        Grid.find.mockReturnValue({skip: mockSkip});
 
-        handleGridRequest(mockSocket);
-        expect(mockSocket.on).toHaveBeenCalledTimes(2);
-        expect(mockSocket.on.mock.calls[0]).toHaveLength(2);
-        expect(mockSocket.on.mock.calls[0][0]).toBe('simulation_id');
-        let testSimId = "1234";
-        mockSocket.on.mock.calls[0][1](testSimId);
+        verifyRequestHandler()
 
         process.nextTick(() => {
             expect(mockSocket.emit).toHaveBeenCalledTimes(1);
@@ -214,29 +170,15 @@ describe("Grid controller", () => {
                 1234,
                 ["status", "grid_consumption_finished", "config.enable_citizen_state_messages"]
             );
-            expect(Grid.find).toHaveBeenCalledTimes(2);
-            expect(Grid.find.mock.calls[0]).toEqual([
-                {simulation_id: 1234},
-                {},
-                {sort: {'_id': 1}}
-            ]);
-            expect(Grid.find.mock.calls[1]).toEqual([
-                {simulation_id: 1234},
-                {},
-                {sort: {'_id': 1}}
-            ]);
-            expect(mockSkip).toHaveBeenCalledTimes(2);
-            expect(mockSkip).toHaveBeenNthCalledWith(1, 0);
-            expect(mockSkip).toHaveBeenNthCalledWith(2, 1);
+            expect(findSortedById).toHaveBeenCalledTimes(2);
+            expect(findSortedById.mock.calls[0]).toEqual([1234, 0]);
+            expect(findSortedById.mock.calls[1]).toEqual([1234, 1]);
             expect(mockCursorClose).toHaveBeenCalledTimes(1);
             done();
         });
     });
 
     it('should console on connection closed', () => {
-        const mockCursor = jest.fn().mockReturnValueOnce([]);
-        const mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
-        Grid.find.mockReturnValueOnce({skip: mockSkip});
         global.console = {
             log: jest.fn()
         };

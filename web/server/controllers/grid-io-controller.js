@@ -19,15 +19,11 @@
 
 
 const { SimulationStatus } = require("../db/models/Simulation");
-const Grid = require("../db/models/Grid").Grid;
 const {fetchSimulation} = require('../db/services/SimulationService')
+const {findSortedById} = require('../db/services/GridService')
 
 async function sendGridData(simulationId, socket, totalConsumerRecords) {
-  let query = { simulation_id: simulationId };
-  let cursor = Grid
-      .find(query, {}, { sort: { '_id': 1 } })
-      .skip(totalConsumerRecords)
-      .cursor();
+  const cursor = findSortedById(simulationId, totalConsumerRecords);
 
   let countOfMessagesConsumed = 0;
   for await (const data of cursor) {

@@ -30,4 +30,12 @@ async function saveCitizenState(citizenState) {
     await updateQuery.exec()
 }
 
-module.exports = {saveGridLayout, saveCitizenState};
+function findSortedById(simulationId , skipBy) {
+    const query = { simulation_id: simulationId };
+    return Grid
+        .find(query, {_id: 0, __v: 0}, { sort: { '_id': 1 } })
+        .skip(skipBy)
+        .cursor();
+}
+
+module.exports = {saveGridLayout, saveCitizenState, findSortedById};

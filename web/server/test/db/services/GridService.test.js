@@ -19,6 +19,7 @@
 const dbHandler = require("../db-handler")
 const GridService = require("../../../db/services/GridService")
 const {Grid, CitizenState} = require("../../../db/models/Grid")
+const mongoose = require('mongoose');
 
 describe('Grid Service', function () {
     beforeAll(async () => await dbHandler.connect());
@@ -119,6 +120,27 @@ describe('Grid Service', function () {
 
             expect(citizenStateInDb).toEqual(citizenStateToCreate)
             expect(numberOfCitizenStateInDb).toEqual(1)
+        });
+    });
+
+    describe('findSortedById', function () {
+        it('should sort documents by id and skip by 1 document', async function () {
+            await new Grid({simulation_id: 1}).save()
+            await new Grid({simulation_id: 1, grid_size: 3}).save()
+
+            const cursor = GridService.findSortedById(1, 1);
+
+            let documents = []
+            for await (document of cursor) {
+                documents = documents.concat(document.toObject())
+            }
+            expect(documents).toHaveLength(1);
+            expect(documents[0]).toEqual({
+                simulation_id: 1,
+                grid_size: 3,
+                houses: [],
+                offices: []
+            });
         });
     });
 });

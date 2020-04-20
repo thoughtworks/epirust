@@ -40,17 +40,12 @@ sample = """
         "death_rate": 0.035,
         "percentage_asymptomatic_population": 0.3,
         "percentage_severe_infected_population": 0.3,
-        "exposed_duration": 48
+        "exposed_duration": 48,
+        "pre_symptomatic_duration": 48
       },
       "grid_size": 250,
       "hours": 10000,
       "interventions": [
-        {
-          "Vaccinate": {
-            "at_hour": 5000,
-            "percent": 0.2
-          }
-        },
         {
           "Lockdown": {
             "at_number_of_infections": 100,

@@ -97,6 +97,27 @@ describe('Simulation Service', function () {
           });
     });
 
+    it('should return a simulation with all fields if not specified specified', async function (done) {
+      const simulationId = randomId();
+      await (new Simulation({
+        simulation_id: simulationId,
+        status: SimulationStatus.RUNNING,
+        config: {
+          dummyField1: 'dummyValue1',
+          dummyField2: 'dummyValue2'
+        }
+      })).save()
+
+      SimulationService.fetchSimulation(simulationId)
+          .then(receivedSimulation => {
+            expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
+            expect(receivedSimulation.simulation_id).toBe(simulationId);
+            expect(receivedSimulation.config.dummyField1).toBe('dummyValue1');
+            expect(receivedSimulation.config.dummyField2).toBe('dummyValue2');
+            done();
+          });
+    });
+
     it('should throw error with error message if no simulation exists',  function () {
       const simulationId = randomId();
       const expectedError = `Simulation with id: ${simulationId} not found`

@@ -74,5 +74,35 @@ describe('Simulation Service', function () {
     });
   });
 
+  describe('fetchSimulation', function () {
+    it('should return a simulation with projection fields specified', async function (done) {
+      const simulationId = randomId();
+      await (new Simulation({
+        simulation_id: simulationId,
+        status: SimulationStatus.RUNNING,
+        config: {
+          dummyField1: 'dummyValue1',
+          dummyField2: 'dummyValue2'
+        }
+      })).save()
+
+      SimulationService.fetchSimulation(simulationId, ['simulation_id', 'status', 'config.dummyField1'])
+          .then(receivedSimulation => {
+            expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
+            expect(receivedSimulation.simulation_id).toBe(simulationId);
+            expect(receivedSimulation.config.dummyField1).toBe('dummyValue1');
+            expect(receivedSimulation.config).not.toHaveProperty('dummyField2');
+            done();
+          });
+    });
+
+    it('should throw error with error message if no simulation exists',  function () {
+      const simulationId = randomId();
+      const expectedError = `Simulation with id: ${simulationId} not found`
+
+      expect(SimulationService.fetchSimulation(simulationId)).rejects.toEqual(new Error(expectedError));
+    });
+  });
+
   const randomId = () => Math.random()
 });

@@ -42,4 +42,16 @@ const fetchSimulationStatus = (simulationId) => {
     })
 };
 
-module.exports = {updateSimulationStatus, markGridConsumptionFinished, fetchSimulationStatus};
+const fetchSimulation = (simulationId, projectionFields = []) => {
+    const projection = {}
+    projectionFields.forEach(pf => projection[pf] = 1)
+    return Simulation.findOne({simulation_id: simulationId}, projection).exec()
+        .then((doc) => {
+            if(!doc) {
+                throw Error(`Simulation with id: ${simulationId} not found`)
+            }
+            return doc
+        })
+};
+
+module.exports = {updateSimulationStatus, markGridConsumptionFinished, fetchSimulationStatus, fetchSimulation};

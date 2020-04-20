@@ -18,8 +18,9 @@
  */
 
 
-const { Simulation, SimulationStatus } = require("../db/models/Simulation");
+const { SimulationStatus } = require("../db/models/Simulation");
 const Grid = require("../db/models/Grid").Grid;
+const {fetchSimulation} = require('../db/services/SimulationService')
 
 async function sendGridData(simulationId, socket, totalConsumerRecords) {
   let query = { simulation_id: simulationId };
@@ -38,25 +39,18 @@ async function sendGridData(simulationId, socket, totalConsumerRecords) {
     socket.emit('gridData', data);
   }
 
-  const findSimulation = Simulation.findOne(
-      {simulation_id: simulationId},
-      { status:1, grid_consumption_finished: 1 , "config.enable_citizen_state_messages": 1}
-  );
-  const promise = findSimulation.exec();
-
-  await promise.then((simulation) => {
-    if (simulation.grid_consumption_finished || simulation.status === SimulationStatus.FAILED) {
-      if(socket.disconnected)
-        return ;
-      socket.emit('gridData', { "simulation_ended": true });
-    }
-    else if(!simulation.config.enable_citizen_state_messages) {
-      if(socket.disconnected)
-        return ;
-      socket.emit('gridData', { message: "no grid data" });
-    }
-    else sendGridData(simulationId, socket, totalConsumerRecords + countOfMessagesConsumed);
-  });
+  await fetchSimulation(simulationId, ['status', 'grid_consumption_finished', 'config.enable_citizen_state_messages'])
+      .then(simulation => {
+        if (simulation.grid_consumption_finished || simulation.status === SimulationStatus.FAILED) {
+          if (socket.disconnected)
+            return;
+          socket.emit('gridData', {"simulation_ended": true});
+        } else if (!simulation.config.enable_citizen_state_messages) {
+          if (socket.disconnected)
+            return;
+          socket.emit('gridData', {message: "no grid data"});
+        } else sendGridData(simulationId, socket, totalConsumerRecords + countOfMessagesConsumed);
+      });
 }
 
 function handleRequest(socket) {

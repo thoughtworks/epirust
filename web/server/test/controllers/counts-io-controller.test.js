@@ -69,14 +69,7 @@ describe("Count controller", () => {
       expect(Count.find).toHaveBeenCalledTimes(1);
       expect(mockSkip).toHaveBeenCalledTimes(1);
       expect(mockSkip).toBeCalledWith(0);
-      expect(Count.find.mock.calls[0]).toEqual([{
-          "$and": [
-            {"simulation_id": 1234},
-            {"$or": [{"hour": {"$mod": [24, 1]}}, {"interventions": {"$exists": true}}]}
-          ]
-        }, {},
-        {"$sort": 1}
-      ]);
+      expect(Count.find.mock.calls[0][0]).toEqual({"simulation_id": 1234}, {}, {"$sort": 1})
       done();
     })
   });
@@ -115,22 +108,8 @@ describe("Count controller", () => {
       expect(Simulation.findOne.mock.calls[0]).toEqual([{simulation_id: 1234}, {status: 1}]);
       expect(Simulation.findOne.mock.calls[1]).toEqual([{simulation_id: 1234}, {status: 1}]);
       expect(Count.find).toHaveBeenCalledTimes(2);
-      expect(Count.find.mock.calls[0]).toEqual([{
-        "$and": [
-          {"simulation_id": 1234},
-          {"$or": [{"hour": {"$mod": [24, 1]}}, {"interventions": {"$exists": true}}]}
-        ]
-      }, {},
-        {"$sort": 1}
-      ]);
-      expect(Count.find.mock.calls[1]).toEqual([{
-        "$and": [
-          {"simulation_id": 1234},
-          {"$or": [{"hour": {"$mod": [24, 1]}}, {"interventions": {"$exists": true}}]}
-        ]
-      }, {},
-        {"$sort": 1}
-      ]);
+      expect(Count.find.mock.calls[0]).toEqual([{"simulation_id": 1234},{},{"$sort": 1}]);
+      expect(Count.find.mock.calls[1]).toEqual([{"simulation_id": 1234},{},{"$sort": 1}]);
       expect(mockSkip).toHaveBeenCalledTimes(2);
       expect(mockSkip).toHaveBeenNthCalledWith(1, 0);
       expect(mockSkip).toHaveBeenNthCalledWith(2, 1);

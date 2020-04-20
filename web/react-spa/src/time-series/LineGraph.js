@@ -21,6 +21,7 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
                 xlabel: 'Hours',
                 showRoller: true,
                 errorBars: errorBars,
+                rollPeriod: 24
             }
             if (labels) {
                 options = { ...options, labels: labels }

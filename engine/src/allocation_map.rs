@@ -17,7 +17,6 @@
  *
  */
 
-use fxhash::{FxHashMap, FxBuildHasher};
 
 use crate::agent;
 use crate::geography::{Area, Grid};
@@ -28,21 +27,22 @@ use crate::disease_state_machine::State;
 use crate::listeners::events::counts::Counts;
 use crate::travel_plan::Traveller;
 use std::collections::hash_map::{IterMut, Iter};
+use fnv::FnvHashMap;
 
 #[derive(Clone)]
 pub struct AgentLocationMap {
     grid_size: i32,
-    agent_cell: FxHashMap<Point, agent::Citizen>,
+    agent_cell: FnvHashMap<Point, agent::Citizen>,
 }
 
 impl AgentLocationMap {
     pub fn init_with_capacity(&mut self, size: usize) {
-        self.agent_cell = FxHashMap::with_capacity_and_hasher(size, FxBuildHasher::default());
+        self.agent_cell = FnvHashMap::with_capacity_and_hasher(size, Default::default());
     }
 
     pub fn new(grid_size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
-        let mut map: FxHashMap<Point, agent::Citizen> = FxHashMap::default();
+        let mut map: FnvHashMap<Point, agent::Citizen> = FnvHashMap::default();
         for i in 0..agent_list.len() {
             map.insert(points[i], agent_list[i]);
         }

@@ -17,19 +17,19 @@
  *
  */
 
-use fxhash::FxHashMap;
 use std::any::Any;
 use crate::listeners::listener::Listener;
 use crate::geography::Point;
 use crate::listeners::events::counts::Counts;
+use fnv::FnvHashMap;
 
 pub struct Hotspot {
-    disease_hotspot_tracker: FxHashMap<Point, i32>
+    disease_hotspot_tracker: FnvHashMap<Point, i32>
 }
 
 impl Hotspot {
     pub fn new() -> Hotspot {
-        let disease_hotspot_tracker = FxHashMap::default();
+        let disease_hotspot_tracker = FnvHashMap::default();
         Hotspot{disease_hotspot_tracker}
     }
 }

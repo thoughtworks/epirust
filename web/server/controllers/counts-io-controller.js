@@ -18,15 +18,11 @@
  */
 
 const {SimulationStatus} = require("../db/models/Simulation");
-const {Count} = require("../db/models/Count");
 const {fetchSimulation} = require('../db/services/SimulationService')
+const {fetchCountsInSimulation} = require('../db/services/CountService')
 
 async function sendCountsData(simulationId, socket, totalConsumedRecords) {
-  let cursor = Count.find(
-      { simulation_id: simulationId },
-      {}, { $sort: 1 })
-    .skip(totalConsumedRecords)
-    .cursor();
+  const cursor = fetchCountsInSimulation(simulationId, totalConsumedRecords)
 
   let recordsConsumedInThisGo = 0;
   for await(const data of cursor) {

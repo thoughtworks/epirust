@@ -18,10 +18,10 @@
  */
 
 const {handleRequest: handleCountsRequest} = require("../../controllers/counts-io-controller");
-jest.mock("../../db/models/Count");
 jest.mock("../../db/services/SimulationService");
-const {Count} = require("../../db/models/Count");
+jest.mock("../../db/services/CountService");
 const {fetchSimulation} = require('../../db/services/SimulationService')
+const {fetchCountsInSimulation} = require("../../db/services/CountService")
 
 describe("Count controller", () => {
   let mockSocket;
@@ -40,9 +40,7 @@ describe("Count controller", () => {
 
   it('should emit all counts if simulation has ended', (done) => {
     fetchSimulation.mockResolvedValue(mockSimulationPromise('finished'));
-    let mockCursor = jest.fn().mockReturnValueOnce([{dummyKey: 'dummyValue', hour: 1}]);
-    let mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
-    Count.find.mockReturnValueOnce({skip: mockSkip});
+    fetchCountsInSimulation.mockReturnValueOnce([{dummyKey: 'dummyValue', hour: 1}])
 
     handleCountsRequest(mockSocket);
     expect(mockSocket.on).toHaveBeenCalledTimes(2);
@@ -60,10 +58,8 @@ describe("Count controller", () => {
       expect(mockSocket.emit.mock.calls[1]).toEqual(['epidemicStats', {"simulation_ended": true}]);
       expect(fetchSimulation).toHaveBeenCalledTimes(1);
       expect(fetchSimulation).toHaveBeenCalledWith(1234, ['status']);
-      expect(Count.find).toHaveBeenCalledTimes(1);
-      expect(mockSkip).toHaveBeenCalledTimes(1);
-      expect(mockSkip).toBeCalledWith(0);
-      expect(Count.find.mock.calls[0][0]).toEqual({"simulation_id": 1234}, {}, {"$sort": 1})
+      expect(fetchCountsInSimulation).toHaveBeenCalledTimes(1);
+      expect(fetchCountsInSimulation).toHaveBeenCalledWith(1234, 0);
       done();
     })
   });
@@ -75,9 +71,7 @@ describe("Count controller", () => {
     ];
     const cursors = [[{dummyKey: 'dummyValue', hour: 1}], [{dummyKey: 'dummyValue2', hour: 2}]];
     fetchSimulation.mockImplementation(() => Promise.resolve(docPromises.shift()))
-    const mockCursor = jest.fn(() => cursors.shift());
-    const mockSkip = jest.fn().mockReturnValue({cursor: mockCursor});
-    Count.find.mockReturnValue({skip: mockSkip});
+    fetchCountsInSimulation.mockImplementation(() => cursors.shift())
 
     handleCountsRequest(mockSocket);
     expect(mockSocket.on).toHaveBeenCalledTimes(2);
@@ -100,21 +94,16 @@ describe("Count controller", () => {
       expect(fetchSimulation).toHaveBeenCalledTimes(2);
       expect(fetchSimulation.mock.calls[0]).toEqual([1234, ['status']]);
       expect(fetchSimulation.mock.calls[1]).toEqual([1234, ['status']]);
-      expect(Count.find).toHaveBeenCalledTimes(2);
-      expect(Count.find.mock.calls[0]).toEqual([{"simulation_id": 1234},{},{"$sort": 1}]);
-      expect(Count.find.mock.calls[1]).toEqual([{"simulation_id": 1234},{},{"$sort": 1}]);
-      expect(mockSkip).toHaveBeenCalledTimes(2);
-      expect(mockSkip).toHaveBeenNthCalledWith(1, 0);
-      expect(mockSkip).toHaveBeenNthCalledWith(2, 1);
+      expect(fetchCountsInSimulation).toHaveBeenCalledTimes(2);
+      expect(fetchCountsInSimulation.mock.calls[0]).toEqual([1234, 0]);
+      expect(fetchCountsInSimulation.mock.calls[1]).toEqual([1234, 1]);
       done();
     });
   });
 
   it('should send simulation ended if simulation has failed', (done) => {
     fetchSimulation.mockResolvedValue(mockSimulationPromise('failed'));
-    const mockCursor = jest.fn().mockReturnValueOnce([{dummyKey: 'dummyValue', hour: 1}]);
-    const mockSkip = jest.fn().mockReturnValueOnce({cursor: mockCursor});
-    Count.find.mockReturnValueOnce({skip: mockSkip});
+    fetchCountsInSimulation.mockReturnValueOnce([{dummyKey: 'dummyValue', hour: 1}])
 
     handleCountsRequest(mockSocket);
     expect(mockSocket.on).toHaveBeenCalledTimes(2);

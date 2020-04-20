@@ -17,8 +17,9 @@
  *
  */
 
-const {Simulation, SimulationStatus} = require("../db/models/Simulation");
+const {SimulationStatus} = require("../db/models/Simulation");
 const {Count} = require("../db/models/Count");
+const {fetchSimulation} = require('../db/services/SimulationService')
 
 async function sendCountsData(simulationId, socket, totalConsumedRecords) {
   let cursor = Count.find(
@@ -36,16 +37,14 @@ async function sendCountsData(simulationId, socket, totalConsumedRecords) {
     recordsConsumedInThisGo += 1;
     socket.emit('epidemicStats', data);
   }
-  const findLastRecordQuery = Simulation.findOne({simulation_id: simulationId}, {status: 1});
-  const promise = findLastRecordQuery.exec();
-
-  await promise.then((simulation) => {
-    if (simulation.status === SimulationStatus.FINISHED || simulation.status === SimulationStatus.FAILED) {
-      if(socket.disconnected)
-        return ;
-      socket.emit('epidemicStats', {"simulation_ended": true});
-    } else sendCountsData(simulationId, socket, totalConsumedRecords + recordsConsumedInThisGo);
-  })
+  await fetchSimulation(simulationId, ['status'])
+      .then((simulation) => {
+        if (simulation.status === SimulationStatus.FINISHED || simulation.status === SimulationStatus.FAILED) {
+          if (socket.disconnected)
+            return;
+          socket.emit('epidemicStats', {"simulation_ended": true});
+        } else sendCountsData(simulationId, socket, totalConsumedRecords + recordsConsumedInThisGo);
+      });
 }
 
 const handleRequest = (socket) => {

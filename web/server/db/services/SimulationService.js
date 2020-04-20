@@ -19,17 +19,17 @@
 
 const {Simulation} = require("../models/Simulation");
 
-const updateSimulationStatus = async (simulationId, status) => {
+const updateSimulationStatus = (simulationId, status) => {
   const query = {simulation_id: simulationId};
   const update = {status};
-  await Simulation.updateOne(query, update, {upsert: true}).exec()
+  return Simulation.updateOne(query, update, {upsert: true}).exec()
 };
 
-const markGridConsumptionFinished = async (simulationId) => {
+const markGridConsumptionFinished = (simulationId) => {
   const query = {simulation_id: simulationId};
   const update = {simulation_id: simulationId, grid_consumption_finished: true};
   const simulationUpdate = Simulation.updateOne(query, update, {upsert: true});
-  await simulationUpdate.exec()
+  return simulationUpdate.exec()
 };
 
 module.exports = {updateSimulationStatus, markGridConsumptionFinished};

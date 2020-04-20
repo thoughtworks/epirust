@@ -64,4 +64,5 @@ pub struct TickAck {
     pub engine_id: String,
     pub hour: i32,
     pub counts: Counts,
+    pub locked_down: bool,
 }

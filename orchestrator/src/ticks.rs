@@ -97,6 +97,7 @@ pub struct TickAck {
     engine_id: String,
     hour: i32,
     counts: Counts,
+    locked_down: bool
 }
 
 impl TickAck {
@@ -139,6 +140,7 @@ pub struct TickAcks {
     acks: HashMap<String, TickAck>,
     current_hour: i32,
     engines: Vec<String>,
+    lockdown_status_by_engine: HashMap<String, bool>,
 }
 
 impl TickAcks {
@@ -147,6 +149,7 @@ impl TickAcks {
             acks: HashMap::new(),
             current_hour: 0,
             engines: engines.clone(),
+            lockdown_status_by_engine: HashMap::new()
         }
     }
 
@@ -169,6 +172,7 @@ impl TickAcks {
             return;
         }
         let cloned = ack.clone();
+        self.lockdown_status_by_engine.insert(ack.engine_id.clone(), ack.locked_down);
         self.acks.insert(ack.engine_id, cloned);
     }
 
@@ -194,10 +198,12 @@ mod tests {
         let engines = vec!["engine1".to_string(), "engine2".to_string()];
         let mut acks = TickAcks::new(&engines);
         acks.reset(22);
-        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, counts: Counts::new(1, 100, 0, 0, 0, 0, 0) };
+        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, counts: Counts::new(1, 100, 0, 0, 0, 0, 0),
+            locked_down: true };
         acks.push(ack.clone());
 
         assert_eq!(*acks.acks.get("engine1").unwrap(), ack);
+        assert_eq!(*acks.lockdown_status_by_engine.get("engine1").unwrap(), true);
     }
 
     #[test]
@@ -228,11 +234,13 @@ mod tests {
             engine_id: "engine1".to_string(),
             hour: 1,
             counts: Counts::new(1, 99, 0, 1, 0, 0, 0),
+            locked_down: false,
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 1,
             counts: Counts::new(1, 99, 0, 1, 0, 0, 0),
+            locked_down: false,
         });
         assert!(!acks.should_terminate());
 
@@ -241,11 +249,13 @@ mod tests {
             engine_id: "engine1".to_string(),
             hour: 2,
             counts: Counts::new(2, 99, 0, 0, 1, 0, 0),
+            locked_down: false,
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 2,
             counts: Counts::new(2, 100, 0, 0, 0, 0, 0),
+            locked_down: false,
         });
         assert!(!acks.should_terminate());
 
@@ -254,11 +264,13 @@ mod tests {
             engine_id: "engine1".to_string(),
             hour: 3,
             counts: Counts::new(2, 99, 1, 0, 0, 0, 0),
+            locked_down: false,
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 3,
             counts: Counts::new(2, 100, 0, 0, 0, 0, 0),
+            locked_down: false,
         });
         assert!(!acks.should_terminate());
 
@@ -267,11 +279,13 @@ mod tests {
             engine_id: "engine1".to_string(),
             hour: 4,
             counts: Counts::new(3, 100, 0, 0, 0, 0, 0),
+            locked_down: false,
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 4,
             counts: Counts::new(3, 100, 0, 0, 0, 0, 0),
+            locked_down: false,
         });
         assert!(acks.should_terminate());
     }

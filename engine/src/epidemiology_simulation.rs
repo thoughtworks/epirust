@@ -235,7 +235,7 @@ impl Epidemiology {
                 break;
             }
 
-            Epidemiology::send_ack(run_mode, &mut producer, counts_at_hr, simulation_hour).await;
+            Epidemiology::send_ack(run_mode, &mut producer, counts_at_hr, simulation_hour, &lock_down_details).await;
 
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
@@ -278,12 +278,18 @@ impl Epidemiology {
         }
     }
 
-    async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, counts: Counts, simulation_hour: i32) {
+    async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, counts: Counts, simulation_hour: i32,
+                      lockdown: &LockdownIntervention) {
         if simulation_hour > 1 && simulation_hour % 24 != 0 {
             return
         }
         if let RunMode::MultiEngine { engine_id } = run_mode {
-            let ack = TickAck { engine_id: engine_id.to_string(), hour: simulation_hour, counts };
+            let ack = TickAck {
+                engine_id: engine_id.to_string(),
+                hour: simulation_hour,
+                counts,
+                locked_down: lockdown.is_locked_down(),
+            };
             match producer.send_ack(&ack).await.unwrap() {
                 Ok(_) => {}
                 Err(e) => panic!("Failed while sending acknowledgement: {:?}", e.0)

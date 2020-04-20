@@ -84,6 +84,10 @@ impl LockdownIntervention {
     pub fn get_config(&self) -> &Option<LockdownConfig> {
         &self.intervention
     }
+
+    pub fn is_locked_down(&self) -> bool {
+        self.is_locked_down
+    }
 }
 
 impl InterventionType for LockdownIntervention {

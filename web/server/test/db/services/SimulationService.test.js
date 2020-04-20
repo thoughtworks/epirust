@@ -76,7 +76,7 @@ describe('Simulation Service', function () {
   });
 
   describe('fetchSimulation', function () {
-    it('should return a simulation with projection fields specified', async function (done) {
+    it('should return a simulation with projection fields specified', async function () {
       const simulationId = randomId();
       await (new Simulation({
         simulation_id: simulationId,
@@ -87,17 +87,15 @@ describe('Simulation Service', function () {
         }
       })).save()
 
-      SimulationService.fetchSimulation(simulationId, ['simulation_id', 'status', 'config.dummyField1'])
-          .then(receivedSimulation => {
-            expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
-            expect(receivedSimulation.simulation_id).toBe(simulationId);
-            expect(receivedSimulation.config.dummyField1).toBe('dummyValue1');
-            expect(receivedSimulation.config).not.toHaveProperty('dummyField2');
-            done();
-          });
+      const receivedSimulation = await SimulationService.fetchSimulation(simulationId, ['simulation_id', 'status', 'config.dummyField1']);
+
+      expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
+      expect(receivedSimulation.simulation_id).toBe(simulationId);
+      expect(receivedSimulation.config.dummyField1).toBe('dummyValue1');
+      expect(receivedSimulation.config).not.toHaveProperty('dummyField2');
     });
 
-    it('should return a simulation with all fields if not specified specified', async function (done) {
+    it('should return a simulation with all fields if not specified specified', async function () {
       const simulationId = randomId();
       await (new Simulation({
         simulation_id: simulationId,
@@ -108,14 +106,12 @@ describe('Simulation Service', function () {
         }
       })).save()
 
-      SimulationService.fetchSimulation(simulationId)
-          .then(receivedSimulation => {
-            expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
-            expect(receivedSimulation.simulation_id).toBe(simulationId);
-            expect(receivedSimulation.config.dummyField1).toBe('dummyValue1');
-            expect(receivedSimulation.config.dummyField2).toBe('dummyValue2');
-            done();
-          });
+      const receivedSimulation = await SimulationService.fetchSimulation(simulationId)
+
+      expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
+      expect(receivedSimulation.simulation_id).toBe(simulationId);
+      expect(receivedSimulation.config.dummyField1).toBe('dummyValue1');
+      expect(receivedSimulation.config.dummyField2).toBe('dummyValue2');
     });
 
     it('should throw error with error message if no simulation exists',  function () {

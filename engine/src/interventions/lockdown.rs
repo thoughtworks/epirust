@@ -56,7 +56,9 @@ impl LockdownIntervention {
 
     pub fn should_apply(&self, counts: &Counts) -> bool {
         !self.is_locked_down && match self.intervention {
-            Some(i) => { counts.get_infected() > i.at_number_of_infections }
+            Some(i) => {
+                counts.get_infected() > i.at_number_of_infections && counts.get_hour() % 24 == 0
+            }
             None => false
         }
     }
@@ -131,10 +133,11 @@ mod tests {
 
         assert!(!lockdown.should_apply(&Counts::new_test(0, 99, 0,1, 0, 0, 0)));
         assert!(!lockdown.should_apply(&Counts::new_test(22, 80, 0, 20, 0, 0, 0)));
-        assert!(lockdown.should_apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0)));
+        assert!(!lockdown.should_apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0)));
+        assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0)));
 
-        lockdown.apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0));
-        assert_eq!(lockdown.locked_till_hr, 196);
+        lockdown.apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0));
+        assert_eq!(lockdown.locked_till_hr, 216);
         assert_eq!(lockdown.is_locked_down, true);
     }
 
@@ -151,9 +154,9 @@ mod tests {
             intervention: Some(config),
         };
 
-        assert!(lockdown.should_apply(&Counts::new_test(28, 79, 0,21, 0, 0, 0)));
-        lockdown.apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0));
-        assert!(!lockdown.should_apply(&Counts::new_test(29, 75, 0, 25, 0, 0, 0)));
+        assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0,21, 0, 0, 0)));
+        lockdown.apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0));
+        assert!(!lockdown.should_apply(&Counts::new_test(48, 75, 0, 25, 0, 0, 0)));
     }
 
     #[test]
@@ -168,11 +171,14 @@ mod tests {
             locked_till_hr: 0,
             intervention: Some(config),
         };
-        assert!(lockdown.should_apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0)));
+        assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0)));
 
-        lockdown.apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0));
-        assert!(!lockdown.should_unlock(&Counts::new_test(42, 79, 0,21, 0, 0, 0)));
-        assert!(lockdown.should_unlock(&Counts::new_test(196, 79, 0, 21, 0, 0, 0)));
+        lockdown.apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0));
+        let lockdown_until = 48 + (7 * 24);
+        for hr in 48..lockdown_until {
+            assert!(!lockdown.should_unlock(&Counts::new_test(hr, 79, 0,21, 0, 0, 0)));
+        }
+        assert!(lockdown.should_unlock(&Counts::new_test(lockdown_until, 79, 0, 21, 0, 0, 0)));
     }
 
     #[test]

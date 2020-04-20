@@ -205,9 +205,11 @@ impl Citizen {
                 self.current_area = grid.housing_area;
             }
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
-                new_cell = self.goto_area(grid.transport_area, map, cell, rng);
-                self.current_area = grid.transport_area;
-                self.update_infection_dynamics(cell, &map, counts, rng, &disease);
+                if self.working && self.uses_public_transport{
+                    new_cell = self.goto_area(grid.transport_area, map, cell, rng);
+                    self.current_area = grid.transport_area;
+                    self.update_infection_dynamics(cell, &map, counts, rng, &disease);
+                }
             }
             constants::ROUTINE_WORK_TIME => {
                 new_cell = self.goto_area(self.work_location, map, cell, rng);

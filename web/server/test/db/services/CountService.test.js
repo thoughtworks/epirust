@@ -87,6 +87,46 @@ describe('CountService', () => {
     });
   });
 
+  describe('fetchCountsInSimulation', () => {
+    it('should fetch the counts sorted by hour in ascending order', async () => {
+      const simulationId = randomId();
+      const hour2Count = {simulation_id: simulationId, hour:2};
+      await new Count(hour2Count).save()
+      const hour1Count = {simulation_id: simulationId, hour:1};
+      await new Count(hour1Count).save()
+
+      const cursor = CountService.fetchCountsInSimulation(simulationId, 0);
+
+      let receivedCounts = []
+      for await(const data of cursor) {
+        receivedCounts = receivedCounts.concat(data.toObject())
+      }
+
+      expect(receivedCounts)
+
+      expect(receivedCounts).toEqual([hour1Count, hour2Count]);
+    });
+
+    it('should fetch the counts sorted by hour in ascending order and skip by 1', async () => {
+      const simulationId = randomId();
+      const hour2Count = {simulation_id: simulationId, hour:2};
+      await new Count(hour2Count).save()
+      const hour1Count = {simulation_id: simulationId, hour:1};
+      await new Count(hour1Count).save()
+
+      const cursor = CountService.fetchCountsInSimulation(simulationId, 1);
+
+      let receivedCounts = []
+      for await(const data of cursor) {
+        receivedCounts = receivedCounts.concat(data.toObject())
+      }
+
+      expect(receivedCounts)
+
+      expect(receivedCounts).toEqual([hour2Count]);
+    });
+  });
+
   beforeAll(async () => await dbHandler.connect());
   afterEach(async () => await dbHandler.clearDatabase());
   afterAll(async () => await dbHandler.closeDatabase());

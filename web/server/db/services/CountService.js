@@ -36,4 +36,11 @@ const upsertCount = async (simulationId, count) => {
   await query.exec();
 };
 
-module.exports = {addIntervention, upsertCount};
+const fetchCountsInSimulation = (simulationId, skipBy) => {
+  return Count.find({simulation_id: simulationId}, {__v: 0, _id: 0})
+      .sort({hour: 1})
+      .skip(skipBy)
+      .cursor();
+};
+
+module.exports = {addIntervention, upsertCount, fetchCountsInSimulation};

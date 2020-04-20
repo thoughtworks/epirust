@@ -19,7 +19,6 @@
 const dbHandler = require("../db-handler")
 const GridService = require("../../../db/services/GridService")
 const {Grid, CitizenState} = require("../../../db/models/Grid")
-const mongoose = require('mongoose');
 
 describe('Grid Service', function () {
     beforeAll(async () => await dbHandler.connect());
@@ -131,8 +130,8 @@ describe('Grid Service', function () {
             const cursor = GridService.findSortedById(1, 1);
 
             let documents = []
-            for await (document of cursor) {
-                documents = documents.concat(document.toObject())
+            for await (const doc of cursor) {
+                documents = documents.concat(doc.toObject())
             }
             expect(documents).toHaveLength(1);
             expect(documents[0]).toEqual({

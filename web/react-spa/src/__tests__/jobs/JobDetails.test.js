@@ -27,7 +27,7 @@ describe('Job Details', () => {
         const component = render(<MemoryRouter initialEntries={['/jobs/123/time-series']}>
             <JobDetails simulationId={123} details={{ config: {} }} />
         </MemoryRouter>);
-
+        //TODO: Find a better way to assert. Changes irrelevant to the test would fail this test
         expect(component.container).toMatchSnapshot()
     });
 
@@ -47,13 +47,13 @@ describe('Job Details', () => {
         expect(component.container).toMatchSnapshot()
     });
 
-    it('should render time-series if grid is disabled in config', () => {
+    it('should render loader initially when no info received from socket', () => {
         const simulationDetails = { config: { enable_citizen_state_messages: false } };
-        const component = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
+        const { asFragment } = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
             <JobDetails simulationId={123} details={simulationDetails} />
         </MemoryRouter>);
 
-        expect(component.container).toMatchSnapshot()
+        expect(asFragment()).toMatchSnapshot()
     });
 
     it('should render grid if grid is enabled in config', () => {

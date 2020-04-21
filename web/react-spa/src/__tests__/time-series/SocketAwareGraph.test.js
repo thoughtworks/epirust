@@ -19,7 +19,7 @@
 
 import React from 'react'
 import SocketAwareGraph from '../../time-series/SocketAwareGraph'
-import { render } from '@testing-library/react'
+import { render, prettyDOM } from '@testing-library/react'
 import MockSocket from 'socket.io-mock'
 import Dygraph from 'dygraphs'
 import { act } from 'react-dom/test-utils'
@@ -44,12 +44,7 @@ const hourStatisticsFor100thHour = {
     deceased: 0
 }
 
-test('should render SocketAwareGraph', () => {
-    const { asFragment } = render(<SocketAwareGraph simulationId={simulationId} socket={null} />)
-    expect(asFragment()).toMatchSnapshot()
-})
-
-test('should recieve data sent on socket and parse & set graph to empty', () => {
+test('should display loader and stop displaying when data arrives', () => {
     const mockDygraphfn = Dygraph.mockImplementation(() => { })
     let socket = new MockSocket()
     const closeSpy = jest.fn()
@@ -57,35 +52,18 @@ test('should recieve data sent on socket and parse & set graph to empty', () => 
 
     const hourStatistics = { ...hourStatisticsFor100thHour, hour: 10 }
 
-    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
+    const { getByTestId, container } = render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
 
-    act(() => {
-        socket.emit("epidemicStats", hourStatistics)
-    })
-    expect(mockDygraphfn).toHaveBeenCalledTimes(0)
-    jest.clearAllMocks()
-})
-
-test('should set dataBuffer and render graph and plot graph', () => {
-    const mockDygraphfn = Dygraph.mockImplementation(() => { })
-    let socket = new MockSocket()
-    const closeSpy = jest.fn()
-    socket.socketClient.close = closeSpy
-
-    const hourStatistics = { ...hourStatisticsFor100thHour, hour: 0 }
-
-    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
+    expect(getByTestId('loader')).toBeInTheDocument()
 
     act(() => {
         emitNMessages(socket, 100, hourStatistics)
         jest.runAllTimers();
     })
 
-    expect(mockDygraphfn).toHaveBeenCalledTimes(1)
-    expect(mockDygraphfn.mock.calls[0][1].length).toBe(100);
+    expect(container.querySelector('#loader')).not.toBeInTheDocument()
     jest.clearAllMocks()
 })
-
 
 test('should set residue also into data buffer when simulation ended flag is true', () => {
     const updateSpyFn = jest.fn()
@@ -97,19 +75,31 @@ test('should set residue also into data buffer when simulation ended flag is tru
     const closeSpy = jest.fn()
     socket.socketClient.close = closeSpy
     const hourStatistics = { ...hourStatisticsFor100thHour }
-    const hourStatistics101 = { ...hourStatistics, hour: 101 }
 
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
 
     act(() => {
-        socket.emit("epidemicStats", hourStatistics)
-        socket.emit("epidemicStats", hourStatistics101)
+        emitNMessages(socket, 15, hourStatistics)
+        jest.runAllTimers();
+
         socket.emit("epidemicStats", { "simulation_ended": true })
         jest.runAllTimers();
     })
 
-    expect(mockDygraphfn).toHaveBeenCalledTimes(1)
-    expect(updateSpyFn).toHaveBeenCalledWith({ file: [Object.values(hourStatistics), Object.values(hourStatistics101)] })
+    function getNMessages(n) {
+        let expectedData = []
+        for (let index = 0; index < n; index++) {
+            expectedData.push(Object.values(hourStatistics))
+        }
+        return expectedData
+    }
+
+    expect(mockDygraphfn).toHaveBeenCalledTimes(1);
+
+    //Creating the graph triggers the useFffect again and updates once again. Hence 2. (1 unnecessary). Fix this!
+    expect(updateSpyFn).toHaveBeenCalledTimes(2)
+    expect(updateSpyFn.mock.calls[0][0]).toEqual({ file: getNMessages(10) });
+    expect(updateSpyFn.mock.calls[1][0]).toEqual({ file: getNMessages(15) })
 })
 
 test("should enable export in graph if simulation has ended", () => {
@@ -117,6 +107,12 @@ test("should enable export in graph if simulation has ended", () => {
     const closeSpy = jest.fn()
     socket.socketClient.close = closeSpy
     const { container } = render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
+
+    act(() => {
+        emitNMessages(socket, 10, hourStatisticsFor100thHour);
+        jest.runAllTimers();
+    })
+
     expect(container.querySelector(".graph-actions .btn-secondary")).toBeDisabled()
 
     act(() => {

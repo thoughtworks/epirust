@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { Interventions } from '../grid/constants';
 import Graph from './LineGraph';
+import Loader from '../common/Loader'
 
 export default function SocketAwareGraph({ socket, simulationId }) {
     const [dataBuffer, setDataBuffer] = useState([]);
@@ -47,6 +48,9 @@ export default function SocketAwareGraph({ socket, simulationId }) {
 
         return () => socket.close()
     }, [socket, simulationId]);
+
+    if (!dataBuffer.length)
+        return <Loader />
 
     return (
         <Graph

@@ -77,12 +77,12 @@ test('should set dataBuffer and render graph and plot graph', () => {
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
 
     act(() => {
-        emitNMessages(socket, 10, hourStatistics)
+        emitNMessages(socket, 100, hourStatistics)
         jest.runAllTimers();
     })
 
     expect(mockDygraphfn).toHaveBeenCalledTimes(1)
-    expect(mockDygraphfn.mock.calls[0][1].length).toBe(10);
+    expect(mockDygraphfn.mock.calls[0][1].length).toBe(100);
     jest.clearAllMocks()
 })
 
@@ -158,7 +158,7 @@ test("should render the annotations for lockdown applied intervention ", () => {
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 10, hourStatistics)
+        emitNMessages(socket, 100, hourStatistics)
 
         socket.emit("epidemicStats", {
             ...hourStatistics, interventions: [{
@@ -196,7 +196,7 @@ test("should render the annotations for lockdown revoked intervention ", () => {
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 10, hourStatistics)
+        emitNMessages(socket, 100, hourStatistics)
 
         socket.emit("epidemicStats", {
             ...hourStatistics, interventions: [{
@@ -234,7 +234,7 @@ test("should render the annotations for interventions for BuildNewHospital", () 
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 10, hourStatistics)
+        emitNMessages(socket, 100, hourStatistics)
         socket.emit("epidemicStats", {
             ...hourStatistics, interventions: [{
                 intervention: "build_new_hospital",
@@ -269,7 +269,7 @@ test("should render the annotations for interventions for Vaccination", () => {
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 10, hourStatisticsFor100thHour)
+        emitNMessages(socket, 100, hourStatisticsFor100thHour)
         socket.emit("epidemicStats", {
             ...hourStatisticsFor100thHour, interventions: [{
                 intervention: "vaccination",
@@ -305,7 +305,7 @@ test("should render the annotations for interventions and apply height to the ti
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 10, hourStatisticsFor100thHour)
+        emitNMessages(socket, 100, hourStatisticsFor100thHour)
         socket.emit("epidemicStats", {
             ...hourStatisticsFor100thHour, interventions: [{
                 intervention: "vaccination",

@@ -36,7 +36,7 @@ export default function SocketAwareGraph({ socket, simulationId }) {
                     )
                 }
             }
-            if (buff.length === 10 || simulationEndedTemp) {
+            if (buff.length === 100 || simulationEndedTemp) {
                 setDataBuffer(buffer => [...buffer, ...buff]);
                 buff = [];
             }

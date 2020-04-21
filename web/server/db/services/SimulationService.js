@@ -55,7 +55,7 @@ const fetchSimulation = (simulationId, projectionFields = []) => {
 
 const saveSimulation = (simulation) => {
     return Simulation(simulation).save()
-}
+};
 
 module.exports = {
     updateSimulationStatus,

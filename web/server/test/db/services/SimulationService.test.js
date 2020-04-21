@@ -53,7 +53,7 @@ describe('Simulation Service', function () {
   describe('fetchSimulationStatus', function () {
     it('should return a simulation with its status if available in db', async function () {
       const simulationId = randomId();
-      await (new Simulation({simulation_id: simulationId, status: SimulationStatus.RUNNING})).save()
+      await (new Simulation({simulation_id: simulationId, status: SimulationStatus.RUNNING})).save();
 
       const receivedSimulation = await SimulationService.fetchSimulationStatus(simulationId);
 
@@ -65,7 +65,7 @@ describe('Simulation Service', function () {
 
     it('should throw error with error message if no simulation exists',  function (done) {
       const simulationId = randomId();
-      const expectedError = `Simulation with id: ${simulationId} not found`
+      const expectedError = `Simulation with id: ${simulationId} not found`;
 
       SimulationService.fetchSimulationStatus(simulationId)
         .catch(err => {
@@ -85,7 +85,7 @@ describe('Simulation Service', function () {
           dummyField1: 'dummyValue1',
           dummyField2: 'dummyValue2'
         }
-      })).save()
+      })).save();
 
       const receivedSimulation = await SimulationService.fetchSimulation(simulationId, ['simulation_id', 'status', 'config.dummyField1']);
 
@@ -104,9 +104,9 @@ describe('Simulation Service', function () {
           dummyField1: 'dummyValue1',
           dummyField2: 'dummyValue2'
         }
-      })).save()
+      })).save();
 
-      const receivedSimulation = await SimulationService.fetchSimulation(simulationId)
+      const receivedSimulation = await SimulationService.fetchSimulation(simulationId);
 
       expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
       expect(receivedSimulation.simulation_id).toBe(simulationId);
@@ -116,7 +116,7 @@ describe('Simulation Service', function () {
 
     it('should throw error with error message if no simulation exists',  function () {
       const simulationId = randomId();
-      const expectedError = `Simulation with id: ${simulationId} not found`
+      const expectedError = `Simulation with id: ${simulationId} not found`;
 
       expect(SimulationService.fetchSimulation(simulationId)).rejects.toEqual(new Error(expectedError));
     });

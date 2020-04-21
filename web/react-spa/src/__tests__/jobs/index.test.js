@@ -26,6 +26,16 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+test('should render loader while fetching data of status', async function () {
+  const { container } = render(
+    <MemoryRouter>
+      <JobsList />
+    </MemoryRouter>
+  );
+
+  expect(container.querySelector('#loader')).toBeInTheDocument()
+});
+
 test('should fetch simulation status from API to show status on UI', async function () {
   const mockResponse = Promise.resolve([{ simulation_id: 1234, status: "finished" }]);
 

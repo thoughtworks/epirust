@@ -24,16 +24,21 @@ import { JobDetails } from "./JobDetails";
 import { Redirect, useParams } from 'react-router-dom';
 import config from "../config";
 import io from 'socket.io-client'
+import Loader from "../common/Loader";
 
 export const JobsList = () => {
   const { id, view } = useParams();
   const [simulations, updateSimulations] = useState([]);
   const [socket, setSocket] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    setIsLoading(true)
+
     fetch(`${config.API_HOST}/simulation/`)
       .then(res => res.json())
       .then(value => updateSimulations(value.reverse()))
+      .then(() => setIsLoading(false))
   }, []);
 
   useEffect(() => {
@@ -79,8 +84,8 @@ export const JobsList = () => {
     );
   }
 
-  if (!id && !simulations.length) {
-    return "Loading"
+  if (isLoading) {
+    return <Loader />
   }
 
   if (!id && simulations.length) {

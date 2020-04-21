@@ -19,21 +19,21 @@
 
 const {Count} = require('../models/Count');
 
-const addIntervention = async (simulationId, intervention) => {
+const addIntervention = (simulationId, intervention) => {
   const query = Count.updateOne(
     {simulation_id: simulationId, hour: intervention.hour},
     {$addToSet: {interventions: intervention}},
     {upsert: true}
   );
 
-  await query.exec()
+  return query.exec()
 };
 
-const upsertCount = async (simulationId, count) => {
+const upsertCount = (simulationId, count) => {
   const query = Count.updateOne({simulation_id: simulationId, hour: count.hour},
     count, {upsert: true});
 
-  await query.exec();
+  return query.exec();
 };
 
 const fetchCountsInSimulation = (simulationId, skipBy) => {

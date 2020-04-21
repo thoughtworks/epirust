@@ -50,31 +50,6 @@ describe('Simulation Service', function () {
     });
   });
 
-  describe('fetchSimulationStatus', function () {
-    it('should return a simulation with its status if available in db', async function () {
-      const simulationId = randomId();
-      await (new Simulation({simulation_id: simulationId, status: SimulationStatus.RUNNING})).save();
-
-      const receivedSimulation = await SimulationService.fetchSimulationStatus(simulationId);
-
-      expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
-
-      //TODO: check if the simulation id is required or not
-      // expect(receivedSimulation.simulation_id).toBe(simulationId)
-    });
-
-    it('should throw error with error message if no simulation exists',  function (done) {
-      const simulationId = randomId();
-      const expectedError = `Simulation with id: ${simulationId} not found`;
-
-      SimulationService.fetchSimulationStatus(simulationId)
-        .catch(err => {
-          expect(err.message).toBe(expectedError);
-          done();
-        })
-    });
-  });
-
   describe('fetchSimulation', function () {
     it('should return a simulation with projection fields specified', async function () {
       const simulationId = randomId();

@@ -32,16 +32,6 @@ const markGridConsumptionFinished = (simulationId) => {
   return simulationUpdate.exec()
 };
 
-const fetchSimulationStatus = (simulationId) => {
-  return Simulation.findOne({simulation_id: simulationId}, {status: 1}).exec()
-    .then((doc) => {
-      if(!doc) {
-        throw Error(`Simulation with id: ${simulationId} not found`)
-      }
-      return doc
-    })
-};
-
 const fetchSimulation = (simulationId, projectionFields = []) => {
   const projection = projectionFields.reduce((acc, cur) => {acc[cur] = 1; return acc;}, {});
   return Simulation.findOne({simulation_id: simulationId}, projection).exec()
@@ -60,7 +50,6 @@ const saveSimulation = (simulation) => {
 module.exports = {
     updateSimulationStatus,
     markGridConsumptionFinished,
-    fetchSimulationStatus,
     fetchSimulation,
     saveSimulation
 };

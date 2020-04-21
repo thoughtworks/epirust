@@ -20,6 +20,7 @@ Object {
             >
               <p
                 class="job-status"
+                data-testid="job-status-1234"
               >
                 In-Progress
               </p>
@@ -53,6 +54,7 @@ Object {
           >
             <p
               class="job-status"
+              data-testid="job-status-1234"
             >
               In-Progress
             </p>

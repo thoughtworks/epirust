@@ -36,7 +36,7 @@ export const Job = ({ simulationId, status, isActive = false }) => {
       <Link to={`/jobs/${simulationId}`} className={'no-link-formatting'}>
         <div className={`simulation-tab ${isActive ? "active shadow" : ""} ${status}`}>
           <div className="card-body card-body-less-padding">
-            <p className="job-status">{statusText[status]}</p>
+            <p data-testid={`job-status-${simulationId}`} className="job-status">{statusText[status]}</p>
             <p className="minor-details">{`Id: `}<code>{simulationId}</code></p>
           </div>
         </div>

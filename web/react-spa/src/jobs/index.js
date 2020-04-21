@@ -23,16 +23,32 @@ import { Job } from "./Job";
 import { JobDetails } from "./JobDetails";
 import { Redirect, useParams } from 'react-router-dom';
 import config from "../config";
+import io from 'socket.io-client'
 
 export const JobsList = () => {
   const { id, view } = useParams();
   const [simulations, updateSimulations] = useState([]);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     fetch(`${config.API_HOST}/simulation/`)
       .then(res => res.json())
       .then(value => updateSimulations(value.reverse()))
   }, []);
+
+  useEffect(() => {
+    if (!socket) {
+      setSocket(io(`${config.API_HOST}/job-status`))
+    }
+    else {
+      socket.on('jobStatus', (data) => {
+        updateSimulations(data.reverse())
+      })
+    }
+    return () => {
+      socket && socket.close()
+    }
+  }, [socket]);
 
   function renderSimulationTabs() {
     return (

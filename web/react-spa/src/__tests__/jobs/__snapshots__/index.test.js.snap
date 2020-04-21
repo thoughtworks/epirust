@@ -1,7 +1,49 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`JobsList should fetch simulations when id and view is not selected 1`] = `
+exports[`should fetch simulation status from API to show status on UI 1`] = `
 <DocumentFragment>
-  Loading
+  <div
+    class="row jobs-list"
+  >
+    <div
+      class="col-2"
+    >
+      <ul
+        class="list-group scrollable"
+      >
+        <li
+          class="list-group-item borderless item-less-padding"
+        >
+          <a
+            class="no-link-formatting"
+            href="/jobs/1234"
+          >
+            <div
+              class="simulation-tab  finished"
+            >
+              <div
+                class="card-body card-body-less-padding"
+              >
+                <p
+                  class="job-status"
+                  data-testid="job-status-1234"
+                >
+                  Finished
+                </p>
+                <p
+                  class="minor-details"
+                >
+                  Id: 
+                  <code>
+                    1234
+                  </code>
+                </p>
+              </div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
 </DocumentFragment>
 `;

@@ -38,7 +38,9 @@ pub struct Grid {
     pub offices: Vec<Area>,
 
     //Occupancy based on home and work locations - updated when travellers arrive/depart
+    #[serde(skip_serializing)]
     pub houses_occupancy: HashMap<Area, i32>,
+    #[serde(skip_serializing)]
     pub offices_occupancy: HashMap<Area, i32>,
 }
 
@@ -226,6 +228,10 @@ impl Grid {
 mod tests {
     use super::*;
     use crate::geography::define_geography;
+    use serde_json::map::Keys;
+    use ndarray::Array;
+    use futures::sink::Buffer;
+    use serde_json::Value;
 
     #[test]
     fn should_generate_population() {
@@ -263,5 +269,23 @@ mod tests {
 
         assert_eq!(grid.hospital_area.start_offset, Point::new(70, 0));
         assert_eq!(grid.hospital_area.end_offset, Point::new(120, 120));
+    }
+
+    #[test]
+    fn grid_should_be_serializable_and_should_not_serialize_skipped_keys() {
+        let grid: Grid = define_geography(75);
+
+        let grid_message = serde_json::to_value(&grid).unwrap();
+
+        let message = grid_message.as_object().unwrap();
+        let keys = message.keys();
+        assert_eq!(keys.len(), 7);
+        assert!(message.contains_key("grid_size"));
+        assert!(message.contains_key("housing_area"));
+        assert!(message.contains_key("work_area"));
+        assert!(message.contains_key("transport_area"));
+        assert!(message.contains_key("hospital_area"));
+        assert!(message.contains_key("houses"));
+        assert!(message.contains_key("offices"));
     }
 }

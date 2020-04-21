@@ -109,50 +109,27 @@ exports[`Job Details should not render time series mean comparison tab when a jo
       class="job-details-content"
     >
       <div
-        class="graph-wrap"
+        class="multi-spinners"
+        data-testid="loader"
+        id="loader"
       >
         <div
-          class="graph-actions"
-        >
-          <p
-            class="action"
-          >
-            Zoom: 
-            <code
-              class="control"
-            >
-              click-drag
-            </code>
-          </p>
-          <p
-            class="action"
-          >
-            Pan: 
-            <code
-              class="control"
-            >
-              shift-click-drag
-            </code>
-          </p>
-          <p
-            class="action"
-          >
-            Restore: 
-            <code
-              class="control"
-            >
-              double-click
-            </code>
-          </p>
-          <button
-            class="btn btn-sm btn-secondary"
-          >
-            Export graph data
-          </button>
-        </div>
+          class="spinner-grow text-dark"
+        />
         <div
-          data-testid="visualization"
-          id="vis"
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
         />
       </div>
     </div>
@@ -538,50 +515,27 @@ exports[`Job Details should render time series mean comparison graph tab when a 
       class="job-details-content"
     >
       <div
-        class="graph-wrap"
+        class="multi-spinners"
+        data-testid="loader"
+        id="loader"
       >
         <div
-          class="graph-actions"
-        >
-          <p
-            class="action"
-          >
-            Zoom: 
-            <code
-              class="control"
-            >
-              click-drag
-            </code>
-          </p>
-          <p
-            class="action"
-          >
-            Pan: 
-            <code
-              class="control"
-            >
-              shift-click-drag
-            </code>
-          </p>
-          <p
-            class="action"
-          >
-            Restore: 
-            <code
-              class="control"
-            >
-              double-click
-            </code>
-          </p>
-          <button
-            class="btn btn-sm btn-secondary"
-          >
-            Export graph data
-          </button>
-        </div>
+          class="spinner-grow text-dark"
+        />
         <div
-          data-testid="visualization"
-          id="vis"
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
+        />
+        <div
+          class="spinner-grow text-dark"
         />
       </div>
     </div>

@@ -20,6 +20,7 @@
 import React, { useState, useEffect } from 'react'
 import Graph from './LineGraph';
 import config from "../config";
+import Loader from "../common/Loader"
 
 export function transformTimeSeriesDeviationMessages(message) {
 
@@ -46,9 +47,12 @@ export function transformTimeSeriesDeviationMessages(message) {
 }
 
 export function TimeSeriesDeviation({ simulationId }) {
-    const [data, setData] = useState([])
+    const [data, setData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
+        setIsLoading(true);
+
         fetch(`${config.API_HOST}/simulation/${simulationId}/time-series-deviation`)
             .then(res => res.json())
             .then(hours => hours.map((hour) => transformTimeSeriesDeviationMessages(hour)))
@@ -62,9 +66,20 @@ export function TimeSeriesDeviation({ simulationId }) {
                     "deceased", "deceased_mean"
                 ]
 
-                hours.unshift(labels)
-                setData(hours.join("\n"))
+                setIsLoading(false)
+
+                if (hours.length) {
+                    setData([labels, ...hours])
+                }
             })
     }, [simulationId])
-    return <Graph dataBuffer={data} enableExport={true} errorBars={true} />
+
+    if (isLoading)
+        return <Loader />
+
+    if (!data.length)
+        return "Run multiple simulations for COVID-19"
+
+    const csvFormattedData = data.join("\n");
+    return <Graph dataBuffer={csvFormattedData} enableExport={true} errorBars={true} />
 }

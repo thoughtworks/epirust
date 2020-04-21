@@ -24,6 +24,11 @@ const {fetchCountsInSimulation} = require('../db/services/CountService')
 async function sendCountsData(simulationId, socket, totalConsumedRecords) {
   const cursor = fetchCountsInSimulation(simulationId, totalConsumedRecords)
 
+  if(socket.disconnected){
+    cursor.close();
+    return ;
+  }
+
   let recordsConsumedInThisGo = 0;
   for await(const data of cursor) {
     if(socket.disconnected){

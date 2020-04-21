@@ -25,6 +25,11 @@ const {findSortedById} = require('../db/services/GridService')
 async function sendGridData(simulationId, socket, totalConsumerRecords) {
   const cursor = findSortedById(simulationId, totalConsumerRecords);
 
+  if(socket.disconnected){
+    cursor.close();
+    return;
+  }
+
   let countOfMessagesConsumed = 0;
   for await (const data of cursor) {
     if(socket.disconnected) {

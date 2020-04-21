@@ -22,10 +22,11 @@ const {SimulationCountsConsumer} = require("./services/SimulationCountsConsumer"
 const {SimulationGridConsumer} = require("./services/SimulationGridConsumer");
 const config = require('./config');
 
-mongoose.connect(config.DATABASE_URL, { useNewUrlParser: true });
+mongoose.connect(config.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = global.Promise;
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+mongoose.set('useCreateIndex', true);
 
 
 new SimulationCountsConsumer().start();

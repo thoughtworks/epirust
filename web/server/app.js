@@ -30,7 +30,7 @@ const config = require("./config");
 const app = express();
 
 if (process.env.NODE_ENV !== "test") {
-  mongoose.connect(config.DATABASE_URL, { useNewUrlParser: true });
+  mongoose.connect(config.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
   mongoose.Promise = global.Promise;
   mongoose.set('useCreateIndex', true);
   const db = mongoose.connection;

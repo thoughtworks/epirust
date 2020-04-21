@@ -4,6 +4,7 @@ import { Interventions } from '../grid/constants';
 import Graph from './LineGraph';
 import Loader from '../common/Loader'
 
+export const BUFFER_SIZE_TO_RENDER = 100;
 export default function SocketAwareGraph({ socket, simulationId }) {
     const [dataBuffer, setDataBuffer] = useState([]);
     const [simulationEnded, setSimulationEnded] = useState(false);
@@ -37,7 +38,8 @@ export default function SocketAwareGraph({ socket, simulationId }) {
                     )
                 }
             }
-            if (buff.length === 100 || simulationEndedTemp) {
+
+            if (buff.length === BUFFER_SIZE_TO_RENDER || simulationEndedTemp) {
                 setDataBuffer(buffer => [...buffer, ...buff]);
                 buff = [];
             }

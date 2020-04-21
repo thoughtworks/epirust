@@ -18,8 +18,8 @@
  */
 
 import React from 'react'
-import SocketAwareGraph from '../../time-series/SocketAwareGraph'
-import { render, prettyDOM } from '@testing-library/react'
+import SocketAwareGraph, { BUFFER_SIZE_TO_RENDER } from '../../time-series/SocketAwareGraph'
+import { render } from '@testing-library/react'
 import MockSocket from 'socket.io-mock'
 import Dygraph from 'dygraphs'
 import { act } from 'react-dom/test-utils'
@@ -45,7 +45,6 @@ const hourStatisticsFor100thHour = {
 }
 
 test('should display loader and stop displaying when data arrives', () => {
-    const mockDygraphfn = Dygraph.mockImplementation(() => { })
     let socket = new MockSocket()
     const closeSpy = jest.fn()
     socket.socketClient.close = closeSpy
@@ -57,7 +56,7 @@ test('should display loader and stop displaying when data arrives', () => {
     expect(getByTestId('loader')).toBeInTheDocument()
 
     act(() => {
-        emitNMessages(socket, 100, hourStatistics)
+        emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatistics)
         jest.runAllTimers();
     })
 
@@ -79,7 +78,7 @@ test('should set residue also into data buffer when simulation ended flag is tru
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
 
     act(() => {
-        emitNMessages(socket, 15, hourStatistics)
+        emitNMessages(socket, BUFFER_SIZE_TO_RENDER + 5, hourStatistics)
         jest.runAllTimers();
 
         socket.emit("epidemicStats", { "simulation_ended": true })
@@ -98,8 +97,8 @@ test('should set residue also into data buffer when simulation ended flag is tru
 
     //Creating the graph triggers the useFffect again and updates once again. Hence 2. (1 unnecessary). Fix this!
     expect(updateSpyFn).toHaveBeenCalledTimes(2)
-    expect(updateSpyFn.mock.calls[0][0]).toEqual({ file: getNMessages(10) });
-    expect(updateSpyFn.mock.calls[1][0]).toEqual({ file: getNMessages(15) })
+    expect(updateSpyFn.mock.calls[0][0]).toEqual({ file: getNMessages(BUFFER_SIZE_TO_RENDER) });
+    expect(updateSpyFn.mock.calls[1][0]).toEqual({ file: getNMessages(BUFFER_SIZE_TO_RENDER + 5) })
 })
 
 test("should enable export in graph if simulation has ended", () => {
@@ -109,7 +108,7 @@ test("should enable export in graph if simulation has ended", () => {
     const { container } = render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
 
     act(() => {
-        emitNMessages(socket, 10, hourStatisticsFor100thHour);
+        emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatisticsFor100thHour);
         jest.runAllTimers();
     })
 
@@ -154,7 +153,7 @@ test("should render the annotations for lockdown applied intervention ", () => {
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 100, hourStatistics)
+        emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatistics)
 
         socket.emit("epidemicStats", {
             ...hourStatistics, interventions: [{
@@ -192,7 +191,7 @@ test("should render the annotations for lockdown revoked intervention ", () => {
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 100, hourStatistics)
+        emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatistics)
 
         socket.emit("epidemicStats", {
             ...hourStatistics, interventions: [{
@@ -230,7 +229,7 @@ test("should render the annotations for interventions for BuildNewHospital", () 
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 100, hourStatistics)
+        emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatistics)
         socket.emit("epidemicStats", {
             ...hourStatistics, interventions: [{
                 intervention: "build_new_hospital",
@@ -265,7 +264,7 @@ test("should render the annotations for interventions for Vaccination", () => {
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 100, hourStatisticsFor100thHour)
+        emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatisticsFor100thHour)
         socket.emit("epidemicStats", {
             ...hourStatisticsFor100thHour, interventions: [{
                 intervention: "vaccination",
@@ -301,7 +300,7 @@ test("should render the annotations for interventions and apply height to the ti
     render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
 
     act(() => {
-        emitNMessages(socket, 100, hourStatisticsFor100thHour)
+        emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatisticsFor100thHour)
         socket.emit("epidemicStats", {
             ...hourStatisticsFor100thHour, interventions: [{
                 intervention: "vaccination",

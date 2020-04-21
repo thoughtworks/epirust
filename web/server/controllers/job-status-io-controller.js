@@ -17,20 +17,33 @@
  *
  */
 
-const CountsIoController = require("./controllers/counts-io-controller");
-const GridIoController = require("./controllers/grid-io-controller");
-const JobStatusIoController = require("./controllers/job-status-io-controller");
+const { Simulation } = require("../db/models/Simulation");
 
-module.exports = function setupIO(ioInstance) {
-  ioInstance
-    .of('/counts')
-    .on('connection', CountsIoController.handleRequest);
+async function sendJobsStatus(socket) {
+    const cursor = Simulation
+        .find({})
+        .cursor()
 
-  ioInstance
-    .of('/grid-updates')
-    .on('connection', GridIoController.handleRequest);
+    let jobStatus = []
+    for await (const data of cursor) {
+        if (socket.disconnected)
+            cursor.close()
 
-  ioInstance
-    .of('/job-status')
-    .on('connection', JobStatusIoController.handleRequest)
+        jobStatus.push(data)
+    }
+
+    socket.emit('jobStatus', jobStatus);
+}
+
+async function handleRequest(socket) {
+    const intervalId = setInterval(async() => await sendJobsStatus(socket), 15000)
+
+    socket.on('disconnect', reason => {
+        clearInterval(intervalId)
+        console.log("Disconnect job-status socket:", reason)
+    });
+}
+
+module.exports = {
+    handleRequest
 };

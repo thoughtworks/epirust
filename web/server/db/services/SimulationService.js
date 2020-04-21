@@ -43,9 +43,8 @@ const fetchSimulationStatus = (simulationId) => {
 };
 
 const fetchSimulation = (simulationId, projectionFields = []) => {
-    const projection = {}
-    projectionFields.forEach(pf => projection[pf] = 1)
-    return Simulation.findOne({simulation_id: simulationId}, projection).exec()
+  const projection = projectionFields.reduce((acc, cur) => {acc[cur] = 1; return acc;}, {});
+  return Simulation.findOne({simulation_id: simulationId}, projection).exec()
         .then((doc) => {
             if(!doc) {
                 throw Error(`Simulation with id: ${simulationId} not found`)

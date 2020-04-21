@@ -202,31 +202,48 @@ impl Citizen {
                 new_cell = self.quarantine_all(cell, &grid.hospital_area, map, counts, disease);
             }
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {
-                self.current_area = grid.housing_area;
+                self.current_area = self.home_location;
             }
             constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
                 if self.working && self.uses_public_transport{
                     new_cell = self.goto_area(grid.transport_area, map, cell, rng);
                     self.current_area = grid.transport_area;
-                    self.update_infection_dynamics(cell, &map, counts, rng, &disease);
+                } else {
+                    new_cell = self.move_agent_from(map, cell, rng);
                 }
+                self.update_infection_dynamics(new_cell, &map, counts, rng, &disease);
             }
             constants::ROUTINE_WORK_TIME => {
-                new_cell = self.goto_area(self.work_location, map, cell, rng);
-                self.current_area = grid.work_area;
-                self.update_infection_dynamics(cell, &map, counts, rng, &disease);
+                if self.working {
+                    new_cell = self.goto_area(self.work_location, map, cell, rng);
+                    self.current_area = self.work_location;
+                } else if !self.working {
+                    new_cell = self.goto_area(grid.housing_area, map, cell, rng);
+                    self.current_area = grid.housing_area;
+                }
+                self.update_infection_dynamics(new_cell, &map, counts, rng, &disease);
             }
+            constants::NON_WORKING_TRAVEL_END_TIME => {
+                if self.working {
+                    new_cell = self.move_agent_from(map, cell, rng);
+                } else if !self.working {
+                    new_cell = self.goto_area(self.home_location, map, cell, rng);
+                    self.current_area = self.home_location;
+                }
+                self.update_infection_dynamics(new_cell, &map, counts, rng, &disease);
+            }
+
             constants::ROUTINE_WORK_END_TIME => {
                 new_cell = self.goto_area(self.home_location, map, cell, rng);
-                self.current_area = grid.housing_area;
-                self.update_infection_dynamics(cell, &map, counts, rng, &disease);
+                self.current_area = self.home_location;
+                self.update_infection_dynamics(new_cell, &map, counts, rng, &disease);
             }
             constants::ROUTINE_END_TIME => {
                 new_cell = self.deceased(map, cell, counts, rng, disease)
             }
             _ => {
                 new_cell = self.move_agent_from(map, cell, rng);
-                self.update_infection_dynamics(cell, &map, counts, rng, &disease);
+                self.update_infection_dynamics(new_cell, &map, counts, rng, &disease);
             }
         }
         new_cell
@@ -340,7 +357,12 @@ impl Citizen {
     }
 
     fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
-        let new_cell = self.current_area.get_neighbors_of(cell)
+        let mut current_location = cell;
+        if !self.current_area.contains(&cell) {
+            current_location = self.current_area.get_random_point(rng);
+        }
+
+        let new_cell = self.current_area.get_neighbors_of(current_location)
             .filter(|p| map.is_point_in_grid(p))
             .filter(|p| map.is_cell_vacant(p))
             .choose(rng.get())

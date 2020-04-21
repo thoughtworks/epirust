@@ -248,6 +248,8 @@ exports[`Grid Page should render GridPage component with Loading 1`] = `
 <DocumentFragment>
   <div
     class="multi-spinners"
+    data-testid="loader"
+    id="loader"
   >
     <div
       class="spinner-grow text-dark"

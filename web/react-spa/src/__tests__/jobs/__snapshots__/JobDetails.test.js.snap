@@ -224,6 +224,8 @@ exports[`Job Details should render grid if grid is enabled in config 1`] = `
     >
       <div
         class="multi-spinners"
+        data-testid="loader"
+        id="loader"
       >
         <div
           class="spinner-grow text-dark"

@@ -17,16 +17,17 @@
  *
  */
 
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 
 import LandmarksLayer from './LandmarksLayer';
 import LinesLayer from './LinesLayer';
 import AreasLayer from './AreasLayer';
 import AgentsLayer from './AgentsLayer';
-import {AreaColors} from './constants';
-import {useParams} from "react-router-dom"
+import { AreaColors } from './constants';
+import { useParams } from "react-router-dom"
 import io from 'socket.io-client'
 import config from "../config";
+import Loader from '../common/Loader';
 
 
 export const GridContext = React.createContext(null);
@@ -110,18 +111,10 @@ export default function GridPage() {
     }, [socket]);
 
     if (!gridContextData)
-        return (<div className="multi-spinners">
-            <div className="spinner-grow text-dark"/>
-            <div className="spinner-grow text-dark"/>
-            <div className="spinner-grow text-dark"/>
-            <div className="spinner-grow text-dark"/>
-            <div className="spinner-grow text-dark"/>
-            <div className="spinner-grow text-dark"/>
-        </div>);
+        return <Loader />;
 
     return (
         <div className="grid-wrap">
-
             <GridContext.Provider value={gridContextData}>
                 <div style={{ position: "relative" }}>
                     <AreasLayer areaDimensions={areaDimensions} />

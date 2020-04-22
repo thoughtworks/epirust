@@ -27,6 +27,10 @@ afterEach(() => {
 });
 
 test('should render loader while fetching data of status', async function () {
+  const mockResponse = Promise.resolve([{ simulation_id: 1234, status: "finished" }]);
+  const mockPromise = { json: jest.fn().mockReturnValueOnce(mockResponse) };
+  jest.spyOn(global, 'fetch').mockResolvedValue(mockPromise)
+
   const { container } = render(
     <MemoryRouter>
       <JobsList />
@@ -34,6 +38,13 @@ test('should render loader while fetching data of status', async function () {
   );
 
   expect(container.querySelector('#loader')).toBeInTheDocument()
+
+  await act(async () => {
+    await flushPromises()
+  })
+
+  expect(container.querySelector('#loader')).not.toBeInTheDocument();
+
 });
 
 test('should fetch simulation status from API to show status on UI', async function () {

@@ -20,20 +20,10 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const SimulationStatus = {
-  RUNNING: "running",
-  FAILED: "failed",
-  FINISHED: "finished",
-  INQUEUE: 'in-queue'
-};
-Object.freeze(SimulationStatus);
-
-const simulationSchema = new Schema({
-  job_id: {type: mongoose.ObjectId, required: true},
-  status: String,
-  grid_consumption_finished: Boolean
+const jobSchema = new Schema({
+  config: Object
 });
 
 
-const Simulation = mongoose.model('Simulation', simulationSchema);
-module.exports = {Simulation, SimulationStatus};
+const Job = mongoose.model('Jobs', jobSchema);
+module.exports = {Job};

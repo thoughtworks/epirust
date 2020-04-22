@@ -36,7 +36,7 @@ const citizenStatesSchema = new Schema({
 }, {_id: false})
 
 const citizenStateSchema = new Schema({
-  simulation_id: {type: Number, required: true},
+  simulation_id: {type: mongoose.ObjectId, required: true},
 
   hr: {type: Number},
   citizen_states: [citizenStatesSchema]

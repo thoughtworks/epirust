@@ -26,7 +26,7 @@ const interventionSchema = new Schema({
 }, {_id: false});
 
 const countSchema = new Schema({
-  simulation_id: {type: Number, required: true},
+  simulation_id: {type: mongoose.ObjectId, required: true},
   hour: Number,
   susceptible: Number,
   infected: Number,

@@ -57,8 +57,18 @@ export default function LandmarksLayer({ landmarksDimensions }) {
                 const startX = element.start_offset.x;
                 const startY = element.start_offset.y;
 
-                const width = element.end_offset.x - startX
-                const height = element.end_offset.y - startY
+                const width = 1 + element.end_offset.x - startX
+                const height = 1 + element.end_offset.y - startY
+
+                /**
+                 *   ____________
+                 *  | 0,0 | 0, 1|
+                 *  |_____|_____|
+                 *  | 0,0 | 1, 1|
+                 *  |_____|_____|
+                 * e.g. for a landmark, start_offset {x: 0, y: 0} & end_offset {x: 1, y: 1}
+                 * Hence, width and height of the landmark is 2 cells.
+                 */
 
                 landmarksCanvasContext.strokeRect((startX * cellDimension) + lineWidth / 2, (startY * cellDimension) + lineWidth / 2, width * cellDimension, height * cellDimension);
             });

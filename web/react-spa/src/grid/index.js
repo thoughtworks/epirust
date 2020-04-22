@@ -118,9 +118,9 @@ export default function GridPage() {
             <GridContext.Provider value={gridContextData}>
                 <div style={{ position: "relative" }}>
                     <AreasLayer areaDimensions={areaDimensions} />
-                    <LinesLayer />
+                    {/* <LinesLayer /> */}
                     <LandmarksLayer landmarksDimensions={landmarksDimensions} />
-                    {agentPositions && <AgentsLayer agentPositions={agentPositions} simulationEnded={socketDataExhausted} />}
+                    {/* {agentPositions && <AgentsLayer agentPositions={agentPositions} simulationEnded={socketDataExhausted} />} */}
                 </div >
             </GridContext.Provider>
         </div>

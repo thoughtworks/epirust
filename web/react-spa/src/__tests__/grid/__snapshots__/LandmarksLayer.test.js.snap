@@ -32,8 +32,8 @@ Array [
   },
   Object {
     "props": Object {
-      "height": 4,
-      "width": 4,
+      "height": 6,
+      "width": 6,
       "x": 0.5,
       "y": 0.5,
     },
@@ -49,8 +49,8 @@ Array [
   },
   Object {
     "props": Object {
-      "height": 4,
-      "width": 4,
+      "height": 6,
+      "width": 6,
       "x": 4.5,
       "y": 0.5,
     },
@@ -80,8 +80,8 @@ Array [
   },
   Object {
     "props": Object {
-      "height": 2,
-      "width": 2,
+      "height": 4,
+      "width": 4,
       "x": 10.5,
       "y": 0.5,
     },
@@ -97,8 +97,8 @@ Array [
   },
   Object {
     "props": Object {
-      "height": 2,
-      "width": 2,
+      "height": 4,
+      "width": 4,
       "x": 12.5,
       "y": 0.5,
     },

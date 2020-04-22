@@ -23,6 +23,8 @@ const {SimulationStatus} = require("../db/models/Simulation");
 const SimulationService = require('../db/services/SimulationService');
 const CountService = require('../db/services/CountService');
 
+const {toObjectId} = require('../common/util')
+
 class SimulationCountsConsumer {
   constructor() {
     this.kafkaConsumer =
@@ -33,7 +35,7 @@ class SimulationCountsConsumer {
     for await (const data of this.kafkaConsumer.consumerStream) {
       const parsedMessage = JSON.parse(data.value);
 
-      let simulationId = parseInt(data.key.toString());
+      const simulationId = toObjectId(data.key.toString());
 
       const simulationEnded = "simulation_ended" in parsedMessage;
       const isInterventionMessage = "intervention" in parsedMessage;

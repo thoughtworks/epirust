@@ -22,6 +22,7 @@ const KafkaServices = require('../services/kafka');
 const config = require("../config");
 const SimulationService = require('../db/services/SimulationService')
 const GridService = require('../db/services/GridService')
+const {toObjectId} = require('../common/util')
 
 
 class SimulationGridConsumer {
@@ -36,7 +37,7 @@ class SimulationGridConsumer {
   async start() {
     for await (const data of this.kafkaConsumer.consumerStream) {
       const parsedMessage = JSON.parse(data.value);
-      const simulationId = parseInt(data.key.toString());
+      const simulationId = toObjectId(data.key.toString());
       parsedMessage["simulation_id"] = simulationId;
 
       if('simulation_ended' in parsedMessage) {

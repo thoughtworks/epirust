@@ -25,6 +25,8 @@ const router = express.Router();
 const KafkaServices = require('../services/kafka');
 const { Simulation, SimulationStatus } = require("../db/models/Simulation");
 const {updateSimulationStatus, saveSimulation} = require('../db/services/SimulationService')
+const {range} = require('../common/util');
+const JobService = require('../db/services/JobService');
 
 const configMatch = {
   "config.population.Auto.number_of_agents": 10000,
@@ -65,12 +67,12 @@ router.post('/init', (req, res, next) => {
     percentage_asymptomatic_population,
     percentage_severe_infected_population,
     exposed_duration,
-    pre_symptomatic_duration,
+    pre_symptomatic_duration
   } = message;
 
-  const simulationId = Date.now();
+  const number_of_simulations = 1;
+
   const simulation_config = {
-    "sim_id": `${simulationId}`,
     "enable_citizen_state_messages": enable_citizen_state_messages,
     "population": {
       "Auto": {
@@ -95,25 +97,31 @@ router.post('/init', (req, res, next) => {
     "hours": simulation_hrs,
     "interventions": modelInterventions(message)
   };
-  const { sim_id, ...configToStore } = simulation_config;
-  const simulation = {
-    simulation_id: simulationId,
-    status: SimulationStatus.INQUEUE,
-    config: configToStore
-  };
 
-  saveSimulation(simulation)
-    .then(() => {
-      const kafkaProducer = new KafkaServices.KafkaProducerService();
-      return kafkaProducer.send('simulation_requests', simulation_config).catch(err => {
-        console.error("Error occurred while sending kafka message", err);
-        return updateSimulationStatus(simulationId, SimulationStatus.FAILED)
-            .then(() => {throw new Error(err.message)});
-      })
+  const kafkaProducer = new KafkaServices.KafkaProducerService();
+  let jobId;
+
+  JobService.saveJob(simulation_config)
+    .then(job => {
+      jobId = job._id;
+      const simulation = {status: SimulationStatus.INQUEUE, job_id: job._id};
+      return Promise.all(range(number_of_simulations)
+        .map(() => saveSimulation(simulation)))
+    })
+    .then((simulations) => {
+      return Promise.all(simulations.map(s => {
+        return kafkaProducer
+          .send('simulation_requests', {...simulation_config, sim_id: s._id.toString()})
+          .catch(err => {
+            console.error("Error occurred while sending kafka message", err);
+            return updateSimulationStatus(s._id, SimulationStatus.FAILED)
+              .then(() => {throw new Error(err.message)});
+        })
+      }))
     })
     .then(() => {
       res.status(201);
-      res.send({ status: "Simulation started", simulationId });
+      res.send({ status: "Job started", jobId });
     })
     .catch((err) => {
       res.status(500);

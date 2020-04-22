@@ -20,77 +20,54 @@
 const dbHandler = require('../db-handler');
 const SimulationService = require('../../../db/services/SimulationService');
 const {Simulation, SimulationStatus}  = require('../../../db/models/Simulation');
+const mongoose = require('mongoose');
 
 describe('Simulation Service', function () {
-  beforeAll(async () => await dbHandler.connect());
-  afterEach(async () => await dbHandler.clearDatabase());
-  afterAll(async () => await dbHandler.closeDatabase());
-
   describe('updateSimulationStatus', function () {
     it('should set simulation status to ended', async function () {
-      const testSimulationId = 1234;
-      await new Simulation({simulation_id: testSimulationId, status: SimulationStatus.RUNNING}).save();
+      const {_id: simulationId} = await createNewSimulation(SimulationStatus.RUNNING)
 
-      await SimulationService.updateSimulationStatus(testSimulationId, SimulationStatus.FAILED);
+      await SimulationService.updateSimulationStatus(simulationId, SimulationStatus.FAILED);
 
-      const s = await Simulation.findOne({simulation_id: testSimulationId}).exec();
+      const s = await Simulation.findOne({_id: simulationId}).exec();
       expect(s.toObject().status).toBe(SimulationStatus.FAILED);
     });
   });
 
-  describe('markSimulationEnd', function () {
-    it('should set simulation status to ended', async function () {
-      const testSimulationId = 1234;
-      await new Simulation({simulation_id: testSimulationId, status: SimulationStatus.RUNNING}).save();
+  describe('markGridConsumptionFinished', function () {
+    it('should set grid consumption finished to true', async function () {
+      const {_id: simulationId} = await createNewSimulation(SimulationStatus.RUNNING)
 
-      await SimulationService.markGridConsumptionFinished(testSimulationId);
+      await SimulationService.markGridConsumptionFinished(simulationId);
 
-      const s = await Simulation.findOne({simulation_id: testSimulationId}).exec();
+      const s = await Simulation.findOne({_id: simulationId}).exec();
       expect(s.grid_consumption_finished).toEqual(true);
     });
   });
 
   describe('fetchSimulation', function () {
     it('should return a simulation with projection fields specified', async function () {
-      const simulationId = randomId();
-      await (new Simulation({
-        simulation_id: simulationId,
-        status: SimulationStatus.RUNNING,
-        config: {
-          dummyField1: 'dummyValue1',
-          dummyField2: 'dummyValue2'
-        }
-      })).save();
+      const {_id: simulationId} = await createNewSimulation(SimulationStatus.RUNNING)
 
-      const receivedSimulation = await SimulationService.fetchSimulation(simulationId, ['simulation_id', 'status', 'config.dummyField1']);
+      const receivedSimulation = await SimulationService.fetchSimulation(simulationId, ['_id', 'status']);
 
       expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
-      expect(receivedSimulation.simulation_id).toBe(simulationId);
-      expect(receivedSimulation.config.dummyField1).toBe('dummyValue1');
-      expect(receivedSimulation.config).not.toHaveProperty('dummyField2');
+      expect(receivedSimulation._id).toEqual(simulationId);
+      expect(receivedSimulation).not.toHaveProperty('job_id');
     });
 
-    it('should return a simulation with all fields if not specified specified', async function () {
-      const simulationId = randomId();
-      await (new Simulation({
-        simulation_id: simulationId,
-        status: SimulationStatus.RUNNING,
-        config: {
-          dummyField1: 'dummyValue1',
-          dummyField2: 'dummyValue2'
-        }
-      })).save();
+    it('should return a simulation with all fields if not specified projection fields', async function () {
+      const {_id: simulationId, job_id} = await createNewSimulation(SimulationStatus.RUNNING)
 
       const receivedSimulation = await SimulationService.fetchSimulation(simulationId);
 
       expect(receivedSimulation.status).toBe(SimulationStatus.RUNNING);
-      expect(receivedSimulation.simulation_id).toBe(simulationId);
-      expect(receivedSimulation.config.dummyField1).toBe('dummyValue1');
-      expect(receivedSimulation.config.dummyField2).toBe('dummyValue2');
+      expect(receivedSimulation._id).toEqual(simulationId);
+      expect(receivedSimulation.job_id).toEqual(job_id)
     });
 
     it('should throw error with error message if no simulation exists',  function () {
-      const simulationId = randomId();
+      const simulationId = mockObjectId();
       const expectedError = `Simulation with id: ${simulationId} not found`;
 
       expect(SimulationService.fetchSimulation(simulationId)).rejects.toEqual(new Error(expectedError));
@@ -99,16 +76,8 @@ describe('Simulation Service', function () {
 
   describe('saveSimulation', function () {
     it('should save simulation in database', async function () {
-      const simulationId = randomId();
-
-      const simulation = {
-        simulation_id: simulationId,
-        status: SimulationStatus.RUNNING,
-        config: {
-          dummyField1: 'dummyValue1',
-          dummyField2: 'dummyValue2'
-        }
-      };
+      const jobId = mockObjectId();
+      const simulation = {status: SimulationStatus.RUNNING, job_id: jobId};
 
       await SimulationService.saveSimulation(simulation);
 
@@ -117,5 +86,14 @@ describe('Simulation Service', function () {
     });
   });
 
-  const randomId = () => Math.random()
+  const mockObjectId = () => mongoose.Types.ObjectId();
+
+  const createNewSimulation = (simulationStatus) => {
+    const jobId = mockObjectId();
+    return new Simulation({job_id: jobId, status: simulationStatus}).save();
+  }
+
+  beforeAll(async () => await dbHandler.connect());
+  afterEach(async () => await dbHandler.clearDatabase());
+  afterAll(async () => await dbHandler.closeDatabase());
 });

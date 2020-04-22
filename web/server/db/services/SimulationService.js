@@ -20,26 +20,26 @@
 const {Simulation} = require("../models/Simulation");
 
 const updateSimulationStatus = (simulationId, status) => {
-  const query = {simulation_id: simulationId};
+  const query = {_id: simulationId};
   const update = {status};
   return Simulation.updateOne(query, update, {upsert: true}).exec()
 };
 
 const markGridConsumptionFinished = (simulationId) => {
-  const query = {simulation_id: simulationId};
-  const update = {simulation_id: simulationId, grid_consumption_finished: true};
+  const query = {_id: simulationId};
+  const update = {grid_consumption_finished: true};
   const simulationUpdate = Simulation.updateOne(query, update, {upsert: true});
   return simulationUpdate.exec()
 };
 
 const fetchSimulation = (simulationId, projectionFields = []) => {
   const projection = projectionFields.reduce((acc, cur) => {acc[cur] = 1; return acc;}, {});
-  return Simulation.findOne({simulation_id: simulationId}, projection).exec()
+  return Simulation.findOne({_id: simulationId}, projection).exec()
         .then((doc) => {
             if(!doc) {
                 throw Error(`Simulation with id: ${simulationId} not found`)
             }
-            return doc
+            return doc.toObject()
         })
 };
 

@@ -19,6 +19,7 @@
 const dbHandler = require("../db-handler")
 const GridService = require("../../../db/services/GridService")
 const {Grid, CitizenState} = require("../../../db/models/Grid")
+const {mockObjectId} = require('../../helpers');
 
 describe('Grid Service', function () {
     beforeAll(async () => await dbHandler.connect());
@@ -75,7 +76,7 @@ describe('Grid Service', function () {
 
     describe('saveCitizenState', function () {
         it('should save a new citizen state if it does not exist in db', async function () {
-            const testSimulationId = 123;
+            const testSimulationId = mockObjectId();
             const citizenStateToCreate = {
                 simulation_id: testSimulationId,
                 hr: 2,
@@ -97,7 +98,7 @@ describe('Grid Service', function () {
         });
 
         it('should update citizen state if it already exist in db', async function () {
-            const testSimulationId = 123;
+            const testSimulationId = mockObjectId();
             await new CitizenState({simulation_id: testSimulationId, hr: 2}).save()
 
             const citizenStateToCreate = {
@@ -115,7 +116,7 @@ describe('Grid Service', function () {
             await GridService.saveCitizenState({...citizenStateToCreate})
 
             const citizenStateInDb = (await CitizenState.findOne({}, {_id: 0, __v:0}).exec()).toObject();
-            const numberOfCitizenStateInDb = await CitizenState.count().exec();
+            const numberOfCitizenStateInDb = await CitizenState.countDocuments().exec();
 
             expect(citizenStateInDb).toEqual(citizenStateToCreate)
             expect(numberOfCitizenStateInDb).toEqual(1)

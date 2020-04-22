@@ -22,12 +22,14 @@ const supertest = require('supertest');
 const request = supertest(app);
 
 jest.mock('../../services/kafka');
-jest.mock("../../services/kafka");
 jest.mock("../../db/services/SimulationService");
+jest.mock("../../db/services/JobService");
 
 const KafkaServices = require("../../services/kafka");
 
 const { updateSimulationStatus, saveSimulation } = require('../../db/services/SimulationService');
+const { saveJob } = require('../../db/services/JobService');
+const {mockObjectId} = require('../helpers');
 
 describe('simulation controller', () => {
 
@@ -53,11 +55,9 @@ describe('simulation controller', () => {
         "percentage_asymptomatic_population": 0.3,
         "percentage_severe_infected_population": 0.3,
         "exposed_duration": 48,
-        "pre_symptomatic_duration": 0
+        "pre_symptomatic_duration": 0,
+        "number_of_simulations": 2
     };
-
-    let kafkaService;
-
     afterAll(async () => {
         await app.close()
     });
@@ -66,68 +66,99 @@ describe('simulation controller', () => {
         jest.clearAllMocks()
     });
 
+    describe('/init', function () {
+        it('should create a job with id and config', async () => {
+            const mockKafkaSend = jest.fn().mockReturnValue(Promise.resolve());
+            KafkaServices.KafkaProducerService.mockReturnValue({ send: mockKafkaSend });
 
-    it('should insert simulation in db', async () => {
-        saveSimulation.mockResolvedValue();
-        const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
-        KafkaServices.KafkaProducerService.mockReturnValueOnce({ send: mockKafkaSend });
+            saveSimulation.mockResolvedValue({_id: mockObjectId()});
 
-        const response = await request
+            const jobId = mockObjectId();
+            saveJob.mockResolvedValue({_id: jobId});
+
+            await request
+              .post('/simulation/init')
+              .send({ ...postData, number_of_simulations: 1 });
+
+            expect(saveJob).toHaveBeenCalledTimes(1);
+            expect(saveJob.mock.calls[0][0]).toMatchSnapshot()
+        })
+
+        it('should create two simulations on successful job creation', async () => {
+            const mockKafkaSend = jest.fn().mockReturnValue(Promise.resolve());
+            KafkaServices.KafkaProducerService.mockReturnValue({ send: mockKafkaSend });
+
+            const mockSimulationSave = [{_id: mockObjectId()}, {_id: mockObjectId()}]
+            saveSimulation.mockImplementation(() => Promise.resolve(mockSimulationSave.shift()));
+
+            const jobId = mockObjectId();
+            saveJob.mockResolvedValue({_id: jobId});
+
+            const response = await request
+              .post('/simulation/init')
+              .send({ ...postData });
+
+            expect(saveSimulation).toHaveBeenCalledTimes(2);
+            expect(saveSimulation).toHaveBeenNthCalledWith(1, {status: 'in-queue', job_id: jobId})
+            expect(saveSimulation).toHaveBeenNthCalledWith(2, {status: 'in-queue', job_id: jobId})
+            expect(response.status).toBe(201);
+            expect(JSON.parse(response.text).jobId).toEqual(jobId.toString())
+        });
+
+        it('should update simulation as `failed`, when publishing message on kafka fails', async () => {
+          const mockSend = jest.fn()
+            .mockResolvedValueOnce()
+            .mockRejectedValueOnce(new Error("because we want to"));
+
+          KafkaServices.KafkaProducerService
+            .mockReturnValueOnce({send: mockSend})
+
+          const simId1 = mockObjectId();
+          const simId2 = mockObjectId();
+          saveSimulation
+            .mockResolvedValueOnce({_id: simId1})
+            .mockResolvedValueOnce({_id: simId2});
+
+          const jobId = mockObjectId();
+          saveJob.mockResolvedValue({_id: jobId});
+
+          const response = await request
             .post('/simulation/init')
-            .send({ ...postData });
+            .send({...postData});
 
-        const simulationDocument = saveSimulation.mock.calls[0][0];
-        expect(saveSimulation).toHaveBeenCalledTimes(1);
-        expect(simulationDocument.simulation_id).toBeTruthy();
-        expect(simulationDocument.config).toMatchSnapshot();
-        expect(simulationDocument.status).toEqual('in-queue');
-        expect(response.status).toBe(201);
-        expect(JSON.parse(response.text)).toHaveProperty('simulationId')
-    });
+          expect(updateSimulationStatus).toHaveBeenCalledTimes(1);
+          expect(updateSimulationStatus).toHaveBeenCalledWith(simId2, 'failed')
+          expect(response.status).toBe(500);
+        });
 
-    it('should update simulation has failed when sending message on kafka has failed', async () => {
-        saveSimulation.mockResolvedValue();
-        const mockFailingSend = jest.fn().mockRejectedValue(new Error("because we want to"));
-        KafkaServices.KafkaProducerService.mockReturnValueOnce({ send: mockFailingSend });
+        it('should write simulation start request on kafka topic after simulation db insert', async () => {
+          const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
+          KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
 
-        const response = await request
+          const simId = mockObjectId();
+          saveSimulation
+            .mockResolvedValueOnce({_id: simId})
+
+          const jobId = mockObjectId();
+          saveJob.mockResolvedValue({_id: jobId});
+
+          const response = await request
             .post('/simulation/init')
-            .send({ ...postData });
+            .send({...postData, number_of_simulations: 1});
 
-        const simulationDocument = saveSimulation.mock.calls[0][0];
-        expect(saveSimulation).toHaveBeenCalledTimes(1);
-        expect(simulationDocument.simulation_id).toBeTruthy();
-        expect(simulationDocument.config).toMatchSnapshot();
-        expect(simulationDocument.status).toEqual('in-queue');
-        expect(updateSimulationStatus).toHaveBeenCalledTimes(1);
-        expect(updateSimulationStatus.mock.calls[0][1]).toEqual("failed");
-        expect(typeof updateSimulationStatus.mock.calls[0][0]).toEqual('number');
-        expect(response.status).toBe(500);
-    });
-
-    it('should write simulation start request on kafka topic after simulation db insert', async done => {
-        kafkaService = require('../../services/kafka');
-        saveSimulation.mockResolvedValue();
-        const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
-        kafkaService.KafkaProducerService.mockReturnValueOnce({ send: mockKafkaSend });
-
-        const response = await request
-            .post('/simulation/init')
-            .send({ ...postData });
-
-        const kafkaPayload = {
+          const kafkaPayload = {
             enable_citizen_state_messages: false,
             population:
-            {
+              {
                 Auto:
-                {
+                  {
                     number_of_agents: 10000,
                     public_transport_percentage: 0.2,
                     working_percentage: 0.7
-                }
-            },
+                  }
+              },
             disease:
-            {
+              {
                 regular_transmission_start_day: 10,
                 high_transmission_start_day: 16,
                 last_day: 22,
@@ -138,68 +169,70 @@ describe('simulation controller', () => {
                 percentage_severe_infected_population: 0.3,
                 exposed_duration: 48,
                 pre_symptomatic_duration: 0
-            },
+              },
             grid_size: 250,
             hours: 10000,
             interventions:
-                [{
-                    Vaccinate: {
-                        at_hour: 5000,
-                        percent: 0.2
-                    },
+              [{
+                Vaccinate: {
+                  at_hour: 5000,
+                  percent: 0.2
+                },
+              },
+                {
+                  Lockdown: {
+                    at_number_of_infections: 100,
+                    essential_workers_population: 0.1,
+                    lock_down_period: 21
+                  }
                 },
                 {
-                    Lockdown: {
-                        at_number_of_infections: 100,
-                        essential_workers_population: 0.1,
-                        lock_down_period: 21
-                    }
-                },
-                {
-                    BuildNewHospital: {
-                        spread_rate_threshold: 100
-                    }
+                  BuildNewHospital: {
+                    spread_rate_threshold: 100
+                  }
                 }]
-        }
+          }
 
-        expect(kafkaService.KafkaProducerService).toHaveBeenCalledTimes(1);
+          expect(KafkaServices.KafkaProducerService).toHaveBeenCalledTimes(1);
 
-        expect(mockKafkaSend).toHaveBeenCalledTimes(1);
-        expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
-        const payload = mockKafkaSend.mock.calls[0][1];
-        delete payload["sim_id"]; //it is a timestamp, cannot test
-        expect(payload).toEqual(kafkaPayload);
+          expect(mockKafkaSend).toHaveBeenCalledTimes(1);
+          expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
+          const payload = mockKafkaSend.mock.calls[0][1];
+          expect(payload).toEqual({...kafkaPayload, sim_id: simId.toString()});
 
-        expect(response.status).toBe(201);
-        done();
-    });
+          expect(response.status).toBe(201);
+        });
 
-    it('should not put vaccination intervention in kafka topic if params not available in /init POST request', async done => {
-        kafkaService = require('../../services/kafka');
-        saveSimulation.mockResolvedValue();
-        const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
-        kafkaService.KafkaProducerService.mockReturnValueOnce({ send: mockKafkaSend });
+        it('should not put vaccination intervention in kafka topic if params not available in /init POST request', async () => {
+          const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
+          KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
 
+          const simId1 = mockObjectId();
+          saveSimulation
+            .mockResolvedValueOnce({_id: simId1})
 
-        const { vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention } = { ...postData };
+          const jobId = mockObjectId();
+          saveJob.mockResolvedValue({_id: jobId});
 
-        const response = await request
+          const {vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention} = {...postData};
+
+          const response = await request
             .post('/simulation/init')
-            .send(postDataWithoutVaccinationIntervention);
+            .send({...postDataWithoutVaccinationIntervention, number_of_simulations: 1});
 
-        const kafkaPayload = {
+          const kafkaPayload = {
             enable_citizen_state_messages: false,
             population:
-            {
+              {
                 Auto:
-                {
+                  {
                     number_of_agents: 10000,
                     public_transport_percentage: 0.2,
                     working_percentage: 0.7
-                }
-            },
+                  }
+              },
             disease:
-            {
+              {
                 regular_transmission_start_day: 10,
                 high_transmission_start_day: 16,
                 last_day: 22,
@@ -210,31 +243,31 @@ describe('simulation controller', () => {
                 percentage_severe_infected_population: 0.3,
                 exposed_duration: 48,
                 pre_symptomatic_duration: 0
-            },
+              },
             grid_size: 250,
             hours: 10000,
             interventions:
-                [{
-                    Lockdown: {
-                        at_number_of_infections: 100,
-                        essential_workers_population: 0.1,
-                        lock_down_period: 21
-                    }
-                },
+              [{
+                Lockdown: {
+                  at_number_of_infections: 100,
+                  essential_workers_population: 0.1,
+                  lock_down_period: 21
+                }
+              },
                 {
-                    BuildNewHospital: {
-                        spread_rate_threshold: 100
-                    }
+                  BuildNewHospital: {
+                    spread_rate_threshold: 100
+                  }
                 }]
-        };
+          };
 
-        expect(kafkaService.KafkaProducerService).toHaveBeenCalledTimes(1);
-        expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
-        const payload = mockKafkaSend.mock.calls[0][1];
-        delete payload["sim_id"]; //it is a timestamp, cannot test
-        expect(payload).toEqual(kafkaPayload);
+          expect(KafkaServices.KafkaProducerService).toHaveBeenCalledTimes(1);
+          expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
+          const payload = mockKafkaSend.mock.calls[0][1];
+          delete payload["sim_id"]; //it is a timestamp, cannot test
+          expect(payload).toEqual(kafkaPayload);
 
-        expect(response.status).toBe(201);
-        done();
+          expect(response.status).toBe(201);
+        });
     });
 });

@@ -24,6 +24,7 @@ jest.mock("../../db/services/GridService");
 const {KafkaGroupConsumer} = require('../../services/kafka');
 const SimulationService = require('../../db/services/SimulationService');
 const GridService = require('../../db/services/GridService');
+const {mockObjectId} = require('../helpers');
 
 describe('Simulation Grid Consumer', () => {
     beforeEach(() => {
@@ -39,33 +40,37 @@ describe('Simulation Grid Consumer', () => {
     });
 
     it('should store simulation ended when the messages arrives', async () => {
-        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"simulation_ended":true}', key: "123"}]});
+        const simulationId = mockObjectId();
+        KafkaGroupConsumer.mockReturnValueOnce({
+            consumerStream: [{value: '{"simulation_ended":true}', key: simulationId}]});
         const simulationConsumerGrid = new SimulationGridConsumer();
 
         await simulationConsumerGrid.start();
 
         expect(SimulationService.markGridConsumptionFinished).toHaveBeenCalledTimes(1);
-        expect(SimulationService.markGridConsumptionFinished).toHaveBeenCalledWith(123);
+        expect(SimulationService.markGridConsumptionFinished).toHaveBeenCalledWith(simulationId);
     });
 
     it('should store grid layout when grid layout message is sent', async () => {
-        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"grid_size":2}', key: "123"}]});
+        const simulationId = mockObjectId();
+        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"grid_size":2}', key: simulationId}]});
         const simulationConsumerGrid = new SimulationGridConsumer();
 
         await simulationConsumerGrid.start();
 
         expect(GridService.saveGridLayout).toHaveBeenCalledTimes(1);
-        expect(GridService.saveGridLayout).toHaveBeenCalledWith({"grid_size":2, "simulation_id": 123});
+        expect(GridService.saveGridLayout).toHaveBeenCalledWith({"grid_size":2, "simulation_id": simulationId});
     });
 
     it('should store citizen state when citizen state message is sent', async () => {
-        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummy_key":1, "hr":1}', key: "123"}]});
+        const simulationId = mockObjectId();
+        KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"dummy_key":1, "hr":1}', key: simulationId}]});
         const simulationConsumerGrid = new SimulationGridConsumer();
 
         await simulationConsumerGrid.start();
 
         expect(GridService.saveCitizenState).toHaveBeenCalledTimes(1);
-        expect(GridService.saveCitizenState).toHaveBeenCalledWith({dummy_key:1, hr:1, simulation_id: 123});
+        expect(GridService.saveCitizenState).toHaveBeenCalledWith({dummy_key:1, hr:1, simulation_id: simulationId});
     });
 });
 

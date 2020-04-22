@@ -67,10 +67,9 @@ router.post('/init', (req, res, next) => {
     percentage_asymptomatic_population,
     percentage_severe_infected_population,
     exposed_duration,
-    pre_symptomatic_duration
+    pre_symptomatic_duration,
+    number_of_simulations
   } = message;
-
-  const number_of_simulations = 1;
 
   const simulation_config = {
     "enable_citizen_state_messages": enable_citizen_state_messages,

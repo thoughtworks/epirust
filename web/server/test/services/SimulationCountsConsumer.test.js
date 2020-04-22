@@ -27,6 +27,7 @@ const {KafkaGroupConsumer} = require('../../services/kafka');
 const {SimulationStatus} = require('../../db/models/Simulation');
 const SimulationService = require('../../db/services/SimulationService');
 const CountService = require('../../db/services/CountService');
+const {mockObjectId} = require('../helpers');
 
 describe('Simulation Counts Consumer', () => {
   beforeEach(() => {
@@ -42,33 +43,36 @@ describe('Simulation Counts Consumer', () => {
   });
 
   it('should updated the status of simulation to be finished', async () => {
-    KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"simulation_ended":true}', key: "123"}]});
+    const simulationId = mockObjectId();
+    KafkaGroupConsumer.mockReturnValueOnce({consumerStream: [{value: '{"simulation_ended":true}', key: simulationId.toString()}]});
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
     expect(SimulationService.updateSimulationStatus).toHaveBeenCalledTimes(1);
-    expect(SimulationService.updateSimulationStatus).toHaveBeenCalledWith(123, SimulationStatus.FINISHED);
+    expect(SimulationService.updateSimulationStatus).toHaveBeenCalledWith(simulationId, SimulationStatus.FINISHED);
   });
 
   it('should store counts if not ended message', async () => {
     const countMessage = {"infected":78, "hour": 12};
+    const simulationId = mockObjectId();
     KafkaGroupConsumer.mockReturnValueOnce({
-      consumerStream: [{value: JSON.stringify(countMessage), key: "123"}]
+      consumerStream: [{value: JSON.stringify(countMessage), key: simulationId.toString()}]
     });
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
     expect(CountService.upsertCount).toHaveBeenCalledTimes(1);
-    expect(CountService.upsertCount).toHaveBeenCalledWith(123, countMessage)
+    expect(CountService.upsertCount).toHaveBeenCalledWith(simulationId, countMessage)
   });
 
   it('should update the status of simulation as running when the first count is recieved', async (done) => {
+    const simulationId = mockObjectId();
     KafkaGroupConsumer.mockReturnValueOnce({
       consumerStream: [{
         value: '{"dummyKey":"dummyValue", "hour":1}',
-        key: "123"
+        key: simulationId.toString()
       }]
     });
     const simulationCountsConsumer = new SimulationCountsConsumer();
@@ -77,22 +81,23 @@ describe('Simulation Counts Consumer', () => {
 
     process.nextTick(() => {
       expect(SimulationService.updateSimulationStatus).toHaveBeenCalledTimes(1);
-      expect(SimulationService.updateSimulationStatus).toHaveBeenCalledWith(123, SimulationStatus.RUNNING);
+      expect(SimulationService.updateSimulationStatus).toHaveBeenCalledWith(simulationId, SimulationStatus.RUNNING);
       done();
     });
   });
 
   it('should write intervention in db', async () => {
     const intervention = {"hour": 12, "intervention": "lockdown", "data": {"status": "locked_down"}}
+    const simulationId = mockObjectId();
     KafkaGroupConsumer.mockReturnValueOnce({
-      consumerStream: [{value: JSON.stringify(intervention), key: "123"}]
+      consumerStream: [{value: JSON.stringify(intervention), key: simulationId.toString()}]
     });
     const simulationCountsConsumer = new SimulationCountsConsumer();
 
     await simulationCountsConsumer.start();
 
     expect(CountService.addIntervention).toHaveBeenCalledTimes(1);
-    expect(CountService.addIntervention).toHaveBeenCalledWith(123, intervention);
+    expect(CountService.addIntervention).toHaveBeenCalledWith(simulationId, intervention);
   })
 });
 

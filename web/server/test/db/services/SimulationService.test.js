@@ -20,7 +20,7 @@
 const dbHandler = require('../db-handler');
 const SimulationService = require('../../../db/services/SimulationService');
 const {Simulation, SimulationStatus}  = require('../../../db/models/Simulation');
-const mongoose = require('mongoose');
+const {mockObjectId} = require('../../helpers');
 
 describe('Simulation Service', function () {
   describe('updateSimulationStatus', function () {
@@ -85,8 +85,6 @@ describe('Simulation Service', function () {
       expect(savedSimulation.toObject()).toEqual(simulation);
     });
   });
-
-  const mockObjectId = () => mongoose.Types.ObjectId();
 
   const createNewSimulation = (simulationStatus) => {
     const jobId = mockObjectId();

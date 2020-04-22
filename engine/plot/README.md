@@ -15,7 +15,7 @@ python plot.py --data-path <PATH_TO_CSV_FILE>
 ```
 
 Sample output:
-![Epicurves plot](https://user-images.githubusercontent.com/16804955/79537240-79cf3700-809f-11ea-911e-dd7bc4d047e3.png)
+![Epicurves plot](https://user-images.githubusercontent.com/16804955/79959420-bf29a500-84a1-11ea-844e-11cc721b7b79.png)
 
 # Plot the average of all simulations
 

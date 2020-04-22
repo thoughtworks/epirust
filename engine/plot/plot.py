@@ -32,7 +32,7 @@ def plot(data_frame, time_column):
     daily_basis = data_frame[data_frame[time_column] % 24 == 1]
 
     for column in columns:
-        plt.plot(daily_basis[time_column], daily_basis[column], label=column)
+        plt.plot((daily_basis[time_column] / 24) + 1, daily_basis[column], label=column)
 
     plt.legend()
     plt.xlabel('Days')

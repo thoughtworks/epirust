@@ -120,7 +120,7 @@ export default function GridPage() {
                     <AreasLayer areaDimensions={areaDimensions} />
                     <LinesLayer />
                     <LandmarksLayer landmarksDimensions={landmarksDimensions} />
-                    {agentPositions && <AgentsLayer agentPositions={agentPositions} simulationEnded={socketDataExhausted} />}
+                    {<AgentsLayer agentPositions={agentPositions} simulationEnded={socketDataExhausted} />}
                 </div >
             </GridContext.Provider>
         </div>

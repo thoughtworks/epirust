@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import React, {useContext, useEffect, useRef, useState} from 'react';
-import {GridContext} from './index'
-import {AgentStateMapper, AgentStateToColor} from './constants';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { GridContext } from './index'
+import { AgentStateMapper, AgentStateToColor } from './constants';
 import GridLegend from "./GridLegend";
 
-export default function AgentPositionsWrapper({agentPositions, simulationEnded}) {
-    const [simulationPaused, setSimulationPaused] = useState(true);
+export default function AgentPositionsWrapper({ agentPositions, simulationEnded }) {
+    const [displayIndexIncrementPaused, setDisplayIndexIncrementPaused] = useState(true);
     const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
     const [intervalId, setIntervalId] = useState(null);
     const [clickedPause, setClickedPause] = useState(false);
@@ -45,10 +45,10 @@ export default function AgentPositionsWrapper({agentPositions, simulationEnded})
 
     //pause
     useEffect(() => {
-        if (simulationPaused && agentPositions) {
+        if (displayIndexIncrementPaused && agentPositions) {
             stopIncrement();
         }
-    }, [simulationPaused, agentPositions]);
+    }, [displayIndexIncrementPaused, agentPositions]);
 
     //race condition
     useEffect(() => {
@@ -56,19 +56,19 @@ export default function AgentPositionsWrapper({agentPositions, simulationEnded})
             return
         }
         if (currentDisplayIndex >= agentPositions.length - 1) {
-            setSimulationPaused(true);
+            setDisplayIndexIncrementPaused(true);
             return
         }
 
-        if (simulationPaused && !clickedPause) {
-            setSimulationPaused(false)
+        if (displayIndexIncrementPaused && !clickedPause) {
+            setDisplayIndexIncrementPaused(false)
         }
 
     }, [currentDisplayIndex, agentPositions, simulationEnded, clickedPause]);
 
     //count++
     useEffect(() => {
-        if (simulationPaused)
+        if (displayIndexIncrementPaused)
             return;
 
         if (!agentPositions || intervalId)
@@ -79,22 +79,22 @@ export default function AgentPositionsWrapper({agentPositions, simulationEnded})
         setIntervalId(interval);
 
         return () => clearInterval(intervalId)
-    }, [simulationPaused, agentPositions]);
+    }, [displayIndexIncrementPaused, agentPositions]);
 
     const handleResume = () => {
         setClickedPause(false);
-        setSimulationPaused(false)
+        setDisplayIndexIncrementPaused(false)
     };
 
     const handlePause = () => {
         setClickedPause(true);
-        setSimulationPaused(true)
+        setDisplayIndexIncrementPaused(true)
     };
 
     const handleReset = () => {
         setCurrentDisplayIndex(0);
         setClickedPause(true);
-        setSimulationPaused(true)
+        setDisplayIndexIncrementPaused(true)
     };
 
     const positionsToDisplay = agentPositions
@@ -113,30 +113,51 @@ export default function AgentPositionsWrapper({agentPositions, simulationEnded})
 
     };
 
+    const handleAddHour = () => {
+        if (currentDisplayIndex + 1 >= agentPositions.length)
+            return
+
+        setCurrentDisplayIndex(idx => idx + 1)
+    }
+
+    const handleSubtractHour = () => {
+        if (currentDisplayIndex <= 0)
+            return
+
+        setCurrentDisplayIndex(idx => idx - 1)
+    }
+
     return (
         <div style={{ position: "relative" }}>
-            <div style={{ position: "absolute", zIndex: 5, right: 0, width: 190 }}>
-                <h4 data-testid="counter">{`${currentDisplayIndex + 1}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
+            <div className="card px-4 py-4" style={{ position: "absolute", zIndex: 5, right: 0, width: 190 }}>
+                <h4 style={{ textAlign: 'center' }} data-testid="counter">{`${currentDisplayIndex + 1}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
 
-                <div className="btn-group mr-2" role="group" aria-label="Buttons to pause/play and reset">
+                <div className="btn-group mb-2" role="group" aria-label="Buttons to pause/play and reset">
                     {clickedPause
-                        ? <button className="btn btn-success btn-sm" onClick={handleResume}>{currentDisplayIndex === 0 ? 'START' : 'RESUME'}</button>
+                        ? <button className="btn btn-success btn-sm" onClick={handleResume} disabled={displayedAll()}>{currentDisplayIndex === 0 ? 'START' : 'RESUME'}</button>
                         : <button className="btn btn-primary btn-sm" onClick={handlePause} disabled={displayedAll()}>PAUSE</button>
                     }
 
                     <button className="btn btn-danger btn-sm" onClick={handleReset}>RESET</button>
                 </div>
 
-            </div>
-            <AgentsLayer agentPositionsPerHour={positionsToDisplay}/>
+                {(clickedPause || displayedAll()) && (
+                    <div data-testid="hour-step-controls" className="btn-group my-0 mx-auto" role="group" aria-label="Buttons to increase/decrease current displayed hour">
+                        <button className="btn-sm mr-2 btn-outline-primary" name="increment hour" onClick={handleAddHour}>+1</button>
+                        <button className="btn-sm mr-2 btn-outline-secondary" name="decrement hour" onClick={handleSubtractHour}>-1</button>
+                    </div>
+                )}
 
-            <GridLegend {...getCounts(positionsToDisplay)}/>
+            </div>
+            <AgentsLayer agentPositionsPerHour={positionsToDisplay} />
+
+            <GridLegend {...getCounts(positionsToDisplay)} />
         </div>
     )
 }
 
-function AgentsLayer({agentPositionsPerHour}) {
-    const {cellDimension, lineWidth, canvasDimension} = useContext(GridContext);
+function AgentsLayer({ agentPositionsPerHour }) {
+    const { cellDimension, lineWidth, canvasDimension } = useContext(GridContext);
 
     const agentsLayerCanvas = useRef(null);
     const [agentsCanvasContext, setAgentsCanvasContext] = useState(null);
@@ -156,7 +177,7 @@ function AgentsLayer({agentPositionsPerHour}) {
         agentsCanvasContext.clearRect(0, 0, canvasDimension, canvasDimension);
 
         agentPositionsPerHour.forEach((agent) => {
-            const {x, y} = agent.location;
+            const { x, y } = agent.location;
 
             agentsCanvasContext.fillStyle = AgentStateToColor[agent.state];
 
@@ -174,6 +195,6 @@ function AgentsLayer({agentPositionsPerHour}) {
 
     return (
         <canvas ref={agentsLayerCanvas} data-testid="grid-canvas-agents" id="grid-canvas-agents" width={canvasDimension}
-                height={canvasDimension} style={{position: "absolute", zIndex: 4}}/>
+            height={canvasDimension} style={{ position: "absolute", zIndex: 4 }} />
     )
 }

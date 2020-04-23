@@ -47,9 +47,15 @@ const saveSimulation = (simulation) => {
     return Simulation(simulation).save()
 };
 
+const fetchSimulationsWithJobId = (jobId) => {
+  return Simulation.find({job_id: jobId}).exec()
+    .then(docs => docs.map(doc => doc.toObject()))
+}
+
 module.exports = {
     updateSimulationStatus,
     markGridConsumptionFinished,
     fetchSimulation,
-    saveSimulation
+    saveSimulation,
+    fetchSimulationsWithJobId
 };

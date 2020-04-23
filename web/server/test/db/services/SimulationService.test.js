@@ -86,8 +86,20 @@ describe('Simulation Service', () => {
     });
   });
 
-  const createNewSimulation = (simulationStatus) => {
-    const jobId = mockObjectId();
+  describe('fetchSimulationsWithJobId', () => {
+    it('should return all the simulations with given jobId', async () => {
+      const jobId = mockObjectId();
+      const sim1 = await createNewSimulation(SimulationStatus.INQUEUE, jobId)
+      const sim2 = await createNewSimulation(SimulationStatus.INQUEUE, jobId)
+
+      const simulations = (await SimulationService.fetchSimulationsWithJobId(jobId));
+      expect(simulations).toHaveLength(2)
+      expect(simulations[0]._id).toEqual(sim1._id)
+      expect(simulations[1]._id).toEqual(sim2._id)
+    });
+  });
+
+  const createNewSimulation = (simulationStatus, jobId = mockObjectId()) => {
     return new Simulation({job_id: jobId, status: simulationStatus}).save();
   }
 

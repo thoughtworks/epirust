@@ -66,7 +66,7 @@ exports[`Grid Page should render GridPage component consuming the data coming fr
           width="625"
         />
         <div
-          class="legends-wrap"
+          class="legends-wrap px-2 py-2"
         >
           <h6>
             Areas

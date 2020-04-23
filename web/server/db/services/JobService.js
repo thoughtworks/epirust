@@ -23,4 +23,13 @@ const saveJob = (config) => {
   return new Job({config}).save()
 }
 
-module.exports = {saveJob}
+const fetchJob = (jobId) => {
+  return Job.findOne({_id: jobId}).exec()
+    .then(doc => {
+      if(!doc)
+        throw new Error(`Job with id ${jobId} not found`)
+      return doc;
+    })
+}
+
+module.exports = {saveJob, fetchJob}

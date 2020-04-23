@@ -19,19 +19,43 @@
 const dbHandler = require('../db-handler');
 const JobService = require('../../../db/services/JobService');
 const {Job} = require('../../../db/models/Job');
+const {mockObjectId} = require('../../helpers');
 
 describe('Job Service', () => {
   describe('saveJob', () => {
     it('should save the job with config', async () => {
-      const config = {'key': 'value', 'field1': 12}
 
-      const writeAck = await JobService.saveJob(config)
+      const writeAck = await JobService.saveJob(testConfig)
 
       const receivedJob = (await Job.findOne({}).exec()).toObject()
-      expect(receivedJob.config).toEqual(config)
+      expect(receivedJob.config).toEqual(testConfig)
       expect(writeAck).toHaveProperty('_id');
     });
   });
+
+  describe('fetchJob', () => {
+    it('should return job if present in database', async () => {
+      const jobDoc = await createTestJob()
+
+      const receivedJob = await JobService.fetchJob(jobDoc._id);
+
+      expect(receivedJob).toBeDefined();
+      expect(receivedJob.toObject().config).toEqual(testConfig);
+    });
+
+    it('should fail if the job is not present in db', async () => {
+      const randomJobId = mockObjectId();
+
+      await expect(JobService.fetchJob(randomJobId))
+        .rejects.toThrow(`Job with id ${randomJobId} not found`)
+    });
+  });
+
+  const testConfig = {'key': 'value', 'field1': 12}
+
+  const createTestJob = () => {
+    return new Job({config: testConfig}).save()
+  }
 
   beforeAll(async () => await dbHandler.connect());
   afterEach(async () => await dbHandler.clearDatabase());

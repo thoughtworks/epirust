@@ -18,10 +18,10 @@
  */
 
 import React from 'react';
-import {AgentStateToColor, AreaColors} from './constants';
+import { AgentStateToColor, AreaColors } from './constants';
 import PropTypes from 'prop-types'
 
-export default function GridLegend({susceptible, infected, recovered, deceased}) {
+export default function GridLegend({ susceptible, infected, recovered, deceased }) {
 
     const areasLegends = [
         { backgroundColor: AreaColors.HOUSING, text: "Housing" },
@@ -33,18 +33,18 @@ export default function GridLegend({susceptible, infected, recovered, deceased})
 
     const agentsLegends = [
         { backgroundColor: AgentStateToColor.s, text: "Susceptible", count: susceptible },
-        { backgroundColor: AgentStateToColor.i, text: "Infected", count: infected},
-        { backgroundColor: AgentStateToColor.r, text: "Recovered", count: recovered  },
+        { backgroundColor: AgentStateToColor.i, text: "Infected", count: infected },
+        { backgroundColor: AgentStateToColor.r, text: "Recovered", count: recovered },
         { backgroundColor: AgentStateToColor.d, text: "Deceased", count: deceased }
     ];
     return (
-        <div className="legends-wrap">
+        <div className="legends-wrap px-2 py-2">
             <h6>Areas</h6>
             <ul className="legends areas">{
                 areasLegends.map(({ backgroundColor, text }) => (
                     <li key={text}>
                         <div className="legend-item">
-                            <span className="swatch" style={{backgroundColor}}/>
+                            <span className="swatch" style={{ backgroundColor }} />
                             <span className="text">{text}</span>
                         </div>
                     </li>
@@ -56,7 +56,7 @@ export default function GridLegend({susceptible, infected, recovered, deceased})
                 agentsLegends.map(({ backgroundColor, text, count }) => (
                     <li key={text}>
                         <div className="legend-item">
-                            <span className="swatch" style={{backgroundColor}}/>
+                            <span className="swatch" style={{ backgroundColor }} />
                             <span className="text count">{count}</span>
                             <span className="text">{text}</span>
                         </div>

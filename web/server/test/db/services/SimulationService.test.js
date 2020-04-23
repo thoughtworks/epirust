@@ -22,9 +22,9 @@ const SimulationService = require('../../../db/services/SimulationService');
 const {Simulation, SimulationStatus}  = require('../../../db/models/Simulation');
 const {mockObjectId} = require('../../helpers');
 
-describe('Simulation Service', function () {
-  describe('updateSimulationStatus', function () {
-    it('should set simulation status to ended', async function () {
+describe('Simulation Service', () => {
+  describe('updateSimulationStatus', () => {
+    it('should set simulation status to ended', async () => {
       const {_id: simulationId} = await createNewSimulation(SimulationStatus.RUNNING)
 
       await SimulationService.updateSimulationStatus(simulationId, SimulationStatus.FAILED);
@@ -34,8 +34,8 @@ describe('Simulation Service', function () {
     });
   });
 
-  describe('markGridConsumptionFinished', function () {
-    it('should set grid consumption finished to true', async function () {
+  describe('markGridConsumptionFinished', () => {
+    it('should set grid consumption finished to true', async () => {
       const {_id: simulationId} = await createNewSimulation(SimulationStatus.RUNNING)
 
       await SimulationService.markGridConsumptionFinished(simulationId);
@@ -45,8 +45,8 @@ describe('Simulation Service', function () {
     });
   });
 
-  describe('fetchSimulation', function () {
-    it('should return a simulation with projection fields specified', async function () {
+  describe('fetchSimulation', () => {
+    it('should return a simulation with projection fields specified', async () => {
       const {_id: simulationId} = await createNewSimulation(SimulationStatus.RUNNING)
 
       const receivedSimulation = await SimulationService.fetchSimulation(simulationId, ['_id', 'status']);
@@ -56,7 +56,7 @@ describe('Simulation Service', function () {
       expect(receivedSimulation).not.toHaveProperty('job_id');
     });
 
-    it('should return a simulation with all fields if not specified projection fields', async function () {
+    it('should return a simulation with all fields if not specified projection fields', async () => {
       const {_id: simulationId, job_id} = await createNewSimulation(SimulationStatus.RUNNING)
 
       const receivedSimulation = await SimulationService.fetchSimulation(simulationId);
@@ -66,7 +66,7 @@ describe('Simulation Service', function () {
       expect(receivedSimulation.job_id).toEqual(job_id)
     });
 
-    it('should throw error with error message if no simulation exists',  function () {
+    it('should throw error with error message if no simulation exists',  () => {
       const simulationId = mockObjectId();
       const expectedError = `Simulation with id: ${simulationId} not found`;
 
@@ -74,8 +74,8 @@ describe('Simulation Service', function () {
     });
   });
 
-  describe('saveSimulation', function () {
-    it('should save simulation in database', async function () {
+  describe('saveSimulation', () => {
+    it('should save simulation in database', async () => {
       const jobId = mockObjectId();
       const simulation = {status: SimulationStatus.RUNNING, job_id: jobId};
 

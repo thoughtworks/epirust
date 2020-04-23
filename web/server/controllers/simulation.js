@@ -50,52 +50,7 @@ const configMatch = {
 };
 
 router.post('/init', (req, res, next) => {
-  const message = req.body;
-  const {
-    number_of_agents,
-    public_transport_percentage,
-    working_percentage,
-    regular_transmission_start_day,
-    high_transmission_start_day,
-    last_day,
-    regular_transmission_rate,
-    high_transmission_rate,
-    death_rate,
-    grid_size,
-    simulation_hrs,
-    enable_citizen_state_messages,
-    percentage_asymptomatic_population,
-    percentage_severe_infected_population,
-    exposed_duration,
-    pre_symptomatic_duration,
-    number_of_simulations
-  } = message;
-
-  const simulation_config = {
-    "enable_citizen_state_messages": enable_citizen_state_messages,
-    "population": {
-      "Auto": {
-        "number_of_agents": number_of_agents,
-        "public_transport_percentage": public_transport_percentage,
-        "working_percentage": working_percentage
-      }
-    },
-    "disease": {
-      "regular_transmission_start_day": regular_transmission_start_day,
-      "high_transmission_start_day": high_transmission_start_day,
-      "last_day": last_day,
-      "regular_transmission_rate": regular_transmission_rate,
-      "high_transmission_rate": high_transmission_rate,
-      "death_rate": death_rate,
-      "percentage_asymptomatic_population": percentage_asymptomatic_population,
-      "percentage_severe_infected_population": percentage_severe_infected_population,
-      "exposed_duration": exposed_duration,
-      "pre_symptomatic_duration": pre_symptomatic_duration
-    },
-    "grid_size": grid_size,
-    "hours": simulation_hrs,
-    "interventions": modelInterventions(message)
-  };
+  const {number_of_simulations, simulation_config} = makeSimulationConfig(req.body);
 
   const kafkaProducer = new KafkaServices.KafkaProducerService();
   let jobId;
@@ -141,14 +96,6 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-async function extractFromCursor(stream) {
-  const aggregate = [];
-  for await (const data of stream) {
-    aggregate.push(data)
-  }
-  return aggregate;
-}
-
 router.get("/:simulation_id/time-series-deviation", async (req, res, next) => {
 
   const simulationToAggregate = Simulation.find(configMatch, { simulation_id: 1 })
@@ -193,7 +140,62 @@ router.get("/:simulation_id/time-series-deviation", async (req, res, next) => {
 
 });
 
-module.exports = router;
+async function extractFromCursor(stream) {
+  const aggregate = [];
+  for await (const data of stream) {
+    aggregate.push(data)
+  }
+  return aggregate;
+}
+
+function makeSimulationConfig(message) {
+  const {
+    number_of_agents,
+    public_transport_percentage,
+    working_percentage,
+    regular_transmission_start_day,
+    high_transmission_start_day,
+    last_day,
+    regular_transmission_rate,
+    high_transmission_rate,
+    death_rate,
+    grid_size,
+    simulation_hrs,
+    enable_citizen_state_messages,
+    percentage_asymptomatic_population,
+    percentage_severe_infected_population,
+    exposed_duration,
+    pre_symptomatic_duration,
+    number_of_simulations
+  } = message;
+
+  const simulation_config = {
+    "enable_citizen_state_messages": enable_citizen_state_messages,
+    "population": {
+      "Auto": {
+        "number_of_agents": number_of_agents,
+        "public_transport_percentage": public_transport_percentage,
+        "working_percentage": working_percentage
+      }
+    },
+    "disease": {
+      "regular_transmission_start_day": regular_transmission_start_day,
+      "high_transmission_start_day": high_transmission_start_day,
+      "last_day": last_day,
+      "regular_transmission_rate": regular_transmission_rate,
+      "high_transmission_rate": high_transmission_rate,
+      "death_rate": death_rate,
+      "percentage_asymptomatic_population": percentage_asymptomatic_population,
+      "percentage_severe_infected_population": percentage_severe_infected_population,
+      "exposed_duration": exposed_duration,
+      "pre_symptomatic_duration": pre_symptomatic_duration
+    },
+    "grid_size": grid_size,
+    "hours": simulation_hrs,
+    "interventions": modelInterventions(message)
+  };
+  return {number_of_simulations, simulation_config};
+}
 
 function modelInterventions(message) {
   const { vaccinate_at, vaccinate_percentage, lockdown_at_number_of_infections, essential_workers_population, hospital_spread_rate_threshold } = message;
@@ -227,4 +229,7 @@ function modelInterventions(message) {
     ...(areHospitalSpreadParamsPresent ? [hospitalSpreadIntervention] : [])
   ];
 }
+
+module.exports = router;
+
 

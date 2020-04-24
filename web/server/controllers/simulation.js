@@ -27,6 +27,7 @@ const { Simulation, SimulationStatus } = require("../db/models/Simulation");
 const {updateSimulationStatus, saveSimulation} = require('../db/services/SimulationService')
 const {range} = require('../common/util');
 const JobService = require('../db/services/JobService');
+const CountService = require('../db/services/CountService');
 
 const configMatch = {
   "config.population.Auto.number_of_agents": 10000,
@@ -97,47 +98,25 @@ router.get('/', async (req, res, next) => {
 });
 
 router.get("/:simulation_id/time-series-deviation", async (req, res, next) => {
-
-  const simulationToAggregate = Simulation.find(configMatch, { simulation_id: 1 })
+  Simulation.find(configMatch, { simulation_id: 1 })
     .exec()
     .then(async (docs) => {
       let simulationIds = docs.map(a => a.simulation_id);
 
-      const aggregateStream = Count
-        .aggregate([
-          { $match: { simulation_id: { $in: simulationIds } } },
-          {
-            $group: {
-              _id: '$hour',
-              infected_mean: { $avg: '$infected' },
-              susceptible_mean: { $avg: '$susceptible' },
-              quarantined_mean: { $avg: '$quarantined' },
-              recovered_mean: { $avg: '$recovered' },
-              deceased_mean: { $avg: '$deceased' },
-              infected_std: { $stdDevPop: '$infected' },
-              susceptible_std: { $stdDevPop: '$susceptible' },
-              quarantined_std: { $stdDevPop: '$quarantined' },
-              recovered_std: { $stdDevPop: '$recovered' },
-              deceased_std: { $stdDevPop: '$deceased' },
-            }
-          },
-          { $sort: { _id: 1 } }
-        ]);
+      const aggregateStream = CountService.aggregateSimulations(simulationIds);
+      const countsCursor = CountService.fetchCountsInSimulation(parseInt(req.params.simulation_id), 0);
 
-      const aggregate = await extractFromCursor(aggregateStream);
-
-      const countsCursor = Count.find({ simulation_id: parseInt(req.params.simulation_id) }, {}, { sort: { hour: 1 } })
-        .cursor();
-
-      const counts = await extractFromCursor(countsCursor);
-
-      if (counts.length < aggregate.length) {
-        res.json(counts.map((c, i) => ({ ...c.toObject(), ...aggregate[i] })));
-      } else {
-        res.json(aggregate.map((a, i) => ({ ...a, ...counts[i].toObject() })));
-      }
+      return Promise.all([extractFromCursor(aggregateStream), extractFromCursor(countsCursor)])
+        .then(resolved => {
+          const aggregate = resolved[0]
+          const counts = resolved[1];
+          if (counts.length < aggregate.length) {
+            res.json(counts.map((c, i) => ({ ...c.toObject(), ...aggregate[i] })));
+          } else {
+            res.json(aggregate.map((a, i) => ({ ...a, ...counts[i].toObject() })));
+          }
+        })
     })
-
 });
 
 async function extractFromCursor(stream) {

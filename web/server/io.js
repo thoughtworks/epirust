@@ -29,7 +29,7 @@ module.exports = function setupIO(ioInstance) {
   ioInstance
     .of('/grid-updates')
     .on('connection', (socket) => {
-      socket.on('simulation-id', (simulationId) => GridIoController.handleRequest(socket, simulationId))
+      socket.on('get', (getRequest) => GridIoController.handleRequest(socket, getRequest.jobId))
       socket.on('disconnect', reason => console.log("Disconnect", reason));
     });
 

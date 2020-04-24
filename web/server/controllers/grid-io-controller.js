@@ -19,8 +19,9 @@
 
 
 const { SimulationStatus } = require("../db/models/Simulation");
-const {fetchSimulation} = require('../db/services/SimulationService')
+const {fetchSimulation, fetchSimulationsWithJobId} = require('../db/services/SimulationService')
 const {findSortedById} = require('../db/services/GridService')
+const {toObjectId} = require('../common/util');
 
 async function sendGridData(simulationId, socket, totalConsumerRecords) {
   const cursor = findSortedById(simulationId, totalConsumerRecords);
@@ -54,7 +55,19 @@ async function sendGridData(simulationId, socket, totalConsumerRecords) {
       });
 }
 
-const handleRequest = (socket, simulationId) => sendGridData(parseInt(simulationId), socket, 0)
+const handleRequest = (socket, jobId) => {
+  fetchSimulationsWithJobId(toObjectId(jobId))
+    .then(simulations => {
+      if(simulations.length === 0)
+        throw new Error("No simulation for provided jobId or invalid job-id provided")
+
+      if(simulations.length > 1)
+        throw new Error("Grid visualization is not supported for multi-simulation job")
+
+      return sendGridData(simulations[0]._id, socket, 0)
+    })
+    .catch(err => socket.emit('error', {message: err.message}))
+}
 
 module.exports = {
   handleRequest

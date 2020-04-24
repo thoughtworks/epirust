@@ -225,6 +225,32 @@ describe("Count controller", () => {
         done();
       })
     });
+
+    it('should send back error if any of the job fails', (done) => {
+      const simId1 = "3457634"
+      const simId2 = "76543e4"
+      const jobId = mockObjectId();
+      fetchSimulationsWithJobId
+        .mockResolvedValueOnce([
+          mockSimulationPromise('in-progress', simId1),
+          mockSimulationPromise('in-queue', simId2)
+        ])
+        .mockResolvedValueOnce([
+          mockSimulationPromise('finished', simId1),
+          mockSimulationPromise('failed', simId2)
+        ])
+
+      aggregateSimulations.mockReturnValueOnce([1, 2])
+
+      handleRequest(mockSocket);
+      mockSocket.on.mock.calls[0][1]({jobId});
+
+      process.nextTick( () => {
+        expect(mockSocket.emit).toHaveBeenCalledTimes(1)
+        expect(mockSocket.emit).toHaveBeenCalledWith('error', {"message": "One of the simulations failed to finish"})
+        done();
+      })
+    });
   });
 
   it('should console on connection closed', () => {

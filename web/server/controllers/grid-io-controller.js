@@ -54,12 +54,7 @@ async function sendGridData(simulationId, socket, totalConsumerRecords) {
       });
 }
 
-function handleRequest(socket) {
-  socket.on('simulation_id', (message) => {
-    sendGridData(parseInt(message), socket, 0);
-  });
-  socket.on('disconnect', reason => console.log("Disconnect", reason));
-}
+const handleRequest = (socket, simulationId) => sendGridData(parseInt(simulationId), socket, 0)
 
 module.exports = {
   handleRequest

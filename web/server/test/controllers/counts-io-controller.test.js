@@ -17,12 +17,12 @@
  *
  */
 
-const {handleRequest} = require("../../controllers/counts-io-controller");
+const { handleRequest } = require("../../controllers/counts-io-controller");
 jest.mock("../../db/services/SimulationService");
 jest.mock("../../db/services/CountService");
-const {fetchSimulation, fetchSimulationsWithJobId} = require('../../db/services/SimulationService')
-const {fetchCountsInSimulation, aggregateSimulations} = require("../../db/services/CountService")
-const {mockObjectId} = require('../helpers');
+const { fetchSimulation, fetchSimulationsWithJobId } = require('../../db/services/SimulationService')
+const { fetchCountsInSimulation, aggregateSimulations } = require("../../db/services/CountService")
+const { mockObjectId } = require('../helpers');
 jest.useFakeTimers();
 
 describe("Count controller", () => {
@@ -43,8 +43,15 @@ describe("Count controller", () => {
     };
   });
 
-  function mockSimulationPromise(status, id = 'dummyId') {
-    return {status, _id: id}
+  function mockSimulation(status, id = 'dummyId') {
+    return { status, _id: id }
+  }
+
+  function MockMongoDocument(data) {
+    this._doc = data;
+    this.toObject = function () {
+      return this._doc
+    }
   }
 
   describe('when job contains single simulation', () => {
@@ -52,15 +59,17 @@ describe("Count controller", () => {
     it('should emit all counts if simulation has ended', (done) => {
       const testSimId = 1234;
       const jobId = mockObjectId()
-      fetchSimulationsWithJobId.mockResolvedValueOnce([mockSimulationPromise('finished', testSimId)])
-      fetchSimulation.mockResolvedValue(mockSimulationPromise('finished'));
-      fetchCountsInSimulation.mockReturnValueOnce([{dummyKey: 'dummyValue', hour: 1}])
+      fetchSimulationsWithJobId.mockResolvedValueOnce([mockSimulation('finished', testSimId)])
+      fetchSimulation.mockResolvedValue(mockSimulation('finished'));
+
+      const job = { dummyKey: 'dummyValue', hour: 1 };
+      fetchCountsInSimulation.mockReturnValueOnce([new MockMongoDocument(job)])
 
       handleRequest(mockSocket);
       expect(mockSocket.on).toHaveBeenCalledTimes(2);
       expect(mockSocket.on.mock.calls[0]).toHaveLength(2);
       expect(mockSocket.on.mock.calls[0][0]).toBe('get');
-      mockSocket.on.mock.calls[0][1]({jobId: jobId.toString()});
+      mockSocket.on.mock.calls[0][1]({ jobId: jobId.toString() });
 
       process.nextTick(() => {
         expect(fetchSimulationsWithJobId).toHaveBeenCalledTimes(1)
@@ -69,9 +78,9 @@ describe("Count controller", () => {
         expect(mockSocket.emit).toHaveBeenCalledTimes(2);
         expect(mockSocket.emit.mock.calls[0]).toEqual([
           'epidemicStats',
-          {dummyKey: 'dummyValue', hour: 1, ...placeHolderData}
+          { dummyKey: 'dummyValue', hour: 1, ...placeHolderData }
         ]);
-        expect(mockSocket.emit.mock.calls[1]).toEqual(['epidemicStats', {"simulation_ended": true}]);
+        expect(mockSocket.emit.mock.calls[1]).toEqual(['epidemicStats', { "simulation_ended": true }]);
         expect(fetchSimulation).toHaveBeenCalledTimes(1);
         expect(fetchSimulation).toHaveBeenCalledWith(testSimId, ['status']);
         expect(fetchCountsInSimulation).toHaveBeenCalledTimes(1);
@@ -81,17 +90,18 @@ describe("Count controller", () => {
     });
 
     it('should keep emitting all counts until simulation has ended', (done) => {
-      const docPromises = [
-        mockSimulationPromise('unfinished'),
-        mockSimulationPromise('finished')
-      ];
       const testSimId = 1234;
       const jobId = mockObjectId()
 
-      const cursors = [[{dummyKey: 'dummyValue', hour: 1}], [{dummyKey: 'dummyValue2', hour: 2}]];
-      fetchSimulationsWithJobId.mockResolvedValueOnce([mockSimulationPromise('finished', testSimId)])
-      fetchSimulation.mockImplementation(() => Promise.resolve(docPromises.shift()))
-      fetchCountsInSimulation.mockImplementation(() => cursors.shift())
+      fetchSimulationsWithJobId.mockResolvedValueOnce([mockSimulation('finished', testSimId)])
+
+      const countsData = [{ dummyKey: 'dummyValue', hour: 1 }, { dummyKey: 'dummyValue2', hour: 2 }];
+      fetchCountsInSimulation.mockImplementation(() => [new MockMongoDocument(countsData.shift())])
+
+      const docPromises = [mockSimulation('running'),mockSimulation('finished')];
+      fetchSimulation
+      .mockResolvedValueOnce(docPromises.shift())
+      .mockResolvedValueOnce(docPromises.shift())
 
       handleRequest(mockSocket);
       expect(mockSocket.on).toHaveBeenCalledTimes(2);
@@ -99,26 +109,27 @@ describe("Count controller", () => {
       expect(mockSocket.on.mock.calls[0][0]).toBe('get');
       mockSocket.on.mock.calls[0][1]({jobId: jobId.toString()});
 
-      process.nextTick(() => {
+      process.nextTick(async () => {
+        await flushPromises()
         expect(fetchSimulationsWithJobId).toHaveBeenCalledTimes(1)
         expect(fetchSimulationsWithJobId).toHaveBeenCalledWith(jobId)
 
         expect(mockSocket.emit).toHaveBeenCalledTimes(3);
-        expect(mockSocket.emit.mock.calls[0]).toEqual([
-          'epidemicStats',
-          {dummyKey: 'dummyValue', hour: 1, ...placeHolderData}
-        ]);
-        expect(mockSocket.emit.mock.calls[1]).toEqual([
-          'epidemicStats',
-          {dummyKey: 'dummyValue2', hour: 2, ...placeHolderData}
-        ]);
-        expect(mockSocket.emit.mock.calls[2]).toEqual(['epidemicStats', {"simulation_ended": true}]);
+        expect(mockSocket.emit.mock.calls[0]).toEqual(['epidemicStats', { ...placeHolderData, dummyKey: 'dummyValue', hour: 1,}]);
+        expect(mockSocket.emit.mock.calls[1]).toEqual(['epidemicStats', { ...placeHolderData, dummyKey: 'dummyValue2', hour: 2}]);
+        expect(mockSocket.emit.mock.calls[2]).toEqual(['epidemicStats', {simulation_ended: true}]);
+        
         expect(fetchSimulation).toHaveBeenCalledTimes(2);
-        expect(fetchSimulation.mock.calls[0]).toEqual([testSimId, ['status']]);
-        expect(fetchSimulation.mock.calls[1]).toEqual([testSimId, ['status']]);
+        expect(fetchSimulation.mock.calls).toEqual([
+          [testSimId, ['status']],
+          [testSimId, ['status']]
+        ]);
+        
         expect(fetchCountsInSimulation).toHaveBeenCalledTimes(2);
-        expect(fetchCountsInSimulation.mock.calls[0]).toEqual([testSimId, 0]);
-        expect(fetchCountsInSimulation.mock.calls[1]).toEqual([testSimId, 1]);
+        expect(fetchCountsInSimulation.mock.calls).toEqual([
+          [testSimId, 0],
+          [testSimId, 1]
+        ]);
         done();
       });
     });
@@ -127,16 +138,15 @@ describe("Count controller", () => {
       const testSimId = 1234;
       const jobId = mockObjectId()
 
-      fetchSimulation.mockResolvedValue(mockSimulationPromise('failed'));
-      fetchSimulationsWithJobId.mockResolvedValueOnce([mockSimulationPromise('finished', testSimId)])
-      fetchCountsInSimulation.mockReturnValueOnce([{dummyKey: 'dummyValue', hour: 1}])
+      fetchSimulation.mockResolvedValue(mockSimulation('failed'));
+      fetchSimulationsWithJobId.mockResolvedValueOnce([mockSimulation('finished', testSimId)])
+      fetchCountsInSimulation.mockReturnValueOnce([new MockMongoDocument({ dummyKey: 'dummyValue', hour: 1 })])
 
       handleRequest(mockSocket);
       expect(mockSocket.on).toHaveBeenCalledTimes(2);
       expect(mockSocket.on.mock.calls[0]).toHaveLength(2);
       expect(mockSocket.on.mock.calls[0][0]).toBe('get');
-      mockSocket.on.mock.calls[0][1]({jobId: jobId.toString()});
-
+      mockSocket.on.mock.calls[0][1]({ jobId: jobId.toString() });
 
       process.nextTick(() => {
         expect(fetchSimulationsWithJobId).toHaveBeenCalledTimes(1)
@@ -145,9 +155,9 @@ describe("Count controller", () => {
         expect(mockSocket.emit).toHaveBeenCalledTimes(2);
         expect(mockSocket.emit.mock.calls[0]).toEqual([
           'epidemicStats',
-          {dummyKey: 'dummyValue', hour: 1, ...placeHolderData}
+          { dummyKey: 'dummyValue', hour: 1, ...placeHolderData }
         ]);
-        expect(mockSocket.emit.mock.calls[1]).toEqual(['epidemicStats', {"simulation_ended": true}]);
+        expect(mockSocket.emit.mock.calls[1]).toEqual(['epidemicStats', { "simulation_ended": true }]);
         done();
       })
     });
@@ -159,8 +169,8 @@ describe("Count controller", () => {
       const simId2 = "76543e4"
       const jobId = mockObjectId();
       fetchSimulationsWithJobId.mockResolvedValue([
-        mockSimulationPromise('finished', simId1),
-        mockSimulationPromise('finished', simId2)
+        mockSimulation('finished', simId1),
+        mockSimulation('finished', simId2)
       ]);
 
       aggregateSimulations.mockReturnValueOnce([1, 2])
@@ -169,7 +179,7 @@ describe("Count controller", () => {
       expect(mockSocket.on).toHaveBeenCalledTimes(2);
       expect(mockSocket.on.mock.calls[0]).toHaveLength(2);
       expect(mockSocket.on.mock.calls[0][0]).toBe('get');
-      mockSocket.on.mock.calls[0][1]({jobId});
+      mockSocket.on.mock.calls[0][1]({ jobId });
 
       process.nextTick(() => {
         expect(fetchSimulationsWithJobId).toHaveBeenCalledTimes(2)
@@ -182,35 +192,35 @@ describe("Count controller", () => {
         expect(mockSocket.emit).toHaveBeenCalledTimes(3)
         expect(mockSocket.emit).toHaveBeenNthCalledWith(1, 'epidemicStats', 1)
         expect(mockSocket.emit).toHaveBeenNthCalledWith(2, 'epidemicStats', 2)
-        expect(mockSocket.emit).toHaveBeenNthCalledWith(3, 'epidemicStats', {simulation_ended: true})
+        expect(mockSocket.emit).toHaveBeenNthCalledWith(3, 'epidemicStats', { simulation_ended: true })
         done();
       })
 
 
     });
 
-    it('should retry until all the simulations are finished',  (done) => {
+    it('should retry until all the simulations are finished', (done) => {
       const simId1 = "3457634"
       const simId2 = "76543e4"
       const jobId = mockObjectId();
       fetchSimulationsWithJobId
         .mockResolvedValueOnce([
-          mockSimulationPromise('in-progress', simId1),
-          mockSimulationPromise('in-queue', simId2)
+          mockSimulation('in-progress', simId1),
+          mockSimulation('in-queue', simId2)
         ])
         .mockResolvedValueOnce([
-          mockSimulationPromise('finished', simId1),
-          mockSimulationPromise('in-progress', simId2)
+          mockSimulation('finished', simId1),
+          mockSimulation('in-progress', simId2)
         ])
         .mockResolvedValueOnce([
-          mockSimulationPromise('finished', simId1),
-          mockSimulationPromise('finished', simId2)
+          mockSimulation('finished', simId1),
+          mockSimulation('finished', simId2)
         ]);
 
       aggregateSimulations.mockReturnValueOnce([1, 2])
 
       handleRequest(mockSocket);
-      mockSocket.on.mock.calls[0][1]({jobId});
+      mockSocket.on.mock.calls[0][1]({ jobId });
 
       process.nextTick(async () => {
         jest.runAllTimers();
@@ -230,14 +240,15 @@ describe("Count controller", () => {
       const simId1 = "3457634"
       const simId2 = "76543e4"
       const jobId = mockObjectId();
+
       fetchSimulationsWithJobId
         .mockResolvedValueOnce([
-          mockSimulationPromise('in-progress', simId1),
-          mockSimulationPromise('in-queue', simId2)
+          mockSimulation('in-progress', simId1),
+          mockSimulation('in-queue', simId2)
         ])
         .mockResolvedValueOnce([
-          mockSimulationPromise('finished', simId1),
-          mockSimulationPromise('failed', simId2)
+          mockSimulation('finished', simId1),
+          mockSimulation('failed', simId2)
         ])
 
       aggregateSimulations.mockReturnValueOnce([1, 2])

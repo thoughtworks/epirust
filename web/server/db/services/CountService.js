@@ -43,4 +43,28 @@ const fetchCountsInSimulation = (simulationId, skipBy) => {
       .cursor();
 };
 
-module.exports = {addIntervention, upsertCount, fetchCountsInSimulation};
+const aggregateSimulations = (simulationIds) => {
+  return Count
+    .aggregate([
+      { $match: { simulation_id: { $in: simulationIds } } },
+      {
+        $group: {
+          _id: '$hour',
+          infected: { $avg: '$infected' },
+          susceptible: { $avg: '$susceptible' },
+          quarantined: { $avg: '$quarantined' },
+          recovered: { $avg: '$recovered' },
+          deceased: { $avg: '$deceased' },
+          infected_std: { $stdDevPop: '$infected' },
+          susceptible_std: { $stdDevPop: '$susceptible' },
+          quarantined_std: { $stdDevPop: '$quarantined' },
+          recovered_std: { $stdDevPop: '$recovered' },
+          deceased_std: { $stdDevPop: '$deceased' },
+        }
+      },
+      {$addFields: {hour: '$_id'}},
+      { $sort: { _id: 1 } }
+    ])
+}
+
+module.exports = {addIntervention, upsertCount, fetchCountsInSimulation, aggregateSimulations};

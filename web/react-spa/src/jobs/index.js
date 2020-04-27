@@ -82,7 +82,7 @@ export const JobsList = () => {
   }
 
   if (!paramId && simulations.length) {
-    return (<Redirect to={`/jobs/${simulations[0].job_id}/time-series`} />);
+    return (<Redirect to={`/jobs/${simulations[0]._id}/time-series`} />);
   }
 
   if (paramId && !view) {

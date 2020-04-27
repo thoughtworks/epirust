@@ -16,7 +16,7 @@ exports[`should fetch simulation status from API to show status on UI 1`] = `
         >
           <a
             class="no-link-formatting"
-            href="/jobs/1234"
+            href="/jobs/ad1234"
           >
             <div
               class="simulation-tab  finished"
@@ -26,7 +26,7 @@ exports[`should fetch simulation status from API to show status on UI 1`] = `
               >
                 <p
                   class="job-status"
-                  data-testid="job-status-1234"
+                  data-testid="job-status-ad1234"
                 >
                   Finished
                 </p>
@@ -35,7 +35,7 @@ exports[`should fetch simulation status from API to show status on UI 1`] = `
                 >
                   Id: 
                   <code>
-                    1234
+                    ad1234
                   </code>
                 </p>
               </div>

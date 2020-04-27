@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
-import { Interventions } from '../grid/constants';
 import Graph from './LineGraph';
 import Loader from '../common/Loader'
+import { parseAnnotations } from './utils';
 
 export const BUFFER_SIZE_TO_RENDER = 100;
-export default function SocketAwareGraph({ socket, simulationId }) {
+export default function SocketAwareGraph({ socket, jobId, includesMultipleSimulations = false }) {
     const [dataBuffer, setDataBuffer] = useState([]);
     const [simulationEnded, setSimulationEnded] = useState(false);
     const [annotations, updateAnnotations] = useState([]);
@@ -17,7 +17,7 @@ export default function SocketAwareGraph({ socket, simulationId }) {
         }
 
         let buff = [];
-        socket.emit('simulation_id', simulationId);
+        socket.emit('get', { jobId });
 
         socket.on('epidemicStats', function (messageRaw) {
             const message = messageRaw;
@@ -28,13 +28,34 @@ export default function SocketAwareGraph({ socket, simulationId }) {
                 socket.close();
             }
             else {
-                const { hour, susceptible, infected, quarantined, recovered, deceased } = message;
-                const perHourStats = [hour, susceptible, infected, quarantined, recovered, deceased];
+
+                //TODO: write this better
+                let perHourStats = []
+                if (includesMultipleSimulations) {
+                    const { hour,
+                        susceptible, susceptible_std,
+                        infected, infected_std,
+                        quarantined, quarantined_std,
+                        recovered, recovered_std,
+                        deceased, deceased_std } = message;
+
+                    perHourStats = [hour,
+                        susceptible, susceptible_std,
+                        infected, infected_std,
+                        quarantined, quarantined_std,
+                        recovered, recovered_std,
+                        deceased, deceased_std
+                    ];
+                }
+                else {
+                    const { hour, susceptible, infected, quarantined, recovered, deceased } = message;
+                    perHourStats = [hour, susceptible, infected, quarantined, recovered, deceased];
+                }
                 buff.push(perHourStats);
 
                 if ('interventions' in message) {
                     updateAnnotations(annotations =>
-                        [...annotations, ...parseAnnotations(message.interventions, hour)]
+                        [...annotations, ...parseAnnotations(message.interventions, message.hour)]
                     )
                 }
             }
@@ -49,10 +70,17 @@ export default function SocketAwareGraph({ socket, simulationId }) {
         });
 
         return () => socket.close()
-    }, [socket, simulationId]);
+    }, [socket, jobId]);
 
     if (!dataBuffer.length)
         return <Loader />
+
+    if (includesMultipleSimulations) {
+        const arr = [...dataBuffer]
+        arr.unshift(["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]);
+        const csvFormattedData = arr.join("\n");
+        return <Graph dataBuffer={csvFormattedData} enableExport={true} errorBars={true} />
+    }
 
     return (
         <Graph
@@ -66,39 +94,5 @@ export default function SocketAwareGraph({ socket, simulationId }) {
 
 SocketAwareGraph.propTypes = {
     socket: PropTypes.object,
-    simulationId: PropTypes.number.isRequired,
+    jobId: PropTypes.string.isRequired,
 };
-
-function parseAnnotations(interventions, hour) {
-
-    const InterventionToClassNames = {
-        [Interventions.LOCKDOWN]: "lockdown",
-        [Interventions.BUILD_NEW_HOSPITAL]: "hospital",
-        [Interventions.VACCINATION]: "vaccination"
-    }
-
-    function getLabel(interventionObj) {
-        switch (interventionObj.intervention) {
-
-            case Interventions.LOCKDOWN:
-                return interventionObj.data.status === Interventions.status.LOCKDOWN_START
-                    ? "Lockdown start"
-                    : "Lockdown end"
-
-            case Interventions.BUILD_NEW_HOSPITAL:
-                return "Build Hospitals"
-
-            case Interventions.VACCINATION:
-                return "Vaccination"
-
-            default:
-                return "Unknown"
-        }
-    }
-
-    return interventions.map(i => {
-        const className = InterventionToClassNames[i.intervention];
-        return { x: hour, label: getLabel(i), className }
-    })
-}
-

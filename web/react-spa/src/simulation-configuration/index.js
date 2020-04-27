@@ -33,7 +33,7 @@ export default function SimulationConfiguration() {
   function pushData(paramsData) {
     post("/simulation/init", paramsData)
       .then(res => res.json())
-      .then(data => history.push(`/jobs/${data.simulationId}`))
+      .then(data => history.push(`/jobs/${data.job_id}`))
       .catch(err => {
         console.error(err);
         setButtonDisabled(false);
@@ -72,6 +72,8 @@ export default function SimulationConfiguration() {
       }
       paramsData[key] = value;
     });
+
+    paramsData["number_of_simulations"] = 2
 
     if ("generate_grid_vis" in paramsData) {
       const value = paramsData["generate_grid_vis"];

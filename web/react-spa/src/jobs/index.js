@@ -27,26 +27,28 @@ import io from 'socket.io-client'
 import Loader from "../common/Loader";
 
 export const JobsList = () => {
-  const { id, view } = useParams();
+  const { id: paramId, view } = useParams();
   const [simulations, updateSimulations] = useState([]);
   const [socket, setSocket] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setIsLoading(true)
-
+    //TODO: [multi-sim] jobs api
     fetch(`${config.API_HOST}/simulation/`)
       .then(res => res.json())
       .then(value => updateSimulations(value.reverse()))
       .then(() => setIsLoading(false))
   }, []);
 
+  // "[{"_id":"5ea297e1d117e34f524f1470","status":"finished","job_id":"5ea297e1d117e34f524f146f","__v":0}]"
   useEffect(() => {
     if (!socket) {
       setSocket(io(`${config.API_HOST}/job-status`))
     }
     else {
       socket.on('jobStatus', (data) => {
+        //TODO: [multi-sim] this structure should also change from backend
         updateSimulations(data.reverse())
       })
     }
@@ -61,10 +63,10 @@ export const JobsList = () => {
         <ul className="list-group scrollable">
           {simulations.map(s =>
             <Job
-              key={s.simulation_id}
-              simulationId={s.simulation_id}
+              key={s.job_id}
+              jobId={s.job_id}
               status={s.status}
-              isActive={s.simulation_id === parseInt(id)}
+              isActive={s.job_id === paramId}
             />
           )}
         </ul>
@@ -73,13 +75,13 @@ export const JobsList = () => {
   }
 
   function renderDetails() {
-    const simulationDetails = simulations.find(s => s.simulation_id === parseInt(id));
+    const simulationDetails = simulations.find(s => s.job_id === paramId);
 
     if (!simulationDetails) return null
 
     return (
       <div className="col-10 left-border scrollable details">
-        <JobDetails simulationId={parseInt(id)} details={simulationDetails} />
+        <JobDetails jobId={paramId} details={simulationDetails} />
       </div>
     );
   }
@@ -88,12 +90,12 @@ export const JobsList = () => {
     return <Loader />
   }
 
-  if (!id && simulations.length) {
-    return (<Redirect to={`/jobs/${simulations[0].simulation_id}/time-series`} />);
+  if (!paramId && simulations.length) {
+    return (<Redirect to={`/jobs/${simulations[0].job_id}/time-series`} />);
   }
 
-  if (id && !view) {
-    return (<Redirect to={`/jobs/${id}/time-series`} />);
+  if (paramId && !view) {
+    return (<Redirect to={`/jobs/${paramId}/time-series`} />);
   }
 
   return (

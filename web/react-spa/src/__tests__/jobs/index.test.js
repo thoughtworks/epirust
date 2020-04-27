@@ -22,13 +22,15 @@ const flushPromises = () => new Promise(setImmediate);
 
 import { MemoryRouter } from "react-router-dom";
 
+const jobId = 'ad1234';
+const job = { job_id: jobId, status: "finished", config: {} };
+
 afterEach(() => {
   jest.clearAllMocks();
 });
 
 test('should render loader while fetching data of status', async function () {
-  const mockResponse = Promise.resolve([{ simulation_id: 1234, status: "finished" }]);
-  const mockPromise = { json: jest.fn().mockReturnValueOnce(mockResponse) };
+  const mockPromise = { json: jest.fn().mockResolvedValue([job]) };
   jest.spyOn(global, 'fetch').mockResolvedValue(mockPromise)
 
   const { container } = render(
@@ -48,9 +50,7 @@ test('should render loader while fetching data of status', async function () {
 });
 
 test('should fetch simulation status from API to show status on UI', async function () {
-  const mockResponse = Promise.resolve([{ simulation_id: 1234, status: "finished" }]);
-
-  const mockPromise = { json: jest.fn().mockReturnValueOnce(mockResponse) };
+  const mockPromise = { json: jest.fn().mockResolvedValue([job]) };
   jest.spyOn(global, 'fetch').mockResolvedValue(mockPromise)
 
   io.mockImplementation(() => jest.fn().mockReturnValueOnce({
@@ -76,10 +76,8 @@ test('should fetch simulation status from API to show status on UI', async funct
 
 
 test('should fetch simulation status from socket messages to update status on UI', async function () {
-  const simulationId = 1234;
-  const mockResponse = Promise.resolve([{ simulation_id: simulationId, status: "in-queue" }]);
 
-  const mockPromise = { json: jest.fn().mockReturnValueOnce(mockResponse) };
+  const mockPromise = { json: jest.fn().mockResolvedValue([{ ...job, status: 'in-queue' }]) };
   jest.spyOn(global, 'fetch').mockResolvedValue(mockPromise)
 
   const socket = new MockSocket();
@@ -96,20 +94,20 @@ test('should fetch simulation status from socket messages to update status on UI
     await flushPromises()
   })
 
-  expect(getByTestId(`job-status-${simulationId}`)).toHaveTextContent("In-Queue")
+  expect(getByTestId(`job-status-${jobId}`)).toHaveTextContent("In-Queue")
 
   act(() => {
-    socket.emit('jobStatus', [{ simulation_id: simulationId, status: "running" }])
+    socket.emit('jobStatus', [{ job_id: jobId, status: "running" }])
     jest.runAllTimers();
   })
 
-  expect(getByTestId(`job-status-${simulationId}`)).toHaveTextContent("In-Progress")
+  expect(getByTestId(`job-status-${jobId}`)).toHaveTextContent("In-Progress")
 
   act(() => {
-    socket.emit('jobStatus', [{ simulation_id: simulationId, status: "finished" }])
+    socket.emit('jobStatus', [{ job_id: jobId, status: "finished" }])
     jest.runAllTimers();
   })
-  expect(getByTestId(`job-status-${simulationId}`)).toHaveTextContent("Finished")
+  expect(getByTestId(`job-status-${jobId}`)).toHaveTextContent("Finished")
 
   expect(io).toHaveBeenCalledTimes(1);
   expect(io).toHaveBeenCalledWith("http://localhost:3000/job-status");

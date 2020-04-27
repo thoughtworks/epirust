@@ -22,7 +22,7 @@ import './job.scss'
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 
-export const Job = ({ simulationId, status, isActive = false }) => {
+export const Job = ({jobId, status, isActive = false }) => {
   const statusText = {
     "running": "In-Progress",
     "finished": "Finished",
@@ -33,11 +33,11 @@ export const Job = ({ simulationId, status, isActive = false }) => {
   return (
     <li className="list-group-item borderless item-less-padding">
 
-      <Link to={`/jobs/${simulationId}`} className={'no-link-formatting'}>
+      <Link to={`/jobs/${jobId}`} className={'no-link-formatting'}>
         <div className={`simulation-tab ${isActive ? "active shadow" : ""} ${status}`}>
           <div className="card-body card-body-less-padding">
-            <p data-testid={`job-status-${simulationId}`} className="job-status">{statusText[status]}</p>
-            <p className="minor-details">{`Id: `}<code>{simulationId}</code></p>
+            <p data-testid={`job-status-${jobId}`} className="job-status">{statusText[status]}</p>
+            <p className="minor-details">{`Id: `}<code>{jobId}</code></p>
           </div>
         </div>
       </Link>
@@ -47,6 +47,6 @@ export const Job = ({ simulationId, status, isActive = false }) => {
 };
 
 Job.propTypes = {
-  simulationId: PropTypes.number.isRequired,
+  jobId: PropTypes.string.isRequired,
   status: PropTypes.oneOf(["running", "finished", "failed", "in-queue"]).isRequired
 };

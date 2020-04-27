@@ -27,7 +27,7 @@ import { act } from 'react-dom/test-utils'
 jest.mock('dygraphs')
 jest.useFakeTimers();
 
-const simulationId = 1231231231
+const jobId = 'a23vb21245g'
 
 function emitNMessages(socket, n, hourStatistics) {
     for (let index = 0; index < n; index++) {
@@ -51,7 +51,7 @@ test('should display loader and stop displaying when data arrives', () => {
 
     const hourStatistics = { ...hourStatisticsFor100thHour, hour: 10 }
 
-    const { getByTestId, container } = render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
+    const { getByTestId, container } = render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />)
 
     expect(getByTestId('loader')).toBeInTheDocument()
 
@@ -75,7 +75,7 @@ test('should set residue also into data buffer when simulation ended flag is tru
     socket.socketClient.close = closeSpy
     const hourStatistics = { ...hourStatisticsFor100thHour }
 
-    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
+    render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />)
 
     act(() => {
         emitNMessages(socket, BUFFER_SIZE_TO_RENDER + 5, hourStatistics)
@@ -105,7 +105,7 @@ test("should enable export in graph if simulation has ended", () => {
     let socket = new MockSocket()
     const closeSpy = jest.fn()
     socket.socketClient.close = closeSpy
-    const { container } = render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />)
+    const { container } = render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />)
 
     act(() => {
         emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatisticsFor100thHour);
@@ -127,7 +127,7 @@ test("should close the socket on receiving simulation ended message", () => {
     const closeSpy = jest.fn()
     socket.socketClient.close = closeSpy;
 
-    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+    render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />);
 
     act(() => {
         socket.emit("epidemicStats", { "simulation_ended": true });
@@ -150,7 +150,7 @@ test("should render the annotations for lockdown applied intervention ", () => {
         updateOptions: jest.fn()
     }))
 
-    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+    render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />);
 
     act(() => {
         emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatistics)
@@ -188,7 +188,7 @@ test("should render the annotations for lockdown revoked intervention ", () => {
         updateOptions: jest.fn()
     }))
 
-    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+    render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />);
 
     act(() => {
         emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatistics)
@@ -226,7 +226,7 @@ test("should render the annotations for interventions for BuildNewHospital", () 
         updateOptions: jest.fn()
     }))
 
-    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+    render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />);
 
     act(() => {
         emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatistics)
@@ -261,7 +261,7 @@ test("should render the annotations for interventions for Vaccination", () => {
         updateOptions: jest.fn()
     }))
 
-    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+    render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />);
 
     act(() => {
         emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatisticsFor100thHour)
@@ -297,7 +297,7 @@ test("should render the annotations for interventions and apply height to the ti
         updateOptions: jest.fn()
     }))
 
-    render(<SocketAwareGraph socket={socket.socketClient} simulationId={simulationId} />);
+    render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />);
 
     act(() => {
         emitNMessages(socket, BUFFER_SIZE_TO_RENDER, hourStatisticsFor100thHour)

@@ -27,10 +27,10 @@ import PropTypes from 'prop-types';
 import { TimeSeries } from "../time-series";
 import { TimeSeriesDeviation } from "../time-series/TimeSeriesDeviation";
 
-export const JobDetails = ({ simulationId, details }) => {
-  const linkPrefix = `/jobs/${simulationId}`;
+export const JobDetails = ({ jobId, details }) => {
+  const linkPrefix = `/jobs/${jobId}`;
 
-  const isGridEnabled = details && details.config.enable_citizen_state_messages,
+  const isGridEnabled = details && details.config && details.config.enable_citizen_state_messages || false,
     isFinished = details && details.status === 'finished';
 
   function renderGraphTabs() {
@@ -48,7 +48,7 @@ export const JobDetails = ({ simulationId, details }) => {
         </div>
 
         <div className="col-4">
-          <h4 className="simulation-id">{`Simulation: `}<code>{simulationId}</code></h4>
+          <h4 className="simulation-id">{`Simulation: `}<code>{jobId}</code></h4>
         </div>
       </div>
     );
@@ -56,26 +56,26 @@ export const JobDetails = ({ simulationId, details }) => {
 
   function renderContentForTab() {
     return (
-        <div className='job-details-content'>
-            <Switch>
+      <div className='job-details-content'>
+        <Switch>
 
-                <Route exact path={"/jobs/:id/time-series"}>
-                    <TimeSeries simulationId={simulationId}/>
-                </Route>
+          <Route exact path={"/jobs/:id/time-series"}>
+            <TimeSeries jobId={jobId} />
+          </Route>
 
-                <Route exact path={"/jobs/:id/time-series-deviation"}>
-                    <TimeSeriesDeviation simulationId={simulationId}/>
-                </Route>
+          <Route exact path={"/jobs/:id/time-series-deviation"}>
+            <TimeSeriesDeviation jobId={jobId} />
+          </Route>
 
-                <Route exact path={"/jobs/:id/grid"}>
-                    {isGridEnabled ? <GridPage/> : <Redirect to={`/jobs/${simulationId}/time-series`}/>}
-                </Route>
+          <Route exact path={"/jobs/:id/grid"}>
+            {isGridEnabled ? <GridPage /> : <Redirect to={`/jobs/${jobId}/time-series`} />}
+          </Route>
 
-                <Route exact path={"/jobs/:id/config"}>
-                    {details && <pre>{JSON.stringify(details.config, undefined, 4)}</pre>}
-                </Route>
-            </Switch>
-        </div>
+          <Route exact path={"/jobs/:id/config"}>
+            {details && <pre>{JSON.stringify(details.config, undefined, 4)}</pre>}
+          </Route>
+        </Switch>
+      </div>
     );
   }
 
@@ -89,6 +89,6 @@ export const JobDetails = ({ simulationId, details }) => {
 };
 
 JobDetails.propTypes = {
-  simulationId: PropTypes.number.isRequired,
+  jobId: PropTypes.string.isRequired,
   details: PropTypes.object
 };

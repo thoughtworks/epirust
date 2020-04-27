@@ -18,24 +18,30 @@
  */
 
 
-import {Job} from "../../jobs/Job";
+import { Job } from "../../jobs/Job";
 import React from "react";
-import {render} from '@testing-library/react'
-import {BrowserRouter} from "react-router-dom";
+import { render } from '@testing-library/react'
+import { BrowserRouter } from "react-router-dom";
 
 describe('Job', function () {
-  function getComponent(simulationId) {
+  function getComponent(jobId, isActive) {
     return (
       <BrowserRouter>
-        <Job status="running" simulationId={simulationId}/>
+        <Job status="running" jobId={jobId} isActive={isActive} />
       </BrowserRouter>
 
     );
   }
 
-  it('should render job lists', function () {
-    const component = render(getComponent(1234));
+  it('should render job', function () {
+    const isActiveJob = false;
+    const component = render(getComponent('a12d34', isActiveJob));
+    expect(component).toMatchSnapshot()
+  });
 
+  it('should render job as active', function () {
+    const isActiveJob = true;
+    const component = render(getComponent('a1d234', isActiveJob));
     expect(component).toMatchSnapshot()
   });
 });

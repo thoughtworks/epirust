@@ -573,6 +573,7 @@ Object {
   "last_day": 22,
   "lockdown_at_number_of_infections": 100,
   "number_of_agents": 10000,
+  "number_of_simulations": 2,
   "percentage_asymptomatic_population": 0,
   "percentage_severe_infected_population": 1,
   "pre_symptomatic_duration": 0,

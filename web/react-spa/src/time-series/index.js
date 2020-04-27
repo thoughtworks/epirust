@@ -23,7 +23,7 @@ import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
 import config from "../config";
 
-export function TimeSeries({ simulationId }) {
+export function TimeSeries({ jobId }) {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
@@ -35,6 +35,6 @@ export function TimeSeries({ simulationId }) {
     }
   }, []);
   return (
-    <SocketAwareGraph simulationId={simulationId} socket={socket} />
+    <SocketAwareGraph jobId={jobId} socket={socket} />
   )
 }

@@ -25,7 +25,7 @@ import { MemoryRouter } from "react-router-dom";
 describe('Job Details', () => {
     it('should render the time series if the view is time-series', () => {
         const component = render(<MemoryRouter initialEntries={['/jobs/123/time-series']}>
-            <JobDetails simulationId={123} details={{ config: {} }} />
+            <JobDetails jobId={123} details={{ config: {} }} />
         </MemoryRouter>);
         //TODO: Find a better way to assert. Changes irrelevant to the test would fail this test
         expect(component.container).toMatchSnapshot()
@@ -33,7 +33,7 @@ describe('Job Details', () => {
 
     it('should render the config if the config is given', () => {
         const component = render(<MemoryRouter initialEntries={['/jobs/123/config']}>
-            <JobDetails simulationId={123} details={{ config: { configKey: 'configValue' } }} />
+            <JobDetails jobId={123} details={{ config: { configKey: 'configValue' } }} />
         </MemoryRouter>);
 
         expect(component.container).toMatchSnapshot()
@@ -41,7 +41,7 @@ describe('Job Details', () => {
 
     it('should not render the config if the config is not given', () => {
         const component = render(<MemoryRouter initialEntries={['/jobs/123/config']}>
-            <JobDetails simulationId={123} />
+            <JobDetails jobId={123} />
         </MemoryRouter>);
 
         expect(component.container).toMatchSnapshot()
@@ -50,7 +50,7 @@ describe('Job Details', () => {
     it('should render loader initially when no info received from socket', () => {
         const simulationDetails = { config: { enable_citizen_state_messages: false } };
         const { asFragment } = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
-            <JobDetails simulationId={123} details={simulationDetails} />
+            <JobDetails jobId={123} details={simulationDetails} />
         </MemoryRouter>);
 
         expect(asFragment()).toMatchSnapshot()
@@ -59,7 +59,7 @@ describe('Job Details', () => {
     it('should render grid if grid is enabled in config', () => {
         const simulationDetails = { config: { enable_citizen_state_messages: true } };
         const component = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
-            <JobDetails simulationId={123} details={simulationDetails} />
+            <JobDetails jobId={123} details={simulationDetails} />
         </MemoryRouter>);
 
         expect(component.container).toMatchSnapshot()
@@ -68,7 +68,7 @@ describe('Job Details', () => {
     it('should not render time series mean comparison tab when a job is not finished', () => {
         const { asFragment } = render(
             <MemoryRouter initialEntries={['/jobs/123/time-series-deviation']}>
-                <JobDetails simulationId={123} details={{
+                <JobDetails jobId={123} details={{
                     config: {},
                     status: "in-queue"
                 }} />
@@ -80,7 +80,7 @@ describe('Job Details', () => {
     it('should render time series mean comparison graph tab when a job is finished', () => {
         const { asFragment } = render(
             <MemoryRouter initialEntries={['/jobs/123/time-series-deviation']}>
-                <JobDetails simulationId={123} details={{ config: {}, status: "finished" }} />
+                <JobDetails jobId={123} details={{ config: {}, status: "finished" }} />
             </MemoryRouter>
         );
         expect(asFragment()).toMatchSnapshot()

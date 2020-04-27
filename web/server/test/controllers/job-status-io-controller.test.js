@@ -17,9 +17,10 @@
  *
  */
 
-jest.mock('../../db/models/Simulation');
+jest.mock('../../db/services/SimulationService');
 const { handleRequest: handleJobsRequest } = require('../../controllers/job-status-io-controller')
-const { Simulation, SimulationStatus } = require('../../db/models/Simulation');
+const { SimulationStatus } = require('../../db/models/Simulation');
+const SimulationService = require('../../db/services/SimulationService')
 
 jest.useFakeTimers();
 
@@ -38,10 +39,10 @@ describe('Jobs Status controller', () => {
 
         //TODO: implement async iterator for the returned value from cursor.
         //this implementation restricts testing close method
-        Simulation.find
-            .mockReturnValueOnce({ cursor: jest.fn().mockReturnValue(jobStatus1) })
-            .mockReturnValueOnce({ cursor: jest.fn().mockReturnValue(jobStatus2) })
-            .mockReturnValueOnce({ cursor: jest.fn().mockReturnValue(jobStatus3) })
+        SimulationService.groupSimulationsByJob
+            .mockReturnValueOnce(jobStatus1)
+            .mockReturnValueOnce(jobStatus2)
+            .mockReturnValueOnce(jobStatus3)
 
         const emitSpy = jest.fn(), onHookSpy = jest.fn();
         const mockSocket = { emit: emitSpy, disconnected: false, on: onHookSpy }
@@ -53,14 +54,14 @@ describe('Jobs Status controller', () => {
 
         //1
         jest.advanceTimersByTime(15000);
-        expect(Simulation.find).toHaveBeenCalledTimes(1)
+        expect(SimulationService.groupSimulationsByJob).toHaveBeenCalledTimes(1)
 
         await flushPromises()
         expect(emitSpy).toHaveBeenCalledTimes(1)
 
         //2
         jest.advanceTimersByTime(15000);
-        expect(Simulation.find).toHaveBeenCalledTimes(2)
+        expect(SimulationService.groupSimulationsByJob).toHaveBeenCalledTimes(2)
 
         await flushPromises()
         expect(emitSpy).toHaveBeenCalledTimes(2)
@@ -68,7 +69,7 @@ describe('Jobs Status controller', () => {
         //3
         jest.advanceTimersByTime(15000);
         // mockSocket.disconnected = true
-        expect(Simulation.find).toHaveBeenCalledTimes(3)
+        expect(SimulationService.groupSimulationsByJob).toHaveBeenCalledTimes(3)
 
         await flushPromises()
         expect(emitSpy).toHaveBeenCalledTimes(3)

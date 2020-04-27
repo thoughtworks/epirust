@@ -25,6 +25,7 @@ import { Redirect, useParams } from 'react-router-dom';
 import config from "../config";
 import io from 'socket.io-client'
 import Loader from "../common/Loader";
+import {reduceStatus} from "./JobTransformer";
 
 export const JobsList = () => {
   const { id: paramId, view } = useParams();
@@ -38,7 +39,7 @@ export const JobsList = () => {
     }
     else {
       socket.on('jobStatus', (data) => {
-        updateSimulations(data.reverse())
+        updateSimulations(data.map(reduceStatus).reverse())
         setIsLoading(false)
       })
     }

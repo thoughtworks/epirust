@@ -4,6 +4,9 @@ import React from "react";
 import MockSocket from 'socket.io-mock'
 import {MemoryRouter} from "react-router-dom";
 
+jest.mock("../../jobs/JobTransformer")
+import {reduceStatus} from "../../jobs/JobTransformer";
+
 jest.mock('socket.io-client')
 import io from 'socket.io-client'
 
@@ -86,10 +89,11 @@ describe('Jobs', () => {
     socket = new MockSocket();
     socket.socketClient.close = jest.fn()
     io.mockImplementation(() => socket.socketClient)
+
+    reduceStatus.mockImplementation((x) => (x));
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 });
-

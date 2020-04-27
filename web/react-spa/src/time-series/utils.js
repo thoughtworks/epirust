@@ -31,3 +31,16 @@ export function parseAnnotations(interventions, hour) {
         return { x: hour, label: getLabel(i), className }
     })
 }
+
+export function modelAnnotation({ x, label, className }, i) {
+    const newLocal = i % 2 === 0;
+    return {
+        series: 'susceptible',
+        x,
+        shortText: label,
+        text: `${label} at ${x}`,
+        tickHeight: newLocal ? 40 : 80,
+        attachAtBottom: true,
+        cssClass: `annotation ${className}`
+    }
+}

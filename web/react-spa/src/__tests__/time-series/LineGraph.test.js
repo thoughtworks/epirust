@@ -25,8 +25,16 @@ import renderer from 'react-test-renderer'
 
 jest.mock('dygraphs')
 
+
+const simulationData = [
+    ['hour', 'a', 'b', 'c', 'd', 'e']
+    [1, 10, 0, 5, 0, 0, 0, 0, 0, 0, 0],
+    [2, 15, 0, 6, 0, 0, 0, 0, 0, 0, 0],
+    [3, 20, 0, 7, 0, 0, 0, 0, 0, 1, 0]
+]
+
 test("should render Graph", () => {
-    const component = renderer.create(<Graph dataBuffer={[]} />)
+    const component = renderer.create(<Graph dataBuffer={''} />)
     let tree = component.toJSON()
 
     expect(tree).toMatchSnapshot()
@@ -34,50 +42,42 @@ test("should render Graph", () => {
 
 test('should render an empty Graph without calling dygraphs for empty data buffer', () => {
     const dygraphMockFn = Dygraph.mockImplementation(() => { graph: "mockGraph" })
-    const { getByTestId } = render(<Graph dataBuffer={[]} />)
+    const { getByTestId } = render(<Graph dataBuffer={''} />)
 
     expect(getByTestId("visualization")).toBeInTheDocument()
     expect(dygraphMockFn).toHaveBeenCalledTimes(0)
 })
 
 test('should invoke dygraph when data buffer length is not 0 and graph is null', () => {
-    const simulationData = [
-        [1, 10, 5, 0, 0, 0],
-        [2, 15, 6, 0, 0, 0],
-        [3, 20, 7, 0, 0, 1]]
-    const labels = ["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]
 
     const expectedOptions = {
-        "labels": labels,
         legend: 'always',
         animatedZooms: true,
         title: 'Time Series Graph',
         ylabel: 'Number of Agents',
         xlabel: 'Hours',
         showRoller: true,
-        errorBars: false,
+        errorBars: true,
         rollPeriod: 24
     }
     const dygraphMockFn = Dygraph.mockImplementationOnce(() => { graph: "mockGraph" })
-    render(<Graph dataBuffer={simulationData} labels={labels} />)
+    render(<Graph dataBuffer={simulationData.join('\n')} />)
 
     expect(dygraphMockFn).toHaveBeenCalledTimes(1)
-    expect(dygraphMockFn).toHaveBeenCalledWith(expect.anything(), simulationData, expectedOptions)
+    expect(dygraphMockFn).toHaveBeenCalledWith(expect.anything(), simulationData.join('\n'), expectedOptions)
     jest.clearAllMocks()
 })
 
 test('should update dygraph chart when data buffer is not 0 and graph is not null', () => {
-    const simulationData1 = [
-        [1, 10, 5, 0, 0, 0],
-        [2, 15, 6, 0, 0, 0],
-        [3, 20, 7, 0, 0, 1]]
-    const simulationData2 = [[4, 30, 8, 0, 0, 2]]
+
     const updateSpyFn = jest.fn()
     const dygraphMockFn = Dygraph.mockImplementation(() => ({ updateOptions: updateSpyFn }))
-    const { rerender } = render(<Graph dataBuffer={simulationData1} />)
-    expect(dygraphMockFn).toHaveBeenCalled()
-    expect(updateSpyFn).toHaveBeenNthCalledWith(1, { file: simulationData1 }) //TODO: stop update if new Dygraph has already been generated
 
-    rerender(<Graph dataBuffer={simulationData2} />)
-    expect(updateSpyFn).toHaveBeenNthCalledWith(2, { file: simulationData2 })
+    const { rerender } = render(<Graph dataBuffer={simulationData.join('\n')} />)
+    expect(dygraphMockFn).toHaveBeenCalled()
+    expect(updateSpyFn).toHaveBeenNthCalledWith(1, { file: simulationData.join('\n') }) //TODO: stop update if new Dygraph has already been generated
+
+    const simulationData2 = [...simulationData, [4, 20, 0, 7, 0, 0, 0, 0, 0, 1, 0]]
+    rerender(<Graph dataBuffer={simulationData2.join('\n')} />)
+    expect(updateSpyFn).toHaveBeenNthCalledWith(2, { file: simulationData2.join('\n') })
 })

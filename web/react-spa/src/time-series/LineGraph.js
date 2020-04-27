@@ -2,8 +2,9 @@ import React from 'react';
 import Dygraph from 'dygraphs';
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'
+import { modelAnnotation } from './utils';
 
-export default function Graph({ dataBuffer, enableExport = false, labels, errorBars = false, annotations = [] }) {
+export default function Graph({ dataBuffer, enableExport = false, annotations = [] }) {
     const [graph, setGraph] = useState(null);
 
     useEffect(() => {
@@ -20,11 +21,8 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
                 ylabel: 'Number of Agents',
                 xlabel: 'Hours',
                 showRoller: true,
-                errorBars: errorBars,
+                errorBars: true,
                 rollPeriod: 24
-            }
-            if (labels) {
-                options = { ...options, labels: labels }
             }
             const visualisationDiv = document.getElementById("vis");
             const graphInstance = new Dygraph(visualisationDiv, dataBuffer, options);
@@ -33,7 +31,7 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
         else {
             graph.updateOptions({ 'file': dataBuffer });
         }
-    }, [graph, dataBuffer, labels, errorBars])
+    }, [graph, dataBuffer])
 
     useEffect(() => {
         if (!graph || !annotations.length)
@@ -74,18 +72,6 @@ export default function Graph({ dataBuffer, enableExport = false, labels, errorB
 
 Graph.propTypes = {
     enableExport: PropTypes.bool,
-    annotations: PropTypes.arrayOf(PropTypes.object)
-}
-
-function modelAnnotation({ x, label, className }, i) {
-    const newLocal = i % 2 === 0;
-    return {
-        series: 'susceptible',
-        x,
-        shortText: label,
-        text: `${label} at ${x}`,
-        tickHeight: newLocal ? 40 : 80,
-        attachAtBottom: true,
-        cssClass: `annotation ${className}`
-    }
+    annotations: PropTypes.arrayOf(PropTypes.object),
+    dataBuffer: PropTypes.string,
 }

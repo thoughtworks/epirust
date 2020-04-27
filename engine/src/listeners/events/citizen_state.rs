@@ -76,6 +76,7 @@ mod tests {
     use crate::random_wrapper::RandomWrapper;
 
     use super::*;
+    use crate::agent::WorkStatus;
 
     #[test]
     fn citizen_states_at_hr() {
@@ -94,6 +95,6 @@ mod tests {
 
     fn citizen() -> Citizen {
         let area = Area::new(Point::new(0, 0), Point::new(1, 1));
-        Citizen::new(area, area, Point::new(2, 2), true, true, &mut RandomWrapper::new())
+        Citizen::new(area, area, Point::new(2, 2), true, true, WorkStatus::Normal {}, &mut RandomWrapper::new())
     }
 }

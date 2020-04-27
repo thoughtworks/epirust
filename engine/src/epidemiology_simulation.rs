@@ -32,7 +32,7 @@ use crate::disease::Disease;
 use crate::geography;
 use crate::geography::{Grid, Point};
 use crate::interventions::hospital::BuildNewHospital;
-use crate::interventions::lockdown::{LockdownConfig, LockdownIntervention};
+use crate::interventions::lockdown::LockdownIntervention;
 use crate::interventions::vaccination::VaccinateIntervention;
 use crate::kafka_producer::{KafkaProducer, TickAck};
 use crate::listeners::csv_service::CsvListener;
@@ -127,6 +127,11 @@ impl Epidemiology {
         let vaccinations = VaccinateIntervention::init(config);
         let mut lock_down_details = LockdownIntervention::init(config);
         let mut hospital_intervention = BuildNewHospital::init(config);
+        let essential_workers_population = lock_down_details.get_essential_workers_percentage();
+
+        for (_, agent) in self.agent_location_map.iter_mut(){
+            agent.assign_essential_worker(essential_workers_population, &mut rng);
+        }
 
         listeners.grid_updated(&self.grid);
         let mut producer = KafkaProducer::new();
@@ -212,7 +217,7 @@ impl Epidemiology {
 
             if lock_down_details.should_apply(&counts_at_hr) {
                 lock_down_details.apply(&counts_at_hr);
-                Epidemiology::lock_city(simulation_hour, &mut write_buffer_reference, &mut rng, &lock_down_details.get_config().unwrap());
+                Epidemiology::lock_city(simulation_hour, &mut write_buffer_reference);
                 listeners.intervention_applied(simulation_hour, &lock_down_details)
             }
 
@@ -388,10 +393,10 @@ impl Epidemiology {
         }
     }
 
-    fn lock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper, lockdown_details: &LockdownConfig) {
+    fn lock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
         info!("Locking the city. Hour: {}", hr);
         for (_v, agent) in write_buffer_reference.iter_mut() {
-            if rng.get().gen_bool(1.0 - lockdown_details.essential_workers_population) {
+            if !agent.is_essential_worker() {
                 agent.set_isolation(true);
             }
         }

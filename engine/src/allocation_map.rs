@@ -180,6 +180,7 @@ impl AgentLocationMap {
 mod tests {
     use super::*;
     use crate::random_wrapper::RandomWrapper;
+    use crate::agent::WorkStatus;
 
     fn before_each() -> AgentLocationMap {
         let mut rng = RandomWrapper::new();
@@ -187,9 +188,10 @@ mod tests {
         let home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
 
         let work_locations = vec![Area::new(Point::new(5, 0), Point::new(6, 2)), Area::new(Point::new(7, 0), Point::new(8, 2))];
+        let work_status = WorkStatus::NA {};
 
-        let agents = vec![agent::Citizen::new(home_locations[0], work_locations[0], points[0], false, false, &mut rng),
-                          agent::Citizen::new(home_locations[1], work_locations[0], points[0], true, true, &mut rng)];
+        let agents = vec![agent::Citizen::new(home_locations[0], work_locations[0], points[0], false, false, work_status, &mut rng),
+                          agent::Citizen::new(home_locations[1], work_locations[0], points[0], true, true, work_status, &mut rng)];
         AgentLocationMap::new(5, &agents, &points)
     }
 
@@ -204,11 +206,12 @@ mod tests {
     fn should_goto_hospital() {
         let mut rng = RandomWrapper::new();
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
+        let work_status = WorkStatus::Normal {};
         let home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
 
         let work_locations = vec![Area::new(Point::new(5, 0), Point::new(6, 2)), Area::new(Point::new(7, 0), Point::new(8, 2))];
-        let mut citizen1 = agent::Citizen::new(home_locations[0], work_locations[1], points[0], false, false, &mut rng);
-        let citizen2 = agent::Citizen::new(home_locations[1], work_locations[0], points[0], true, true, &mut rng);
+        let mut citizen1 = agent::Citizen::new(home_locations[0], work_locations[1], points[0], false, false, work_status, &mut rng);
+        let citizen2 = agent::Citizen::new(home_locations[1], work_locations[0], points[0], true, true, work_status, &mut rng);
         let agents = vec![citizen1, citizen2];
         let map = AgentLocationMap::new(5, &agents, &points);
         let hospital = Area::new(Point::new(2, 2), Point::new(4, 4));
@@ -221,12 +224,13 @@ mod tests {
         let mut rng = RandomWrapper::new();
         let points = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0), Point::new(1, 1)];
         let home = Area::new(Point::new(0, 0), Point::new(2, 2));
+        let work_status = WorkStatus::NA {};
 
         let work = Area::new(Point::new(5, 0), Point::new(6, 2));
-        let mut citizen1 = agent::Citizen::new(home, work, points[0], false, false, &mut rng);
-        let citizen2 = agent::Citizen::new(home, work, points[0], false, false, &mut rng);
-        let citizen3 = agent::Citizen::new(home, work, points[0], false, false, &mut rng);
-        let citizen4 = agent::Citizen::new(home, work, points[0], false, false, &mut rng);
+        let mut citizen1 = agent::Citizen::new(home, work, points[0], false, false, work_status, &mut rng);
+        let citizen2 = agent::Citizen::new(home, work, points[0], false, false, work_status, &mut rng);
+        let citizen3 = agent::Citizen::new(home, work, points[0], false, false, work_status, &mut rng);
+        let citizen4 = agent::Citizen::new(home, work, points[0], false, false, work_status, &mut rng);
         let agents = vec![citizen1, citizen2, citizen3, citizen4];
         let map = AgentLocationMap::new(5, &agents, &points);
         let hospital = Area::new(Point::new(0, 0), Point::new(1, 1));

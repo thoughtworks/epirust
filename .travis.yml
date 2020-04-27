@@ -38,3 +38,4 @@ matrix:
         - cd $TRAVIS_BUILD_DIR/web/server && npm install
       script:
         - cd $TRAVIS_BUILD_DIR/web && npm run test
+        - cd $TRAVIS_BUILD_DIR/web && npm run coveralls

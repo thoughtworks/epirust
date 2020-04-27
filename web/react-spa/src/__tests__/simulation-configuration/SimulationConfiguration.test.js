@@ -18,14 +18,14 @@
  */
 
 import React from 'react'
-import {act, fireEvent, render} from '@testing-library/react'
+import { act, fireEvent, render } from '@testing-library/react'
 import renderer from 'react-test-renderer'
-import {MemoryRouter} from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 import SimulationConfiguration from "../../simulation-configuration";
 
 jest.mock("../../common/apiCall");
 
-const {post} = require("../../common/apiCall");
+const { post } = require("../../common/apiCall");
 
 const mockHistoryPush = jest.fn();
 jest.mock('react-router-dom', () => ({
@@ -35,16 +35,19 @@ jest.mock('react-router-dom', () => ({
   }),
 }));
 
+
+const flushPromises = () => new Promise(setImmediate);
+
 describe('ParametersForm', function () {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    const mockToJson = jest.fn().mockResolvedValue({job_id: 'dummyId'});
-    post.mockResolvedValueOnce({json: mockToJson});
+    const mockToJson = jest.fn().mockResolvedValue({ job_id: 'dummyId' });
+    post.mockResolvedValueOnce({ json: mockToJson });
   });
 
   function getComponent() {
-    return <MemoryRouter><SimulationConfiguration/></MemoryRouter>;
+    return <MemoryRouter><SimulationConfiguration /></MemoryRouter>;
   }
 
   it('should render ParametersForm with defaults', () => {
@@ -106,35 +109,39 @@ describe('ParametersForm', function () {
     expect(container).toMatchSnapshot()
   });
 
-  it('should redirect to Jobs page on successful job creation', function () {
-    const {getByTestId} = render(getComponent());
+  it('should redirect to Jobs page on successful job creation', async function () {
+    const { getByTestId } = render(getComponent());
 
     fireEvent.submit(getByTestId('simulationForm'));
 
-    process.nextTick(() => {
-      expect(mockHistoryPush).toHaveBeenCalledTimes(1);
-      expect(mockHistoryPush).toHaveBeenCalledWith('/jobs/dummyId')
-    });
+    await act(async () => {
+      await flushPromises()
+    })
+
+    expect(mockHistoryPush).toHaveBeenCalledTimes(1);
+    expect(mockHistoryPush).toHaveBeenCalledWith('/jobs/dummyId')
   });
 
-  it('should show error message if submit job fails and should enable start button', function () {
+  it('should show error message if submit job fails and should enable start button', async function () {
     post.mockReset();
-    post.mockRejectedValueOnce(new Error("error message"));
-
+    post.mockRejectedValueOnce(new Error("Intentional error message. Ignore"));
+  
     let container_a;
     act(() => {
-      const {container, getByTestId} = render(getComponent());
+      const { container, getByTestId } = render(getComponent());
       container_a = container;
       fireEvent.submit(getByTestId('simulationForm'))
     });
-
-    process.nextTick(() => {
-      const button = container_a.querySelector('button');
-      expect(button.disabled).toBe(false);
-      expect(button.textContent).toBe("Submit");
-
-      const errorMessage = container_a.querySelector('.error-message');
-      expect(errorMessage.textContent).toBe("Error Occurred please try again!");
-    });
-  });
+  
+    await act(async () => {
+      await flushPromises()
+    })
+  
+    const button = container_a.querySelector('button');
+    expect(button.disabled).toBe(false);
+    expect(button.textContent).toBe("Submit");
+  
+    const errorMessage = container_a.querySelector('.error-message');
+    expect(errorMessage.textContent).toBe("Error Occurred please try again!");
+  })
 });

@@ -34,6 +34,7 @@ async function sendJobsStatus(socket) {
 }
 
 async function handleRequest(socket) {
+    sendJobsStatus(socket)
     const intervalId = setInterval(async() => await sendJobsStatus(socket), 15000)
 
     socket.on('disconnect', reason => {

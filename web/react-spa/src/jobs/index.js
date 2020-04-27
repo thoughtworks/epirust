@@ -30,26 +30,16 @@ export const JobsList = () => {
   const { id: paramId, view } = useParams();
   const [simulations, updateSimulations] = useState([]);
   const [socket, setSocket] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    setIsLoading(true)
-    //TODO: [multi-sim] jobs api
-    fetch(`${config.API_HOST}/simulation/`)
-      .then(res => res.json())
-      .then(value => updateSimulations(value.reverse()))
-      .then(() => setIsLoading(false))
-  }, []);
-
-  // "[{"_id":"5ea297e1d117e34f524f1470","status":"finished","job_id":"5ea297e1d117e34f524f146f","__v":0}]"
   useEffect(() => {
     if (!socket) {
       setSocket(io(`${config.API_HOST}/job-status`))
     }
     else {
       socket.on('jobStatus', (data) => {
-        //TODO: [multi-sim] this structure should also change from backend
         updateSimulations(data.reverse())
+        setIsLoading(false)
       })
     }
     return () => {
@@ -63,10 +53,10 @@ export const JobsList = () => {
         <ul className="list-group scrollable">
           {simulations.map(s =>
             <Job
-              key={s.job_id}
-              jobId={s.job_id}
+              key={s._id}
+              jobId={s._id}
               status={s.status}
-              isActive={s.job_id === paramId}
+              isActive={s._id === paramId}
             />
           )}
         </ul>
@@ -75,7 +65,7 @@ export const JobsList = () => {
   }
 
   function renderDetails() {
-    const simulationDetails = simulations.find(s => s.job_id === paramId);
+    const simulationDetails = simulations.find(s => s._id === paramId);
 
     if (!simulationDetails) return null
 

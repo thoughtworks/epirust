@@ -5,7 +5,7 @@ import Loader from '../common/Loader'
 import { parseAnnotations } from './utils';
 
 export const BUFFER_SIZE_TO_RENDER = 100;
-export default function SocketAwareGraph({ socket, jobId, includesMultipleSimulations = false }) {
+export default function SocketAwareGraph({ socket, jobId }) {
     const [dataBuffer, setDataBuffer] = useState([]);
     const [simulationEnded, setSimulationEnded] = useState(false);
     const [annotations, updateAnnotations] = useState([]);
@@ -28,29 +28,21 @@ export default function SocketAwareGraph({ socket, jobId, includesMultipleSimula
                 socket.close();
             }
             else {
+                const { hour,
+                    susceptible, susceptible_std,
+                    infected, infected_std,
+                    quarantined, quarantined_std,
+                    recovered, recovered_std,
+                    deceased, deceased_std } = message;
 
-                //TODO: write this better
-                let perHourStats = []
-                if (includesMultipleSimulations) {
-                    const { hour,
-                        susceptible, susceptible_std,
-                        infected, infected_std,
-                        quarantined, quarantined_std,
-                        recovered, recovered_std,
-                        deceased, deceased_std } = message;
+                const perHourStats = [hour,
+                    susceptible, susceptible_std,
+                    infected, infected_std,
+                    quarantined, quarantined_std,
+                    recovered, recovered_std,
+                    deceased, deceased_std
+                ];
 
-                    perHourStats = [hour,
-                        susceptible, susceptible_std,
-                        infected, infected_std,
-                        quarantined, quarantined_std,
-                        recovered, recovered_std,
-                        deceased, deceased_std
-                    ];
-                }
-                else {
-                    const { hour, susceptible, infected, quarantined, recovered, deceased } = message;
-                    perHourStats = [hour, susceptible, infected, quarantined, recovered, deceased];
-                }
                 buff.push(perHourStats);
 
                 if ('interventions' in message) {
@@ -75,20 +67,15 @@ export default function SocketAwareGraph({ socket, jobId, includesMultipleSimula
     if (!dataBuffer.length)
         return <Loader />
 
-    if (includesMultipleSimulations) {
-        const arr = [...dataBuffer]
-        arr.unshift(["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]);
-        const csvFormattedData = arr.join("\n");
-        return <Graph dataBuffer={csvFormattedData} enableExport={true} errorBars={true} />
-    }
-
+    const arr = [...dataBuffer]
+    arr.unshift(["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]);
+    const csvFormattedData = arr.join("\n");
     return (
         <Graph
             annotations={annotations}
-            dataBuffer={dataBuffer}
+            dataBuffer={csvFormattedData}
             enableExport={simulationEnded}
-            labels={["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]}
-        />
+            errorBars={true} />
     )
 }
 

@@ -52,10 +52,22 @@ const fetchSimulationsWithJobId = (jobId) => {
     .then(docs => docs.map(doc => doc.toObject()))
 }
 
+const groupSimulationsByJob = () => {
+  return Simulation.aggregate([{
+      $group: {
+        _id: "$job_id",
+        simulations: {$push: {status: "$status", id: "$_id"}}
+      }
+    },
+    {$sort: {_id: 1}}
+  ])
+}
+
 module.exports = {
     updateSimulationStatus,
     markGridConsumptionFinished,
     fetchSimulation,
     saveSimulation,
-    fetchSimulationsWithJobId
+    fetchSimulationsWithJobId,
+    groupSimulationsByJob
 };

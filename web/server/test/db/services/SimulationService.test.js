@@ -99,6 +99,40 @@ describe('Simulation Service', () => {
     });
   });
 
+  describe('groupSimulationsByJob', () => {
+    it('should group all the simulations by jobId and return with their statuses', async() => {
+      const jobId1 = mockObjectId();
+      const jobId2 = mockObjectId();
+      const simId1 = (await createNewSimulation(SimulationStatus.FINISHED, jobId1)).toObject()._id
+      const simId2 = (await createNewSimulation(SimulationStatus.INQUEUE, jobId1)).toObject()._id
+      const simId3 = (await createNewSimulation(SimulationStatus.FINISHED, jobId1)).toObject()._id
+      const simId4 = (await createNewSimulation(SimulationStatus.FINISHED, jobId2)).toObject()._id
+      const simId5 = (await createNewSimulation(SimulationStatus.RUNNING, jobId2)).toObject()._id
+
+      const cursor = SimulationService.groupSimulationsByJob();
+
+      const jobs = []
+      for await (const job of cursor) {
+        jobs.push(job);
+      }
+
+      expect(jobs).toHaveLength(2);
+      expect(jobs[0]).toEqual({
+        _id: jobId1,
+        simulations: [
+          {status: SimulationStatus.FINISHED, id: simId1},
+          {status: SimulationStatus.INQUEUE, id: simId2},
+          {status: SimulationStatus.FINISHED, id: simId3},
+          ]});
+      expect(jobs[1]).toEqual({
+        _id: jobId2,
+        simulations: [
+          {status: SimulationStatus.FINISHED, id: simId4},
+          {status: SimulationStatus.RUNNING, id: simId5},
+        ]});
+    });
+  });
+
   const createNewSimulation = (simulationStatus, jobId = mockObjectId()) => {
     return new Simulation({job_id: jobId, status: simulationStatus}).save();
   }

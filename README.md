@@ -2,6 +2,7 @@
 ## An agent-based epidemiology simulation framework built in Rust
 
 [![Build Status](https://travis-ci.org/thoughtworks/epirust.svg?branch=master)](https://travis-ci.org/thoughtworks/epirust)
+[![Coverage Status](https://coveralls.io/repos/github/thoughtworks/epirust/badge.svg?branch=coverage-report)](https://coveralls.io/github/thoughtworks/epirust?branch=master)
 
 This is a monorepo containing code for the EpiRust framework -
 

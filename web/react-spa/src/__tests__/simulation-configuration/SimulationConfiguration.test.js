@@ -18,9 +18,9 @@
  */
 
 import React from 'react'
-import { act, fireEvent, render } from '@testing-library/react'
+import {act, fireEvent, render} from '@testing-library/react'
 import renderer from 'react-test-renderer'
-import { MemoryRouter } from "react-router-dom";
+import {MemoryRouter} from "react-router-dom";
 import SimulationConfiguration from "../../simulation-configuration";
 
 jest.mock("../../common/apiCall");
@@ -63,7 +63,7 @@ describe('ParametersForm', function () {
 
     fireEvent.submit(getByTestId('simulationForm'));
     expect(post).toHaveBeenCalledTimes(1);
-    expect(post.mock.calls[0][0]).toBe("/simulation/init");
+    expect(post.mock.calls[0][0]).toBe("/jobs/init");
     expect(post.mock.calls[0][1]).toMatchSnapshot()
   });
 

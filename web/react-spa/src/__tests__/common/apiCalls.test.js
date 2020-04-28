@@ -1,4 +1,5 @@
 import {post} from "../../common/apiCall";
+
 jest.setTimeout(100000);
 
 describe('apiCalls', function () {
@@ -8,12 +9,12 @@ describe('apiCalls', function () {
       jest.spyOn(global, 'fetch').mockResolvedValueOnce(returnVal);
 
       const mockData = {"key": "value"};
-      const mockUrl = "/mock/api/url";
+      const mockUrl = "/mock/url";
 
       const expectedReturnVal  = await post(mockUrl, mockData);
 
       expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch.mock.calls[0][0]).toBe("http://localhost:3000/mock/api/url");
+      expect(fetch.mock.calls[0][0]).toBe("http://localhost:3000/api/mock/url");
       expect(fetch.mock.calls[0][1]).toMatchSnapshot()
       expect(expectedReturnVal).toBe(returnVal)
     });

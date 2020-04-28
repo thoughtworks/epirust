@@ -17,15 +17,10 @@
  *
  */
 
-var express = require('express');
-var router = express.Router();
-var simulation = require('../controllers/simulation');
+const express = require('express');
+const router = express.Router();
+const jobs = require('../controllers/jobs');
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.sendFile('../public/index.html');
-});
-
-router.use('/simulation', simulation);
+router.use('/jobs', jobs);
 
 module.exports = router;

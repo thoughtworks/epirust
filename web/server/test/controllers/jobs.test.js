@@ -31,7 +31,7 @@ const { updateSimulationStatus, saveSimulation } = require('../../db/services/Si
 const { saveJob } = require('../../db/services/JobService');
 const {mockObjectId} = require('../helpers');
 
-describe('simulation controller', () => {
+describe('jobs controller', () => {
 
     const postData = {
         "number_of_agents": 10000,
@@ -77,7 +77,7 @@ describe('simulation controller', () => {
             saveJob.mockResolvedValue({_id: jobId});
 
             await request
-              .post('/simulation/init')
+              .post('/api/jobs/init')
               .send({ ...postData, number_of_simulations: 1 });
 
             expect(saveJob).toHaveBeenCalledTimes(1);
@@ -95,7 +95,7 @@ describe('simulation controller', () => {
             saveJob.mockResolvedValue({_id: jobId});
 
             const response = await request
-              .post('/simulation/init')
+              .post('/api/jobs/init')
               .send({ ...postData });
 
             expect(saveSimulation).toHaveBeenCalledTimes(2);
@@ -123,7 +123,7 @@ describe('simulation controller', () => {
           saveJob.mockResolvedValue({_id: jobId});
 
           const response = await request
-            .post('/simulation/init')
+            .post('/api/jobs/init')
             .send({...postData});
 
           expect(updateSimulationStatus).toHaveBeenCalledTimes(1);
@@ -143,7 +143,7 @@ describe('simulation controller', () => {
           saveJob.mockResolvedValue({_id: jobId});
 
           const response = await request
-            .post('/simulation/init')
+            .post('/api/jobs/init')
             .send({...postData, number_of_simulations: 1});
 
           const kafkaPayload = {
@@ -217,7 +217,7 @@ describe('simulation controller', () => {
           const {vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention} = {...postData};
 
           const response = await request
-            .post('/simulation/init')
+            .post('/api/jobs/init')
             .send({...postDataWithoutVaccinationIntervention, number_of_simulations: 1});
 
           const kafkaPayload = {

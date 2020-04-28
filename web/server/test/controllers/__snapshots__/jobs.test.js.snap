@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`simulation controller /init should create a job with id and config 1`] = `
+exports[`jobs controller /init should create a job with id and config 1`] = `
 Object {
   "disease": Object {
     "death_rate": 0.2,

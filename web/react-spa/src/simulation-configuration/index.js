@@ -17,12 +17,12 @@
  *
  */
 
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import DiseaseDynamics from './DiseaseDynamics'
 import Interventions from './Interventions'
 import MiscellaneousConfig from "./MiscellaneousConfig";
-import { useHistory } from "react-router-dom";
-import { post } from "../common/apiCall";
+import {useHistory} from "react-router-dom";
+import {post} from "../common/apiCall";
 
 export default function SimulationConfiguration() {
   const [buttonDisabled, setButtonDisabled] = useState(false);
@@ -31,7 +31,7 @@ export default function SimulationConfiguration() {
   const history = useHistory();
 
   function pushData(paramsData) {
-    post("/simulation/init", paramsData)
+    post("/jobs/init", paramsData)
       .then(res => res.json())
       .then(data => history.push(`/jobs/${data.job_id}`))
       .catch(err => {

@@ -1,0 +1,1522 @@
+{
+  "travel_plan": {
+    "regions": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "FN",
+      "FS",
+      "GN",
+      "GS",
+      "HE",
+      "HW",
+      "KE",
+      "KW",
+      "L",
+      "ME",
+      "MW",
+      "N",
+      "PN",
+      "PS",
+      "RC",
+      "RN",
+      "RS",
+      "S",
+      "T"
+    ],
+    "matrix": [
+      [
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0,
+        100
+      ],
+      [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        0
+      ]
+    ]
+  },
+  "simulation": [
+    {
+      "config": {
+        "grid_size": 1000,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 185014,
+            "working_percentage": 0.4527224967
+          }
+        }
+      },
+      "engine_id": "A"
+    },
+    {
+      "config": {
+        "grid_size": 1000,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 127290,
+            "working_percentage": 0.3945164585
+          }
+        }
+      },
+      "engine_id": "B"
+    },
+    {
+      "config": {
+        "grid_size": 1000,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 166161,
+            "working_percentage": 0.4768748383
+          }
+        }
+      },
+      "engine_id": "C"
+    },
+    {
+      "config": {
+        "grid_size": 1500,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 346866,
+            "working_percentage": 0.4413606407
+          }
+        }
+      },
+      "engine_id": "D"
+    },
+    {
+      "config": {
+        "grid_size": 1500,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 393286,
+            "working_percentage": 0.4059615649
+          }
+        }
+      },
+      "engine_id": "E"
+    },
+    {
+      "config": {
+        "grid_size": 1800,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 529034,
+            "working_percentage": 0.3931013886
+          }
+        }
+      },
+      "engine_id": "FN"
+    },
+    {
+      "config": {
+        "grid_size": 1500,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 360972,
+            "working_percentage": 0.3911965471
+          }
+        }
+      },
+      "engine_id": "FS"
+    },
+    {
+      "config": {
+        "grid_size": 1500,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 377749,
+            "working_percentage": 0.4214994613
+          }
+        }
+      },
+      "engine_id": "GN"
+    },
+    {
+      "config": {
+        "grid_size": 2000,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 599039,
+            "working_percentage": 0.4173885173
+          }
+        }
+      },
+      "engine_id": "GS"
+    },
+    {
+      "config": {
+        "grid_size": 1400,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 307581,
+            "working_percentage": 0.4307840861
+          }
+        }
+      },
+      "engine_id": "HE"
+    },
+    {
+      "config": {
+        "grid_size": 1800,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 557239,
+            "working_percentage": 0.4143338855
+          }
+        }
+      },
+      "engine_id": "HW"
+    },
+    {
+      "config": {
+        "grid_size": 2200,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 823885,
+            "working_percentage": 0.4125090274
+          }
+        }
+      },
+      "engine_id": "KE"
+    },
+    {
+      "config": {
+        "grid_size": 2200,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 748688,
+            "working_percentage": 0.4188153143
+          }
+        }
+      },
+      "engine_id": "KW"
+    },
+    {
+      "config": {
+        "grid_size": 2400,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 902225,
+            "working_percentage": 0.3811344177
+          }
+        }
+      },
+      "engine_id": "L"
+    },
+    {
+      "config": {
+        "grid_size": 2200,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 807720,
+            "working_percentage": 0.3528809488
+          }
+        }
+      },
+      "engine_id": "ME"
+    },
+    {
+      "config": {
+        "grid_size": 1600,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 411893,
+            "working_percentage": 0.4079700311
+          }
+        }
+      },
+      "engine_id": "MW"
+    },
+    {
+      "config": {
+        "grid_size": 2000,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 622853,
+            "working_percentage": 0.3881798755
+          }
+        }
+      },
+      "engine_id": "N"
+    },
+    {
+      "config": {
+        "grid_size": 2400,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 941366,
+            "working_percentage": 0.3947986224
+          }
+        }
+      },
+      "engine_id": "PN"
+    },
+    {
+      "config": {
+        "grid_size": 1700,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 463507,
+            "working_percentage": 0.4159980324
+          }
+        }
+      },
+      "engine_id": "PS"
+    },
+    {
+      "config": {
+        "grid_size": 1900,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 562162,
+            "working_percentage": 0.4023164141
+          }
+        }
+      },
+      "engine_id": "RC"
+    },
+    {
+      "config": {
+        "grid_size": 1600,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 431368,
+            "working_percentage": 0.4112521096
+          }
+        }
+      },
+      "engine_id": "RN"
+    },
+    {
+      "config": {
+        "grid_size": 2100,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 691229,
+            "working_percentage": 0.4078011773
+          }
+        }
+      },
+      "engine_id": "RS"
+    },
+    {
+      "config": {
+        "grid_size": 2100,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 743783,
+            "working_percentage": 0.3932249057
+          }
+        }
+      },
+      "engine_id": "S"
+    },
+    {
+      "config": {
+        "grid_size": 1500,
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 100
+            }
+          }
+        ],
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 40,
+          "regular_transmission_rate": 0.025,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 20,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "hours": 10000,
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "public_transport_percentage": 0.8,
+            "number_of_agents": 341463,
+            "working_percentage": 0.4015193447
+          }
+        }
+      },
+      "engine_id": "T"
+    }
+  ]
+}

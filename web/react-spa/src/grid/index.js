@@ -60,7 +60,7 @@ export default function GridPage() {
         if (!socket)
             return;
 
-        socket.emit('simulation_id', id);
+        socket.emit('get', {jobId: id});
 
         socket.on('gridData', function (message) {
             if ("simulation_ended" in message) {

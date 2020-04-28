@@ -161,7 +161,7 @@ describe('Grid Page', () => {
         });
 
         expect(asFragment()).toMatchSnapshot();
-        expect(emitSpy).toHaveBeenCalledWith("simulation_id", 1542319876);
+        expect(emitSpy).toHaveBeenCalledWith("get", {jobId: 1542319876});
         expect(closeSpy).toHaveBeenCalled()
     });
 

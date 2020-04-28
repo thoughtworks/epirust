@@ -43,7 +43,7 @@ const citizenStateSchema = new Schema({
 });
 
 const gridSchema = new Schema({
-  simulation_id: {type: Number, required: true},
+  simulation_id: {type: mongoose.ObjectId, required: true},
 
   grid_size: Number,
   housing_area: AreaSchema,

@@ -28,7 +28,7 @@ describe('Grid Service', function () {
 
     describe('saveGridLayout', function () {
         it('should save grid layout', async function () {
-            const testSimulationId = 123;
+            const testSimulationId = mockObjectId();
             const gridLayoutToCreate = {
                 simulation_id: testSimulationId,
 
@@ -125,10 +125,11 @@ describe('Grid Service', function () {
 
     describe('findSortedById', function () {
         it('should sort documents by id and skip by 1 document', async function () {
-            await new Grid({simulation_id: 1}).save()
-            await new Grid({simulation_id: 1, grid_size: 3}).save()
+            const simulationId = mockObjectId();
+            await new Grid({simulation_id: simulationId}).save()
+            await new Grid({simulation_id: simulationId, grid_size: 3}).save()
 
-            const cursor = GridService.findSortedById(1, 1);
+            const cursor = GridService.findSortedById(simulationId, 1);
 
             let documents = []
             for await (const doc of cursor) {
@@ -136,7 +137,7 @@ describe('Grid Service', function () {
             }
             expect(documents).toHaveLength(1);
             expect(documents[0]).toEqual({
-                simulation_id: 1,
+                simulation_id: simulationId,
                 grid_size: 3,
                 houses: [],
                 offices: []

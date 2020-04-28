@@ -38,7 +38,7 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 
-var server = http.createServer(app);
+const server = http.createServer(app);
 server.listen(config.PORT);
 server.on('error', onError);
 server.on('listening', onListening);
@@ -66,8 +66,8 @@ function onError(error) {
     throw error;
   }
 
-  var addr = server.address();
-  var bind = typeof addr === 'string'
+  const addr = server.address();
+  const bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
 
@@ -87,8 +87,8 @@ function onError(error) {
 }
 
 function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
+  const addr = server.address();
+  const bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);

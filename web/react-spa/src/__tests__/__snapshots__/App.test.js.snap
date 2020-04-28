@@ -275,6 +275,7 @@ exports[`renders App 1`] = `
                   id="regular_transmission_start_day"
                   name="regular_transmission_start_day"
                   placeholder="Regular Transmission Start Day"
+                  step="any"
                   type="number"
                   value="10"
                 />
@@ -294,6 +295,7 @@ exports[`renders App 1`] = `
                   id="high_transmission_start_day"
                   name="high_transmission_start_day"
                   placeholder="High Transmission Start Day"
+                  step="any"
                   type="number"
                   value="16"
                 />
@@ -313,6 +315,7 @@ exports[`renders App 1`] = `
                   id="last_day"
                   name="last_day"
                   placeholder="Last Day"
+                  step="any"
                   type="number"
                   value="22"
                 />
@@ -334,6 +337,7 @@ exports[`renders App 1`] = `
                   min="0"
                   name="regular_transmission_rate"
                   placeholder="Regular Transmission Rate"
+                  step="any"
                   type="number"
                   value="0.05"
                 />
@@ -355,6 +359,7 @@ exports[`renders App 1`] = `
                   min="0"
                   name="high_transmission_rate"
                   placeholder="High Transmission Rate"
+                  step="any"
                   type="number"
                   value="0.5"
                 />
@@ -376,6 +381,7 @@ exports[`renders App 1`] = `
                   min="0"
                   name="death_rate"
                   placeholder="Death Rate"
+                  step="any"
                   type="number"
                   value="0.2"
                 />
@@ -397,6 +403,7 @@ exports[`renders App 1`] = `
                   min="0"
                   name="percentage_asymptomatic_population"
                   placeholder="Asymptomatic percentage"
+                  step="any"
                   type="number"
                   value="0"
                 />
@@ -418,6 +425,7 @@ exports[`renders App 1`] = `
                   min="0"
                   name="percentage_severe_infected_population"
                   placeholder="Percentage Severe Infected Population"
+                  step="any"
                   type="number"
                   value="1"
                 />
@@ -437,6 +445,7 @@ exports[`renders App 1`] = `
                   id="exposed_duration"
                   name="exposed_duration"
                   placeholder="Exposed Duration"
+                  step="any"
                   type="number"
                   value="0"
                 />
@@ -456,6 +465,7 @@ exports[`renders App 1`] = `
                   id="pre_symptomatic_duration"
                   name="pre_symptomatic_duration"
                   placeholder="Pre symptomatic Duration"
+                  step="any"
                   type="number"
                   value="0"
                 />

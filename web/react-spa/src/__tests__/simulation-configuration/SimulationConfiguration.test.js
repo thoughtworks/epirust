@@ -42,7 +42,7 @@ describe('ParametersForm', function () {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    const mockToJson = jest.fn().mockResolvedValue({ job_id: 'dummyId' });
+    const mockToJson = jest.fn().mockResolvedValue({ jobId: 'dummyId' });
     post.mockResolvedValueOnce({ json: mockToJson });
   });
 

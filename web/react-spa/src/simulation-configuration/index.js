@@ -33,7 +33,7 @@ export default function SimulationConfiguration() {
   function pushData(paramsData) {
     post("/jobs/init", paramsData)
       .then(res => res.json())
-      .then(data => history.push(`/jobs/${data.job_id}`))
+      .then(data => history.push(`/jobs/${data.jobId}`))
       .catch(err => {
         console.error(err);
         setButtonDisabled(false);

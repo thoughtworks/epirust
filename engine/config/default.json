@@ -23,12 +23,6 @@
   "hours": 10000,
   "interventions": [
     {
-      "Vaccinate": {
-        "at_hour": 5000,
-        "percent": 0.2
-      }
-    },
-    {
       "Lockdown": {
         "at_number_of_infections": 100,
         "essential_workers_population": 0.1,

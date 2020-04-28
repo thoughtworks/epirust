@@ -17,7 +17,7 @@
  *
  */
 
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 
 export default function MiscellaneousConfig() {
   const disableGrid = (gs) => gs > 100;
@@ -32,7 +32,7 @@ export default function MiscellaneousConfig() {
   useEffect(() => {
     updateGridDisabled(disableGrid(gridSize));
 
-    if(gridSize > 100)
+    if (gridSize > 100)
       updateGridChecked(false);
   }, [gridSize]);
 
@@ -43,17 +43,22 @@ export default function MiscellaneousConfig() {
         <input onChange={handleSizeChange} type="number" name="grid_size" className="form-control form-control-sm" id="grid_size" aria-describedby="grid_size" placeholder="Grid Size" defaultValue={gridSize} />
       </div>
 
-
       <div className="input-control">
         <label className="col-form-label-sm" htmlFor="simulation_hrs">Simulation Hours</label>
         <input type="number" name="simulation_hrs" className="form-control form-control-sm" id="simulation_hrs" aria-describedby="simulation_hrs" placeholder="Simulation Hours" defaultValue="10000" />
       </div>
 
+      <div className="input-control">
+        <label className="col-form-label-sm" htmlFor="number_of_simulations">Number of simulations</label>
+        <input type="number" name="number_of_simulations" className="form-control form-control-sm" id="number_of_simulations" aria-describedby="number_of_simulations" placeholder="Number of simulations" defaultValue="1" step="1" min="1" />
+      </div>
+
       <div className="custom-control custom-switch switch-right">
         <input type="checkbox" name="generate_grid_vis" onChange={handleCheckedChange} checked={gridChecked} disabled={gridDisable} className="custom-control-input" id="generate_grid_vis" />
         <label className="custom-control-label col-form-label-sm" htmlFor="generate_grid_vis">Grid Visualization</label>
+        <small className="form-text text-muted">Allowed when grid size less than 101 </small>
       </div>
-      <small className="form-text text-muted">Allowed when grid size less than 101 </small>
+
     </fieldset>
   )
 }

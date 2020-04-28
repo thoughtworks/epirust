@@ -177,6 +177,27 @@ exports[`renders App 1`] = `
                   />
                 </div>
                 <div
+                  class="input-control"
+                >
+                  <label
+                    class="col-form-label-sm"
+                    for="number_of_simulations"
+                  >
+                    Number of simulations
+                  </label>
+                  <input
+                    aria-describedby="number_of_simulations"
+                    class="form-control form-control-sm"
+                    id="number_of_simulations"
+                    min="1"
+                    name="number_of_simulations"
+                    placeholder="Number of simulations"
+                    step="1"
+                    type="number"
+                    value="1"
+                  />
+                </div>
+                <div
                   class="custom-control custom-switch switch-right"
                 >
                   <input
@@ -192,12 +213,12 @@ exports[`renders App 1`] = `
                   >
                     Grid Visualization
                   </label>
+                  <small
+                    class="form-text text-muted"
+                  >
+                    Allowed when grid size less than 101 
+                  </small>
                 </div>
-                <small
-                  class="form-text text-muted"
-                >
-                  Allowed when grid size less than 101 
-                </small>
               </fieldset>
             </div>
             <fieldset>
@@ -254,7 +275,7 @@ exports[`renders App 1`] = `
                   id="regular_transmission_start_day"
                   name="regular_transmission_start_day"
                   placeholder="Regular Transmission Start Day"
-                  type="text"
+                  type="number"
                   value="10"
                 />
               </div>
@@ -273,7 +294,7 @@ exports[`renders App 1`] = `
                   id="high_transmission_start_day"
                   name="high_transmission_start_day"
                   placeholder="High Transmission Start Day"
-                  type="text"
+                  type="number"
                   value="16"
                 />
               </div>
@@ -292,7 +313,7 @@ exports[`renders App 1`] = `
                   id="last_day"
                   name="last_day"
                   placeholder="Last Day"
-                  type="text"
+                  type="number"
                   value="22"
                 />
               </div>
@@ -309,9 +330,11 @@ exports[`renders App 1`] = `
                   aria-describedby="regular_transmission_rate"
                   class="form-control form-control-sm"
                   id="regular_transmission_rate"
+                  max="1"
+                  min="0"
                   name="regular_transmission_rate"
                   placeholder="Regular Transmission Rate"
-                  type="text"
+                  type="number"
                   value="0.05"
                 />
               </div>
@@ -328,9 +351,11 @@ exports[`renders App 1`] = `
                   aria-describedby="high_transmission_rate"
                   class="form-control form-control-sm"
                   id="high_transmission_rate"
+                  max="1"
+                  min="0"
                   name="high_transmission_rate"
                   placeholder="High Transmission Rate"
-                  type="text"
+                  type="number"
                   value="0.5"
                 />
               </div>
@@ -347,9 +372,11 @@ exports[`renders App 1`] = `
                   aria-describedby="death_rate"
                   class="form-control form-control-sm"
                   id="death_rate"
+                  max="1"
+                  min="0"
                   name="death_rate"
                   placeholder="Death Rate"
-                  type="text"
+                  type="number"
                   value="0.2"
                 />
               </div>
@@ -366,9 +393,11 @@ exports[`renders App 1`] = `
                   aria-describedby="percentage_asymptomatic_population"
                   class="form-control form-control-sm"
                   id="percentage_asymptomatic_population"
+                  max="1"
+                  min="0"
                   name="percentage_asymptomatic_population"
                   placeholder="Asymptomatic percentage"
-                  type="text"
+                  type="number"
                   value="0"
                 />
               </div>
@@ -385,9 +414,11 @@ exports[`renders App 1`] = `
                   aria-describedby="percentage_severe_infected_population"
                   class="form-control form-control-sm"
                   id="percentage_severe_infected_population"
+                  max="1"
+                  min="0"
                   name="percentage_severe_infected_population"
                   placeholder="Percentage Severe Infected Population"
-                  type="text"
+                  type="number"
                   value="1"
                 />
               </div>
@@ -406,7 +437,7 @@ exports[`renders App 1`] = `
                   id="exposed_duration"
                   name="exposed_duration"
                   placeholder="Exposed Duration"
-                  type="text"
+                  type="number"
                   value="0"
                 />
               </div>
@@ -425,7 +456,7 @@ exports[`renders App 1`] = `
                   id="pre_symptomatic_duration"
                   name="pre_symptomatic_duration"
                   placeholder="Pre symptomatic Duration"
-                  type="text"
+                  type="number"
                   value="0"
                 />
               </div>

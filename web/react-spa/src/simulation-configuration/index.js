@@ -66,14 +66,13 @@ export default function SimulationConfiguration() {
         "percentage_asymptomatic_population",
         "percentage_severe_infected_population",
         "exposed_duration",
-        "pre_symptomatic_duration"
+        "pre_symptomatic_duration",
+        "number_of_simulations"
       ].includes(key)) {
         value = Number(value);
       }
       paramsData[key] = value;
     });
-
-    paramsData["number_of_simulations"] = 2
 
     if ("generate_grid_vis" in paramsData) {
       const value = paramsData["generate_grid_vis"];
@@ -113,8 +112,10 @@ export default function SimulationConfiguration() {
     )
   }
 
-  const loading = () => (<><span className="spinner-grow spinner-grow-lg" />
-    <span className="button-text"> Submitting..</span> </>);
+  const loading = () => (<>
+    <span className="spinner-grow spinner-grow-lg" />
+    <span className="button-text"> Submitting..</span>
+  </>);
 
   return (
     <div className="graph-input">

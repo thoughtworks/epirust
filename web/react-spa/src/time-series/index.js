@@ -20,21 +20,19 @@
 
 import SocketAwareGraph from "./SocketAwareGraph";
 import React, { useEffect, useState } from "react";
-import io from "socket.io-client";
-import config from "../config";
 
 export function TimeSeries({ jobId }) {
-  const [socket, setSocket] = useState(null);
+  // const [socket, setSocket] = useState(null);
 
-  useEffect(() => {
-    const socketInstance = io(`${config.API_HOST}/${'counts'}`);
-    setSocket(socketInstance);
+  // useEffect(() => {
+  //   const socketInstance = io(`${config.API_HOST}/${'counts'}`);
+  //   setSocket(socketInstance);
 
-    return () => {
-      socketInstance.close();
-    }
-  }, []);
+  //   return () => {
+  //     socketInstance.close();
+  //   }
+  // }, []);
   return (
-    <SocketAwareGraph jobId={jobId} socket={socket} />
+    <SocketAwareGraph jobId={jobId}/>
   )
 }

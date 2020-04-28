@@ -3,12 +3,24 @@ import React, { useEffect, useState } from 'react';
 import Graph from './LineGraph';
 import Loader from '../common/Loader'
 import { parseAnnotations } from './utils';
+import io from "socket.io-client";
+import config from "../config";
 
 export const BUFFER_SIZE_TO_RENDER = 100;
-export default function SocketAwareGraph({ socket, jobId }) {
+export default function SocketAwareGraph({ jobId }) {
+    const [socket, setSocket] = useState(null);
     const [dataBuffer, setDataBuffer] = useState([]);
     const [simulationEnded, setSimulationEnded] = useState(false);
     const [annotations, updateAnnotations] = useState([]);
+
+    useEffect(() => {
+        const socketInstance = io(`${config.API_HOST}/${'counts'}`);
+        setSocket(socketInstance);
+
+        return () => {
+            socketInstance.close();
+        }
+    }, []);
 
     useEffect(() => {
         if (!socket) {
@@ -53,8 +65,11 @@ export default function SocketAwareGraph({ socket, jobId }) {
             }
 
             if (buff.length === BUFFER_SIZE_TO_RENDER || simulationEndedTemp) {
-                setDataBuffer(buffer => [...buffer, ...buff]);
-                buff = [];
+                setDataBuffer(buffer => {                
+                    const temp = [...buffer, ...buff]
+                    buff = [];
+                    return temp;
+                });
             }
             if (simulationEndedTemp) {
                 setSimulationEnded(true)
@@ -67,13 +82,10 @@ export default function SocketAwareGraph({ socket, jobId }) {
     if (!dataBuffer.length)
         return <Loader />
 
-    const arr = [...dataBuffer]
-    arr.unshift(["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]);
-    const csvFormattedData = arr.join("\n");
     return (
         <Graph
             annotations={annotations}
-            dataBuffer={csvFormattedData}
+            dataBuffer={convertToCsv(dataBuffer)}
             enableExport={simulationEnded}
             errorBars={true} />
     )
@@ -83,3 +95,8 @@ SocketAwareGraph.propTypes = {
     socket: PropTypes.object,
     jobId: PropTypes.string.isRequired,
 };
+
+export function convertToCsv(dataBuffer) {
+    const labels = ["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"];
+    return [labels, ...dataBuffer].join("\n");
+}

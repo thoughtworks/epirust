@@ -55,16 +55,21 @@ impl LockdownIntervention {
     }
 
     pub fn should_apply(&self, counts: &Counts) -> bool {
-        !self.is_locked_down && match self.intervention {
+        !self.is_locked_down && counts.get_hour() % 24 == 0 && self.above_threshold(counts)
+    }
+
+    fn above_threshold(&self, counts: &Counts) -> bool {
+        match self.intervention {
             Some(i) => {
-                counts.get_infected() > i.at_number_of_infections && counts.get_hour() % 24 == 0
+                counts.get_infected() > i.at_number_of_infections
             }
             None => false
         }
     }
 
     pub fn should_unlock(&self, counts: &Counts) -> bool {
-        self.is_locked_down && self.locked_till_hr == counts.get_hour()
+        !self.above_threshold(counts) && counts.get_hour() % 24 == 0 &&
+            self.is_locked_down && counts.get_hour() >= self.locked_till_hr
     }
 
     pub fn apply(&mut self, counts: &Counts) {
@@ -98,8 +103,7 @@ impl InterventionType for LockdownIntervention {
     fn json_data(&self) -> String {
         if self.is_locked_down {
             r#"{"status": "locked_down"}"#.to_string()
-        }
-        else {
+        } else {
             r#"{"status": "lockdown_revoked"}"#.to_string()
         }
     }
@@ -135,7 +139,7 @@ mod tests {
             intervention: Some(config),
         };
 
-        assert!(!lockdown.should_apply(&Counts::new_test(0, 99, 0,1, 0, 0, 0)));
+        assert!(!lockdown.should_apply(&Counts::new_test(0, 99, 0, 1, 0, 0, 0)));
         assert!(!lockdown.should_apply(&Counts::new_test(22, 80, 0, 20, 0, 0, 0)));
         assert!(!lockdown.should_apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0)));
         assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0)));
@@ -158,13 +162,13 @@ mod tests {
             intervention: Some(config),
         };
 
-        assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0,21, 0, 0, 0)));
+        assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0)));
         lockdown.apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0));
         assert!(!lockdown.should_apply(&Counts::new_test(48, 75, 0, 25, 0, 0, 0)));
     }
 
     #[test]
-    fn should_lift_lockdown_at_threshold() {
+    fn should_lift_lockdown_at_after_time_elapsed_and_infections_below_threshold() {
         let config = LockdownConfig {
             at_number_of_infections: 20,
             essential_workers_population: 0.1,
@@ -180,9 +184,33 @@ mod tests {
         lockdown.apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0));
         let lockdown_until = 48 + (7 * 24);
         for hr in 48..lockdown_until {
-            assert!(!lockdown.should_unlock(&Counts::new_test(hr, 79, 0,21, 0, 0, 0)));
+            assert!(!lockdown.should_unlock(&Counts::new_test(hr, 80, 0, 20, 0, 0, 0)));
         }
-        assert!(lockdown.should_unlock(&Counts::new_test(lockdown_until, 79, 0, 21, 0, 0, 0)));
+        assert!(lockdown.should_unlock(&Counts::new_test(lockdown_until, 80, 0, 20, 0, 0, 0)));
+    }
+
+    #[test]
+    fn should_extend_lockdown_until_infections_below_threshold() {
+        let config = LockdownConfig {
+            at_number_of_infections: 20,
+            essential_workers_population: 0.1,
+            lock_down_period: 7,
+        };
+        let mut lockdown = LockdownIntervention {
+            is_locked_down: false,
+            locked_till_hr: 0,
+            intervention: Some(config),
+        };
+        assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0)));
+
+        lockdown.apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0));
+        let lockdown_until = 48 + (7 * 24);
+        for hr in 48..lockdown_until {
+            assert!(!lockdown.should_unlock(&Counts::new_test(hr, 79, 0, 21, 0, 0, 0)));
+        }
+        assert!(!lockdown.should_unlock(&Counts::new_test(lockdown_until, 79, 0, 21, 0, 0, 0)));
+        assert!(!lockdown.should_unlock(&Counts::new_test(lockdown_until + 1, 79, 0, 20, 0, 0, 0)));
+        assert!(lockdown.should_unlock(&Counts::new_test(lockdown_until + 24, 79, 0, 20, 0, 0, 0)));
     }
 
     #[test]
@@ -198,8 +226,8 @@ mod tests {
             intervention: Some(config),
         };
         lockdown.apply(&Counts::new_test(28, 79, 0, 21, 0, 0, 0));
-        assert!(lockdown.should_unlock(&Counts::new_test(196, 79,  0,21, 0, 0, 0)));
-        assert!(!lockdown.should_apply(&Counts::new_test(200, 70, 0, 30, 0, 0, 0)));
+        assert!(lockdown.should_unlock(&Counts::new_test(216, 80, 0, 20, 0, 0, 0)));
+        assert!(!lockdown.should_apply(&Counts::new_test(240, 70, 0, 30, 0, 0, 0)));
     }
 
     #[test]

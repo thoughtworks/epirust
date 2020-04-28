@@ -20,18 +20,16 @@
 import React from "react";
 
 import "./job-details.scss"
-import { NavItem } from "../common/NavItem";
-import { Redirect, Route, Switch } from "react-router-dom";
+import {NavItem} from "../common/NavItem";
+import {Redirect, Route, Switch} from "react-router-dom";
 import GridPage from "../grid";
 import PropTypes from 'prop-types';
-import { TimeSeries } from "../time-series";
-import { TimeSeriesDeviation } from "../time-series/TimeSeriesDeviation";
+import {TimeSeries} from "../time-series";
 
 export const JobDetails = ({ jobId, details }) => {
   const linkPrefix = `/jobs/${jobId}`;
 
-  const isGridEnabled = details && details.config && details.config.enable_citizen_state_messages || false,
-    isFinished = details && details.status === 'finished';
+  const isGridEnabled = details && details.config && details.config.enable_citizen_state_messages || false;
 
   function renderGraphTabs() {
     return (
@@ -40,7 +38,6 @@ export const JobDetails = ({ jobId, details }) => {
           <ul className="nav nav-tabs nav-fill">
 
             <NavItem name="Time Series" linksTo={`${linkPrefix}/time-series`} activeOnExactMatch={true} />
-            {isFinished && <NavItem name="Time Series Deviation" linksTo={`${linkPrefix}/time-series-deviation`} />}
             {isGridEnabled && <NavItem name="Grid" linksTo={`${linkPrefix}/grid`} />}
             <NavItem name="Config" linksTo={`${linkPrefix}/config`} />
 
@@ -61,10 +58,6 @@ export const JobDetails = ({ jobId, details }) => {
 
           <Route exact path={"/jobs/:id/time-series"}>
             <TimeSeries jobId={jobId} />
-          </Route>
-
-          <Route exact path={"/jobs/:id/time-series-deviation"}>
-            <TimeSeriesDeviation jobId={jobId} />
           </Route>
 
           <Route exact path={"/jobs/:id/grid"}>

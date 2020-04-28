@@ -17,38 +17,13 @@
  *
  */
 
-/* GET simulation listing. */
-const { Count } = require("../db/models/Count");
-
 const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
-const { Simulation, SimulationStatus } = require("../db/models/Simulation");
+const { SimulationStatus } = require("../db/models/Simulation");
 const {updateSimulationStatus, saveSimulation} = require('../db/services/SimulationService')
 const {range} = require('../common/util');
 const JobService = require('../db/services/JobService');
-const CountService = require('../db/services/CountService');
-
-const configMatch = {
-  "config.population.Auto.number_of_agents": 10000,
-  "config.population.Auto.public_transport_percentage": 0.2,
-  "config.population.Auto.working_percentage": 0.7,
-
-  "config.disease.regular_transmission_start_day": 5,
-  "config.disease.high_transmission_start_day": 20,
-  "config.disease.last_day": 40,
-  "config.disease.regular_transmission_rate": 0.025,
-  "config.disease.high_transmission_rate": 0.25,
-  "config.disease.death_rate": 0.2,
-  "config.percentage_asymptomatic_population": 0.3,
-  "config.percentage_severe_infected_population": 0.3,
-  "config.exposed_duration": 48,
-  "config.pre_symptomatic_duration": 48,
-
-  "config.hours": 10000,
-  "config.grid_size": 250,
-  "config.interventions": { $size: 0 }
-};
 
 router.post('/init', (req, res, next) => {
   const {number_of_simulations, simulation_config} = makeSimulationConfig(req.body);
@@ -84,36 +59,6 @@ router.post('/init', (req, res, next) => {
       console.error("Failed to create Simulation entry ", err);
     });
 });
-
-router.get("/:simulation_id/time-series-deviation", async (req, res, next) => {
-  Simulation.find(configMatch, { simulation_id: 1 })
-    .exec()
-    .then(async (docs) => {
-      let simulationIds = docs.map(a => a.simulation_id);
-
-      const aggregateStream = CountService.aggregateSimulations(simulationIds);
-      const countsCursor = CountService.fetchCountsInSimulation(parseInt(req.params.simulation_id), 0);
-
-      return Promise.all([extractFromCursor(aggregateStream), extractFromCursor(countsCursor)])
-        .then(resolved => {
-          const aggregate = resolved[0]
-          const counts = resolved[1];
-          if (counts.length < aggregate.length) {
-            res.json(counts.map((c, i) => ({ ...c.toObject(), ...aggregate[i] })));
-          } else {
-            res.json(aggregate.map((a, i) => ({ ...a, ...counts[i].toObject() })));
-          }
-        })
-    })
-});
-
-async function extractFromCursor(stream) {
-  const aggregate = [];
-  for await (const data of stream) {
-    aggregate.push(data)
-  }
-  return aggregate;
-}
 
 function makeSimulationConfig(message) {
   const {

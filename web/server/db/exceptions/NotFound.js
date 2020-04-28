@@ -16,20 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-const NotFound = require('../exceptions/NotFound')
-const {Job} = require('../models/Job');
 
-const saveJob = (config) => {
-  return new Job({config}).save()
+class NotFound extends Error {
+    constructor(id) {
+        super(`Document with id ${id} not found`)
+
+        Object.setPrototypeOf(this, NotFound.prototype);
+    }
 }
 
-const fetchJob = (jobId) => {
-  return Job.findOne({_id: jobId}).exec()
-    .then(doc => {
-      if(!doc)
-        throw new NotFound(jobId)
-      return doc;
-    })
-}
-
-module.exports = {saveJob, fetchJob}
+module.exports = NotFound

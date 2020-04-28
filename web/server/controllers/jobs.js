@@ -24,6 +24,9 @@ const { SimulationStatus } = require("../db/models/Simulation");
 const {updateSimulationStatus, saveSimulation} = require('../db/services/SimulationService')
 const {range} = require('../common/util');
 const JobService = require('../db/services/JobService');
+const {toObjectId} = require("../common/util")
+const {fetchJob} = require("../db/services/JobService")
+const NotFound = require("../db/exceptions/NotFound")
 
 router.post('/init', (req, res, next) => {
   const {number_of_simulations, simulation_config} = makeSimulationConfig(req.body);
@@ -58,6 +61,25 @@ router.post('/init', (req, res, next) => {
       res.send({ message: err.message });
       console.error("Failed to create Simulation entry ", err);
     });
+});
+
+router.get('/:job_id', (req, res, next) => {
+  fetchJob(toObjectId(req.params.job_id))
+      .then((job) => {
+        res.status(200);
+        res.send(job);
+      })
+      .catch((error) => {
+        switch (error.constructor) {
+          case NotFound:
+            res.status(404);
+            res.send({message: error.message});
+            break;
+          default:
+            res.status(500);
+            res.send();
+        }
+      })
 });
 
 function makeSimulationConfig(message) {

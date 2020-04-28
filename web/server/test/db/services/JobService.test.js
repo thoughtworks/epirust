@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+const NotFound = require("../../../db/exceptions/NotFound");
 const dbHandler = require('../db-handler');
 const JobService = require('../../../db/services/JobService');
 const {Job} = require('../../../db/models/Job');
@@ -46,8 +48,8 @@ describe('Job Service', () => {
     it('should fail if the job is not present in db', async () => {
       const randomJobId = mockObjectId();
 
-      await expect(JobService.fetchJob(randomJobId))
-        .rejects.toThrow(`Job with id ${randomJobId} not found`)
+      await expect(JobService.fetchJob(randomJobId)).rejects.toBeInstanceOf(NotFound)
+      await expect(JobService.fetchJob(randomJobId)).rejects.toEqual(new NotFound(randomJobId))
     });
   });
 

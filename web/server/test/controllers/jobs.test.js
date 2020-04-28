@@ -17,9 +17,15 @@
  *
  */
 
-const app = require('../../app');
+const jobs_controller = require("../../routes/router")
+const express = require("express");
+const app = express();
 const supertest = require('supertest');
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use("/", jobs_controller);
 const request = supertest(app);
+const NotFound = require('../../db/exceptions/NotFound')
 
 jest.mock('../../services/kafka');
 jest.mock("../../db/services/SimulationService");
@@ -28,7 +34,7 @@ jest.mock("../../db/services/JobService");
 const KafkaServices = require("../../services/kafka");
 
 const { updateSimulationStatus, saveSimulation } = require('../../db/services/SimulationService');
-const { saveJob } = require('../../db/services/JobService');
+const { saveJob, fetchJob } = require('../../db/services/JobService');
 const {mockObjectId} = require('../helpers');
 
 describe('jobs controller', () => {
@@ -76,10 +82,11 @@ describe('jobs controller', () => {
             const jobId = mockObjectId();
             saveJob.mockResolvedValue({_id: jobId});
 
-            await request
-              .post('/api/jobs/init')
+            const response = await request
+              .post('/jobs/init')
               .send({ ...postData, number_of_simulations: 1 });
 
+            expect(response.status).toBe(201)
             expect(saveJob).toHaveBeenCalledTimes(1);
             expect(saveJob.mock.calls[0][0]).toMatchSnapshot()
         })
@@ -95,7 +102,7 @@ describe('jobs controller', () => {
             saveJob.mockResolvedValue({_id: jobId});
 
             const response = await request
-              .post('/api/jobs/init')
+              .post('/jobs/init')
               .send({ ...postData });
 
             expect(saveSimulation).toHaveBeenCalledTimes(2);
@@ -123,7 +130,7 @@ describe('jobs controller', () => {
           saveJob.mockResolvedValue({_id: jobId});
 
           const response = await request
-            .post('/api/jobs/init')
+            .post('/jobs/init')
             .send({...postData});
 
           expect(updateSimulationStatus).toHaveBeenCalledTimes(1);
@@ -143,7 +150,7 @@ describe('jobs controller', () => {
           saveJob.mockResolvedValue({_id: jobId});
 
           const response = await request
-            .post('/api/jobs/init')
+            .post('/jobs/init')
             .send({...postData, number_of_simulations: 1});
 
           const kafkaPayload = {
@@ -217,7 +224,7 @@ describe('jobs controller', () => {
           const {vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention} = {...postData};
 
           const response = await request
-            .post('/api/jobs/init')
+            .post('/jobs/init')
             .send({...postDataWithoutVaccinationIntervention, number_of_simulations: 1});
 
           const kafkaPayload = {
@@ -268,6 +275,45 @@ describe('jobs controller', () => {
           expect(payload).toEqual(kafkaPayload);
 
           expect(response.status).toBe(201);
+        });
+    });
+
+    describe('/:job_id', () => {
+        it('should return requested job if present in DB', async () => {
+            const jobId = mockObjectId();
+            const jobInDb = {_id: jobId, config: {configKey: "configValue"}};
+            fetchJob.mockResolvedValueOnce(jobInDb)
+
+            const response = await request.get(`/jobs/${jobId.toString()}`);
+
+            expect(fetchJob).toHaveBeenCalledTimes(1);
+            expect(fetchJob).toHaveBeenCalledWith(jobId)
+            expect(response.status).toEqual(200);
+            expect(response.body).toEqual({...jobInDb, _id: jobId.toString()});
+        });
+
+        it('should say not found if job does not exist', async () => {
+            const jobId = mockObjectId();
+            const errorToThrown = new NotFound(jobId);
+            fetchJob.mockRejectedValueOnce(errorToThrown)
+
+            const response = await request.get(`/jobs/${jobId.toString()}`);
+
+            expect(fetchJob).toHaveBeenCalledTimes(1);
+            expect(fetchJob).toHaveBeenCalledWith(jobId)
+            expect(response.status).toEqual(404);
+            expect(response.body).toEqual({message: errorToThrown.message});
+        });
+
+        it('should say internal server error if any other error occurs', async () => {
+            const jobId = mockObjectId();
+            fetchJob.mockRejectedValueOnce("some error")
+
+            const response = await request.get(`/jobs/${jobId.toString()}`);
+
+            expect(fetchJob).toHaveBeenCalledTimes(1);
+            expect(fetchJob).toHaveBeenCalledWith(jobId)
+            expect(response.status).toEqual(500);
         });
     });
 });

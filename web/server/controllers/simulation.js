@@ -85,18 +85,6 @@ router.post('/init', (req, res, next) => {
     });
 });
 
-router.get('/', async (req, res, next) => {
-  if (req.query.simulation_id) {
-    Simulation.find({ "simulation_id": req.query.simulation_id }, function (err, simulation) {
-      res.json(simulation)
-    })
-  } else {
-    Simulation.find({}, function (err, simulations) {
-      res.json(simulations)
-    })
-  }
-});
-
 router.get("/:simulation_id/time-series-deviation", async (req, res, next) => {
   Simulation.find(configMatch, { simulation_id: 1 })
     .exec()

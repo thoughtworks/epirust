@@ -111,7 +111,11 @@ export default function GridPage() {
     }, [socket]);
 
     if (!gridContextData)
-        return <Loader />;
+        return (
+          <div className="grid-wrap">
+              <Loader />
+          </div>
+        )
 
     return (
         <div className="grid-wrap">

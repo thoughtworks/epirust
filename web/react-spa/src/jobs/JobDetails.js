@@ -17,7 +17,7 @@
  *
  */
 
-import React from "react";
+import React, {useEffect, useState} from "react";
 
 import "./job-details.scss"
 import {NavItem} from "../common/NavItem";
@@ -25,11 +25,27 @@ import {Redirect, Route, Switch} from "react-router-dom";
 import GridPage from "../grid";
 import PropTypes from 'prop-types';
 import {TimeSeries} from "../time-series";
+import {get} from "../common/apiCall";
 
-export const JobDetails = ({ jobId, details }) => {
+export const JobDetails = ({ jobId }) => {
   const linkPrefix = `/jobs/${jobId}`;
+  const [gridEnabled, setGridEnabled] = useState(false)
+  const [jobConfig, setJobConfig] = useState({})
+  const [apiResolved, setApiResolved] = useState(false)
 
-  const isGridEnabled = details && details.config && details.config.enable_citizen_state_messages || false;
+  useEffect(() => {
+    get(`/jobs/${jobId}`)
+      .then(res => res.json())
+      .then(job => {
+        setGridEnabled(job.config.enable_citizen_state_messages)
+        setJobConfig(job.config)
+        setApiResolved(true)
+      })
+      .catch(() => {
+        setApiResolved(true)
+        setJobConfig({error: "Failed to load job config"})
+      })
+  }, [jobId])
 
   function renderGraphTabs() {
     return (
@@ -38,7 +54,7 @@ export const JobDetails = ({ jobId, details }) => {
           <ul className="nav nav-tabs nav-fill">
 
             <NavItem name="Time Series" linksTo={`${linkPrefix}/time-series`} activeOnExactMatch={true} />
-            {isGridEnabled && <NavItem name="Grid" linksTo={`${linkPrefix}/grid`} />}
+            {gridEnabled && <NavItem name="Grid" linksTo={`${linkPrefix}/grid`} />}
             <NavItem name="Config" linksTo={`${linkPrefix}/config`} />
 
           </ul>
@@ -61,11 +77,11 @@ export const JobDetails = ({ jobId, details }) => {
           </Route>
 
           <Route exact path={"/jobs/:id/grid"}>
-            {isGridEnabled ? <GridPage /> : <Redirect to={`/jobs/${jobId}/time-series`} />}
+            {gridEnabled ? <GridPage /> : <Redirect to={`/jobs/${jobId}/time-series`} />}
           </Route>
 
           <Route exact path={"/jobs/:id/config"}>
-            {details && <pre>{JSON.stringify(details.config, undefined, 4)}</pre>}
+            {<pre>{JSON.stringify(jobConfig, undefined, 4)}</pre>}
           </Route>
         </Switch>
       </div>
@@ -74,14 +90,13 @@ export const JobDetails = ({ jobId, details }) => {
 
 
   return (
-    <div className="job-details">
-      {renderGraphTabs()}
-      {renderContentForTab()}
-    </div>
+    apiResolved ? (<div className="job-details">
+        {renderGraphTabs()}
+        {renderContentForTab()}
+      </div>) : (<div/>)
   )
 };
 
 JobDetails.propTypes = {
   jobId: PropTypes.string.isRequired,
-  details: PropTypes.object
 };

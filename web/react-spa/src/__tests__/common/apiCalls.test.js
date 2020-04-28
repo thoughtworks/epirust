@@ -1,10 +1,8 @@
 import {post} from "../../common/apiCall";
 
-jest.setTimeout(100000);
-
-describe('apiCalls', function () {
-  describe('post', function () {
-    it('should return promise if response is in 200 range', async function () {
+describe('apiCalls', () => {
+  describe('post', () => {
+    it('should return promise if response is in 200 range', async () => {
       const returnVal = {ok: true};
       jest.spyOn(global, 'fetch').mockResolvedValueOnce(returnVal);
 
@@ -19,7 +17,7 @@ describe('apiCalls', function () {
       expect(expectedReturnVal).toBe(returnVal)
     });
 
-    it('should throw error if the response is not in 200 range', async function (done) {
+    it('should throw error if the response is not in 200 range', async (done) => {
       const testError = "Test error";
       const returnVal = {ok: false, statusText: testError};
       jest.spyOn(global, 'fetch').mockResolvedValueOnce(returnVal);

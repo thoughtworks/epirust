@@ -44,6 +44,11 @@ exports[`Jobs should fetch simulation status from socket to show status on UI 1`
         </li>
       </ul>
     </div>
+    <div
+      class="col-10 left-border scrollable details"
+    >
+      <div />
+    </div>
   </div>
 </DocumentFragment>
 `;

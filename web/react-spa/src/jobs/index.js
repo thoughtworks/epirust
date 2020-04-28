@@ -66,13 +66,9 @@ export const JobsList = () => {
   }
 
   function renderDetails() {
-    const simulationDetails = simulations.find(s => s._id === paramId);
-
-    if (!simulationDetails) return null
-
-    return (
+      return (
       <div className="col-10 left-border scrollable details">
-        <JobDetails jobId={paramId} details={simulationDetails} />
+        <JobDetails jobId={paramId} />
       </div>
     );
   }

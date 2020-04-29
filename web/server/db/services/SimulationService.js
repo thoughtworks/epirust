@@ -33,18 +33,21 @@ const markGridConsumptionFinished = (simulationId) => {
 };
 
 const fetchSimulation = (simulationId, projectionFields = []) => {
-  const projection = projectionFields.reduce((acc, cur) => {acc[cur] = 1; return acc;}, {});
+  const projection = projectionFields.reduce((acc, cur) => {
+    acc[cur] = 1;
+    return acc;
+  }, {});
   return Simulation.findOne({_id: simulationId}, projection).exec()
-        .then((doc) => {
-            if(!doc) {
-                throw Error(`Simulation with id: ${simulationId} not found`)
-            }
-            return doc.toObject()
-        })
+    .then((doc) => {
+      if (!doc) {
+        throw Error(`Simulation with id: ${simulationId} not found`)
+      }
+      return doc.toObject()
+    })
 };
 
 const saveSimulation = (simulation) => {
-    return Simulation(simulation).save()
+  return Simulation(simulation).save()
 };
 
 const fetchSimulationsWithJobId = (jobId) => {
@@ -54,20 +57,20 @@ const fetchSimulationsWithJobId = (jobId) => {
 
 const groupSimulationsByJob = () => {
   return Simulation.aggregate([{
-      $group: {
-        _id: "$job_id",
-        simulations: {$push: {status: "$status", id: "$_id"}}
-      }
-    },
+    $group: {
+      _id: "$job_id",
+      simulations: {$push: {status: "$status", id: "$_id"}}
+    }
+  },
     {$sort: {_id: 1}}
   ])
 }
 
 module.exports = {
-    updateSimulationStatus,
-    markGridConsumptionFinished,
-    fetchSimulation,
-    saveSimulation,
-    fetchSimulationsWithJobId,
-    groupSimulationsByJob
+  updateSimulationStatus,
+  markGridConsumptionFinished,
+  fetchSimulation,
+  saveSimulation,
+  fetchSimulationsWithJobId,
+  groupSimulationsByJob
 };

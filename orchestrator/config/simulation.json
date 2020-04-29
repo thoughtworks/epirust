@@ -78,6 +78,7 @@
     "matrix": [
       [0, 10],
       [10, 0]
-    ]
+    ],
+    "lockdown_travellers": 2
   }
 }

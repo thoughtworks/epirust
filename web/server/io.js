@@ -26,10 +26,7 @@ module.exports = function setupIO(ioInstance) {
   ioInstance
     .of('/counts')
     .on('connection', (socket) => {
-      socket.on('get', (message) => {
-        CountsIoController.handleRequest(message.jobId, jobId)
-      });
-
+      socket.on('get', message => CountsIoController.handleRequest(socket, message.jobId));
       socket.on('disconnect', reason => console.log("Disconnect", reason));
     });
 

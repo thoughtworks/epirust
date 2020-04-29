@@ -32,6 +32,7 @@ pub fn start(engine_id: &str) -> StreamConsumer {
         .set("bootstrap.servers", kafka_url.as_str())
         .set("group.id", engine_id)
         .set("auto.offset.reset", "earliest")
+        .set("max.poll.interval.ms", "86400000") //max allowed
         .create()
         .expect("Consumer creation failed");
 

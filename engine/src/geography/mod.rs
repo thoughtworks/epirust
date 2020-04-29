@@ -37,10 +37,10 @@ pub fn define_geography(grid_size: i32) -> Grid {
     let hospital_start = work_area_end;
     let hospital_end = work_area_end + (grid_size as f32 * constants::INITIAL_HOSPITAL_RELATIVE_SIZE).ceil() as i32;
 
-    let housing_area = Area::new(Point::new(0, 0), Point::new(home_width, grid_size));
-    let transport_area = Area::new(Point::new(transport_start, 0), Point::new(transport_end, grid_size));
-    let work_area = Area::new(Point::new(work_area_start, 0), Point::new(work_area_end, grid_size));
-    let hospital_area = Area::new(Point::new(hospital_start, 0), Point::new(hospital_end, grid_size));
+    let housing_area = Area::new(Point::new(0, 0), Point::new(home_width - 1, grid_size));
+    let transport_area = Area::new(Point::new(transport_start, 0), Point::new(transport_end - 1, grid_size));
+    let work_area = Area::new(Point::new(work_area_start, 0), Point::new(work_area_end - 1, grid_size));
+    let hospital_area = Area::new(Point::new(hospital_start, 0), Point::new(hospital_end - 1, grid_size));
 
     let houses = area::area_factory(housing_area.start_offset, housing_area.end_offset, constants::HOME_SIZE);
     let offices = area::area_factory(work_area.start_offset, work_area.end_offset, constants::OFFICE_SIZE);
@@ -66,15 +66,15 @@ mod tests {
     fn should_define_geography(){
         let grid = define_geography(10);
         assert_eq!(grid.housing_area.start_offset, Point::new(0,0));
-        assert_eq!(grid.housing_area.end_offset, Point::new(4,10));
+        assert_eq!(grid.housing_area.end_offset, Point::new(3,10));
 
         assert_eq!(grid.transport_area.start_offset, Point::new(4,0));
-        assert_eq!(grid.transport_area.end_offset, Point::new(5,10));
+        assert_eq!(grid.transport_area.end_offset, Point::new(4,10));
 
         assert_eq!(grid.work_area.start_offset, Point::new(5,0));
-        assert_eq!(grid.work_area.end_offset, Point::new(7,10));
+        assert_eq!(grid.work_area.end_offset, Point::new(6,10));
 
         assert_eq!(grid.hospital_area.start_offset, Point::new(7,0));
-        assert_eq!(grid.hospital_area.end_offset, Point::new(8,10));
+        assert_eq!(grid.hospital_area.end_offset, Point::new(7,10));
     }
 }

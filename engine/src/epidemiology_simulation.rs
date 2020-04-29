@@ -437,16 +437,16 @@ mod tests {
         let config = Config::new(Population::Auto(pop), disease, vec![], 100, 10000,
                                  vec![Intervention::Vaccinate(vac)], None);
         let epidemiology: Epidemiology = Epidemiology::new(&config, "id".to_string());
-        let expected_housing_area = Area::new(Point::new(0, 0), Point::new(40, 100));
+        let expected_housing_area = Area::new(Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);
 
-        let expected_transport_area = Area::new(Point::new(40, 0), Point::new(50, 100));
+        let expected_transport_area = Area::new(Point::new(40, 0), Point::new(49, 100));
         assert_eq!(epidemiology.grid.transport_area, expected_transport_area);
 
-        let expected_work_area = Area::new(Point::new(50, 0), Point::new(70, 100));
+        let expected_work_area = Area::new(Point::new(50, 0), Point::new(69, 100));
         assert_eq!(epidemiology.grid.work_area, expected_work_area);
 
-        let expected_hospital_area = Area::new(Point::new(70, 0), Point::new(80, 100));
+        let expected_hospital_area = Area::new(Point::new(70, 0), Point::new(79, 100));
         assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.agent_location_map.current_population(), 10);

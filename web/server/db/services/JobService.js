@@ -18,9 +18,12 @@
  */
 const NotFound = require('../exceptions/NotFound')
 const {Job} = require('../models/Job');
+const {range} = require('../../common/util');
+const {SimulationStatus} = require('../models/Simulation')
 
-const saveJob = (config) => {
-  return new Job({config}).save()
+const saveJob = (config, numSimulations) => {
+  const simulations = range(numSimulations).map(() => ({status: SimulationStatus.INQUEUE}))
+  return new Job({config, simulations}).save()
 }
 
 const fetchJob = (jobId) => {
@@ -32,4 +35,11 @@ const fetchJob = (jobId) => {
     })
 }
 
-module.exports = {saveJob, fetchJob}
+const fetchJobs = (jobIds) => {
+  if(jobIds && jobIds.length > 0){
+    return Job.find({_id: {$in: jobIds}}).cursor()
+  }
+  return Job.find().cursor()
+}
+
+module.exports = {saveJob, fetchJob, fetchJobs}

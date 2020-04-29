@@ -17,10 +17,10 @@
  *
  */
 
-const SimulationService = require('../db/services/SimulationService')
+const JobService = require('../db/services/JobService')
 
 async function sendJobsStatus(socket) {
-    const cursor = SimulationService.groupSimulationsByJob()
+    const cursor = JobService.fetchJobs()
 
     let jobStatus = []
     for await (const data of cursor) {

@@ -19,9 +19,10 @@
 
 
 const { SimulationStatus } = require("../db/models/Simulation");
-const {fetchSimulation, fetchSimulationsWithJobId} = require('../db/services/SimulationService')
+const {fetchSimulation} = require('../db/services/SimulationService')
 const {findSortedById} = require('../db/services/GridService')
 const {toObjectId} = require('../common/util');
+const {fetchJob} = require("../db/services/JobService")
 
 async function sendGridData(simulationId, socket, totalConsumerRecords) {
   const cursor = findSortedById(simulationId, totalConsumerRecords);
@@ -56,8 +57,8 @@ async function sendGridData(simulationId, socket, totalConsumerRecords) {
 }
 
 const handleRequest = (socket, jobId) => {
-  fetchSimulationsWithJobId(toObjectId(jobId))
-    .then(simulations => {
+  fetchJob(toObjectId(jobId))
+    .then(({simulations}) => {
       if(simulations.length === 0)
         throw new Error("No simulation for provided jobId or invalid job-id provided")
 

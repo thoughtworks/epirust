@@ -17,78 +17,36 @@
  *
  */
 
-const {Simulation} = require("../models/Simulation");
+const {Job} = require("../models/Job")
+const NotFound = require("../exceptions/NotFound")
 
 const updateSimulationStatus = (simulationId, status) => {
-  const query = {_id: simulationId};
-  const update = {status};
-  return Simulation.updateOne(query, update, {upsert: true}).exec()
+  const query = {"simulations._id": simulationId};
+  const update = {"simulations.$.status": status};
+  return Job.updateOne(query, update).exec()
 };
 
 const markGridConsumptionFinished = (simulationId) => {
-  const query = {_id: simulationId};
-  const update = {grid_consumption_finished: true};
-  const simulationUpdate = Simulation.updateOne(query, update, {upsert: true});
+  const query = {"simulations._id": simulationId};
+  const update = {"simulations.$.grid_consumption_finished": true};
+  const simulationUpdate = Job.updateOne(query, update);
   return simulationUpdate.exec()
 };
 
-const fetchSimulation = (simulationId, projectionFields = []) => {
-  const projection = projectionFields.reduce((acc, cur) => {
-    acc[cur] = 1;
-    return acc;
-  }, {});
-  return Simulation.findOne({_id: simulationId}, projection).exec()
-    .then((doc) => {
-      if (!doc) {
-        throw Error(`Simulation with id: ${simulationId} not found`)
+const fetchSimulation = (simulationId) => {
+  const query = {"simulations._id": simulationId};
+  const findSimulationQuery = Job.findOne(query, {"simulations.$": 1});
+  return findSimulationQuery.exec()
+    .then(doc => {
+      if(!doc) {
+        throw new NotFound(simulationId)
       }
-      return doc.toObject()
+      return doc.simulations[0]
     })
-};
-
-const saveSimulation = (simulation) => {
-  return Simulation(simulation).save()
-};
-
-const fetchSimulationsWithJobId = (jobId) => {
-  return Simulation.find({job_id: jobId}).exec()
-    .then(docs => docs.map(doc => doc.toObject()))
-}
-
-const groupSimulationsByJob = () => {
-  return Simulation.aggregate([{
-    $group: {
-      _id: "$job_id",
-      simulations: {$push: {status: "$status", id: "$_id"}}
-    }
-  },
-    {$sort: {_id: 1}}
-  ])
-}
-
-const fetchFinishedJobs = () => {
-  return Simulation.aggregate([
-    {
-      $group: {
-        _id: "$job_id",
-        statuses: {$push: "$status"}
-      }
-    },
-    {
-      $match: {
-        statuses: {$elemMatch: {$eq: "finished"}}
-      }
-    },
-    {$sort: {_id: 1}}
-  ])
 }
 
 module.exports = {
   updateSimulationStatus,
   markGridConsumptionFinished,
-  fetchSimulation,
-  saveSimulation,
-  fetchSimulationsWithJobId,
-  groupSimulationsByJob,
-  fetchFinishedJobs
+  fetchSimulation
 };

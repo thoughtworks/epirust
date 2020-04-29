@@ -17,10 +17,10 @@
  *
  */
 
-jest.mock('../../db/services/SimulationService');
+jest.mock('../../db/services/JobService');
 const { handleRequest: handleJobsRequest } = require('../../controllers/job-status-io-controller')
 const { SimulationStatus } = require('../../db/models/Simulation');
-const SimulationService = require('../../db/services/SimulationService')
+const JobService = require('../../db/services/JobService')
 
 jest.useFakeTimers();
 
@@ -40,7 +40,7 @@ describe('Jobs Status controller', () => {
 
         //TODO: implement async iterator for the returned value from cursor.
         //this implementation restricts testing close method
-        SimulationService.groupSimulationsByJob
+        JobService.fetchJobs
             .mockReturnValueOnce(jobStatus0)
             .mockReturnValueOnce(jobStatus1)
             .mockReturnValueOnce(jobStatus2)
@@ -56,14 +56,14 @@ describe('Jobs Status controller', () => {
 
         //1
         jest.advanceTimersByTime(15000);
-        expect(SimulationService.groupSimulationsByJob).toHaveBeenCalledTimes(2)
+        expect(JobService.fetchJobs).toHaveBeenCalledTimes(2)
 
         await flushPromises()
         expect(emitSpy).toHaveBeenCalledTimes(2)
 
         //2
         jest.advanceTimersByTime(15000);
-        expect(SimulationService.groupSimulationsByJob).toHaveBeenCalledTimes(3)
+        expect(JobService.fetchJobs).toHaveBeenCalledTimes(3)
 
         await flushPromises()
         expect(emitSpy).toHaveBeenCalledTimes(3)
@@ -71,7 +71,7 @@ describe('Jobs Status controller', () => {
         //3
         jest.advanceTimersByTime(15000);
         // mockSocket.disconnected = true
-        expect(SimulationService.groupSimulationsByJob).toHaveBeenCalledTimes(4)
+        expect(JobService.fetchJobs).toHaveBeenCalledTimes(4)
 
         await flushPromises()
         expect(emitSpy).toHaveBeenCalledTimes(4)

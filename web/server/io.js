@@ -21,10 +21,17 @@ const CountsIoController = require("./controllers/counts-io-controller");
 const GridIoController = require("./controllers/grid-io-controller");
 const JobStatusIoController = require("./controllers/job-status-io-controller");
 
+
 module.exports = function setupIO(ioInstance) {
   ioInstance
     .of('/counts')
-    .on('connection', CountsIoController.handleRequest);
+    .on('connection', (socket) => {
+      socket.on('get', (message) => {
+        CountsIoController.handleRequest(message.jobId, jobId)
+      });
+
+      socket.on('disconnect', reason => console.log("Disconnect", reason));
+    });
 
   ioInstance
     .of('/grid-updates')

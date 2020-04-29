@@ -28,12 +28,6 @@ const SimulationStatus = {
 };
 Object.freeze(SimulationStatus);
 
-const simulationSchema = new Schema({
-  job_id: {type: mongoose.ObjectId, required: true},
-  status: String,
-  grid_consumption_finished: Boolean
-});
 
 
-const Simulation = mongoose.model('Simulation', simulationSchema);
-module.exports = {Simulation, SimulationStatus};
+module.exports = {SimulationStatus};

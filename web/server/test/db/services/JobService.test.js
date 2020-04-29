@@ -22,16 +22,22 @@ const dbHandler = require('../db-handler');
 const JobService = require('../../../db/services/JobService');
 const {Job} = require('../../../db/models/Job');
 const {mockObjectId} = require('../../helpers');
+const {SimulationStatus} = require('../../../db/models/Simulation')
+
 
 describe('Job Service', () => {
   describe('saveJob', () => {
-    it('should save the job with config', async () => {
+    it('should save the job with config and two simulations', async () => {
 
-      const writeAck = await JobService.saveJob(testConfig)
+      const writeAck = await JobService.saveJob(testConfig, 2)
 
       const receivedJob = (await Job.findOne({}).exec()).toObject()
       expect(receivedJob.config).toEqual(testConfig)
+      expect(receivedJob.simulations).toHaveLength(2)
+      receivedJob.simulations
+        .forEach(s => expect(s.status).toBe(SimulationStatus.INQUEUE));
       expect(writeAck).toHaveProperty('_id');
+      writeAck.simulations.forEach(s => expect(s).toHaveProperty("_id"));
     });
   });
 
@@ -50,6 +56,41 @@ describe('Job Service', () => {
 
       await expect(JobService.fetchJob(randomJobId)).rejects.toBeInstanceOf(NotFound)
       await expect(JobService.fetchJob(randomJobId)).rejects.toEqual(new NotFound(randomJobId))
+    });
+  });
+
+  describe('fetchJobs', () => {
+    it('should return all the jobs in db when no ids specified', async () => {
+      const job1 = await createTestJob()
+      const job2 = await createTestJob()
+
+      const jobs = await JobService.fetchJobs();
+
+      const receivedJobs = [];
+      for await (const job of jobs) {
+        receivedJobs.push(job.toObject())
+      }
+
+      expect(receivedJobs).toHaveLength(2)
+      expect(receivedJobs[0]).toEqual(job1.toObject())
+      expect(receivedJobs[1]).toEqual(job2.toObject())
+    });
+
+    it('should return only jobs asked for', async () => {
+      const job1 = await createTestJob()
+      const job2 = await createTestJob()
+      const job3 = await createTestJob()
+
+      const jobs = await JobService.fetchJobs([job1._id, job2._id]);
+
+      const receivedJobs = [];
+      for await (const job of jobs) {
+        receivedJobs.push(job.toObject())
+      }
+
+      expect(receivedJobs).toHaveLength(2)
+      expect(receivedJobs[0]).toEqual(job1.toObject())
+      expect(receivedJobs[1]).toEqual(job2.toObject())
     });
   });
 

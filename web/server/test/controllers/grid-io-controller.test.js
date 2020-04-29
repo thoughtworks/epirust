@@ -22,15 +22,17 @@ jest.mock("../../db/models/Simulation");
 jest.mock("../../db/models/Grid");
 jest.mock("../../db/services/SimulationService");
 jest.mock("../../db/services/GridService");
-const {fetchSimulation, fetchSimulationsWithJobId} = require("../../db/services/SimulationService");
+jest.mock("../../db/services/JobService");
+const {fetchSimulation} = require("../../db/services/SimulationService");
 const {findSortedById} = require("../../db/services/GridService");
 const {mockObjectId} = require('../helpers');
+const {fetchJob} = require('../../db/services/JobService')
 
 describe("Grid controller", () => {
     let mockSocket;
     describe('when there is single simulation in the job', () => {
         beforeEach(() => {
-            fetchSimulationsWithJobId.mockResolvedValueOnce([{_id: "1234"}])
+            fetchJob.mockResolvedValueOnce({_id: mockObjectId(), simulations: [{_id: "1234"}]})
         });
 
         it('should emit all grid if simulation has ended', (done) => {
@@ -163,13 +165,13 @@ describe("Grid controller", () => {
     describe('when the job has multiple simulations', () => {
         it('should send back error saying that grid visualization is not available for multi-simulation', (done) => {
             const jobId = mockObjectId();
-            fetchSimulationsWithJobId.mockResolvedValueOnce([{_id: mockObjectId()}, {_id: mockObjectId()}])
+            fetchJob.mockResolvedValueOnce({simulations: [{_id: mockObjectId()}, {_id: mockObjectId()}]})
 
             handleRequest(mockSocket, jobId.toString());
 
             process.nextTick(() => {
-                expect(fetchSimulationsWithJobId).toHaveBeenCalledTimes(1);
-                expect(fetchSimulationsWithJobId).toHaveBeenCalledWith(jobId)
+                expect(fetchJob).toHaveBeenCalledTimes(1);
+                expect(fetchJob).toHaveBeenCalledWith(jobId)
 
                 expect(mockSocket.emit).toHaveBeenCalledTimes(1);
                 expect(mockSocket.emit).toHaveBeenCalledWith(
@@ -184,13 +186,13 @@ describe("Grid controller", () => {
     describe('when the job has no associated simulations', () => {
         it('should send back error with message no simulations for provided jobId', (done) => {
             const jobId = mockObjectId();
-            fetchSimulationsWithJobId.mockResolvedValueOnce([])
+            fetchJob.mockResolvedValueOnce({simulations: []})
 
             handleRequest(mockSocket, jobId.toString());
 
             process.nextTick(() => {
-                expect(fetchSimulationsWithJobId).toHaveBeenCalledTimes(1);
-                expect(fetchSimulationsWithJobId).toHaveBeenCalledWith(jobId)
+                expect(fetchJob).toHaveBeenCalledTimes(1);
+                expect(fetchJob).toHaveBeenCalledWith(jobId)
 
                 expect(mockSocket.emit).toHaveBeenCalledTimes(1);
                 expect(mockSocket.emit).toHaveBeenCalledWith(

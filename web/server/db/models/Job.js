@@ -20,8 +20,14 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const simulationSchema = new Schema({
+  status: {type: String, required: true},
+  grid_consumption_finished: Boolean
+});
+
 const jobSchema = new Schema({
-  config: Object
+  config: Object,
+  simulations: [simulationSchema]
 });
 
 

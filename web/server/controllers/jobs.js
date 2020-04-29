@@ -34,15 +34,10 @@ router.post('/init', (req, res, next) => {
   const kafkaProducer = new KafkaServices.KafkaProducerService();
   let jobId;
 
-  JobService.saveJob(simulation_config)
-    .then(job => {
+  JobService.saveJob(simulation_config, simulation_config.number_of_simulations)
+    .then((job) => {
       jobId = job._id;
-      const simulation = {status: SimulationStatus.INQUEUE, job_id: job._id};
-      return Promise.all(range(simulation_config.number_of_simulations)
-        .map(() => saveSimulation(simulation)))
-    })
-    .then((simulations) => {
-      return Promise.all(simulations.map(s => {
+      return Promise.all(job.simulations.map(s => {
         return kafkaProducer
           .send('simulation_requests', {...simulation_config, sim_id: s._id.toString()})
           .catch(err => {

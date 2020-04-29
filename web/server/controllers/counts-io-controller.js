@@ -18,41 +18,30 @@
  */
 
 const {SimulationStatus} = require("../db/models/Simulation");
-const {fetchSimulation, fetchSimulationsWithJobId} = require('../db/services/SimulationService')
 const {fetchCountsInSimulation, aggregateSimulations} = require('../db/services/CountService')
 const {toObjectId} = require('../common/util')
+const {fetchJob} = require('../db/services/JobService')
+const {fetchSimulation} = require('../db/services/SimulationService')
 
-const handleRequest = (socket) => {
-  socket.on('get', (message) => {
-    const jobId = toObjectId(message.jobId);
+const handleRequest = (socket, jobId) => {
+  const mongoJobId = toObjectId(jobId);
+  fetchJob(mongoJobId)
+    .then(job => {
+      const simulations = job.simulations;
+      if(simulations.length === 0) return; //TODO: remove this when job is required to have at least one simulation
 
-    fetchSimulationsWithJobId(jobId)
-      .then(simulations => {
-        if(simulations.length === 0) return;
-
-        if(simulations.length === 1) {
-          // this can be shown live
-          return sendCountsData(simulations[0]._id, socket, 0);
-        } else {
-          return handleMultiSimulationRequest(jobId, socket)
-        }
-      })
-      .catch(err => {
-        console.log("error", err.message);
-        socket.emit('error', {message: err.message})
-      })
-  });
-
-  socket.on('disconnect', reason => console.log("Disconnect", reason));
+      if(simulations.length === 1) {
+        // this can be shown live
+        return sendCountsData(simulations[0]._id, socket, 0);
+      } else {
+        return handleMultiSimulationRequest(mongoJobId, socket)
+      }
+    })
+    .catch(err => {
+      console.log("error", err.message);
+      socket.emit('error', {message: err.message})
+    })
 };
-
-const placeholderData = {
-  infected_std: 0,
-  susceptible_std: 0,
-  quarantined_std: 0,
-  recovered_std: 0,
-  deceased_std: 0,
-}
 
 async function sendCountsData(simulationId, socket, totalConsumedRecords) {
   const cursor = fetchCountsInSimulation(simulationId, totalConsumedRecords)
@@ -71,7 +60,7 @@ async function sendCountsData(simulationId, socket, totalConsumedRecords) {
     recordsConsumedInThisGo += 1;
     socket.emit('epidemicStats', {...placeholderData, ...document.toObject()});
   }
-  return await fetchSimulation(simulationId, ['status'])
+  return await fetchSimulation(simulationId)
     .then((simulation) => {
       if (simulation.status === SimulationStatus.FINISHED || simulation.status === SimulationStatus.FAILED) {
         if (socket.disconnected)
@@ -89,7 +78,7 @@ const sendAggregatedCounts = async (simulations, socket) => {
 }
 
 const handleMultiSimulationRequest = async (jobId, socket) => {
-  const simulations = await fetchSimulationsWithJobId(jobId);
+  const simulations = (await fetchJob(jobId)).simulations;
 
   const anySimulationFailed = simulations.reduce((acc, cur) => acc || cur.status === SimulationStatus.FAILED, false);
   if(anySimulationFailed)
@@ -102,6 +91,14 @@ const handleMultiSimulationRequest = async (jobId, socket) => {
   } else {
     setTimeout(() => handleMultiSimulationRequest(jobId, socket), 2000);
   }
+}
+
+const placeholderData = {
+  infected_std: 0,
+  susceptible_std: 0,
+  quarantined_std: 0,
+  recovered_std: 0,
+  deceased_std: 0,
 }
 
 module.exports = {

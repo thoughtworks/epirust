@@ -33,7 +33,7 @@ jest.mock("../../db/services/JobService");
 
 const KafkaServices = require("../../services/kafka");
 
-const {updateSimulationStatus, saveSimulation} = require('../../db/services/SimulationService');
+const {updateSimulationStatus} = require('../../db/services/SimulationService');
 const {saveJob, fetchJob} = require('../../db/services/JobService');
 const {mockObjectId} = require('../helpers');
 
@@ -77,10 +77,8 @@ describe('jobs controller', () => {
       const mockKafkaSend = jest.fn().mockReturnValue(Promise.resolve());
       KafkaServices.KafkaProducerService.mockReturnValue({send: mockKafkaSend});
 
-      saveSimulation.mockResolvedValue({_id: mockObjectId()});
-
       const jobId = mockObjectId();
-      saveJob.mockResolvedValue({_id: jobId});
+      saveJob.mockResolvedValue({_id: jobId, simulations: []});
 
       const response = await request
         .post('/jobs/init')
@@ -89,28 +87,10 @@ describe('jobs controller', () => {
       expect(response.status).toBe(201)
       expect(saveJob).toHaveBeenCalledTimes(1);
       expect(saveJob.mock.calls[0][0]).toMatchSnapshot()
+      expect(saveJob.mock.calls[0][1]).toEqual(1)
+      expect(JSON.parse(response.text).jobId).toEqual(jobId.toString())
     })
 
-    it('should create two simulations on successful job creation', async () => {
-      const mockKafkaSend = jest.fn().mockReturnValue(Promise.resolve());
-      KafkaServices.KafkaProducerService.mockReturnValue({send: mockKafkaSend});
-
-      const mockSimulationSave = [{_id: mockObjectId()}, {_id: mockObjectId()}]
-      saveSimulation.mockImplementation(() => Promise.resolve(mockSimulationSave.shift()));
-
-      const jobId = mockObjectId();
-      saveJob.mockResolvedValue({_id: jobId});
-
-      const response = await request
-        .post('/jobs/init')
-        .send({...postData});
-
-      expect(saveSimulation).toHaveBeenCalledTimes(2);
-      expect(saveSimulation).toHaveBeenNthCalledWith(1, {status: 'in-queue', job_id: jobId})
-      expect(saveSimulation).toHaveBeenNthCalledWith(2, {status: 'in-queue', job_id: jobId})
-      expect(response.status).toBe(201);
-      expect(JSON.parse(response.text).jobId).toEqual(jobId.toString())
-    });
 
     it('should update simulation as `failed`, when publishing message on kafka fails', async () => {
       const mockSend = jest.fn()
@@ -122,12 +102,9 @@ describe('jobs controller', () => {
 
       const simId1 = mockObjectId();
       const simId2 = mockObjectId();
-      saveSimulation
-        .mockResolvedValueOnce({_id: simId1})
-        .mockResolvedValueOnce({_id: simId2});
 
       const jobId = mockObjectId();
-      saveJob.mockResolvedValue({_id: jobId});
+      saveJob.mockResolvedValue({_id: jobId, simulations: [{_id:simId1}, {_id: simId2}]});
 
       const response = await request
         .post('/jobs/init')
@@ -143,11 +120,9 @@ describe('jobs controller', () => {
       KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
 
       const simId = mockObjectId();
-      saveSimulation
-        .mockResolvedValueOnce({_id: simId})
 
       const jobId = mockObjectId();
-      saveJob.mockResolvedValue({_id: jobId});
+      saveJob.mockResolvedValue({_id: jobId, simulations: [{_id: simId}]});
 
       const response = await request
         .post('/jobs/init')
@@ -216,11 +191,9 @@ describe('jobs controller', () => {
       KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
 
       const simId1 = mockObjectId();
-      saveSimulation
-        .mockResolvedValueOnce({_id: simId1})
 
       const jobId = mockObjectId();
-      saveJob.mockResolvedValue({_id: jobId});
+      saveJob.mockResolvedValue({_id: jobId, simulations: [{_id: simId1}]});
 
       const {vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention} = {...postData};
 

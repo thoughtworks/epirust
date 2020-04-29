@@ -23,13 +23,13 @@ import {fireEvent, render} from "@testing-library/react";
 
 describe('MiscellaneousConfig', function () {
   it('should have grid-data enabler input switch', function () {
-    const {getByLabelText, container} = render(<MiscellaneousConfig/>);
+    const {getByLabelText} = render(<MiscellaneousConfig/>);
 
     expect(getByLabelText("Grid Visualization")).toBeInTheDocument();
   });
 
   it('should disable grid-data input when grid size is greater than 100', function () {
-    const {getByLabelText, container} = render(<MiscellaneousConfig/>);
+    const {getByLabelText} = render(<MiscellaneousConfig/>);
 
     fireEvent.change(getByLabelText("Grid Size"), { target: { value: 200 } });
 
@@ -38,7 +38,7 @@ describe('MiscellaneousConfig', function () {
   });
 
   it('should uncheck grid-data input when grid size is greater than 100', function () {
-    const {getByLabelText, container} = render(<MiscellaneousConfig/>);
+    const {getByLabelText} = render(<MiscellaneousConfig/>);
 
     fireEvent.change(getByLabelText("Grid Size"), { target: { value: 100 } });
     fireEvent.change(getByLabelText("Grid Visualization"), { target: { checked: true } });
@@ -49,11 +49,34 @@ describe('MiscellaneousConfig', function () {
     expect(getByLabelText("Grid Visualization").disabled).toBe(true);
   });
 
-  it('should not disable grid-data input field when grid-size is less than 101', function () {
-    const {getByLabelText, container} = render(<MiscellaneousConfig/>);
+  it('should not disable grid-data input field when grid-size is less than 101 and number of simulation is 1', function () {
+    const {getByLabelText} = render(<MiscellaneousConfig/>);
 
     fireEvent.change(getByLabelText("Grid Size"), { target: { value: 10 } });
+    fireEvent.change(getByLabelText("Number of simulations"), { target: { value: 1 } });
 
     expect(getByLabelText("Grid Visualization").disabled).toBe(false);
+  });
+
+  it('should disable grid-data input when number of simulations is greater than 1', function () {
+    const {getByLabelText} = render(<MiscellaneousConfig/>);
+
+    fireEvent.change(getByLabelText("Grid Size"), { target: { value: 100 } });
+    fireEvent.change(getByLabelText("Number of simulations"), { target: { value: 2 } });
+
+    expect(getByLabelText("Grid Visualization").disabled).toBe(true);
+
+  });
+
+  it('should uncheck grid-data input when number of simulations is greater than 100', function () {
+    const {getByLabelText} = render(<MiscellaneousConfig/>);
+
+    fireEvent.change(getByLabelText("Grid Size"), { target: { value: 100 } });
+    fireEvent.change(getByLabelText("Grid Visualization"), { target: { checked: true } });
+    expect(getByLabelText("Grid Visualization").checked).toBe(true);
+
+    fireEvent.change(getByLabelText("Number of simulations"), { target: { value: 2 } });
+    expect(getByLabelText("Grid Visualization").checked).toBe(false);
+    expect(getByLabelText("Grid Visualization").disabled).toBe(true);
   });
 });

@@ -20,21 +20,24 @@
 import React, { useEffect, useState } from "react";
 
 export default function MiscellaneousConfig() {
-  const disableGrid = (gs) => gs > 100;
+  const disableGrid = (gs, ns) => gs > 100 || ns > 1;
   const handleSizeChange = (e) => updateGridSize(e.target.value);
 
   const [gridSize, updateGridSize] = useState(250);
-  const [gridDisable, updateGridDisabled] = useState(disableGrid(gridSize));
+  const [numberOfSimulations, updateNumberOfSimulations] = useState(1);
+  const [gridDisable, updateGridDisabled] = useState(disableGrid(gridSize, numberOfSimulations));
   const [gridChecked, updateGridChecked] = useState(false);
 
-  const handleCheckedChange = (e) => updateGridChecked(!gridChecked);
+  const handleCheckedChange = () => updateGridChecked(!gridChecked);
+  const handleNumberOfSimulationChange = (e) => updateNumberOfSimulations(e.target.value)
 
   useEffect(() => {
-    updateGridDisabled(disableGrid(gridSize));
+    const isGridDisabled = disableGrid(gridSize, numberOfSimulations);
+    updateGridDisabled(isGridDisabled);
 
-    if (gridSize > 100)
+    if (isGridDisabled)
       updateGridChecked(false);
-  }, [gridSize]);
+  }, [gridSize, numberOfSimulations]);
 
   return (
     <fieldset>
@@ -50,7 +53,7 @@ export default function MiscellaneousConfig() {
 
       <div className="input-control">
         <label className="col-form-label-sm" htmlFor="number_of_simulations">Number of simulations</label>
-        <input type="number" name="number_of_simulations" className="form-control form-control-sm" id="number_of_simulations" aria-describedby="number_of_simulations" placeholder="Number of simulations" defaultValue="1" step="1" min="1" />
+        <input type="number" name="number_of_simulations" onChange={handleNumberOfSimulationChange} className="form-control form-control-sm" id="number_of_simulations" aria-describedby="number_of_simulations" placeholder="Number of simulations" step="1" min="1" value={numberOfSimulations}/>
       </div>
 
       <div className="custom-control custom-switch switch-right">

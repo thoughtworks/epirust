@@ -29,7 +29,7 @@ const {fetchJob} = require("../db/services/JobService")
 const NotFound = require("../db/exceptions/NotFound")
 
 router.post('/init', (req, res, next) => {
-  const {number_of_simulations, simulation_config} = makeSimulationConfig(req.body);
+  const simulation_config = makeSimulationConfig(req.body);
 
   const kafkaProducer = new KafkaServices.KafkaProducerService();
   let jobId;
@@ -38,7 +38,7 @@ router.post('/init', (req, res, next) => {
     .then(job => {
       jobId = job._id;
       const simulation = {status: SimulationStatus.INQUEUE, job_id: job._id};
-      return Promise.all(range(number_of_simulations)
+      return Promise.all(range(simulation_config.number_of_simulations)
         .map(() => saveSimulation(simulation)))
     })
     .then((simulations) => {
@@ -103,7 +103,7 @@ function makeSimulationConfig(message) {
     number_of_simulations
   } = message;
 
-  const simulation_config = {
+  return {
     "enable_citizen_state_messages": enable_citizen_state_messages,
     "population": {
       "Auto": {
@@ -126,9 +126,9 @@ function makeSimulationConfig(message) {
     },
     "grid_size": grid_size,
     "hours": simulation_hrs,
-    "interventions": modelInterventions(message)
+    "interventions": modelInterventions(message),
+    "number_of_simulations": number_of_simulations
   };
-  return {number_of_simulations, simulation_config};
 }
 
 function modelInterventions(message) {

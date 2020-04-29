@@ -179,6 +179,7 @@ describe('jobs controller', () => {
               },
             grid_size: 250,
             hours: 10000,
+            number_of_simulations: 1,
             interventions:
               [{
                 Vaccinate: {
@@ -265,7 +266,8 @@ describe('jobs controller', () => {
                   BuildNewHospital: {
                     spread_rate_threshold: 100
                   }
-                }]
+                }],
+            number_of_simulations: 1
           };
 
           expect(KafkaServices.KafkaProducerService).toHaveBeenCalledTimes(1);

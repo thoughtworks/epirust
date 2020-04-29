@@ -37,6 +37,7 @@ Object {
       },
     },
   ],
+  "number_of_simulations": 1,
   "population": Object {
     "Auto": Object {
       "number_of_agents": 10000,

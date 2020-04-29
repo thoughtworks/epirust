@@ -761,13 +761,14 @@ exports[`ParametersForm should render ParametersForm with defaults 1`] = `
               <input
                 aria-describedby="number_of_simulations"
                 className="form-control form-control-sm"
-                defaultValue="1"
                 id="number_of_simulations"
                 min="1"
                 name="number_of_simulations"
+                onChange={[Function]}
                 placeholder="Number of simulations"
                 step="1"
                 type="number"
+                value={1}
               />
             </div>
             <div

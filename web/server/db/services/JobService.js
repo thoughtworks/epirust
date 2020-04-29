@@ -18,7 +18,8 @@
  */
 const NotFound = require('../exceptions/NotFound')
 const {Job} = require('../models/Job');
-const {range} = require('../../common/util');
+const SimulationService = require('./SimulationService')
+const {range, toObjectId} = require('../../common/util');
 const {SimulationStatus} = require('../models/Simulation')
 
 const saveJob = (config, numSimulations) => {
@@ -43,3 +44,29 @@ const fetchJobs = (jobIds) => {
 }
 
 module.exports = {saveJob, fetchJob, fetchJobs}
+const fetchJobsStatus = (jobIds) => {
+  const jobObjectId = jobIds.map(toObjectId)
+  return SimulationService.groupSimulationsByJobId(jobObjectId)
+    .exec()
+    .then(jobsStatus => {
+      return jobsStatus.map(job => {
+        const jobStatus = extractStatus(job.simulations);
+        return {
+          jobId: job._id,
+          status: jobStatus
+        }
+      });
+    })
+    .catch(Promise.reject)
+}
+
+const extractStatus = (simulations) => {
+  if (simulations.some(s => s.status === 'failed')) return 'failed'
+  if (simulations.some(s => s.status === 'running')) return 'running'
+  if (simulations.every(s => s.status === 'finished')) return 'finished'
+  if (simulations.some(s => s.status === 'finished')) return 'running'
+  return 'in-queue'
+}
+
+
+module.exports = { saveJob, fetchJob, fetchJobs, fetchJobsStatus }

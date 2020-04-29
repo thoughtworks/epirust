@@ -19,12 +19,27 @@
 
 const dbHandler = require('../db-handler');
 const SimulationService = require('../../../db/services/SimulationService');
-const {SimulationStatus}  = require('../../../db/models/Simulation');
+const {SimulationStatus, Simulation} = require('../../../db/models/Simulation');
 const {Job} = require('../../../db/models/Job')
 const NotFound = require("../../../db/exceptions/NotFound")
 const {mockObjectId} = require("../../helpers")
 
 describe('Simulation Service', () => {
+
+  beforeAll(async () => await dbHandler.connect());
+  afterEach(async () => await dbHandler.clearDatabase());
+  afterAll(async () => await dbHandler.closeDatabase());
+
+  const createNewJob = (...simulationStatuses) => {
+    return new Job({
+      simulations: simulationStatuses.map(s => ({status: s}))
+    }).save();
+  }
+
+  const createNewSimulation = (simulationStatus, jobId = mockObjectId()) => {
+    return new Simulation({job_id: jobId, status: simulationStatus}).save();
+  }
+
   describe('updateSimulationStatus', () => {
     it('should set simulation status to ended', async () => {
       const {_id: jobId, simulations} = await createNewJob(SimulationStatus.RUNNING)
@@ -63,16 +78,17 @@ describe('Simulation Service', () => {
 
       await expect(SimulationService.fetchSimulation(mockObjectId())).rejects.toBeInstanceOf(NotFound)
     });
-
   });
 
-  const createNewJob = (...simulationStatuses) => {
-    return new Job({
-      simulations: simulationStatuses.map(s => ({status: s}))
-    }).save();
-  }
+  it('should group all the simulations by given jobId and return with their statuses', async () => {
+    const job1 = await createNewJob(SimulationStatus.FINISHED, SimulationStatus.INQUEUE, SimulationStatus.FINISHED)
+    await createNewJob(SimulationStatus.RUNNING, SimulationStatus.FINISHED);
+    const groupedJobStatus = await SimulationService.groupSimulationsByJobId([job1._id]).exec();
 
-  beforeAll(async () => await dbHandler.connect());
-  afterEach(async () => await dbHandler.clearDatabase());
-  afterAll(async () => await dbHandler.closeDatabase());
-});
+    expect(groupedJobStatus).toHaveLength(1);
+    expect(groupedJobStatus[0]._id).toEqual(job1._id);
+    expect(groupedJobStatus[0].simulations[0].status).toBe("finished");
+    expect(groupedJobStatus[0].simulations[1].status).toBe("in-queue");
+    expect(groupedJobStatus[0].simulations[2].status).toBe("finished");
+  })
+})

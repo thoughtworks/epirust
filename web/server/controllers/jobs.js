@@ -58,6 +58,18 @@ router.post('/init', (req, res, next) => {
     });
 });
 
+router.get('/status', (req, res) => {
+  const jobIds = req.query.jobId.split(",")
+  JobService.fetchJobsStatus(jobIds)
+  .then(jobsStatus => {
+    return res.send(jobsStatus);
+  })
+  .catch((err) => {
+    console.error("Error occurred while fetching document")
+    res.sendStatus(500)
+  })
+})
+
 router.get('/:job_id', (req, res, next) => {
   fetchJob(toObjectId(req.params.job_id))
       .then((job) => {

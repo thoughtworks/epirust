@@ -22,7 +22,7 @@ const express = require("express");
 const app = express();
 const supertest = require('supertest');
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({extended: false}));
 app.use("/", jobs_controller);
 const request = supertest(app);
 const NotFound = require('../../db/exceptions/NotFound')
@@ -33,289 +33,289 @@ jest.mock("../../db/services/JobService");
 
 const KafkaServices = require("../../services/kafka");
 
-const { updateSimulationStatus, saveSimulation } = require('../../db/services/SimulationService');
-const { saveJob, fetchJob } = require('../../db/services/JobService');
+const {updateSimulationStatus, saveSimulation} = require('../../db/services/SimulationService');
+const {saveJob, fetchJob} = require('../../db/services/JobService');
 const {mockObjectId} = require('../helpers');
 
 describe('jobs controller', () => {
 
-    const postData = {
-        "number_of_agents": 10000,
-        "public_transport_percentage": 0.2,
-        "working_percentage": 0.7,
-        "grid_size": 250,
-        "simulation_hrs": 10000,
-        "vaccinate_at": 5000,
-        "vaccinate_percentage": 0.2,
-        "lockdown_at_number_of_infections": 100,
-        "essential_workers_population": 0.1,
-        "hospital_spread_rate_threshold": 100,
-        "disease_name": "small_pox",
-        "regular_transmission_start_day": 10,
-        "high_transmission_start_day": 16,
-        "last_day": 22,
-        "regular_transmission_rate": 0.05,
-        "high_transmission_rate": 0.5,
-        "death_rate": 0.2,
-        "enable_citizen_state_messages": false,
-        "percentage_asymptomatic_population": 0.3,
-        "percentage_severe_infected_population": 0.3,
-        "exposed_duration": 48,
-        "pre_symptomatic_duration": 0,
-        "number_of_simulations": 2
-    };
-    afterAll(async () => {
-        await app.close()
+  const postData = {
+    "number_of_agents": 10000,
+    "public_transport_percentage": 0.2,
+    "working_percentage": 0.7,
+    "grid_size": 250,
+    "simulation_hrs": 10000,
+    "vaccinate_at": 5000,
+    "vaccinate_percentage": 0.2,
+    "lockdown_at_number_of_infections": 100,
+    "essential_workers_population": 0.1,
+    "hospital_spread_rate_threshold": 100,
+    "disease_name": "small_pox",
+    "regular_transmission_start_day": 10,
+    "high_transmission_start_day": 16,
+    "last_day": 22,
+    "regular_transmission_rate": 0.05,
+    "high_transmission_rate": 0.5,
+    "death_rate": 0.2,
+    "enable_citizen_state_messages": false,
+    "percentage_asymptomatic_population": 0.3,
+    "percentage_severe_infected_population": 0.3,
+    "exposed_duration": 48,
+    "pre_symptomatic_duration": 0,
+    "number_of_simulations": 2
+  };
+  afterAll(async () => {
+    await app.close()
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks()
+  });
+
+  describe('/init', function () {
+    it('should create a job with id and config', async () => {
+      const mockKafkaSend = jest.fn().mockReturnValue(Promise.resolve());
+      KafkaServices.KafkaProducerService.mockReturnValue({send: mockKafkaSend});
+
+      saveSimulation.mockResolvedValue({_id: mockObjectId()});
+
+      const jobId = mockObjectId();
+      saveJob.mockResolvedValue({_id: jobId});
+
+      const response = await request
+        .post('/jobs/init')
+        .send({...postData, number_of_simulations: 1});
+
+      expect(response.status).toBe(201)
+      expect(saveJob).toHaveBeenCalledTimes(1);
+      expect(saveJob.mock.calls[0][0]).toMatchSnapshot()
+    })
+
+    it('should create two simulations on successful job creation', async () => {
+      const mockKafkaSend = jest.fn().mockReturnValue(Promise.resolve());
+      KafkaServices.KafkaProducerService.mockReturnValue({send: mockKafkaSend});
+
+      const mockSimulationSave = [{_id: mockObjectId()}, {_id: mockObjectId()}]
+      saveSimulation.mockImplementation(() => Promise.resolve(mockSimulationSave.shift()));
+
+      const jobId = mockObjectId();
+      saveJob.mockResolvedValue({_id: jobId});
+
+      const response = await request
+        .post('/jobs/init')
+        .send({...postData});
+
+      expect(saveSimulation).toHaveBeenCalledTimes(2);
+      expect(saveSimulation).toHaveBeenNthCalledWith(1, {status: 'in-queue', job_id: jobId})
+      expect(saveSimulation).toHaveBeenNthCalledWith(2, {status: 'in-queue', job_id: jobId})
+      expect(response.status).toBe(201);
+      expect(JSON.parse(response.text).jobId).toEqual(jobId.toString())
     });
 
-    afterEach(() => {
-        jest.clearAllMocks()
+    it('should update simulation as `failed`, when publishing message on kafka fails', async () => {
+      const mockSend = jest.fn()
+        .mockResolvedValueOnce()
+        .mockRejectedValueOnce(new Error("because we want to"));
+
+      KafkaServices.KafkaProducerService
+        .mockReturnValueOnce({send: mockSend})
+
+      const simId1 = mockObjectId();
+      const simId2 = mockObjectId();
+      saveSimulation
+        .mockResolvedValueOnce({_id: simId1})
+        .mockResolvedValueOnce({_id: simId2});
+
+      const jobId = mockObjectId();
+      saveJob.mockResolvedValue({_id: jobId});
+
+      const response = await request
+        .post('/jobs/init')
+        .send({...postData});
+
+      expect(updateSimulationStatus).toHaveBeenCalledTimes(1);
+      expect(updateSimulationStatus).toHaveBeenCalledWith(simId2, 'failed')
+      expect(response.status).toBe(500);
     });
 
-    describe('/init', function () {
-        it('should create a job with id and config', async () => {
-            const mockKafkaSend = jest.fn().mockReturnValue(Promise.resolve());
-            KafkaServices.KafkaProducerService.mockReturnValue({ send: mockKafkaSend });
+    it('should write simulation start request on kafka topic after simulation db insert', async () => {
+      const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
+      KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
 
-            saveSimulation.mockResolvedValue({_id: mockObjectId()});
+      const simId = mockObjectId();
+      saveSimulation
+        .mockResolvedValueOnce({_id: simId})
 
-            const jobId = mockObjectId();
-            saveJob.mockResolvedValue({_id: jobId});
+      const jobId = mockObjectId();
+      saveJob.mockResolvedValue({_id: jobId});
 
-            const response = await request
-              .post('/jobs/init')
-              .send({ ...postData, number_of_simulations: 1 });
+      const response = await request
+        .post('/jobs/init')
+        .send({...postData, number_of_simulations: 1});
 
-            expect(response.status).toBe(201)
-            expect(saveJob).toHaveBeenCalledTimes(1);
-            expect(saveJob.mock.calls[0][0]).toMatchSnapshot()
-        })
-
-        it('should create two simulations on successful job creation', async () => {
-            const mockKafkaSend = jest.fn().mockReturnValue(Promise.resolve());
-            KafkaServices.KafkaProducerService.mockReturnValue({ send: mockKafkaSend });
-
-            const mockSimulationSave = [{_id: mockObjectId()}, {_id: mockObjectId()}]
-            saveSimulation.mockImplementation(() => Promise.resolve(mockSimulationSave.shift()));
-
-            const jobId = mockObjectId();
-            saveJob.mockResolvedValue({_id: jobId});
-
-            const response = await request
-              .post('/jobs/init')
-              .send({ ...postData });
-
-            expect(saveSimulation).toHaveBeenCalledTimes(2);
-            expect(saveSimulation).toHaveBeenNthCalledWith(1, {status: 'in-queue', job_id: jobId})
-            expect(saveSimulation).toHaveBeenNthCalledWith(2, {status: 'in-queue', job_id: jobId})
-            expect(response.status).toBe(201);
-            expect(JSON.parse(response.text).jobId).toEqual(jobId.toString())
-        });
-
-        it('should update simulation as `failed`, when publishing message on kafka fails', async () => {
-          const mockSend = jest.fn()
-            .mockResolvedValueOnce()
-            .mockRejectedValueOnce(new Error("because we want to"));
-
-          KafkaServices.KafkaProducerService
-            .mockReturnValueOnce({send: mockSend})
-
-          const simId1 = mockObjectId();
-          const simId2 = mockObjectId();
-          saveSimulation
-            .mockResolvedValueOnce({_id: simId1})
-            .mockResolvedValueOnce({_id: simId2});
-
-          const jobId = mockObjectId();
-          saveJob.mockResolvedValue({_id: jobId});
-
-          const response = await request
-            .post('/jobs/init')
-            .send({...postData});
-
-          expect(updateSimulationStatus).toHaveBeenCalledTimes(1);
-          expect(updateSimulationStatus).toHaveBeenCalledWith(simId2, 'failed')
-          expect(response.status).toBe(500);
-        });
-
-        it('should write simulation start request on kafka topic after simulation db insert', async () => {
-          const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
-          KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
-
-          const simId = mockObjectId();
-          saveSimulation
-            .mockResolvedValueOnce({_id: simId})
-
-          const jobId = mockObjectId();
-          saveJob.mockResolvedValue({_id: jobId});
-
-          const response = await request
-            .post('/jobs/init')
-            .send({...postData, number_of_simulations: 1});
-
-          const kafkaPayload = {
-            enable_citizen_state_messages: false,
-            population:
+      const kafkaPayload = {
+        enable_citizen_state_messages: false,
+        population:
+          {
+            Auto:
               {
-                Auto:
-                  {
-                    number_of_agents: 10000,
-                    public_transport_percentage: 0.2,
-                    working_percentage: 0.7
-                  }
-              },
-            disease:
-              {
-                regular_transmission_start_day: 10,
-                high_transmission_start_day: 16,
-                last_day: 22,
-                regular_transmission_rate: 0.05,
-                high_transmission_rate: 0.5,
-                death_rate: 0.2,
-                percentage_asymptomatic_population: 0.3,
-                percentage_severe_infected_population: 0.3,
-                exposed_duration: 48,
-                pre_symptomatic_duration: 0
-              },
-            grid_size: 250,
-            hours: 10000,
-            number_of_simulations: 1,
-            interventions:
-              [{
-                Vaccinate: {
-                  at_hour: 5000,
-                  percent: 0.2
-                },
-              },
-                {
-                  Lockdown: {
-                    at_number_of_infections: 100,
-                    essential_workers_population: 0.1,
-                    lock_down_period: 21
-                  }
-                },
-                {
-                  BuildNewHospital: {
-                    spread_rate_threshold: 100
-                  }
-                }]
-          }
+                number_of_agents: 10000,
+                public_transport_percentage: 0.2,
+                working_percentage: 0.7
+              }
+          },
+        disease:
+          {
+            regular_transmission_start_day: 10,
+            high_transmission_start_day: 16,
+            last_day: 22,
+            regular_transmission_rate: 0.05,
+            high_transmission_rate: 0.5,
+            death_rate: 0.2,
+            percentage_asymptomatic_population: 0.3,
+            percentage_severe_infected_population: 0.3,
+            exposed_duration: 48,
+            pre_symptomatic_duration: 0
+          },
+        grid_size: 250,
+        hours: 10000,
+        number_of_simulations: 1,
+        interventions:
+          [{
+            Vaccinate: {
+              at_hour: 5000,
+              percent: 0.2
+            },
+          },
+            {
+              Lockdown: {
+                at_number_of_infections: 100,
+                essential_workers_population: 0.1,
+                lock_down_period: 21
+              }
+            },
+            {
+              BuildNewHospital: {
+                spread_rate_threshold: 100
+              }
+            }]
+      }
 
-          expect(KafkaServices.KafkaProducerService).toHaveBeenCalledTimes(1);
+      expect(KafkaServices.KafkaProducerService).toHaveBeenCalledTimes(1);
 
-          expect(mockKafkaSend).toHaveBeenCalledTimes(1);
-          expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
-          const payload = mockKafkaSend.mock.calls[0][1];
-          expect(payload).toEqual({...kafkaPayload, sim_id: simId.toString()});
+      expect(mockKafkaSend).toHaveBeenCalledTimes(1);
+      expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
+      const payload = mockKafkaSend.mock.calls[0][1];
+      expect(payload).toEqual({...kafkaPayload, sim_id: simId.toString()});
 
-          expect(response.status).toBe(201);
-        });
-
-        it('should not put vaccination intervention in kafka topic if params not available in /init POST request', async () => {
-          const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
-          KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
-
-          const simId1 = mockObjectId();
-          saveSimulation
-            .mockResolvedValueOnce({_id: simId1})
-
-          const jobId = mockObjectId();
-          saveJob.mockResolvedValue({_id: jobId});
-
-          const {vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention} = {...postData};
-
-          const response = await request
-            .post('/jobs/init')
-            .send({...postDataWithoutVaccinationIntervention, number_of_simulations: 1});
-
-          const kafkaPayload = {
-            enable_citizen_state_messages: false,
-            population:
-              {
-                Auto:
-                  {
-                    number_of_agents: 10000,
-                    public_transport_percentage: 0.2,
-                    working_percentage: 0.7
-                  }
-              },
-            disease:
-              {
-                regular_transmission_start_day: 10,
-                high_transmission_start_day: 16,
-                last_day: 22,
-                regular_transmission_rate: 0.05,
-                high_transmission_rate: 0.5,
-                death_rate: 0.2,
-                percentage_asymptomatic_population: 0.3,
-                percentage_severe_infected_population: 0.3,
-                exposed_duration: 48,
-                pre_symptomatic_duration: 0
-              },
-            grid_size: 250,
-            hours: 10000,
-            interventions:
-              [{
-                Lockdown: {
-                  at_number_of_infections: 100,
-                  essential_workers_population: 0.1,
-                  lock_down_period: 21
-                }
-              },
-                {
-                  BuildNewHospital: {
-                    spread_rate_threshold: 100
-                  }
-                }],
-            number_of_simulations: 1
-          };
-
-          expect(KafkaServices.KafkaProducerService).toHaveBeenCalledTimes(1);
-          expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
-          const payload = mockKafkaSend.mock.calls[0][1];
-          delete payload["sim_id"]; //it is a timestamp, cannot test
-          expect(payload).toEqual(kafkaPayload);
-
-          expect(response.status).toBe(201);
-        });
+      expect(response.status).toBe(201);
     });
 
-    describe('/:job_id', () => {
-        it('should return requested job if present in DB', async () => {
-            const jobId = mockObjectId();
-            const jobInDb = {_id: jobId, config: {configKey: "configValue"}};
-            fetchJob.mockResolvedValueOnce(jobInDb)
+    it('should not put vaccination intervention in kafka topic if params not available in /init POST request', async () => {
+      const mockKafkaSend = jest.fn().mockReturnValueOnce(Promise.resolve());
+      KafkaServices.KafkaProducerService.mockReturnValueOnce({send: mockKafkaSend});
 
-            const response = await request.get(`/jobs/${jobId.toString()}`);
+      const simId1 = mockObjectId();
+      saveSimulation
+        .mockResolvedValueOnce({_id: simId1})
 
-            expect(fetchJob).toHaveBeenCalledTimes(1);
-            expect(fetchJob).toHaveBeenCalledWith(jobId)
-            expect(response.status).toEqual(200);
-            expect(response.body).toEqual({...jobInDb, _id: jobId.toString()});
-        });
+      const jobId = mockObjectId();
+      saveJob.mockResolvedValue({_id: jobId});
 
-        it('should say not found if job does not exist', async () => {
-            const jobId = mockObjectId();
-            const errorToThrown = new NotFound(jobId);
-            fetchJob.mockRejectedValueOnce(errorToThrown)
+      const {vaccinate_at, vaccinate_percentage, ...postDataWithoutVaccinationIntervention} = {...postData};
 
-            const response = await request.get(`/jobs/${jobId.toString()}`);
+      const response = await request
+        .post('/jobs/init')
+        .send({...postDataWithoutVaccinationIntervention, number_of_simulations: 1});
 
-            expect(fetchJob).toHaveBeenCalledTimes(1);
-            expect(fetchJob).toHaveBeenCalledWith(jobId)
-            expect(response.status).toEqual(404);
-            expect(response.body).toEqual({message: errorToThrown.message});
-        });
+      const kafkaPayload = {
+        enable_citizen_state_messages: false,
+        population:
+          {
+            Auto:
+              {
+                number_of_agents: 10000,
+                public_transport_percentage: 0.2,
+                working_percentage: 0.7
+              }
+          },
+        disease:
+          {
+            regular_transmission_start_day: 10,
+            high_transmission_start_day: 16,
+            last_day: 22,
+            regular_transmission_rate: 0.05,
+            high_transmission_rate: 0.5,
+            death_rate: 0.2,
+            percentage_asymptomatic_population: 0.3,
+            percentage_severe_infected_population: 0.3,
+            exposed_duration: 48,
+            pre_symptomatic_duration: 0
+          },
+        grid_size: 250,
+        hours: 10000,
+        interventions:
+          [{
+            Lockdown: {
+              at_number_of_infections: 100,
+              essential_workers_population: 0.1,
+              lock_down_period: 21
+            }
+          },
+            {
+              BuildNewHospital: {
+                spread_rate_threshold: 100
+              }
+            }],
+        number_of_simulations: 1
+      };
 
-        it('should say internal server error if any other error occurs', async () => {
-            const jobId = mockObjectId();
-            fetchJob.mockRejectedValueOnce("some error")
+      expect(KafkaServices.KafkaProducerService).toHaveBeenCalledTimes(1);
+      expect(mockKafkaSend.mock.calls[0][0]).toBe("simulation_requests");
+      const payload = mockKafkaSend.mock.calls[0][1];
+      delete payload["sim_id"]; //it is a timestamp, cannot test
+      expect(payload).toEqual(kafkaPayload);
 
-            const response = await request.get(`/jobs/${jobId.toString()}`);
-
-            expect(fetchJob).toHaveBeenCalledTimes(1);
-            expect(fetchJob).toHaveBeenCalledWith(jobId)
-            expect(response.status).toEqual(500);
-        });
+      expect(response.status).toBe(201);
     });
+  });
+
+  describe('/:job_id', () => {
+    it('should return requested job if present in DB', async () => {
+      const jobId = mockObjectId();
+      const jobInDb = {_id: jobId, config: {configKey: "configValue"}};
+      fetchJob.mockResolvedValueOnce(jobInDb)
+
+      const response = await request.get(`/jobs/${jobId.toString()}`);
+
+      expect(fetchJob).toHaveBeenCalledTimes(1);
+      expect(fetchJob).toHaveBeenCalledWith(jobId)
+      expect(response.status).toEqual(200);
+      expect(response.body).toEqual({...jobInDb, _id: jobId.toString()});
+    });
+
+    it('should say not found if job does not exist', async () => {
+      const jobId = mockObjectId();
+      const errorToThrown = new NotFound(jobId);
+      fetchJob.mockRejectedValueOnce(errorToThrown)
+
+      const response = await request.get(`/jobs/${jobId.toString()}`);
+
+      expect(fetchJob).toHaveBeenCalledTimes(1);
+      expect(fetchJob).toHaveBeenCalledWith(jobId)
+      expect(response.status).toEqual(404);
+      expect(response.body).toEqual({message: errorToThrown.message});
+    });
+
+    it('should say internal server error if any other error occurs', async () => {
+      const jobId = mockObjectId();
+      fetchJob.mockRejectedValueOnce("some error")
+
+      const response = await request.get(`/jobs/${jobId.toString()}`);
+
+      expect(fetchJob).toHaveBeenCalledTimes(1);
+      expect(fetchJob).toHaveBeenCalledWith(jobId)
+      expect(response.status).toEqual(500);
+    });
+  });
 });

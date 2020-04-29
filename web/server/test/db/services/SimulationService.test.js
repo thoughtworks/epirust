@@ -133,6 +133,26 @@ describe('Simulation Service', () => {
     });
   });
 
+  describe('fetchFinishedJobs', () => {
+    it('should return jobs which are finished', async () => {
+      const jobId1 = mockObjectId();
+      const jobId2 = mockObjectId();
+      await createNewSimulation(SimulationStatus.FINISHED, jobId1);
+      await createNewSimulation(SimulationStatus.FINISHED, jobId1);
+      await createNewSimulation(SimulationStatus.INQUEUE, jobId2);
+
+      const cursor = SimulationService.fetchFinishedJobs()
+
+      const docs = []
+      for await (const data of cursor) {
+        docs.push(data)
+      }
+
+      expect(docs).toHaveLength(1)
+      expect(docs[0]._id).toEqual(jobId1)
+    });
+  });
+
   const createNewSimulation = (simulationStatus, jobId = mockObjectId()) => {
     return new Simulation({job_id: jobId, status: simulationStatus}).save();
   }

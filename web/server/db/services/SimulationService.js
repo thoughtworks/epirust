@@ -66,11 +66,29 @@ const groupSimulationsByJob = () => {
   ])
 }
 
+const fetchFinishedJobs = () => {
+  return Simulation.aggregate([
+    {
+      $group: {
+        _id: "$job_id",
+        statuses: {$push: "$status"}
+      }
+    },
+    {
+      $match: {
+        statuses: {$elemMatch: {$eq: "finished"}}
+      }
+    },
+    {$sort: {_id: 1}}
+  ])
+}
+
 module.exports = {
   updateSimulationStatus,
   markGridConsumptionFinished,
   fetchSimulation,
   saveSimulation,
   fetchSimulationsWithJobId,
-  groupSimulationsByJob
+  groupSimulationsByJob,
+  fetchFinishedJobs
 };

@@ -37,9 +37,9 @@ const fetchJob = (jobId) => {
 
 const fetchJobs = (jobIds) => {
   if(jobIds && jobIds.length > 0){
-    return Job.find({_id: {$in: jobIds}}).cursor()
+    return Job.find({_id: {$in: jobIds}})
   }
-  return Job.find().cursor()
+  return Job.find()
 }
 
 module.exports = { saveJob, fetchJob, fetchJobs }

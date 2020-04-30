@@ -9,3 +9,5 @@
 !.idea/jsLinters/eslint.xml
 bin/
 *.iml
+
+.DS_Store

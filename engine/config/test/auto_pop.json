@@ -28,5 +28,11 @@
         "percent": 0.2
       }
     }
-  ]
+  ],
+  "starting_infections": {
+    "infected_mild_asymptomatic": 2,
+    "infected_mild_symptomatic": 3,
+    "infected_severe": 4,
+    "exposed": 5
+  }
 }

@@ -35,6 +35,8 @@ pub struct Config {
     output_file: Option<String>,
     #[serde(default)]
     enable_citizen_state_messages: bool,
+    #[serde(default)]
+    starting_infections: StartingInfections,
 }
 
 impl Config {
@@ -83,6 +85,7 @@ impl Config {
             interventions,
             output_file,
             enable_citizen_state_messages: true,
+            starting_infections: StartingInfections::default(),
         }
     }
 }
@@ -110,6 +113,37 @@ pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {
     let reader = File::open(filename)?;
     let v: Config = serde_json::from_reader(reader)?;
     Ok(v)
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
+pub struct StartingInfections {
+    infected_mild_asymptomatic: i32,
+    infected_mild_symptomatic: i32,
+    infected_severe: i32,
+    exposed: i32,
+}
+
+impl StartingInfections {
+    #[cfg(test)]
+    pub fn new(mild_asymp: i32, mild_symp: i32, severe: i32, exposed: i32) -> StartingInfections {
+        StartingInfections {
+            infected_mild_asymptomatic: mild_asymp,
+            infected_mild_symptomatic: mild_symp,
+            infected_severe: severe,
+            exposed
+        }
+    }
+}
+
+impl Default for StartingInfections {
+    fn default() -> Self {
+        StartingInfections {
+            infected_mild_asymptomatic: 0,
+            infected_mild_symptomatic: 0,
+            infected_severe: 0,
+            exposed: 1,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -141,7 +175,8 @@ mod tests {
             hours: 10000,
             interventions: vec![Intervention::Vaccinate(vaccinate)],
             output_file: None,
-            enable_citizen_state_messages: false
+            enable_citizen_state_messages: false,
+            starting_infections: StartingInfections::default(),
         };
 
         assert_eq!(expected_config, read_config);
@@ -167,7 +202,8 @@ mod tests {
             hours: 10000,
             interventions: vec![Intervention::Vaccinate(vaccinate)],
             output_file: Some("simulation_default_config".to_string()),
-            enable_citizen_state_messages: false
+            enable_citizen_state_messages: false,
+            starting_infections: StartingInfections::new(2, 3, 4, 5),
         };
 
         assert_eq!(expected_config, read_config);

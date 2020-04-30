@@ -29,5 +29,11 @@
         "lock_down_period": 21
       }
     }
-  ]
+  ],
+  "starting_infections": {
+    "infected_mild_asymptomatic": 0,
+    "infected_mild_symptomatic": 0,
+    "infected_severe": 0,
+    "exposed": 1
+  }
 }

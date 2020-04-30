@@ -34,7 +34,6 @@ export const JobsView = () => {
 
   const refreshJobs = (jobsToProcess) => {
     const jobsToFetch = jobsToProcess.filter(j => j.status !== "finished")
-    console.log(jobsToFetch)
     if (jobsToFetch.length > 0) {
       const url = `/jobs?jobIds=${jobsToFetch.map(j => j._id).join(",")}`
       get(url)

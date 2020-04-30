@@ -21,7 +21,7 @@ use plotters::prelude::*;
 
 use crate::{agent, constants};
 use crate::agent::{Citizen, PopulationRecord};
-use crate::config::{AutoPopulation, CsvPopulation};
+use crate::config::{AutoPopulation, CsvPopulation, StartingInfections};
 use crate::geography::{Area, Point};
 use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
@@ -45,7 +45,8 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn generate_population(&mut self, auto_pop: &AutoPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
+    pub fn generate_population(&mut self, auto_pop: &AutoPopulation, start_infections: &StartingInfections,
+                               rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
         debug!("Generating Population");
         let number_of_agents = auto_pop.number_of_agents;
         let working_percentage = auto_pop.working_percentage;
@@ -57,7 +58,9 @@ impl Grid {
         let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32, rng);
         debug!("Finished generating transport locations");
 
-        let agent_list = agent::citizen_factory(number_of_agents, &self.houses, &self.offices, &transport_locations, public_transport_percentage, working_percentage, rng);
+        let agent_list = agent::citizen_factory(number_of_agents, &self.houses, &self.offices,
+                                                &transport_locations, public_transport_percentage, working_percentage,
+                                                rng, start_infections);
         debug!("Finished creating agent list");
 
         let (home_loc, agents_in_order) = self.set_start_locations_and_occupancies(rng, &agent_list);
@@ -134,7 +137,8 @@ impl Grid {
                       style, true).unwrap();
     }
 
-    pub fn read_population(&mut self, csv_pop: &CsvPopulation, rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
+    pub fn read_population(&mut self, csv_pop: &CsvPopulation, starting_infections: &StartingInfections,
+                           rng: &mut RandomWrapper) -> (Vec<Point>, Vec<Citizen>) {
         let file = File::open(&csv_pop.file).expect("Could not read population file");
         let mut rdr = csv::Reader::from_reader(file);
         let mut homes_iter = self.houses.iter().cycle();
@@ -157,7 +161,7 @@ impl Grid {
         }
 
         let (home_loc, mut agents_in_order) = self.set_start_locations_and_occupancies(rng, &citizens);
-        agents_in_order.last_mut().as_mut().unwrap().state_machine.expose(0);
+        agent::set_starting_infections(&mut agents_in_order, starting_infections, rng);
 
         self.draw(&home_loc, &self.houses, &self.offices);
         (home_loc, agents_in_order)
@@ -247,7 +251,8 @@ mod tests {
             public_transport_percentage: 0.2,
             working_percentage: 0.2,
         };
-        let (home_locations, agent_list) = grid.generate_population(&pop, &mut rng);
+        let start_infections = StartingInfections::new(0, 0, 0, 1);
+        let (home_locations, agent_list) = grid.generate_population(&pop, &start_infections, &mut rng);
 
         assert_eq!(home_locations.len(), 10);
         assert_eq!(agent_list.len(), 10);

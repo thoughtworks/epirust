@@ -19,7 +19,8 @@
     "death_rate": 0.035,
     "percentage_asymptomatic_population": 0.3,
     "percentage_severe_infected_population": 0.3,
-    "exposed_duration": 48
+    "exposed_duration": 48,
+    "pre_symptomatic_duration": 48
   },
   "disease_overrides": [
     {
@@ -40,7 +41,8 @@
         "death_rate": 0.2,
         "percentage_asymptomatic_population": 0.3,
         "percentage_severe_infected_population": 0.3,
-        "exposed_duration": 48
+        "exposed_duration": 48,
+        "pre_symptomatic_duration": 48
       }
     }
   ],

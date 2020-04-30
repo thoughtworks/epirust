@@ -132,7 +132,7 @@ mod tests {
         let mut listeners = Listeners::from(mocks);
 
 
-        listeners.counts_updated(Counts::new(10, 1));
+        listeners.counts_updated(Counts::new(10, 1, 0));
         listeners.citizen_got_infected(&Point::new(1, 1));
         listeners.simulation_ended();
 

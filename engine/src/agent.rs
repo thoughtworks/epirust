@@ -20,17 +20,18 @@
 use rand::Rng;
 use rand::seq::IteratorRandom;
 use rand::seq::SliceRandom;
+use serde::{de, Deserialize, Deserializer};
+use serde::de::Unexpected;
+use uuid::Uuid;
 
 use crate::allocation_map::AgentLocationMap;
+use crate::config::StartingInfections;
 use crate::constants;
-use crate::geography::{Area, Grid, Point};
-use crate::random_wrapper::RandomWrapper;
 use crate::disease::Disease;
-use serde::{Deserializer, Deserialize, de};
-use serde::de::Unexpected;
-use crate::listeners::events::counts::Counts;
 use crate::disease_state_machine::DiseaseStateMachine;
-use uuid::Uuid;
+use crate::geography::{Area, Grid, Point};
+use crate::listeners::events::counts::Counts;
+use crate::random_wrapper::RandomWrapper;
 use crate::travel_plan::Traveller;
 
 #[derive(Deserialize)]
@@ -61,10 +62,10 @@ fn bool_from_string<'de, D>(deserializer: D) -> Result<bool, D::Error>
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum WorkStatus {
-    Normal {},
-    Essential {},
-    HospitalStaff {work_start_at: i32},
-    NA {},
+    Normal,
+    Essential,
+    HospitalStaff { work_start_at: i32 },
+    NA,
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
@@ -239,14 +240,14 @@ impl Citizen {
         return match self.work_status {
             WorkStatus::HospitalStaff { .. } => true,
             _ => false
-        }
+        };
     }
 
     pub fn is_essential_worker(&self) -> bool {
         return match self.work_status {
             WorkStatus::Essential {} => true,
             _ => false
-        }
+        };
     }
 
     fn perform_movements(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap, counts: &mut Counts, rng: &mut RandomWrapper, disease: &Disease) -> Point {
@@ -277,7 +278,7 @@ impl Citizen {
                 self.update_infection_dynamics(new_cell, &map, counts, rng, &disease);
             }
 
-            WorkStatus::HospitalStaff {work_start_at} => {
+            WorkStatus::HospitalStaff { work_start_at } => {
                 if counts.get_hour() - work_start_at == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) {
                     self.work_quarantined = true;
                     return new_cell;
@@ -286,7 +287,7 @@ impl Citizen {
                 if counts.get_hour() - work_start_at == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS * 2) {
                     new_cell = self.goto_area(self.home_location, map, cell, rng);
                     self.current_area = self.home_location;
-                    self.work_status = WorkStatus::HospitalStaff {work_start_at: (counts.get_hour() + constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS)};
+                    self.work_status = WorkStatus::HospitalStaff { work_start_at: (counts.get_hour() + constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) };
                     return new_cell;
                 }
 
@@ -295,7 +296,7 @@ impl Citizen {
                         if self.current_area != grid.hospital_area && work_start_at <= counts.get_hour() {
                             new_cell = self.goto_area(grid.hospital_area, map, cell, rng);
                             self.current_area = grid.hospital_area;
-                            self.work_status = WorkStatus::HospitalStaff {work_start_at: counts.get_hour()};
+                            self.work_status = WorkStatus::HospitalStaff { work_start_at: counts.get_hour() };
                         }
                         self.work_quarantined = false;
                     }
@@ -366,7 +367,7 @@ impl Citizen {
     }
 
     fn update_infection_severity(&mut self, counts: &mut Counts, rng: &mut RandomWrapper, disease: &Disease) {
-        if self.state_machine.is_pre_symptomatic(){
+        if self.state_machine.is_pre_symptomatic() {
             self.state_machine.change_infection_severity(counts.get_hour(), rng, disease);
         }
     }
@@ -454,7 +455,7 @@ impl Citizen {
     }
 
     pub fn assign_essential_worker(&mut self, essential_workers_percentage: f64, rng: &mut RandomWrapper) {
-        match self.work_status{
+        match self.work_status {
             WorkStatus::Normal {} => {
                 if rng.get().gen_bool(essential_workers_percentage) {
                     self.work_status = WorkStatus::Essential {};
@@ -467,16 +468,37 @@ impl Citizen {
     fn derive_work_status(is_working: bool, rng: &mut RandomWrapper) -> WorkStatus {
         if is_working {
             if rng.get().gen_bool(constants::HOSPITAL_STAFF_PERCENTAGE) {
-                return WorkStatus::HospitalStaff {work_start_at: constants::ROUTINE_WORK_TIME};
+                return WorkStatus::HospitalStaff { work_start_at: constants::ROUTINE_WORK_TIME };
             }
             return WorkStatus::Normal {};
         }
         return WorkStatus::NA {};
     }
+
+    #[cfg(test)]
+    pub fn is_exposed(&self) -> bool {
+        self.state_machine.is_exposed()
+    }
+
+    #[cfg(test)]
+    pub fn is_mild_asymptomatic(&self) -> bool {
+        self.state_machine.is_mild_asymptomatic()
+    }
+
+    #[cfg(test)]
+    pub fn is_mild_symptomatic(&self) -> bool {
+        self.state_machine.is_mild_symptomatic()
+    }
+
+    #[cfg(test)]
+    pub fn is_infected_severe(&self) -> bool {
+        self.state_machine.is_infected_severe()
+    }
 }
 
 pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_locations: &Vec<Area>, public_transport_locations: &Vec<Point>,
-                       percentage_public_transport: f64, working_percentage: f64, rng: &mut RandomWrapper) -> Vec<Citizen> {
+                       percentage_public_transport: f64, working_percentage: f64, rng: &mut RandomWrapper,
+                       starting_infections: &StartingInfections) -> Vec<Citizen> {
     let mut agent_list = Vec::with_capacity(home_locations.len());
 
     for i in 0..number_of_agents as usize {
@@ -506,9 +528,36 @@ pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_l
 
         agent_list.push(agent);
     }
-//TODO: pass number of infected as parameter
-    agent_list.last_mut().as_mut().unwrap().state_machine.expose(0);
+
+    set_starting_infections(&mut agent_list, starting_infections, rng);
+
     agent_list
+}
+
+pub fn set_starting_infections(agent_list: &mut Vec<Citizen>, start_infections: &StartingInfections,
+                               rng: &mut RandomWrapper) {
+    if start_infections.total() as usize > agent_list.len() {
+        panic!("There are {} people set to infect, but only {} agents available",
+               start_infections.total(), agent_list.len())
+    }
+    if start_infections.total() == 0 {
+        warn!("Simulation configured to start without any infected agents");
+    }
+    let mut to_infect = agent_list.iter_mut().choose_multiple(rng.get(), start_infections.total() as usize);
+    let mut citizens = to_infect.iter_mut();
+
+    for _i in 0..start_infections.get_exposed() {
+        citizens.next().unwrap().state_machine.expose(0);
+    }
+    for _i in 0..start_infections.get_infected_mild_asymptomatic() {
+        citizens.next().unwrap().state_machine.set_mild_asymptomatic()
+    }
+    for _i in 0..start_infections.get_infected_mild_symptomatic() {
+        citizens.next().unwrap().state_machine.set_mild_symptomatic()
+    }
+    for _i in 0..start_infections.get_infected_severe() {
+        citizens.next().unwrap().state_machine.set_severe_infected()
+    }
 }
 
 #[cfg(test)]
@@ -522,7 +571,9 @@ mod tests {
         let work_locations = vec![Area::new(Point::new(5, 0), Point::new(6, 2)), Area::new(Point::new(7, 0), Point::new(8, 2))];
 
         let public_transport_location = vec![Point::new(5, 0), Point::new(5, 1), Point::new(5, 2), Point::new(5, 3)];
-        citizen_factory(4, &home_locations, &work_locations, &public_transport_location, 0.5, 0.5, &mut rng)
+        let start_infections = StartingInfections::new(0, 0, 0, 1);
+        citizen_factory(4, &home_locations, &work_locations, &public_transport_location, 0.5, 0.5,
+                        &mut rng, &start_infections)
     }
 
     #[test]
@@ -531,10 +582,37 @@ mod tests {
         let expected_home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
 
         assert_eq!(citizen_list.len(), 4);
-        assert_eq!(citizen_list.last().unwrap().state_machine.is_exposed(), true);
+        assert_eq!(citizen_list.iter().filter(|c| c.is_exposed()).count(), 1);
 
         for citizen in &citizen_list {
             assert!(expected_home_locations.contains(&citizen.home_location));
         }
+    }
+
+    #[test]
+    fn should_set_starting_infections() {
+        let home_location = Area::new(Point::new(0, 0), Point::new(10, 10));
+        let work_location = Area::new(Point::new(11, 0), Point::new(20, 20));
+        let mut citizens = Vec::new();
+        let mut rng = RandomWrapper::new();
+        for _i in 0..20 {
+            let citizen = Citizen::new(home_location, work_location, Point::new(2, 2), false,
+                                       true, WorkStatus::Normal, &mut rng);
+            citizens.push(citizen);
+        }
+
+        let start_infections = StartingInfections::new(2, 3, 4, 5);
+
+        set_starting_infections(&mut citizens, &start_infections, &mut rng);
+
+        let actual_exposed = citizens.iter().filter(|citizen| citizen.is_exposed()).count();
+        let actual_mild_asymp = citizens.iter().filter(|citizen| citizen.is_mild_asymptomatic()).count();
+        let actual_mild_symp = citizens.iter().filter(|citizen| citizen.is_mild_symptomatic()).count();
+        let actual_severe = citizens.iter().filter(|citizen| citizen.is_infected_severe()).count();
+
+        assert_eq!(2, actual_mild_asymp);
+        assert_eq!(3, actual_mild_symp);
+        assert_eq!(4, actual_severe);
+        assert_eq!(5, actual_exposed);
     }
 }

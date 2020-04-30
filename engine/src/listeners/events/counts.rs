@@ -34,8 +34,8 @@ impl Counts {
         Counts { hour, susceptible, exposed, infected, quarantined, recovered, deceased }
     }
 
-    pub fn new(susceptible: i32, exposed: i32) -> Counts {
-        Counts { hour: 0, susceptible, exposed, infected: 0, quarantined: 0, recovered: 0, deceased: 0 }
+    pub fn new(susceptible: i32, exposed: i32, infected: i32) -> Counts {
+        Counts { hour: 0, susceptible, exposed, infected, quarantined: 0, recovered: 0, deceased: 0 }
     }
 
     pub fn get_susceptible(&self) -> i32 {
@@ -102,10 +102,10 @@ mod tests {
 
     #[test]
     fn should_create_counts() {
-        let counts = Counts::new(100, 1);
+        let counts = Counts::new(100, 1, 2);
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
-        assert_eq!(counts.infected, 0);
+        assert_eq!(counts.infected, 2);
         assert_eq!(counts.quarantined, 0);
         assert_eq!(counts.recovered, 0);
         assert_eq!(counts.deceased, 0);
@@ -114,11 +114,11 @@ mod tests {
 
     #[test]
     fn should_update_susceptible() {
-        let mut counts = Counts::new(100, 1);
+        let mut counts = Counts::new(100, 1, 2);
         counts.update_susceptible(5);
         assert_eq!(counts.susceptible, 105);
         assert_eq!(counts.exposed, 1);
-        assert_eq!(counts.infected, 0);
+        assert_eq!(counts.infected, 2);
         assert_eq!(counts.quarantined, 0);
         assert_eq!(counts.recovered, 0);
         assert_eq!(counts.deceased, 0);
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn should_update_exposed() {
-        let mut counts = Counts::new(100, 1);
+        let mut counts = Counts::new(100, 1, 0);
         counts.update_exposed(5);
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 6);
@@ -140,7 +140,7 @@ mod tests {
 
     #[test]
     fn should_update_infected() {
-        let mut counts = Counts::new(100, 1);
+        let mut counts = Counts::new(100, 1, 0);
         counts.update_infected(5);
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
@@ -153,7 +153,7 @@ mod tests {
 
     #[test]
     fn should_update_recovered() {
-        let mut counts = Counts::new(100, 1);
+        let mut counts = Counts::new(100, 1, 0);
         counts.update_recovered(5);
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn should_update_deceased() {
-        let mut counts = Counts::new(100, 1);
+        let mut counts = Counts::new(100, 1, 0);
         counts.update_deceased(5);
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
@@ -179,7 +179,7 @@ mod tests {
 
     #[test]
     fn should_update_quarantined() {
-        let mut counts = Counts::new(100, 1);
+        let mut counts = Counts::new(100, 1, 0);
         counts.update_quarantined(5);
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
@@ -192,7 +192,7 @@ mod tests {
 
     #[test]
     fn should_increment_hour() {
-        let mut counts = Counts::new(100, 1);
+        let mut counts = Counts::new(100, 1, 0);
         counts.increment_hour();
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);

@@ -31,9 +31,9 @@
     }
   ],
   "starting_infections": {
+    "exposed": 1,
     "infected_mild_asymptomatic": 0,
     "infected_mild_symptomatic": 0,
-    "infected_severe": 0,
-    "exposed": 1
+    "infected_severe": 0
   }
 }

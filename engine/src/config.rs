@@ -44,6 +44,10 @@ impl Config {
         self.disease
     }
 
+    pub fn get_starting_infections(&self) -> StartingInfections {
+        self.starting_infections
+    }
+
     pub fn get_population(&self) -> Population {
         self.population.clone()
     }
@@ -130,8 +134,32 @@ impl StartingInfections {
             infected_mild_asymptomatic: mild_asymp,
             infected_mild_symptomatic: mild_symp,
             infected_severe: severe,
-            exposed
+            exposed,
         }
+    }
+
+    pub fn total(&self) -> i32 {
+        self.total_infected() + self.exposed
+    }
+
+    pub fn total_infected(&self) -> i32 {
+        self.infected_mild_asymptomatic + self.infected_mild_symptomatic + self.infected_severe
+    }
+
+    pub fn get_infected_mild_asymptomatic(&self) -> i32 {
+        self.infected_mild_asymptomatic
+    }
+
+    pub fn get_infected_mild_symptomatic(&self) -> i32 {
+        self.infected_mild_symptomatic
+    }
+
+    pub fn get_infected_severe(&self) -> i32 {
+        self.infected_severe
+    }
+
+    pub fn get_exposed(&self) -> i32 {
+        self.exposed
     }
 }
 

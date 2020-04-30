@@ -27,7 +27,7 @@ use rand::Rng;
 
 use crate::{allocation_map, RunMode, ticks_consumer, travellers_consumer};
 use crate::allocation_map::AgentLocationMap;
-use crate::config::{Config, Population};
+use crate::config::{Config, Population, StartingInfections};
 use crate::disease::Disease;
 use crate::geography;
 use crate::geography::{Grid, Point};
@@ -60,11 +60,12 @@ impl Epidemiology {
     pub fn new(config: &Config, sim_id: String) -> Epidemiology {
         let start = Instant::now();
         let disease = config.get_disease();
+        let start_infections = config.get_starting_infections();
         let mut grid = geography::define_geography(config.get_grid_size());
         let mut rng = RandomWrapper::new();
         let (start_locations, agent_list) = match config.get_population() {
-            Population::Csv(csv_pop) => grid.read_population(&csv_pop, &mut rng),
-            Population::Auto(auto_pop) => grid.generate_population(&auto_pop, &mut rng),
+            Population::Csv(csv_pop) => grid.read_population(&csv_pop, &start_infections, &mut rng),
+            Population::Auto(auto_pop) => grid.generate_population(&auto_pop, &start_infections, &mut rng),
         };
 
         let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
@@ -77,7 +78,7 @@ impl Epidemiology {
     fn stop_simulation(run_mode: &RunMode, row: Counts) -> bool {
         let zero_active_cases = row.get_exposed() == 0 && row.get_infected() == 0 && row.get_quarantined() == 0;
         match run_mode {
-            RunMode::MultiEngine { .. } => { false },
+            RunMode::MultiEngine { .. } => { false }
             _ => zero_active_cases
         }
     }
@@ -115,10 +116,18 @@ impl Epidemiology {
         Listeners::from(listeners_vec)
     }
 
+    fn counts_at_start(population: i32, start_infections: &StartingInfections) -> Counts {
+        let s = population - start_infections.total();
+        let e = start_infections.get_exposed();
+        let i = start_infections.total_infected();
+        assert_eq!(s + e + i, population);
+        Counts::new(s, e, i)
+    }
+
     pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
-        let mut counts_at_hr = Counts::new(population - 1, 1);
+        let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
         let mut rng = RandomWrapper::new();
         let start_time = Instant::now();
 
@@ -129,7 +138,7 @@ impl Epidemiology {
         let mut hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        for (_, agent) in self.agent_location_map.iter_mut(){
+        for (_, agent) in self.agent_location_map.iter_mut() {
             agent.assign_essential_worker(essential_workers_population, &mut rng);
         }
 
@@ -152,6 +161,8 @@ impl Epidemiology {
         let mut n_incoming = 0;
         let mut n_outgoing = 0;
 
+        info!("S: {}, E:{}, I: {}, Q: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_exposed(), counts_at_hr.get_infected(),
+              counts_at_hr.get_quarantined(), counts_at_hr.get_recovered(), counts_at_hr.get_deceased());
         for simulation_hour in 1..config.get_hours() {
             let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour).await;
             match &tick {
@@ -233,7 +244,7 @@ impl Epidemiology {
                 &mut write_buffer_reference,
                 &mut rng,
                 &mut listeners,
-                simulation_hour
+                simulation_hour,
             );
 
             if Epidemiology::stop_simulation(&run_mode, counts_at_hr) {
@@ -263,7 +274,7 @@ impl Epidemiology {
     async fn receive_tick(run_mode: &RunMode, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                           simulation_hour: i32) -> Option<Tick> {
         if simulation_hour > 1 && simulation_hour % 24 != 0 {
-           return None;
+            return None;
         }
         if let RunMode::MultiEngine { engine_id: _e } = run_mode {
             let msg = message_stream.next().await;
@@ -286,7 +297,7 @@ impl Epidemiology {
     async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, counts: Counts, simulation_hour: i32,
                       lockdown: &LockdownIntervention) {
         if simulation_hour > 1 && simulation_hour % 24 != 0 {
-            return
+            return;
         }
         if let RunMode::MultiEngine { engine_id } = run_mode {
             let ack = TickAck {
@@ -318,7 +329,7 @@ impl Epidemiology {
             while expected_incoming_regions != received_incoming_regions {
                 let maybe_msg = Epidemiology::receive_travellers_from_region(message_stream, engine_travel_plan).await;
                 match maybe_msg {
-                    None => {},
+                    None => {}
                     Some(region_incoming) => {
                         incoming.extend(region_incoming.get_travellers());
                         received_incoming_regions += 1;

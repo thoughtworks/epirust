@@ -9,3 +9,35 @@
     align-items: center;
     height: 85vh;
 }
+
+.grid-control {
+  .icon {
+    height: 35px;
+    width: 35px;
+    margin: 0 4px;
+    cursor: pointer;
+
+    &.resume {
+      color: var(--green);
+    }
+
+    &.pause {
+      color: var(--blue);
+    }
+
+    &.reset {
+      color: var(--gray-dark)
+    }
+  }
+  .hour-step-control {
+    padding: 4px;
+    border: 1px solid var(--gray);
+    border-radius: 2px;
+    .icon {
+      height: 25px;
+      width: 25px;
+      margin: 0 8px;
+      color: var(--gray);
+    }
+  }
+}

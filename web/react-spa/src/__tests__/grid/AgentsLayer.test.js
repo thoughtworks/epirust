@@ -73,7 +73,7 @@ test('should pause without clicking when displayed all hours are sent by socket 
 
 test('should render AgentsLayer when grid visualization resets', () => {
 
-    const { getByTestId, getByText } = render(
+    const { getByTestId} = render(
         <GridContext.Provider value={gridContextData}>
             <AgentPositionsWrapper agentPositions={agentPositions} simulationEnded={false} />
         </GridContext.Provider>);
@@ -84,30 +84,30 @@ test('should render AgentsLayer when grid visualization resets', () => {
     expect(getByTestId("counter").textContent).toBe("1/1 hrs");
 
     act(() => {
-        fireEvent.click(getByText("RESET"));
+        fireEvent.click(getByTestId("reset"));
     });
 
-    expect(getByText("START")).toBeInTheDocument();
+    expect(getByTestId("resume")).toBeInTheDocument();
     expect(getByTestId("counter").textContent).toBe("1/1 hrs");
     expect(getByTestId("grid-canvas-agents").getContext("2d").__getEvents()).toMatchSnapshot()
 });
 
 test('should render AgentsLayer when grid visualization pauses and resume', () => {
 
-    const { getByTestId, getByText, rerender } = render(
+    const { getByTestId, rerender } = render(
         <GridContext.Provider value={gridContextData}>
             <AgentPositionsWrapper agentPositions={[agentPositions[0], agentPositions[0], agentPositions[0]]} simulationEnded={false} />
         </GridContext.Provider>);
 
     act(() => {
         jest.advanceTimersByTime(100);
-        fireEvent.click(getByText("PAUSE"))
+        fireEvent.click(getByTestId("pause"))
     });
 
     expect(getByTestId("counter").textContent).toBe("2/3 hrs");
 
     act(() => {
-        fireEvent.click(getByText("RESUME"))
+        fireEvent.click(getByTestId("resume"))
     });
 
     rerender(
@@ -121,13 +121,12 @@ test('should render AgentsLayer when grid visualization pauses and resume', () =
     });
 
     expect(getByTestId("counter").textContent).toBe("3/3 hrs");
-    expect(getByText("PAUSE")).toBeDisabled();
     expect(getByTestId("grid-canvas-agents").getContext("2d").__getEvents()).toMatchSnapshot()
 });
 
 test('should display hour step controls i.e. buttons to increment/decrement on pausing the simulation', () => {
 
-    const { getByTestId, getByText, queryByTestId, rerender } = render(
+    const { getByTestId, queryByTestId} = render(
         <GridContext.Provider value={gridContextData}>
             <AgentPositionsWrapper agentPositions={[agentPositions[0], agentPositions[0], agentPositions[0]]} simulationEnded={false} />
         </GridContext.Provider>);
@@ -136,13 +135,13 @@ test('should display hour step controls i.e. buttons to increment/decrement on p
 
     act(() => {
         jest.advanceTimersByTime(100);
-        fireEvent.click(getByText("PAUSE"))
+        fireEvent.click(getByTestId("pause"))
     });
 
     expect(getByTestId("hour-step-controls")).toBeInTheDocument()
 
     act(() => {
-        fireEvent.click(getByText("RESUME"))
+        fireEvent.click(getByTestId("resume"))
     });
 
     expect(queryByTestId("hour-step-controls")).not.toBeInTheDocument()
@@ -178,25 +177,25 @@ test('should display hour step controls i.e. buttons to increment/decrement when
 
 test('should increment currently displayed hour value on clicking + button', () => {
 
-    const { getByTestId, getByText } = render(
+    const { getByTestId} = render(
         <GridContext.Provider value={gridContextData}>
             <AgentPositionsWrapper agentPositions={[agentPositions[0], agentPositions[0], agentPositions[0]]} simulationEnded={false} />
         </GridContext.Provider>);
 
     act(() => {
         jest.advanceTimersByTime(100);
-        fireEvent.click(getByText("PAUSE"))
+        fireEvent.click(getByTestId("pause"))
     });
     expect(getByTestId("counter").textContent).toBe("2/3 hrs");
 
-    act(() => { fireEvent.click(getByText("-1")) });
+    act(() => { fireEvent.click(getByTestId("decrement-hour")) });
     expect(getByTestId("counter").textContent).toBe("1/3 hrs");
     const canvasEventsHour1 = getByTestId("grid-canvas-agents").getContext("2d").__getEvents()
 
-    act(() => { fireEvent.click(getByText("+1")) });
+    act(() => { fireEvent.click(getByTestId("increment-hour")) });
     expect(getByTestId("counter").textContent).toBe("2/3 hrs");
 
-    act(() => { fireEvent.click(getByText("-1")) });
+    act(() => { fireEvent.click(getByTestId("decrement-hour")) });
     expect(getByTestId("counter").textContent).toBe("1/3 hrs");
     const canvasEventsHour1Rerendered = getByTestId("grid-canvas-agents").getContext("2d").__getEvents()
 

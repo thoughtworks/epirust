@@ -20,6 +20,8 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { GridContext } from './index'
 import { AgentStateMapper, AgentStateToColor } from './constants';
 import GridLegend from "./GridLegend";
+import {faPauseCircle, faPlayCircle, faRedo, faStepForward, faStepBackward} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 export default function AgentPositionsWrapper({ agentPositions, simulationEnded }) {
     const [displayIndexIncrementPaused, setDisplayIndexIncrementPaused] = useState(true);
@@ -129,22 +131,22 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
 
     return (
         <div style={{ position: "relative" }}>
-            <div className="card px-4 py-4" style={{ position: "absolute", zIndex: 5, right: 0, width: 190 }}>
-                <h4 style={{ textAlign: 'center' }} data-testid="counter">{`${currentDisplayIndex + 1}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
+            <div className="card p-4 grid-control" style={{ position: "absolute", zIndex: 5, right: 0, width: 190 }}>
+                <h4 style={{ textAlign: 'center' }} className="pb-2" data-testid="counter">{`${currentDisplayIndex + 1}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
 
-                <div className="btn-group mb-2" role="group" aria-label="Buttons to pause/play and reset">
+                <div className="btn-group mb-2 justify-content-center" role="group" aria-label="Buttons to pause/play and reset">
                     {clickedPause
-                        ? <button className="btn btn-success btn-sm" onClick={handleResume} disabled={displayedAll()}>{currentDisplayIndex === 0 ? 'START' : 'RESUME'}</button>
-                        : <button className="btn btn-primary btn-sm" onClick={handlePause} disabled={displayedAll()}>PAUSE</button>
+                        ? <FontAwesomeIcon onClick={handleResume} data-testid="resume" disabled={displayedAll()} icon={faPlayCircle} className="icon resume"/>
+                        : <FontAwesomeIcon data-testid="pause" icon={faPauseCircle} onClick={handlePause} disabled={displayedAll()} className="icon pause"/>
                     }
 
-                    <button className="btn btn-danger btn-sm" onClick={handleReset}>RESET</button>
+                    <FontAwesomeIcon onClick={handleReset} data-testid="reset" icon={faRedo} className="icon reset"/>
                 </div>
 
                 {(clickedPause || displayedAll()) && (
-                    <div data-testid="hour-step-controls" className="btn-group my-0 mx-auto" role="group" aria-label="Buttons to increase/decrease current displayed hour">
-                        <button className="btn-sm mr-2 btn-outline-primary" name="increment hour" onClick={handleAddHour}>+1</button>
-                        <button className="btn-sm mr-2 btn-outline-secondary" name="decrement hour" onClick={handleSubtractHour}>-1</button>
+                    <div data-testid="hour-step-controls" className="btn-group my-0 mx-auto hour-step-control" role="group" aria-label="Buttons to increase/decrease current displayed hour">
+                        <FontAwesomeIcon icon={faStepBackward} data-testid="decrement-hour" name="decrement hour" onClick={handleSubtractHour} className="icon"/>
+                        <FontAwesomeIcon icon={faStepForward} data-testid="increment-hour" name="increment hour" onClick={handleAddHour} className="icon" />
                     </div>
                 )}
 

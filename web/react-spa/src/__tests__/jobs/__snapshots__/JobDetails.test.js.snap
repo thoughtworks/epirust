@@ -1,67 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Job Details should render error message in config tab if fetch job details fails 1`] = `
-<div>
-  <div
-    class="job-details"
-  >
-    <div
-      class="row"
-    >
-      <div
-        class="col-8"
-      >
-        <ul
-          class="nav nav-tabs nav-fill"
-        >
-          <li
-            class="nav-item"
-          >
-            <a
-              class="nav-link "
-              href="/jobs/123/time-series"
-            >
-              Time Series
-            </a>
-          </li>
-          <li
-            class="nav-item"
-          >
-            <a
-              class="nav-link active"
-              href="/jobs/123/config"
-            >
-              Config
-            </a>
-          </li>
-        </ul>
-      </div>
-      <div
-        class="col-4"
-      >
-        <h4
-          class="simulation-id"
-        >
-          Simulation: 
-          <code>
-            123
-          </code>
-        </h4>
-      </div>
-    </div>
-    <div
-      class="job-details-content"
-    >
-      <pre>
-        {
-    "error": "Failed to load job config"
-}
-      </pre>
-    </div>
-  </div>
-</div>
-`;
-
 exports[`Job Details should render grid if grid is enabled in config 1`] = `
 <div>
   <div
@@ -238,7 +176,7 @@ exports[`Job Details should render loader initially when no info received from s
 </DocumentFragment>
 `;
 
-exports[`Job Details should render the config when config is fetched from api 1`] = `
+exports[`Job Details should render the config 1`] = `
 <div>
   <div
     class="job-details"
@@ -292,7 +230,6 @@ exports[`Job Details should render the config when config is fetched from api 1`
     >
       <pre>
         {
-    "test": "testValue",
     "enable_citizen_state_messages": false
 }
       </pre>

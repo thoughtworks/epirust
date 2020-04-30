@@ -17,42 +17,58 @@
  *
  */
 
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import './jobs-list.scss'
-import { Job } from "./Job";
-import { JobDetails } from "./JobDetails";
-import { Redirect, useParams } from 'react-router-dom';
-import config from "../config";
-import io from 'socket.io-client'
+import {Job} from "./Job";
+import {JobDetails} from "./JobDetails";
+import {Redirect, useParams} from 'react-router-dom';
 import Loader from "../common/Loader";
+import {get} from "../common/apiCall";
 import {reduceStatus} from "./JobTransformer";
 
 export const JobsList = () => {
-  const { id: paramId, view } = useParams();
-  const [simulations, updateSimulations] = useState([]);
-  const [socket, setSocket] = useState(null);
+  const {id: paramId, view} = useParams();
+  const [jobs, updateJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const refreshJobs = (jobsToProcess) => {
+    const jobsToFetch = jobsToProcess.filter(j => j.status !== "finished")
+    console.log(jobsToFetch)
+    if (jobsToFetch.length > 0) {
+      const url = `/jobs?jobIds=${jobsToFetch.map(j => j._id).join(",")}`
+      get(url)
+        .then(res => res.json())
+        .then(jobsToUpdate => {
+          updateJobs(prevJobs => {
+            const updatedJobs = prevJobs.map(pj => {
+              const jobToUpdate = jobsToUpdate.find(ju => ju._id === pj._id);
+              return jobToUpdate ? reduceStatus(jobToUpdate) : pj;
+            });
+
+            setTimeout(() => refreshJobs(updatedJobs), 15000);
+            return updatedJobs;
+          })
+        })
+
+    }
+  }
+
   useEffect(() => {
-    if (!socket) {
-      setSocket(io(`${config.API_HOST}/job-status`))
-    }
-    else {
-      socket.on('jobStatus', (data) => {
-        updateSimulations(data.map(reduceStatus).reverse())
+    get("/jobs")
+      .then(res => res.json())
+      .then(receivedJobs => {
+        const convertedJobs = receivedJobs.map(reduceStatus).reverse();
+        updateJobs(convertedJobs)
         setIsLoading(false)
+        setTimeout(() => refreshJobs(convertedJobs), 15000)
       })
-    }
-    return () => {
-      socket && socket.close()
-    }
-  }, [socket]);
+  }, []);
 
   function renderSimulationTabs() {
     return (
       <div className="col-2">
         <ul className="list-group scrollable">
-          {simulations.map(s =>
+          {jobs.map(s =>
             <Job
               key={s._id}
               jobId={s._id}
@@ -66,30 +82,31 @@ export const JobsList = () => {
   }
 
   function renderDetails() {
-      return (
+    const job = jobs.find(j => j._id === paramId)
+    return job && (
       <div className="col-10 left-border scrollable details">
-        <JobDetails jobId={paramId} />
+        <JobDetails jobId={paramId} config={job.config}/>
       </div>
     );
   }
 
   if (isLoading) {
-    return <Loader />
+    return <Loader/>
   }
 
-  if (!paramId && simulations.length) {
-    return (<Redirect to={`/jobs/${simulations[0]._id}/time-series`} />);
+  if (!paramId && jobs.length) {
+    return (<Redirect to={`/jobs/${jobs[0]._id}/time-series`}/>);
   }
 
   if (paramId && !view) {
-    return (<Redirect to={`/jobs/${paramId}/time-series`} />);
+    return (<Redirect to={`/jobs/${paramId}/time-series`}/>);
   }
 
   return (
     <div className="row jobs-list">
       {renderSimulationTabs()}
       {renderDetails()}
-    </div >
+    </div>
   );
 
 }

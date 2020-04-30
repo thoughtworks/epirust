@@ -18,7 +18,7 @@
  */
 
 
-import { Job } from "../../jobs/Job";
+import { JobTile } from "../../jobs/JobTile";
 import React from "react";
 import { render } from '@testing-library/react'
 import { BrowserRouter } from "react-router-dom";
@@ -27,7 +27,7 @@ describe('Job', function () {
   function getComponent(jobId, isActive) {
     return (
       <BrowserRouter>
-        <Job status="running" jobId={jobId} isActive={isActive} />
+        <JobTile status="running" jobId={jobId} isActive={isActive} />
       </BrowserRouter>
 
     );

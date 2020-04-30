@@ -17,34 +17,20 @@
  *
  */
 
-import React from 'react';
-import Header from './Header';
+import {JobTile} from "./JobTile";
+import React from "react";
 
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route
-} from "react-router-dom";
-import { JobsView } from "./jobs";
-import SimulationConfiguration from "./simulation-configuration";
-
-export const Routes = {
-  HOME: "/",
-  JOBS: "/jobs"
-};
-
-function App() {
+export const JobsList = ({jobs, activeJob}) => {
   return (
-    <Router>
-      <Header />
-      <div className="container-fluid mt-4">
-        <Switch>
-          <Route exact path={Routes.HOME}><SimulationConfiguration /></Route>
-          <Route path={`${Routes.JOBS}/:id?/:view?`}><JobsView /></Route>
-        </Switch>
-      </div >
-    </Router >
+    <ul className="list-group scrollable">
+      {jobs.map(s =>
+        <JobTile
+          key={s._id}
+          jobId={s._id}
+          status={s.status}
+          isActive={s._id === activeJob._id}
+        />)
+      }
+    </ul>
   );
 }
-
-export default App;

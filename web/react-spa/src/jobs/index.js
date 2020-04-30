@@ -19,17 +19,18 @@
 
 import React, {useEffect, useState} from "react";
 import './jobs-list.scss'
-import {Job} from "./Job";
-import {JobDetails} from "./JobDetails";
 import {Redirect, useParams} from 'react-router-dom';
 import Loader from "../common/Loader";
 import {get} from "../common/apiCall";
 import {reduceStatus} from "./JobTransformer";
+import {Jobs} from "./Jobs";
+import {LOADING_STATES} from "../common/constants";
 
-export const JobsList = () => {
-  const {id: paramId, view} = useParams();
-  const [jobs, updateJobs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+export const JobsView = () => {
+  const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING)
+  const [jobs, updateJobs] = useState([])
+  let activeJob = null;
+  const {id: activeJobId, view} = useParams();
 
   const refreshJobs = (jobsToProcess) => {
     const jobsToFetch = jobsToProcess.filter(j => j.status !== "finished")
@@ -49,7 +50,6 @@ export const JobsList = () => {
             return updatedJobs;
           })
         })
-
     }
   }
 
@@ -59,55 +59,28 @@ export const JobsList = () => {
       .then(receivedJobs => {
         const convertedJobs = receivedJobs.map(reduceStatus).reverse();
         updateJobs(convertedJobs)
-        setIsLoading(false)
+        updateLoadingState(LOADING_STATES.FINISHED)
         setTimeout(() => refreshJobs(convertedJobs), 15000)
       })
+      .catch(() => updateLoadingState(LOADING_STATES.FAILED))
   }, []);
 
-  function renderSimulationTabs() {
-    return (
-      <div className="col-2">
-        <ul className="list-group scrollable">
-          {jobs.map(s =>
-            <Job
-              key={s._id}
-              jobId={s._id}
-              status={s.status}
-              isActive={s._id === paramId}
-            />
-          )}
-        </ul>
-      </div>
-    );
+  switch (loadingState) {
+    case LOADING_STATES.FINISHED:
+      if (!activeJobId)
+        return (<Redirect to={`/jobs/${jobs[0]._id}/time-series`}/>);
+      if (!view)
+        return (<Redirect to={`/jobs/${activeJobId}/time-series`}/>);
+
+      activeJob = jobs.find(j => j._id === activeJobId)
+
+      if (!activeJob) return <div>Invalid job requested</div>
+      else return <Jobs jobs={jobs} activeJob={activeJob}/>
+
+    case LOADING_STATES.FAILED:
+      return <div>Failed to load</div>
+
+    default:
+      return <Loader/>
   }
-
-  function renderDetails() {
-    const job = jobs.find(j => j._id === paramId)
-    return job && (
-      <div className="col-10 left-border scrollable details">
-        <JobDetails jobId={paramId} config={job.config}/>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return <Loader/>
-  }
-
-  if (!paramId && jobs.length) {
-    return (<Redirect to={`/jobs/${jobs[0]._id}/time-series`}/>);
-  }
-
-  if (paramId && !view) {
-    return (<Redirect to={`/jobs/${paramId}/time-series`}/>);
-  }
-
-  return (
-    <div className="row jobs-list">
-      {renderSimulationTabs()}
-      {renderDetails()}
-    </div>
-  );
-
 }
-

@@ -17,34 +17,8 @@
  *
  */
 
-import React from 'react';
-import Header from './Header';
-
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route
-} from "react-router-dom";
-import { JobsView } from "./jobs";
-import SimulationConfiguration from "./simulation-configuration";
-
-export const Routes = {
-  HOME: "/",
-  JOBS: "/jobs"
-};
-
-function App() {
-  return (
-    <Router>
-      <Header />
-      <div className="container-fluid mt-4">
-        <Switch>
-          <Route exact path={Routes.HOME}><SimulationConfiguration /></Route>
-          <Route path={`${Routes.JOBS}/:id?/:view?`}><JobsView /></Route>
-        </Switch>
-      </div >
-    </Router >
-  );
-}
-
-export default App;
+export const LOADING_STATES = Object.freeze({
+  LOADING: 1,
+  FINISHED: 2,
+  FAILED: 3
+})

@@ -76,5 +76,5 @@ export default function AreasLayer({ areaDimensions }) {
 function isWithinArea(area, currentX, currentY) {
 
     return (currentX >= area.start_offset.x && currentY >= area.start_offset.y
-        && currentX < area.end_offset.x && currentY < area.end_offset.y);
+        && currentX <= area.end_offset.x && currentY <= area.end_offset.y);
 }

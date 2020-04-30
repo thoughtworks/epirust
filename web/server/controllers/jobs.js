@@ -21,14 +21,13 @@ const express = require('express');
 const router = express.Router();
 const KafkaServices = require('../services/kafka');
 const { SimulationStatus } = require("../db/models/Simulation");
-const {updateSimulationStatus, saveSimulation} = require('../db/services/SimulationService')
-const {range} = require('../common/util');
+const {updateSimulationStatus} = require('../db/services/SimulationService')
 const JobService = require('../db/services/JobService');
 const {toObjectId} = require("../common/util")
 const {fetchJob} = require("../db/services/JobService")
 const NotFound = require("../db/exceptions/NotFound")
 
-router.post('/init', (req, res, next) => {
+router.post('/init', (req, res) => {
   const simulation_config = makeSimulationConfig(req.body);
 
   const kafkaProducer = new KafkaServices.KafkaProducerService();
@@ -64,13 +63,13 @@ router.get('/', (req, res) => {
   .then(jobsStatus => {
     return res.send(jobsStatus);
   })
-  .catch((err) => {
+  .catch(() => {
     console.log("Error occurred while fetching document")
     res.sendStatus(500)
   })
 })
 
-router.get('/:job_id', (req, res, next) => {
+router.get('/:job_id', (req, res) => {
   fetchJob(toObjectId(req.params.job_id))
       .then((job) => {
         res.status(200);

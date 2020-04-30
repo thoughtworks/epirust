@@ -18,7 +18,7 @@
  */
 
 import React from "react";
-import './job.scss'
+import '../styles/components/jobs/job.scss'
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 

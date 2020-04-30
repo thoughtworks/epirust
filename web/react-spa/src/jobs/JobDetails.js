@@ -18,7 +18,7 @@
  */
 
 import React from "react";
-import "./job-details.scss"
+import "../styles/components/jobs/job-details.scss"
 import {NavItem} from "../common/NavItem";
 import {Redirect, Route, Switch} from "react-router-dom";
 import GridPage from "../grid";

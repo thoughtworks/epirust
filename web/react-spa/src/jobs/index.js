@@ -18,7 +18,7 @@
  */
 
 import React, {useEffect, useState} from "react";
-import './jobs-list.scss'
+import '../styles/components/jobs/jobs-list.scss'
 import {useParams} from 'react-router-dom';
 import {get} from "../common/apiCall";
 import {reduceStatus} from "./JobTransformer";

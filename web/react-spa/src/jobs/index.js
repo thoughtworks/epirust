@@ -19,17 +19,16 @@
 
 import React, {useEffect, useState} from "react";
 import './jobs-list.scss'
-import {Redirect, useParams} from 'react-router-dom';
-import Loader from "../common/Loader";
+import {useParams} from 'react-router-dom';
 import {get} from "../common/apiCall";
 import {reduceStatus} from "./JobTransformer";
-import {Jobs} from "./Jobs";
 import {LOADING_STATES} from "../common/constants";
+import {JobsContainer} from "./JobsContainer";
+import {LoadingComponent} from "../common/LoadingComponent";
 
 export const JobsView = () => {
   const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING)
   const [jobs, updateJobs] = useState([])
-  let activeJob = null;
   const {id: activeJobId, view} = useParams();
 
   const refreshJobs = (jobsToProcess) => {
@@ -64,22 +63,6 @@ export const JobsView = () => {
       .catch(() => updateLoadingState(LOADING_STATES.FAILED))
   }, []);
 
-  switch (loadingState) {
-    case LOADING_STATES.FINISHED:
-      if (!activeJobId)
-        return (<Redirect to={`/jobs/${jobs[0]._id}/time-series`}/>);
-      if (!view)
-        return (<Redirect to={`/jobs/${activeJobId}/time-series`}/>);
-
-      activeJob = jobs.find(j => j._id === activeJobId)
-
-      if (!activeJob) return <div>Invalid job requested</div>
-      else return <Jobs jobs={jobs} activeJob={activeJob}/>
-
-    case LOADING_STATES.FAILED:
-      return <div>Failed to load</div>
-
-    default:
-      return <Loader/>
-  }
+  const children = <JobsContainer activeJobId={activeJobId} currentView={view} jobs={jobs}/>;
+  return <LoadingComponent loadingState={loadingState} children={children}/>;
 }

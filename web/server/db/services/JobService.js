@@ -43,7 +43,6 @@ const fetchJobs = (jobIds) => {
   return Job.find().cursor()
 }
 
-module.exports = {saveJob, fetchJob, fetchJobs}
 const fetchJobsStatus = (jobIds) => {
   const jobObjectId = jobIds.map(toObjectId)
   return SimulationService.groupSimulationsByJobId(jobObjectId)

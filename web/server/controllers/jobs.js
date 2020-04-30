@@ -58,14 +58,14 @@ router.post('/init', (req, res, next) => {
     });
 });
 
-router.get('/status', (req, res) => {
-  const jobIds = req.query.jobId.split(",")
-  JobService.fetchJobsStatus(jobIds)
+router.get('/', (req, res) => {
+  const jobIds = req.query.jobIds && req.query.jobIds.split(",")
+  JobService.fetchJobs(jobIds)
   .then(jobsStatus => {
     return res.send(jobsStatus);
   })
   .catch((err) => {
-    console.error("Error occurred while fetching document")
+    console.log("Error occurred while fetching document")
     res.sendStatus(500)
   })
 })

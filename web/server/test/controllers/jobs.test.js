@@ -27,8 +27,8 @@ app.use("/", jobs_controller);
 const request = supertest(app);
 const NotFound = require('../../db/exceptions/NotFound')
 const {SimulationStatus} = require('../../db/models/Simulation')
-const { updateSimulationStatus, saveSimulation } = require('../../db/services/SimulationService');
-const { saveJob, fetchJob, fetchJobsStatus } = require('../../db/services/JobService');
+const {updateSimulationStatus} = require('../../db/services/SimulationService');
+const {saveJob, fetchJob, fetchJobs} = require('../../db/services/JobService');
 
 jest.mock('../../services/kafka');
 jest.mock("../../db/services/SimulationService");
@@ -105,7 +105,7 @@ describe('jobs controller', () => {
       const simId2 = mockObjectId();
 
       const jobId = mockObjectId();
-      saveJob.mockResolvedValue({_id: jobId, simulations: [{_id:simId1}, {_id: simId2}]});
+      saveJob.mockResolvedValue({_id: jobId, simulations: [{_id: simId1}, {_id: simId2}]});
 
       const response = await request
         .post('/jobs/init')
@@ -292,41 +292,54 @@ describe('jobs controller', () => {
       expect(response.status).toEqual(500);
     });
   });
-  describe('/status', () => {
-      it('should return given jobs with their status', async () => {
-        const jobId = "jobId";
-        const jobId2 = "jobId2";
-  
-        const jobStatus = { jobId: jobId, status: SimulationStatus.RUNNING }
-        const jobStatus2 = { jobId: jobId2, status: SimulationStatus.FINISHED };
-  
-        fetchJobsStatus.mockResolvedValueOnce([jobStatus, jobStatus2])
-  
-        await request
-          .get("/jobs/status")
-          .query({ jobId: `${jobId},${jobId2}` })
-          .then(res => {
-            expect(res.body).toEqual([{ "jobId": "jobId", "status": "running" }, { "jobId": "jobId2", "status": "finished" }])
-            expect(res.status).toBe(200)
-          })
-  
-        expect(fetchJobsStatus).toHaveBeenCalledWith([jobId, jobId2])
-      })
-  
-      it('should return error status for error occurred while fetching from db', async () => {
-        const jobId = "jobId";
-        const jobId2 = "jobId2";
-  
-        fetchJobsStatus.mockRejectedValueOnce({ message: 'Problem while fetching' })
-  
-        await request
-          .get("/jobs/status")
-          .query({ jobId: `${jobId},${jobId2}` })
-          .then(res => {
-            expect(res.status).toBe(500)
-          })
-  
-        expect(fetchJobsStatus).toHaveBeenCalledWith([jobId, jobId2])
-      })
-    }) 
+
+  describe('/', () => {
+    it('should return given jobs with their status when job ids are specified', async () => {
+      const jobId = "jobId";
+      const jobId2 = "jobId2";
+
+      const jobStatus = {jobId: jobId, status: SimulationStatus.RUNNING}
+      const jobStatus2 = {jobId: jobId2, status: SimulationStatus.FINISHED};
+
+      fetchJobs.mockResolvedValueOnce([jobStatus, jobStatus2])
+
+      const response = await request.get("/jobs")
+
+      expect(response.status).toBe(200)
+      expect(response.body).toEqual([jobStatus, jobStatus2])
+      expect(fetchJobs).toHaveBeenCalledTimes(1)
+      expect(fetchJobs).toHaveBeenCalledWith(undefined)
+    })
+
+    it('should return given jobs with their status when no job ids are specified', async () => {
+      const jobId = "jobId";
+      const jobId2 = "jobId2";
+
+      const jobStatus = {jobId: jobId, status: SimulationStatus.RUNNING}
+      const jobStatus2 = {jobId: jobId2, status: SimulationStatus.FINISHED};
+
+      fetchJobs.mockResolvedValueOnce([jobStatus, jobStatus2])
+
+      const response = await request.get("/jobs").query({jobIds: `${jobId},${jobId2}`})
+
+      expect(response.status).toBe(200)
+      expect(response.body).toEqual([jobStatus, jobStatus2])
+      expect(fetchJobs).toHaveBeenCalledTimes(1)
+      expect(fetchJobs).toHaveBeenCalledWith([jobId, jobId2])
+    })
+
+    it('should return error status for error occurred while fetching from db', async () => {
+      const jobId = "jobId";
+      const jobId2 = "jobId2";
+
+      fetchJobs.mockRejectedValueOnce({message: 'Problem while fetching'})
+
+      const response = await request
+        .get("/jobs")
+        .query({jobIds: `${jobId},${jobId2}`})
+
+      expect(response.status).toBe(500)
+      expect(fetchJobs).toHaveBeenCalledWith([jobId, jobId2])
+    })
+  })
 });

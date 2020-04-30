@@ -22,7 +22,6 @@ const dbHandler = require('../db-handler');
 const JobService = require('../../../db/services/JobService');
 const {Job} = require('../../../db/models/Job');
 const { mockObjectId } = require('../../helpers');
-const SimulationService = require('../../../db/services/SimulationService')
 const { SimulationStatus } = require('../../../db/models/Simulation')
 
 jest.mock('../../../db/services/SimulationService')
@@ -60,121 +59,6 @@ describe('Job Service', () => {
       await expect(JobService.fetchJob(randomJobId)).rejects.toEqual(new NotFound(randomJobId))
     });
   });
-  describe('fetchJobsStatus', () => {
-    const jobId = mockObjectId()
-    
-    it('should return job status as failed if any of the simulations fail for given job id', async () => {
-      const simulationsStatusForJobId = [
-        {
-          _id: jobId,
-          simulations: [
-            { status: SimulationStatus.FAILED, id: mockObjectId() },
-            { status: SimulationStatus.INQUEUE, id: mockObjectId() },
-            { status: SimulationStatus.FINISHED, id: mockObjectId() },
-          ]
-        }
-      ];
-      SimulationService.groupSimulationsByJobId.mockImplementation(() => ({
-        exec: jest.fn().mockResolvedValueOnce(simulationsStatusForJobId)
-      }))
-      const jobsStatus = await JobService.fetchJobsStatus([jobId])
-      expect(jobsStatus[0].status).toBe(SimulationStatus.FAILED)
-      expect(SimulationService.groupSimulationsByJobId).toHaveBeenCalledWith([jobId])
-    });
-
-    it('should return job status as finished when all simulations finish', async() => {
-      const simulationsStatusForJobId = [
-        {
-          _id: jobId,
-          simulations: [
-            { status: SimulationStatus.FINISHED, id: mockObjectId() },
-            { status: SimulationStatus.FINISHED, id: mockObjectId() },
-          ]
-        }
-      ];
-      SimulationService.groupSimulationsByJobId.mockImplementation(() => ({
-        exec: jest.fn().mockResolvedValueOnce(simulationsStatusForJobId)
-      }))
-
-      const jobsStatus = await JobService.fetchJobsStatus([jobId])
-      expect(jobsStatus[0].status).toBe(SimulationStatus.FINISHED)
-    })
-
-    it('should return job status as running when all simulations are running', async() => {
-      const simulationsStatusForJobId = [
-        {
-          _id: jobId,
-          simulations: [
-            { status: SimulationStatus.RUNNING, id: mockObjectId() },
-            { status: SimulationStatus.RUNNING, id: mockObjectId() },
-          ]
-        }
-      ];
-      SimulationService.groupSimulationsByJobId.mockImplementation(() => ({
-        exec: jest.fn().mockResolvedValueOnce(simulationsStatusForJobId)
-      }))
-
-      const jobsStatus = await JobService.fetchJobsStatus([jobId])
-      expect(jobsStatus[0].status).toBe(SimulationStatus.RUNNING)
-    })
-
-    it('should return job status as in queue when all simulations are in queue', async() => {
-      const simulationsStatusForJobId = [
-        {
-          _id: jobId,
-          simulations: [
-            { status: SimulationStatus.INQUEUE, id: mockObjectId() },
-            { status: SimulationStatus.INQUEUE, id: mockObjectId() },
-          ]
-        }
-      ];
-      SimulationService.groupSimulationsByJobId.mockImplementation(() => ({
-        exec: jest.fn().mockResolvedValueOnce(simulationsStatusForJobId)
-      }))
-
-      const jobsStatus = await JobService.fetchJobsStatus([jobId])
-      expect(jobsStatus[0].status).toBe(SimulationStatus.INQUEUE)
-    })
-
-    it('should return job status as running if few are in queue and even one is running', async() => {
-      const simulationsStatusForJobId = [
-        {
-          _id: jobId,
-          simulations: [
-            { status: SimulationStatus.INQUEUE, id: mockObjectId() },
-            { status: SimulationStatus.INQUEUE, id: mockObjectId() },
-            { status: SimulationStatus.RUNNING, id: mockObjectId() },
-          ]
-        }
-      ];
-      SimulationService.groupSimulationsByJobId.mockImplementation(() => ({
-        exec: jest.fn().mockResolvedValueOnce(simulationsStatusForJobId)
-      }))
-
-      const jobsStatus = await JobService.fetchJobsStatus([jobId])
-      expect(jobsStatus[0].status).toBe(SimulationStatus.RUNNING)
-    })
-
-    it('should return job status as running if few are in queue and one is finished', async() => {
-      const simulationsStatusForJobId = [
-        {
-          _id: jobId,
-          simulations: [
-            { status: SimulationStatus.INQUEUE, id: mockObjectId() },
-            { status: SimulationStatus.INQUEUE, id: mockObjectId() },
-            { status: SimulationStatus.FINISHED, id: mockObjectId() },
-          ]
-        }
-      ];
-      SimulationService.groupSimulationsByJobId.mockImplementation(() => ({
-        exec: jest.fn().mockResolvedValueOnce(simulationsStatusForJobId)
-      }))
-
-      const jobsStatus = await JobService.fetchJobsStatus([jobId])
-      expect(jobsStatus[0].status).toBe(SimulationStatus.RUNNING)
-    })
-  })
-
 
   describe('fetchJobs', () => {
     it('should return all the jobs in db when no ids specified', async () => {

@@ -45,18 +45,8 @@ const fetchSimulation = (simulationId) => {
     })
 }
 
-const groupSimulationsByJobId = (jobIds) => {
-  return Job.aggregate([{
-      $match: {
-        _id: { $in: jobIds }
-      }
-    }
-  ])
-}
-
 module.exports = {
   updateSimulationStatus,
   markGridConsumptionFinished,
-  fetchSimulation,
-  groupSimulationsByJobId
+  fetchSimulation
 };

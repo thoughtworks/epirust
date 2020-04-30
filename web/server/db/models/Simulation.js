@@ -17,9 +17,6 @@
  *
  */
 
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
-
 const SimulationStatus = {
   RUNNING: "running",
   FAILED: "failed",
@@ -27,7 +24,5 @@ const SimulationStatus = {
   INQUEUE: 'in-queue'
 };
 Object.freeze(SimulationStatus);
-
-
 
 module.exports = {SimulationStatus};

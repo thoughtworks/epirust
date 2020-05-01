@@ -20,6 +20,7 @@
 import {LOADING_STATES} from "./constants";
 import Loader from "./Loader";
 import React from "react";
+import PropTypes from 'prop-types'
 
 export const LoadingComponent = (props) => {
   switch (props.loadingState) {
@@ -32,4 +33,8 @@ export const LoadingComponent = (props) => {
     default:
       return <Loader/>
   }
+}
+
+LoadingComponent.propTypes = {
+  loadingState: PropTypes.oneOf([1, 2, 3]).isRequired
 }

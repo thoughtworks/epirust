@@ -35,6 +35,7 @@ export const JobsView = () => {
     jobsRefresher.start()
   }, []);
 
-  const children = <JobsContainer activeJobId={activeJobId} currentView={view} jobs={jobs}/>;
-  return <LoadingComponent loadingState={loadingState} children={children}/>;
+  return <LoadingComponent loadingState={loadingState}>
+    <JobsContainer activeJobId={activeJobId} currentView={view} jobs={jobs}/>
+  </LoadingComponent>;
 }

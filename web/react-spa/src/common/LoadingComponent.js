@@ -21,10 +21,10 @@ import {LOADING_STATES} from "./constants";
 import Loader from "./Loader";
 import React from "react";
 
-export const LoadingComponent = ({loadingState, children}) => {
-  switch (loadingState) {
+export const LoadingComponent = (props) => {
+  switch (props.loadingState) {
     case LOADING_STATES.FINISHED:
-      return children;
+      return props.children;
 
     case LOADING_STATES.FAILED:
       return <div>Failed to load</div>

@@ -17,24 +17,21 @@
  *
  */
 
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 
 import LandmarksLayer from './LandmarksLayer';
 import LinesLayer from './LinesLayer';
 import AreasLayer from './AreasLayer';
 import AgentsLayer from './AgentsLayer';
-import { AreaColors } from './constants';
-import { useParams } from "react-router-dom"
+import {AreaColors} from './constants';
 import io from 'socket.io-client'
 import config from "../config";
 import Loader from '../common/Loader';
-
+import PropTypes from "prop-types";
 
 export const GridContext = React.createContext(null);
 
-export default function GridPage() {
-    const { id } = useParams();
-
+export default function GridPage({jobId}) {
     const [socket, setSocket] = useState(null);
     const [socketDataExhausted, setSocketDataExhausted] = useState(false);
 
@@ -60,7 +57,7 @@ export default function GridPage() {
         if (!socket)
             return;
 
-        socket.emit('get', {jobId: id});
+        socket.emit('get', {jobId});
 
         socket.on('gridData', function (message) {
             if ("simulation_ended" in message) {
@@ -108,7 +105,7 @@ export default function GridPage() {
             }
 
         });
-    }, [socket]);
+    }, [socket, jobId]);
 
     if (!gridContextData)
         return (
@@ -129,4 +126,8 @@ export default function GridPage() {
             </GridContext.Provider>
         </div>
     )
+}
+
+GridPage.propTypes = {
+    jobId: PropTypes.string.isRequired
 }

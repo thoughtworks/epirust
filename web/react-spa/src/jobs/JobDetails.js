@@ -59,7 +59,7 @@ export const JobDetails = ({jobId, config}) => {
           </Route>
 
           <Route exact path={"/jobs/:id/grid"}>
-            {gridEnabled ? <GridPage/> : <Redirect to={`/jobs/${jobId}/time-series`}/>}
+            {gridEnabled ? <GridPage jobId={jobId}/> : <Redirect to={`/jobs/${jobId}/time-series`}/>}
           </Route>
 
           <Route exact path={"/jobs/:id/config"}>

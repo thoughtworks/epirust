@@ -24,12 +24,6 @@ import MockSocket from 'socket.io-mock'
 import io from 'socket.io-client'
 
 jest.mock('socket.io-client');
-jest.mock('react-router-dom', () => ({
-    ...jest.requireActual('react-router-dom'), // use actual for all non-hook parts
-    useParams: () => ({
-        id: 1542319876,
-    }),
-}));
 
 describe('Grid Page', () => {
     let mockSocket, closeSpy;
@@ -41,7 +35,7 @@ describe('Grid Page', () => {
     });
 
     it('should render GridPage component with Loading', () => {
-        const { asFragment } = render(<GridPage />);
+        const { asFragment } = render(<GridPage jobId={"1542319876"} />);
         expect(asFragment()).toMatchSnapshot()
     });
 
@@ -147,7 +141,7 @@ describe('Grid Page', () => {
             mockSocket.emit = emitSpy;
         });
 
-        const { asFragment } = render(<GridPage />);
+        const { asFragment } = render(<GridPage jobId={"1542319876"}/>);
 
         act(() => {
             mockSocket.socketClient.emit("gridData", layoutDimensions);
@@ -161,12 +155,12 @@ describe('Grid Page', () => {
         });
 
         expect(asFragment()).toMatchSnapshot();
-        expect(emitSpy).toHaveBeenCalledWith("get", {jobId: 1542319876});
+        expect(emitSpy).toHaveBeenCalledWith("get", {jobId: "1542319876"});
         expect(closeSpy).toHaveBeenCalled()
     });
 
     it('should close the socket before unmounting the component', () => {
-        render(<GridPage />).unmount();
+        render(<GridPage jobId={"1542319876"} />).unmount();
 
         expect(closeSpy).toHaveBeenCalledTimes(1);
         expect(closeSpy.mock.calls[0]).toHaveLength(0)

@@ -19,19 +19,9 @@
 
 
 import SocketAwareGraph from "./SocketAwareGraph";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 export function TimeSeries({ jobId }) {
-  // const [socket, setSocket] = useState(null);
-
-  // useEffect(() => {
-  //   const socketInstance = io(`${config.API_HOST}/${'counts'}`);
-  //   setSocket(socketInstance);
-
-  //   return () => {
-  //     socketInstance.close();
-  //   }
-  // }, []);
   return (
     <SocketAwareGraph jobId={jobId}/>
   )

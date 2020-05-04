@@ -28,7 +28,9 @@ export const Jobs = ({jobs, activeJob}) => {
         <JobsList jobs={jobs} activeJob={activeJob}/>
       </div>
       <div className="col-10 left-border scrollable details">
-        <JobDetails jobId={activeJob._id} config={activeJob.config}/>
+        {activeJob ?
+          <JobDetails jobId={activeJob._id} config={activeJob.config}/>
+          : <div>Invalid job id</div>}
       </div>
     </div>
   )

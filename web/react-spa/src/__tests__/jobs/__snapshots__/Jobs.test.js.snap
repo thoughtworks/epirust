@@ -1,0 +1,94 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Jobs should render invalid job message if active job is invalid 1`] = `
+<div
+  className="row jobs-list"
+>
+  <div
+    className="col-2"
+  >
+    <JobsList
+      activeJob={null}
+      jobs={
+        Array [
+          Object {
+            "_id": "12344",
+            "status": "finished",
+          },
+          Object {
+            "_id": "12345",
+            "config": Object {
+              "key": "value",
+            },
+            "status": "finished",
+          },
+          Object {
+            "_id": "12346",
+            "status": "finished",
+          },
+        ]
+      }
+    />
+  </div>
+  <div
+    className="col-10 left-border scrollable details"
+  >
+    <div>
+      Invalid job id
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Jobs should render jobs list and jobs details 1`] = `
+<div
+  className="row jobs-list"
+>
+  <div
+    className="col-2"
+  >
+    <JobsList
+      activeJob={
+        Object {
+          "_id": "12345",
+          "config": Object {
+            "key": "value",
+          },
+          "status": "finished",
+        }
+      }
+      jobs={
+        Array [
+          Object {
+            "_id": "12344",
+            "status": "finished",
+          },
+          Object {
+            "_id": "12345",
+            "config": Object {
+              "key": "value",
+            },
+            "status": "finished",
+          },
+          Object {
+            "_id": "12346",
+            "status": "finished",
+          },
+        ]
+      }
+    />
+  </div>
+  <div
+    className="col-10 left-border scrollable details"
+  >
+    <JobDetails
+      config={
+        Object {
+          "key": "value",
+        }
+      }
+      jobId="12345"
+    />
+  </div>
+</div>
+`;

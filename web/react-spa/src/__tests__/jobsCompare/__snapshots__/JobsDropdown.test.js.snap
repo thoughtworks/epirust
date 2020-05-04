@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Jobs DropDown should render dropdown with job id list 1`] = `
+<div>
+  <label
+    for="job 1"
+  >
+    job 1
+  </label>
+  <select
+    class="form-control"
+    id="job 1"
+  >
+    <option
+      disabled=""
+      value="true"
+    >
+       -- select a job -- 
+    </option>
+    <option>
+      id1
+    </option>
+    <option>
+      id2
+    </option>
+  </select>
+</div>
+`;

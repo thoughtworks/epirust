@@ -45,5 +45,6 @@ Object {
       "working_percentage": 0.7,
     },
   },
+  "tags": Array [],
 }
 `;

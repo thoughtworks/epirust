@@ -63,7 +63,8 @@ describe('jobs controller', () => {
     "percentage_severe_infected_population": 0.3,
     "exposed_duration": 48,
     "pre_symptomatic_duration": 0,
-    "number_of_simulations": 2
+    "number_of_simulations": 2,
+    "tags": []
   };
   afterAll(async () => {
     await app.close()
@@ -156,6 +157,7 @@ describe('jobs controller', () => {
         grid_size: 250,
         hours: 10000,
         number_of_simulations: 1,
+        tags: [],
         interventions:
           [{
             Vaccinate: {
@@ -241,7 +243,8 @@ describe('jobs controller', () => {
                 spread_rate_threshold: 100
               }
             }],
-        number_of_simulations: 1
+        number_of_simulations: 1,
+        tags: []
       };
 
       expect(KafkaServices.KafkaProducerService).toHaveBeenCalledTimes(1);

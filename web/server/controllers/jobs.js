@@ -106,7 +106,8 @@ function makeSimulationConfig(message) {
     percentage_severe_infected_population,
     exposed_duration,
     pre_symptomatic_duration,
-    number_of_simulations
+    number_of_simulations,
+    tags
   } = message;
 
   return {
@@ -133,7 +134,8 @@ function makeSimulationConfig(message) {
     "grid_size": grid_size,
     "hours": simulation_hrs,
     "interventions": modelInterventions(message),
-    "number_of_simulations": number_of_simulations
+    "number_of_simulations": number_of_simulations,
+    "tags": tags
   };
 }
 

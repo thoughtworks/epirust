@@ -84,7 +84,7 @@ describe('Jobs Refresher', function () {
     expect(updateLoadingState).toHaveBeenCalledTimes(1);
     expect(updateLoadingState).toHaveBeenLastCalledWith(LOADING_STATES.FINISHED);
 
-    const jobs2 = [{_id: 'id1', status: 'finished'}, {_id: 'id2', status: 'finished'}, {_id: 'id3', status: 'running'}];
+    const jobs2 = [{_id: 'id2', status: 'finished'}, {_id: 'id3', status: 'running'}];
     const jobsToRender2 = [{_id: 'id3', status: 'running'}, {_id: 'id2', status: 'finished'}, {_id: 'id1', status: 'finished'}];
     get.mockResolvedValueOnce({json: jest.fn().mockResolvedValue(jobs2)})
 
@@ -97,7 +97,7 @@ describe('Jobs Refresher', function () {
     expect(updateJobs).toHaveBeenCalledTimes(2)
     expect(updateJobs.mock.calls[1][0](jobsToRender)).toEqual(jobsToRender2)
 
-    const jobs3 = [{_id: 'id1', status: 'finished'}, {_id: 'id2', status: 'finished'}, {_id: 'id3', status: 'finished'}];
+    const jobs3 = [{_id: 'id3', status: 'finished'}];
     const jobsToRender3 = [{_id: 'id3', status: 'finished'}, {_id: 'id2', status: 'finished'}, {_id: 'id1', status: 'finished'}];
     get.mockResolvedValueOnce({json: jest.fn().mockResolvedValue(jobs3)})
 

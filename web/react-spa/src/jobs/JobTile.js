@@ -22,7 +22,7 @@ import '../styles/components/jobs/job.scss'
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 
-export const JobTile = ({jobId, status, isActive = false }) => {
+export const JobTile = ({jobId, status, isActive }) => {
   const statusText = {
     "running": "In-Progress",
     "finished": "Finished",

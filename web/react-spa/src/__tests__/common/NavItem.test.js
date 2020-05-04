@@ -20,12 +20,18 @@
 import {NavItem} from "../../common/NavItem";
 import React from "react";
 import {render} from "@testing-library/react";
-import {BrowserRouter} from "react-router-dom";
+import {MemoryRouter} from "react-router-dom";
 
 describe('NavItem', function () {
-  it('should render', function () {
-    const component = render(<BrowserRouter><NavItem name="Test" linksTo="/test"/></BrowserRouter>);
+  it('should render activated', function () {
+    const {container} = render(<MemoryRouter initialEntries={['/test/']}><NavItem name="Test" linksTo="/test"/></MemoryRouter>);
 
-    expect(component).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
+  });
+
+  it('should not render activated', function () {
+    const {container} = render(<MemoryRouter initialEntries={['/abc/']}><NavItem name="Test" linksTo="/test"/></MemoryRouter>);
+
+    expect(container).toMatchSnapshot();
   });
 });

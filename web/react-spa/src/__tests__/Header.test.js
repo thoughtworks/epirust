@@ -19,10 +19,10 @@
 
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
-import App from '../App';
+import Header from "../Header";
 
 test('renders App', () => {
   const renderer = new ShallowRenderer();
-  renderer.render(<App />);
+  renderer.render(<Header />);
   expect(renderer.getRenderOutput()).toMatchSnapshot()
 });

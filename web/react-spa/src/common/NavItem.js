@@ -21,7 +21,7 @@ import {Link, useRouteMatch} from "react-router-dom";
 import React from "react";
 
 export function NavItem({ name, linksTo, activeOnExactMatch = false }) {
-  let match = useRouteMatch({
+  const match = useRouteMatch({
     path: linksTo,
     exact: activeOnExactMatch
   });

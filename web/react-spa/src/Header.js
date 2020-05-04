@@ -33,6 +33,7 @@ export default function Header() {
 
                     <NavItem name={"New Job"} linksTo={Routes.HOME} activeOnExactMatch={true} />
                     <NavItem name={"Jobs"} linksTo={Routes.JOBS} />
+                    <NavItem name={"Compare"} linksTo={Routes.COMPARE} />
 
                 </ul>
             </div>

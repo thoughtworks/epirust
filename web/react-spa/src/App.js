@@ -20,17 +20,15 @@
 import React from 'react';
 import Header from './Header';
 
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route
-} from "react-router-dom";
-import { JobsView } from "./jobs";
+import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
+import {JobsView} from "./jobs";
 import SimulationConfiguration from "./simulation-configuration";
+import JobsCompare from "./jobsCompare/JobsCompare";
 
 export const Routes = {
   HOME: "/",
-  JOBS: "/jobs"
+  JOBS: "/jobs",
+  COMPARE: "/compare"
 };
 
 function App() {
@@ -41,6 +39,7 @@ function App() {
         <Switch>
           <Route exact path={Routes.HOME}><SimulationConfiguration /></Route>
           <Route path={`${Routes.JOBS}/:id?/:view?`}><JobsView /></Route>
+          <Route path={Routes.COMPARE}><JobsCompare /></Route>
         </Switch>
       </div >
     </Router >

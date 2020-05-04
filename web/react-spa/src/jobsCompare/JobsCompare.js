@@ -17,12 +17,6 @@
  *
  */
 
-import React from 'react';
-import ShallowRenderer from 'react-test-renderer/shallow';
-import App from '../App';
-
-test('renders App', () => {
-  const renderer = new ShallowRenderer();
-  renderer.render(<App />);
-  expect(renderer.getRenderOutput()).toMatchSnapshot()
-});
+export default function JobsCompare() {
+  return null
+}

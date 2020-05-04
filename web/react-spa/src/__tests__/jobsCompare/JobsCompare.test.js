@@ -18,22 +18,14 @@
  */
 
 import React from "react";
-import ComparerDropdowns from "./ComparerDropdowns";
+import ShallowRenderer from 'react-test-renderer/shallow';
+import JobsCompare from "../../jobsCompare/JobsCompare";
 
-const jobs = [
-  {
-    _id: "id1",
-  },
-  {
-    _id: "id2",
-  },
-  {
-    _id: "id3",
-  }
-]
+describe('Jobs Compare', function () {
+  it('should render', function () {
+    const renderer = new ShallowRenderer();
+    renderer.render(<JobsCompare />)
 
-export default function JobsCompare() {
-  return <>
-    <ComparerDropdowns jobs={jobs}/>
-  </>
-}
+    expect(renderer.getRenderOutput()).toMatchSnapshot()
+  });
+});

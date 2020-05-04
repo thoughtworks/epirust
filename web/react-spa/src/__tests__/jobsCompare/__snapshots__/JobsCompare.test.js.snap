@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Jobs Compare should render 1`] = `
+<React.Fragment>
+  <ComparerDropdowns
+    jobs={
+      Array [
+        Object {
+          "_id": "id1",
+        },
+        Object {
+          "_id": "id2",
+        },
+        Object {
+          "_id": "id3",
+        },
+      ]
+    }
+  />
+</React.Fragment>
+`;

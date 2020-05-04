@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Comparer Dropdowns should render inputs to select jobs to compare 1`] = `
+<div
+  className="comparer-dropdowns container"
+>
+  <div
+    className="row justify-content-md-center"
+  >
+    <div
+      className="form-group col-4"
+    >
+      <JobsDropdown
+        jobs={
+          Array [
+            Object {
+              "_id": "id1",
+            },
+            Object {
+              "_id": "id2",
+            },
+          ]
+        }
+        label="Job 1"
+      />
+    </div>
+    <div
+      className="form-group col-4"
+    >
+      <JobsDropdown
+        jobs={
+          Array [
+            Object {
+              "_id": "id1",
+            },
+            Object {
+              "_id": "id2",
+            },
+          ]
+        }
+        label="Job 2"
+      />
+    </div>
+  </div>
+</div>
+`;

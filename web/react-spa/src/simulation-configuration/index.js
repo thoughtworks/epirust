@@ -23,6 +23,7 @@ import Interventions from './Interventions'
 import MiscellaneousConfig from "./MiscellaneousConfig";
 import {useHistory} from "react-router-dom";
 import {post} from "../common/apiCall";
+import Tags from "./Tags";
 
 export default function SimulationConfiguration() {
   const [buttonDisabled, setButtonDisabled] = useState(false);
@@ -45,6 +46,7 @@ export default function SimulationConfiguration() {
     setButtonDisabled(true);
     e.preventDefault();
     let paramsData = {};
+    console.log(new FormData(e.target), "---------------");
     new FormData(e.target).forEach(function (value, key) {
       if ([
         "number_of_agents",
@@ -71,7 +73,13 @@ export default function SimulationConfiguration() {
       ].includes(key)) {
         value = Number(value);
       }
-      paramsData[key] = value;
+      if (key === "tags") {
+
+        paramsData["tags"] = Array.isArray(paramsData["tags"])
+          ? [...paramsData["tags"], value]
+          : (value ? [value] : [])
+
+      } else paramsData[key] = value;
     });
 
     if ("generate_grid_vis" in paramsData) {
@@ -92,28 +100,28 @@ export default function SimulationConfiguration() {
         <div className="input-control">
           <label className="col-form-label-sm" htmlFor="number_of_agents">Number of Agents</label>
           <input type="number" name="number_of_agents" className="form-control form-control-sm" id="number_of_agents"
-            aria-describedby="number_of_agents" placeholder="Number of Agents" defaultValue="10000" />
+                 aria-describedby="number_of_agents" placeholder="Number of Agents" defaultValue="10000"/>
         </div>
 
         <div className="input-control">
           <label className="col-form-label-sm" htmlFor="public_transport_percentage">Public Transport Percentage</label>
           <input type="number" name="public_transport_percentage" className="form-control form-control-sm"
-            id="public_transport_percentage" aria-describedby="public_transport_percentage"
-            placeholder="Public Transport Percentage" defaultValue="0.2" step="any" />
+                 id="public_transport_percentage" aria-describedby="public_transport_percentage"
+                 placeholder="Public Transport Percentage" defaultValue="0.2" step="any"/>
         </div>
 
         <div className="input-control">
           <label className="col-form-label-sm" htmlFor="working_percentage">Working Percentage</label>
           <input type="number" name="working_percentage" className="form-control form-control-sm"
-            id="working_percentage" aria-describedby="working_percentage" placeholder="Working Percentage" min="0"
-            max="1" defaultValue="0.7" step="any" />
+                 id="working_percentage" aria-describedby="working_percentage" placeholder="Working Percentage" min="0"
+                 max="1" defaultValue="0.7" step="any"/>
         </div>
       </fieldset>
     )
   }
 
   const loading = () => (<>
-    <span className="spinner-grow spinner-grow-lg" />
+    <span className="spinner-grow spinner-grow-lg"/>
     <span className="button-text"> Submitting..</span>
   </>);
 
@@ -126,16 +134,18 @@ export default function SimulationConfiguration() {
           <div className="col inputs">
             <div>
               {renderPopulation()}
-              <MiscellaneousConfig />
+              <MiscellaneousConfig/>
             </div>
-            <DiseaseDynamics />
-            <Interventions />
+            <DiseaseDynamics/>
+            <Interventions/>
           </div>
-          <div className="col actions">
+          <div className="form-row tag-action">
+            <Tags/>
+            {/*<div className="col actions">*/}
             <button type="submit" className="btn btn-primary btn-lg" id="submitBtn" disabled={buttonDisabled}>
               {buttonDisabled ? loading() : "Submit"}
-
             </button>
+            {/*</div>*/}
           </div>
           {errorOccurred && <div className="error-message alert-danger">Error Occurred please try again!</div>}
         </div>

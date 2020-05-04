@@ -18,7 +18,7 @@
 .actions {
     margin-top: 15px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
 }
 
 .button-text {
@@ -37,15 +37,24 @@
     margin: 10px;
     display: flex;
     flex-direction: column;
+
+    &.tag-action {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin: 0;
+    }
   }
-  
+
   .col.inputs {
     display: flex;
     flex-direction: row;
     flex-basis: 100%;
-    justify-content: space-around;
+    justify-content: space-between;
   }
-  
+
   label {
     margin-bottom: 0.1rem;
   }
@@ -55,7 +64,7 @@
   .col-form-label-sm {
     padding-bottom: 0.1rem;
   }
-  
+
   input {
     margin-bottom: 0.5rem;
     padding: 2px;
@@ -76,15 +85,20 @@
       font-weight: 650;
       color: var(--gray-dark);
     }
-    
+
     label.custom-control-label::before {
       right: 0;
       left: auto;
     }
-    
+
     label.custom-control-label::after {
       left: unset;
       right: calc(0.75rem + 2px);
     }
   }
-  
+
+  .input-control{
+      &.tags-wrap {
+        flex-basis: 500px;
+      }
+  }

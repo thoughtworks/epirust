@@ -18,12 +18,20 @@
  */
 
 import React from 'react'
-import {act, fireEvent, render} from '@testing-library/react'
+import {act, fireEvent, render, prettyDOM} from '@testing-library/react'
 import renderer from 'react-test-renderer'
 import {MemoryRouter} from "react-router-dom";
 import SimulationConfiguration from "../../simulation-configuration";
 
 jest.mock("../../common/apiCall");
+
+jest.mock("react-select", () => ({ options}) => {
+  return (<select data-testid="select" name="tags" id="tags">
+    {options.map(({ label, value }) => (<option key={value} value={value}>
+      {label}
+    </option>))}
+  </select>);
+});
 
 const { post } = require("../../common/apiCall");
 
@@ -38,7 +46,7 @@ jest.mock('react-router-dom', () => ({
 
 const flushPromises = () => new Promise(setImmediate);
 
-describe('ParametersForm', function () {
+describe('Simulation Configuration', function () {
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -50,12 +58,9 @@ describe('ParametersForm', function () {
     return <MemoryRouter><SimulationConfiguration /></MemoryRouter>;
   }
 
-  it('should render ParametersForm with defaults', () => {
-
-    const component = renderer.create(getComponent());
-    let tree = component.toJSON()
-
-    expect(tree).toMatchSnapshot()
+  it('should render with defaults', () => {
+    const {asFragment} = render(getComponent());
+    expect(asFragment()).toMatchSnapshot()
   });
 
   it('should invoke fetch on form submit', () => {
@@ -125,22 +130,22 @@ describe('ParametersForm', function () {
   it('should show error message if submit job fails and should enable start button', async function () {
     post.mockReset();
     post.mockRejectedValueOnce(new Error("Intentional error message. Ignore"));
-  
+
     let container_a;
     act(() => {
       const { container, getByTestId } = render(getComponent());
       container_a = container;
       fireEvent.submit(getByTestId('simulationForm'))
     });
-  
+
     await act(async () => {
       await flushPromises()
     })
-  
+
     const button = container_a.querySelector('button');
     expect(button.disabled).toBe(false);
     expect(button.textContent).toBe("Submit");
-  
+
     const errorMessage = container_a.querySelector('.error-message');
     expect(errorMessage.textContent).toBe("Error Occurred please try again!");
   })

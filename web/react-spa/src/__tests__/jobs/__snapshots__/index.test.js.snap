@@ -1,7 +1,36 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Jobs should fetch simulation status from socket to show status on UI 1`] = `
-<DocumentFragment>
+exports[`JobsView should render components with updated state on refresh 1`] = `
+<div>
+  <div
+    class="multi-spinners"
+    data-testid="loader"
+    id="loader"
+  >
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+    <div
+      class="spinner-grow text-dark"
+    />
+  </div>
+</div>
+`;
+
+exports[`JobsView should render components with updated state on refresh 2`] = `
+<div>
   <div
     class="row jobs-list"
   >
@@ -16,7 +45,38 @@ exports[`Jobs should fetch simulation status from socket to show status on UI 1`
         >
           <a
             class="no-link-formatting"
-            href="/jobs/ad1234"
+            href="/jobs/123456dc"
+          >
+            <div
+              class="simulation-tab active shadow finished"
+            >
+              <div
+                class="card-body card-body-less-padding"
+              >
+                <p
+                  class="job-status"
+                  data-testid="job-status-123456dc"
+                >
+                  Finished
+                </p>
+                <p
+                  class="minor-details"
+                >
+                  Id: 
+                  <code>
+                    123456dc
+                  </code>
+                </p>
+              </div>
+            </div>
+          </a>
+        </li>
+        <li
+          class="list-group-item borderless item-less-padding"
+        >
+          <a
+            class="no-link-formatting"
+            href="/jobs/567890gv"
           >
             <div
               class="simulation-tab  finished"
@@ -26,7 +86,7 @@ exports[`Jobs should fetch simulation status from socket to show status on UI 1`
               >
                 <p
                   class="job-status"
-                  data-testid="job-status-ad1234"
+                  data-testid="job-status-567890gv"
                 >
                   Finished
                 </p>
@@ -35,7 +95,7 @@ exports[`Jobs should fetch simulation status from socket to show status on UI 1`
                 >
                   Id: 
                   <code>
-                    ad1234
+                    567890gv
                   </code>
                 </p>
               </div>
@@ -44,6 +104,86 @@ exports[`Jobs should fetch simulation status from socket to show status on UI 1`
         </li>
       </ul>
     </div>
+    <div
+      class="col-10 left-border scrollable details"
+    >
+      <div
+        class="job-details"
+      >
+        <div
+          class="row"
+        >
+          <div
+            class="col-8"
+          >
+            <ul
+              class="nav nav-tabs nav-fill"
+            >
+              <li
+                class="nav-item"
+              >
+                <a
+                  class="nav-link active"
+                  href="/jobs/123456dc/time-series"
+                >
+                  Time Series
+                </a>
+              </li>
+              <li
+                class="nav-item"
+              >
+                <a
+                  class="nav-link "
+                  href="/jobs/123456dc/config"
+                >
+                  Config
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div
+            class="col-4"
+          >
+            <h4
+              class="simulation-id"
+            >
+              Simulation: 
+              <code>
+                123456dc
+              </code>
+            </h4>
+          </div>
+        </div>
+        <div
+          class="job-details-content"
+        >
+          <div
+            class="multi-spinners"
+            data-testid="loader"
+            id="loader"
+          >
+            <div
+              class="spinner-grow text-dark"
+            />
+            <div
+              class="spinner-grow text-dark"
+            />
+            <div
+              class="spinner-grow text-dark"
+            />
+            <div
+              class="spinner-grow text-dark"
+            />
+            <div
+              class="spinner-grow text-dark"
+            />
+            <div
+              class="spinner-grow text-dark"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</DocumentFragment>
+</div>
 `;

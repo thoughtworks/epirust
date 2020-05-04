@@ -1,56 +1,42 @@
-import {act, render} from "@testing-library/react";
-import {JobsView} from "../../jobs";
 import React from "react";
-import {MemoryRouter} from "react-router-dom";
+import {act, render} from "@testing-library/react";
+import {JobsRefresher} from "../../jobs/JobsRefresher"
+import {JobsView} from "../../jobs";
+import {LOADING_STATES} from "../../common/constants";
+import {MemoryRouter, Route} from "react-router-dom";
 
-jest.mock("../../common/apiCall")
-import {get} from "../../common/apiCall";
+jest.mock("../../jobs/JobsRefresher")
 
-jest.useFakeTimers()
+describe('JobsView', () => {
 
-jest.mock('react-router-dom', () => {
-  return {
-    ...jest.requireActual('react-router-dom'),
-    useParams: () => ({
-      id: 123, view: "time-series"
-    })
-  }
-});
+  it('should start jobs refresher on mount', () => {
+    const mockStart = jest.fn();
+    JobsRefresher.mockImplementation(() => ({start: mockStart}))
 
-describe('Jobs', () => {
-  it('should render loader while fetching jobs', async () => {
-    const {container} = render(
-      <MemoryRouter>
-        <JobsView/>
-      </MemoryRouter>
-    );
+    render(<MemoryRouter initialEntries={["/jobs/"]}><JobsView/></MemoryRouter>)
 
-    expect(container.querySelector('#loader')).toBeInTheDocument()
-
-    await act(async() => {await flushPromises()})
-
-    expect(container.querySelector('#loader')).not.toBeInTheDocument();
+    expect(JobsRefresher).toHaveBeenCalledTimes(1)
+    expect(mockStart).toHaveBeenCalledTimes(1)
   });
 
-  it.skip('should fetch simulation status from socket to show status on UI', async () => {
-    const {asFragment} = await render(
-      <MemoryRouter>
-        <JobsView/>
-      </MemoryRouter>
-    );
+  it('should render components with updated state on refresh', () => {
+    const mockStart = jest.fn();
+    JobsRefresher.mockImplementation(() => ({start: mockStart}))
 
-    await act(async () => {
-      await flushPromises()
+    const {container} = render(<MemoryRouter initialEntries={["/jobs/"]}>
+      <Route path={"/jobs/:id?/:view?"}><JobsView/></Route>
+    </MemoryRouter>)
+
+    expect(container).toMatchSnapshot()
+
+    const [updateJob, updateLoadingState] = JobsRefresher.mock.calls[0]
+    act(() => {
+      updateLoadingState(LOADING_STATES.FINISHED)
+      updateJob([{_id: "123456dc", status: "finished", config: {}}, {_id:"567890gv", status: "finished", config: {}}])
     })
 
-    expect(asFragment()).toMatchSnapshot();
+    expect(container).toMatchSnapshot()
   });
-
-  beforeEach(() => {
-    get.mockResolvedValueOnce({json: () => Promise.resolve([{_id: "ad1234", simulations: [{status: "finished"}]}])})
-  });
-
-  const flushPromises = () => new Promise(setImmediate);
 
   afterEach(() => {
     jest.clearAllMocks();

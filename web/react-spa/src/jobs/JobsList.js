@@ -28,7 +28,7 @@ export const JobsList = ({jobs, activeJob}) => {
           key={s._id}
           jobId={s._id}
           status={s.status}
-          isActive={s._id === activeJob._id}
+          isActive={activeJob ? s._id === activeJob._id: false}
         />)
       }
     </ul>

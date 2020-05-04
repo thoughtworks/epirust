@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`JobsList should render jobs list with no active active job if it is invalid 1`] = `
+<ul
+  className="list-group scrollable"
+>
+  <JobTile
+    isActive={false}
+    jobId="12344"
+    status="finished"
+  />
+  <JobTile
+    isActive={false}
+    jobId="12345"
+    status="finished"
+  />
+  <JobTile
+    isActive={false}
+    jobId="12346"
+    status="finished"
+  />
+</ul>
+`;
+
+exports[`JobsList should render jobs with active job if valid active job 1`] = `
+<ul
+  className="list-group scrollable"
+>
+  <JobTile
+    isActive={false}
+    jobId="12344"
+    status="finished"
+  />
+  <JobTile
+    isActive={true}
+    jobId="12345"
+    status="finished"
+  />
+  <JobTile
+    isActive={false}
+    jobId="12346"
+    status="finished"
+  />
+</ul>
+`;

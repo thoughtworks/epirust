@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`JobsContainer should render jobs component if jobId and view are present 1`] = `
+<Jobs
+  activeJob={
+    Object {
+      "_id": "12345",
+      "status": "finished",
+    }
+  }
+  jobs={
+    Array [
+      Object {
+        "_id": "12344",
+        "status": "finished",
+      },
+      Object {
+        "_id": "12345",
+        "status": "finished",
+      },
+      Object {
+        "_id": "12346",
+        "status": "finished",
+      },
+    ]
+  }
+/>
+`;

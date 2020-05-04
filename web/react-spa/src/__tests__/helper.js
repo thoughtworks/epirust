@@ -17,16 +17,20 @@
  *
  */
 
-import {Redirect} from "react-router-dom";
-import {Jobs} from "./Jobs";
-import React from "react";
+import React from 'react'
+import { Router } from 'react-router-dom'
+import { render } from '@testing-library/react'
+import { createMemoryHistory } from 'history'
 
-export const JobsContainer = ({activeJobId, currentView, jobs}) => {
-  if (!activeJobId)
-    return (<Redirect to={`/jobs/${jobs[0]._id}/time-series`}/>);
-  if (!currentView)
-    return (<Redirect to={`/jobs/${activeJobId}/time-series`}/>);
-
-  const activeJob = jobs.find(j => j._id === activeJobId)
-  return <Jobs jobs={jobs} activeJob={activeJob}/>
+export function renderWithRouter(
+  ui,
+  {
+    route = '/',
+    history = createMemoryHistory({ initialEntries: [route] }),
+  } = {}
+) {
+  return {
+    ...render(<Router history={history}>{ui}</Router>),
+    history,
+  }
 }

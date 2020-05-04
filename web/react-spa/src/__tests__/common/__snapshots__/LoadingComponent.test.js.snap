@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LoadingComponent should render child component if the state is finished 1`] = `
+<div>
+  Test child component
+</div>
+`;
+
+exports[`LoadingComponent should render error message if the state is failed 1`] = `
+<div>
+  Failed to load
+</div>
+`;
+
+exports[`LoadingComponent should render loader if the state is loading 1`] = `<Loader />`;

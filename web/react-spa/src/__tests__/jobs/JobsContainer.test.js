@@ -19,7 +19,7 @@
 import ShallowRenderer from 'react-test-renderer/shallow';
 import {JobsContainer} from "../../jobs/JobsContainer";
 import React from "react";
-import {renderWithRouter} from "../helper";
+import {renderWithRouter} from "../helper/router-helper";
 
 describe('JobsContainer', () => {
   const testJobs = [

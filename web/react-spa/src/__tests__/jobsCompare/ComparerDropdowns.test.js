@@ -30,19 +30,17 @@ describe('Comparer Dropdowns', () => {
     expect(renderer.getRenderOutput()).toMatchSnapshot()
   });
 
-  it('should notify when jobs dropdown has changed', () => {
-    const mockOnChange = jest.fn()
-    const {container} = render(<ComparerDropdowns jobs={[{_id: 'id1'}, {_id: 'id2'}]} onChange={mockOnChange}/>);
+  it('should return selected jobs when compare button clicked', () => {
+    const mockOnCompare = jest.fn()
+    const {container} = render(<ComparerDropdowns jobs={[{_id: 'id1'}, {_id: 'id2'}]} onCompare={mockOnCompare}/>);
 
-    fireEvent.change(container.querySelector('.form-control'), {target: {value: 'id1'}})
+    const dropdowns = container.querySelectorAll('.form-control');
+    fireEvent.change(dropdowns[0], {target: {value: 'id1'}})
+    fireEvent.change(dropdowns[1], {target: {value: 'id2'}})
+    fireEvent.click(container.querySelector('button'))
 
-    expect(mockOnChange).toHaveBeenCalledTimes(1)
-    expect(mockOnChange).toHaveBeenLastCalledWith("id1", "Job1")
-
-    fireEvent.change(container.querySelectorAll('.form-control')[1], {target: {value: 'id1'}})
-
-    expect(mockOnChange).toHaveBeenCalledTimes(2)
-    expect(mockOnChange).toHaveBeenLastCalledWith("id1", "Job2")
+    expect(mockOnCompare).toHaveBeenCalledTimes(1)
+    expect(mockOnCompare).toHaveBeenCalledWith({job1: 'id1', job2: 'id2'})
   });
 });
 

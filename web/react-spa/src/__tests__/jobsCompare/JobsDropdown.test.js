@@ -29,17 +29,6 @@ describe('Jobs DropDown', () => {
     expect(container).toMatchSnapshot()
   });
 
-  it('should notify when dropdown is updated', function () {
-    const mockOnChange = jest.fn()
-    const jobs = [{_id: "id1"}, {_id: "id2"}]
-    const {container} = render(<JobsDropdown jobs={jobs} label="job 1" onChange={mockOnChange}/>);
-
-    fireEvent.change(container.querySelector('.form-control'), {target: {value: 'id1'}})
-
-    expect(mockOnChange).toHaveBeenCalledTimes(1)
-    expect(mockOnChange).toHaveBeenCalledWith("id1", "job1")
-  });
-
   it('should not break when dropdown is updated', function () {
     const jobs = [{_id: "id1"}, {_id: "id2"}]
     const {container} = render(<JobsDropdown jobs={jobs} label="job 1"/>);

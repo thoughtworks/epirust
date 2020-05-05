@@ -21,22 +21,32 @@ import React from "react";
 import JobsDropdown from "./JobsDropdown";
 import PropTypes from "prop-types";
 
-export default function ComparerDropdowns({jobs, onChange}) {
+export default function ComparerDropdowns({jobs, onCompare}) {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formsData = new FormData(e.target);
+    const selectedJobs = Object.fromEntries(formsData.entries())
+    onCompare(selectedJobs)
+  }
+
   return (
     <div className='comparer-dropdowns container'>
-      <div className='row justify-content-md-center'>
-        <div className="form-group col-4">
-          <JobsDropdown jobs={jobs} label='Job 1' onChange={onChange}/>
+      <form className='row justify-content-md-center' onSubmit={handleSubmit}>
+        <div className="col-4">
+          <JobsDropdown jobs={jobs} label='Job 1'/>
         </div>
-        <div className="form-group col-4">
-          <JobsDropdown jobs={jobs} label='Job 2' onChange={onChange}/>
+        <div className="col-4">
+          <JobsDropdown jobs={jobs} label='Job 2'/>
         </div>
-      </div>
+        <div className="col-2 margin-top-auto">
+          <button className="btn btn-primary">Compare</button>
+        </div>
+      </form>
     </div>
   );
 }
 
 ComparerDropdowns.propTypes = {
   jobs: PropTypes.array.isRequired,
-  updateSelectedJobs: PropTypes.func
+  onCompare: PropTypes.func
 }

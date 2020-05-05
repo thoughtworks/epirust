@@ -17,21 +17,6 @@
  *
  */
 
-import React from "react";
-import PropTypes from 'prop-types'
-
-export default function JobsDropdown({jobs, label}) {
-  const id = label.split(' ').join('').toLowerCase();
-  return <>
-    <label htmlFor={id}>{label}</label>
-    <select name={id} className="form-control" id={id}>
-      <option disabled selected value> -- select a job -- </option>
-      {jobs.map(j => <option key={j._id}>{j._id}</option>)}
-    </select>
-  </>
-}
-
-JobsDropdown.propTypes = {
-  jobs: PropTypes.array.isRequired,
-  label: PropTypes.string.isRequired,
+.margin-top-auto {
+  margin-top: auto;
 }

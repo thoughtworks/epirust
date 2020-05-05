@@ -4,11 +4,12 @@ exports[`Comparer Dropdowns should render inputs to select jobs to compare 1`] =
 <div
   className="comparer-dropdowns container"
 >
-  <div
+  <form
     className="row justify-content-md-center"
+    onSubmit={[Function]}
   >
     <div
-      className="form-group col-4"
+      className="col-4"
     >
       <JobsDropdown
         jobs={
@@ -25,7 +26,7 @@ exports[`Comparer Dropdowns should render inputs to select jobs to compare 1`] =
       />
     </div>
     <div
-      className="form-group col-4"
+      className="col-4"
     >
       <JobsDropdown
         jobs={
@@ -41,6 +42,15 @@ exports[`Comparer Dropdowns should render inputs to select jobs to compare 1`] =
         label="Job 2"
       />
     </div>
-  </div>
+    <div
+      className="col-2 margin-top-auto"
+    >
+      <button
+        className="btn btn-primary"
+      >
+        Compare
+      </button>
+    </div>
+  </form>
 </div>
 `;

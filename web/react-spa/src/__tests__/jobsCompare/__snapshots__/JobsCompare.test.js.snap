@@ -15,6 +15,15 @@ exports[`Jobs Compare should render with default state 1`] = `
   >
     <ComparerDropdowns
       jobs={Array []}
+      onCompare={[Function]}
+    />
+    <div
+      style={
+        Object {
+          "height": "720px",
+          "width": "1400px",
+        }
+      }
     />
   </LoadingComponent>
 </React.Fragment>
@@ -95,5 +104,8 @@ exports[`Jobs Compare should render with jobs fetched 1`] = `
       </div>
     </form>
   </div>
+  <div
+    style="width: 1400px; height: 720px;"
+  />
 </div>
 `;

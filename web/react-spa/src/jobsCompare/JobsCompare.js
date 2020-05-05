@@ -22,23 +22,53 @@ import ComparerDropdowns from "./ComparerDropdowns";
 import {get} from "../common/apiCall";
 import {LoadingComponent} from "../common/LoadingComponent";
 import {LOADING_STATES} from "../common/constants";
+import Graph from "../time-series/LineGraph";
+import GraphUpdater from "./GraphUpdater";
 
 export default function JobsCompare() {
   const [jobs, updateJobs] = useState([])
-  const [loadingState,updateLoadingState] = useState(LOADING_STATES.LOADING)
+  const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING)
+  const [graphData, updateGraphData] = useState([])
+
   useEffect(() => {
     get('/jobs')
-        .then((res) => res.json())
-        .then((jobsResponse) => {
-          updateJobs(jobsResponse)
-          updateLoadingState(LOADING_STATES.FINISHED)
-        })
+      .then((res) => res.json())
+      .then((jobsResponse) => {
+        updateJobs(jobsResponse)
+        updateLoadingState(LOADING_STATES.FINISHED)
+      })
       .catch(() => updateLoadingState(LOADING_STATES.FAILED))
   }, [])
 
+  const updateBuffer = (buffer) => {
+    updateGraphData(prevData => prevData.concat(buffer))
+  }
+
+  const onCompare = (selectedJobs) => {
+    updateGraphData([])
+    new GraphUpdater(updateBuffer, selectedJobs.job1, selectedJobs.job2).start()
+  }
+
   return <>
     <LoadingComponent loadingState={loadingState}>
-      <ComparerDropdowns jobs={jobs}/>
+      <ComparerDropdowns jobs={jobs} onCompare={onCompare}/>
+      <div style={{width: "1400px", height: "720px"}}>
+        {graphData.length > 0 && <Graph dataBuffer={makeCSV(graphData)}/>}
+      </div>
     </LoadingComponent>
   </>
+}
+
+const rowToCsv = (row) => {
+  if (row) return [row.susceptible, row.susceptible_std, row.infected, row.infected_std, row.quarantined,
+    row.quarantined_std, row.recovered, row.recovered_std, row.deceased, row.deceased_std]
+  return ['', 0, '', 0, '', 0, '', 0, '', 0]
+}
+
+const makeCSV = (graphData) => {
+
+  return [["hour",
+    "susceptible_job1", "infected_job1", "quarantined_job1", "recovered_job1", "deceased_job1",
+    "susceptible_job2", "infected_job2", "quarantined_job2", "recovered_job2", "deceased_job2"
+  ]].concat(graphData.map(d => ([d.hour, ...rowToCsv(d.job1), ...rowToCsv(d.job2)]))).join('\n')
 }

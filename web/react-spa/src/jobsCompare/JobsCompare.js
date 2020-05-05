@@ -17,22 +17,18 @@
  *
  */
 
-import React from "react";
+import React, {useEffect, useState} from "react";
 import ComparerDropdowns from "./ComparerDropdowns";
-
-const jobs = [
-  {
-    _id: "id1",
-  },
-  {
-    _id: "id2",
-  },
-  {
-    _id: "id3",
-  }
-]
+import {get} from "../common/apiCall";
 
 export default function JobsCompare() {
+  const [jobs, updateJobs] = useState([])
+  useEffect(() => {
+    get('/jobs')
+        .then((res) => res.json())
+        .then((jobsResponse) => updateJobs(jobsResponse))
+  }, [])
+
   return <>
     <ComparerDropdowns jobs={jobs}/>
   </>

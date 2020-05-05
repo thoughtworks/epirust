@@ -1,21 +1,85 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Jobs Compare should render 1`] = `
+exports[`Jobs Compare should render with default state 1`] = `
 <React.Fragment>
   <ComparerDropdowns
-    jobs={
-      Array [
-        Object {
-          "_id": "id1",
-        },
-        Object {
-          "_id": "id2",
-        },
-        Object {
-          "_id": "id3",
-        },
-      ]
-    }
+    jobs={Array []}
   />
 </React.Fragment>
+`;
+
+exports[`Jobs Compare should render with jobs fetched 1`] = `
+<div>
+  <div
+    class="comparer-dropdowns container"
+  >
+    <form
+      class="row justify-content-md-center"
+    >
+      <div
+        class="col-4"
+      >
+        <label
+          for="job1"
+        >
+          Job 1
+        </label>
+        <select
+          class="form-control"
+          id="job1"
+          name="job1"
+        >
+          <option
+            disabled=""
+            value="true"
+          >
+             -- select a job -- 
+          </option>
+          <option>
+            1
+          </option>
+          <option>
+            2
+          </option>
+        </select>
+      </div>
+      <div
+        class="col-4"
+      >
+        <label
+          for="job2"
+        >
+          Job 2
+        </label>
+        <select
+          class="form-control"
+          id="job2"
+          name="job2"
+        >
+          <option
+            disabled=""
+            value="true"
+          >
+             -- select a job -- 
+          </option>
+          <option>
+            1
+          </option>
+          <option>
+            2
+          </option>
+        </select>
+      </div>
+      <div
+        class="col-2 margin-top-auto"
+      >
+        <button
+          class="btn btn-primary"
+        >
+          Compare
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 `;

@@ -19,13 +19,28 @@
 
 import React from "react";
 import ShallowRenderer from 'react-test-renderer/shallow';
+import {render} from '@testing-library/react'
 import JobsCompare from "../../jobsCompare/JobsCompare";
+import {get} from '../../common/apiCall'
+import {flushPromises} from "../helper/promiseHelper";
+
+jest.mock('../../common/apiCall')
 
 describe('Jobs Compare', function () {
-  it('should render', function () {
+  it('should render with default state', function () {
     const renderer = new ShallowRenderer();
     renderer.render(<JobsCompare />)
 
     expect(renderer.getRenderOutput()).toMatchSnapshot()
+  });
+
+  it('should render with jobs fetched', async function () {
+    const jobs = [{_id: 1}, {_id: 2}];
+    get.mockResolvedValueOnce({json: jest.fn().mockResolvedValueOnce(jobs)})
+    const {container} = render(<JobsCompare />)
+
+    await flushPromises()
+
+    expect(container).toMatchSnapshot()
   });
 });

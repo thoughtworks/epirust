@@ -113,20 +113,20 @@ pub struct Counts {
     susceptible: i32,
     exposed: i32,
     infected: i32,
-    quarantined: i32,
+    hospitalized: i32,
     recovered: i32,
     deceased: i32,
 }
 
 impl Counts {
     #[cfg(test)]
-    pub fn new(hr: i32, s: i32, e: i32, i: i32, q: i32, r: i32, d: i32) -> Counts {
+    pub fn new(hr: i32, s: i32, e: i32, i: i32, h: i32, r: i32, d: i32) -> Counts {
         Counts {
             hour: hr,
             susceptible: s,
             exposed: e,
             infected: i,
-            quarantined: q,
+            hospitalized: h,
             recovered: r,
             deceased: d,
         }
@@ -181,8 +181,8 @@ impl TickAcks {
     pub fn should_terminate(&self) -> bool {
         let total_exposed: i32 = self.acks.values().map( |ack| ack.counts.exposed).sum();
         let total_infected: i32 = self.acks.values().map(|ack| ack.counts.infected).sum();
-        let total_quarantined: i32 = self.acks.values().map(|ack| ack.counts.quarantined).sum();
-        total_exposed ==0 && total_infected == 0 && total_quarantined == 0
+        let total_hospitalized: i32 = self.acks.values().map(|ack| ack.counts.hospitalized).sum();
+        total_exposed ==0 && total_infected == 0 && total_hospitalized == 0
     }
 }
 
@@ -213,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn should_terminate_when_exposed_and_infected_and_quarantined_are_zero() {
+    fn should_terminate_when_exposed_and_infected_and_hospitalized_are_zero() {
         let mut acks = TickAcks::new(&vec!["engine1".to_string(), "engine2".to_string()]);
         acks.reset(1);
         acks.push(TickAck {

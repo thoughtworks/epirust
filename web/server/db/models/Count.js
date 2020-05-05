@@ -30,7 +30,7 @@ const countSchema = new Schema({
   hour: Number,
   susceptible: Number,
   infected: Number,
-  quarantined: Number,
+  hospitalized: Number,
   recovered: Number,
   deceased: Number,
   interventions: {type: [interventionSchema], default: undefined}

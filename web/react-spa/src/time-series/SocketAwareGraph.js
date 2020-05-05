@@ -43,14 +43,14 @@ export default function SocketAwareGraph({ jobId }) {
                 const { hour,
                     susceptible, susceptible_std,
                     infected, infected_std,
-                    quarantined, quarantined_std,
+                    hospitalized, hospitalized_std,
                     recovered, recovered_std,
                     deceased, deceased_std } = message;
 
                 const perHourStats = [hour,
                     susceptible, susceptible_std,
                     infected, infected_std,
-                    quarantined, quarantined_std,
+                    hospitalized, hospitalized_std,
                     recovered, recovered_std,
                     deceased, deceased_std
                 ];
@@ -97,6 +97,6 @@ SocketAwareGraph.propTypes = {
 };
 
 export function convertToCsv(dataBuffer) {
-    const labels = ["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"];
+    const labels = ["hour", "susceptible", "infected", "hospitalized", "recovered", "deceased"];
     return [labels, ...dataBuffer].join("\n");
 }

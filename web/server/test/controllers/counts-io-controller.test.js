@@ -32,7 +32,7 @@ describe("Count controller", () => {
   const placeHolderData = {
     infected_std: 0,
     susceptible_std: 0,
-    quarantined_std: 0,
+    hospitalized_std: 0,
     recovered_std: 0,
     deceased_std: 0,
   }

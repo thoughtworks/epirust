@@ -42,19 +42,19 @@ function getNMessagesAsCsv(n) {
         let { hour,
             susceptible, susceptible_std,
             infected, infected_std,
-            quarantined, quarantined_std,
+            hospitalized, hospitalized_std,
             recovered, recovered_std,
             deceased, deceased_std } = hourStatisticsFor100thHour;
 
         expectedData.push([hour,
             susceptible, susceptible_std,
             infected, infected_std,
-            quarantined, quarantined_std,
+            hospitalized, hospitalized_std,
             recovered, recovered_std,
             deceased, deceased_std
         ])
     }
-    expectedData.unshift(["hour", "susceptible", "infected", "quarantined", "recovered", "deceased"]);
+    expectedData.unshift(["hour", "susceptible", "infected", "hospitalized", "recovered", "deceased"]);
     return expectedData.join("\n");
 }
 
@@ -62,12 +62,12 @@ const hourStatisticsFor100thHour = {
     hour: 100,
     susceptible: 9,
     infected: 2,
-    quarantined: 1,
+    hospitalized: 1,
     recovered: 0,
     deceased: 0,
     susceptible_std: 0,
     infected_std: 0,
-    quarantined_std: 0,
+    hospitalized_std: 0,
     recovered_std: 0,
     deceased_std: 0
 }

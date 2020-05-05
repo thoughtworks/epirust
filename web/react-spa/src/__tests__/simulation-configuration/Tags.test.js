@@ -18,10 +18,49 @@
  */
 
 import Tags from '../../simulation-configuration/Tags'
-import {render, fireEvent} from '@testing-library/react'
+import {render} from '@testing-library/react'
 import React from 'react'
+import selectEvent from 'react-select-event'
+import {get} from "../../common/apiCall";
 
-test('should render component with predefined tags', () => {
-  const {asFragment} = render(<Tags/>);
-  expect(asFragment()).toMatchSnapshot();
-})
+jest.mock("../../common/apiCall")
+
+describe("Tags", () => {
+
+  test('should render component with predefined tags', () => {
+    get.mockResolvedValueOnce({
+      json: jest.fn().mockResolvedValueOnce([
+        {id: 'tagId1', name: "Smallpox"}
+      ])
+    });
+
+    const {asFragment} = render(<Tags/>);
+    expect(asFragment()).toMatchSnapshot();
+  });
+
+  test('should render component with predefined tags', async () => {
+    get.mockResolvedValueOnce({
+      json: jest.fn().mockResolvedValueOnce([
+        {id: 'smallPoxId', name: "Smallpox"},
+        {id: 'sarsId', name: "SARS"},
+        {id: 'covidId', name: "COVID-19"}
+      ])
+    });
+
+    const {getByTestId, getByLabelText} = render(
+      <form data-testid={'test-form'}>
+        <Tags/>
+      </form>
+    );
+
+    expect(getByTestId('test-form')).toHaveFormValues({tags: ''}); // empty select
+
+    await selectEvent.select(getByLabelText('Tags'), ['Smallpox', 'SARS']);
+    expect(getByTestId('test-form')).toHaveFormValues({tags: ['smallPoxId', 'sarsId']});
+
+    await selectEvent.select(getByLabelText('Tags'), 'COVID-19');
+    expect(getByTestId('test-form')).toHaveFormValues({
+      tags: ['smallPoxId', 'sarsId', 'covidId'],
+    })
+  })
+});

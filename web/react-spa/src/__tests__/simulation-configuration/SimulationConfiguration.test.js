@@ -19,21 +19,29 @@
 
 import React from 'react'
 import {act, fireEvent, render, prettyDOM} from '@testing-library/react'
-import renderer from 'react-test-renderer'
 import {MemoryRouter} from "react-router-dom";
 import SimulationConfiguration from "../../simulation-configuration";
 
+import {get} from '../../common/apiCall';
+
 jest.mock("../../common/apiCall");
 
-jest.mock("react-select", () => ({ options}) => {
+get.mockImplementation((url) => {
+  if (/jobs\/tags/.test(url))
+    return Promise.resolve({json: jest.fn().mockResolvedValueOnce([{id: 'tag-id', name: "tag-name"}])});
+
+  return Promise.resolve({json: jest.fn().mockResolvedValueOnce({})});
+});
+
+jest.mock("react-select", () => ({options}) => {
   return (<select data-testid="select" name="tags" id="tags">
-    {options.map(({ label, value }) => (<option key={value} value={value}>
+    {options.map(({label, value}) => (<option key={value} value={value}>
       {label}
     </option>))}
   </select>);
 });
 
-const { post } = require("../../common/apiCall");
+const {post} = require("../../common/apiCall");
 
 const mockHistoryPush = jest.fn();
 jest.mock('react-router-dom', () => ({

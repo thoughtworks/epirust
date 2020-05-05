@@ -582,7 +582,7 @@ exports[`Simulation Configuration should disable submit button and show loading 
           >
             <label
               class="font-weight-bold col-form-label-sm"
-              for="tags"
+              for="tag-input"
             >
               Tags
             </label>
@@ -590,23 +590,7 @@ exports[`Simulation Configuration should disable submit button and show loading 
               data-testid="select"
               id="tags"
               name="tags"
-            >
-              <option
-                value="small-pox"
-              >
-                Small Pox
-              </option>
-              <option
-                value="sars"
-              >
-                SARS
-              </option>
-              <option
-                value="covid"
-              >
-                COVID 19
-              </option>
-            </select>
+            />
           </div>
           <button
             class="btn btn-primary btn-lg"
@@ -652,9 +636,6 @@ Object {
   "regular_transmission_rate": 0.05,
   "regular_transmission_start_day": 10,
   "simulation_hrs": 10000,
-  "tags": Array [
-    "small-pox",
-  ],
   "vaccinate_at": 5000,
   "vaccinate_percentage": 0.2,
   "working_percentage": 0.7,
@@ -1243,7 +1224,7 @@ exports[`Simulation Configuration should render with defaults 1`] = `
           >
             <label
               class="font-weight-bold col-form-label-sm"
-              for="tags"
+              for="tag-input"
             >
               Tags
             </label>
@@ -1251,23 +1232,7 @@ exports[`Simulation Configuration should render with defaults 1`] = `
               data-testid="select"
               id="tags"
               name="tags"
-            >
-              <option
-                value="small-pox"
-              >
-                Small Pox
-              </option>
-              <option
-                value="sars"
-              >
-                SARS
-              </option>
-              <option
-                value="covid"
-              >
-                COVID 19
-              </option>
-            </select>
+            />
           </div>
           <button
             class="btn btn-primary btn-lg"

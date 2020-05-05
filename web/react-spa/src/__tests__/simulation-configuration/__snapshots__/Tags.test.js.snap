@@ -1,19 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`should render component with predefined tags 1`] = `
+exports[`Tags should render component with predefined tags 1`] = `
 <DocumentFragment>
   <div
     class="input-control tags-wrap"
   >
     <label
       class="font-weight-bold col-form-label-sm"
-      for="tags"
+      for="tag-input"
     >
       Tags
     </label>
     <div
       class=" css-2b097c-container"
-      id="tags"
     >
       <div
         class=" css-yk16xz-control"
@@ -39,7 +38,7 @@ exports[`should render component with predefined tags 1`] = `
                 autocapitalize="none"
                 autocomplete="off"
                 autocorrect="off"
-                id="react-select-2-input"
+                id="tag-input"
                 spellcheck="false"
                 style="box-sizing: content-box; width: 2px; border: 0px; font-size: inherit; opacity: 1; outline: 0; padding: 0px;"
                 tabindex="0"
@@ -55,6 +54,20 @@ exports[`should render component with predefined tags 1`] = `
         <div
           class=" css-1hb7zxy-IndicatorsContainer"
         >
+          <div
+            aria-hidden="true"
+            class=" css-at12u2-loadingIndicator"
+          >
+            <span
+              class="css-1yvy2vo-LoadingDot"
+            />
+            <span
+              class="css-zoievk-LoadingDot"
+            />
+            <span
+              class="css-x748d8-LoadingDot"
+            />
+          </div>
           <span
             class=" css-1okebmr-indicatorSeparator"
           />

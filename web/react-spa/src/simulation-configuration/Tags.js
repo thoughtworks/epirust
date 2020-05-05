@@ -17,21 +17,42 @@
  *
  */
 
-import React from "react";
+import React, {useEffect, useState} from "react";
 import Select from "react-select"
 import {predefinedTags} from "./predefined-tags"
+import {get} from "../common/apiCall";
+
+function modelTags(tags) {
+  return tags.map(tag => {
+    return {value: tag.id, label: tag.name}
+  })
+}
 
 export default function Tags() {
-  function transform() {
-    return predefinedTags.map(tag => {
-      return {value: tag.id, label: tag.name}
-    })
-  }
+
+  const [tags, setTags] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+
+    get('/jobs/tags')
+      .then(res => res.json())
+      .then(setTags)
+      .then(() => setIsLoading(false))
+  }, []);
 
   return (
     <div className="input-control tags-wrap">
-      <label className="font-weight-bold col-form-label-sm" htmlFor="tags">Tags</label>
-      <Select options={transform()} isMulti name="tags" data-testid="tags" id="tags" aria-label="tags"/>
+      <label className="font-weight-bold col-form-label-sm" htmlFor="tag-input">Tags</label>
+      <Select
+        options={modelTags(tags)}
+        isLoading={isLoading}
+        isMulti
+        inputId="tag-input"
+        name="tags"
+        aria-label="tags"
+      />
     </div>
   )
 }

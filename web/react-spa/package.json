@@ -45,6 +45,7 @@
     "@testing-library/user-event": "^7.1.2",
     "history": "^4.10.1",
     "jest-canvas-mock": "^2.2.0",
+    "react-select-event": "^4.1.4",
     "react-test-renderer": "^16.13.1",
     "socket.io-mock": "^1.2.4"
   },

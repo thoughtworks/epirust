@@ -24,8 +24,8 @@ export default function JobsDropdown({jobs, label}) {
   const id = label.split(' ').join('').toLowerCase();
   return <>
     <label htmlFor={id}>{label}</label>
-    <select name={id} className="form-control" id={id}>
-      <option disabled selected value> -- select a job -- </option>
+    <select name={id} className="form-control" id={id} required>
+      <option disabled selected value=""> -- select a job -- </option>
       {jobs.map(j => <option key={j._id}>{j._id}</option>)}
     </select>
   </>

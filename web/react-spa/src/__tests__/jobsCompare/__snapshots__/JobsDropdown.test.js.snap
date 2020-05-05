@@ -11,10 +11,11 @@ exports[`Jobs DropDown should render dropdown with job id list 1`] = `
     class="form-control"
     id="job1"
     name="job1"
+    required=""
   >
     <option
       disabled=""
-      value="true"
+      value=""
     >
        -- select a job -- 
     </option>

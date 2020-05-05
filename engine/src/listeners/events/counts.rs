@@ -23,19 +23,19 @@ pub struct Counts {
     susceptible: i32,
     exposed: i32,
     infected: i32,
-    quarantined: i32,
+    hospitalized: i32,
     recovered: i32,
     deceased: i32,
 }
 
 impl Counts {
     #[cfg(test)]
-    pub fn new_test(hour: i32, susceptible: i32, exposed: i32, infected: i32, quarantined: i32, recovered: i32, deceased: i32) -> Counts {
-        Counts { hour, susceptible, exposed, infected, quarantined, recovered, deceased }
+    pub fn new_test(hour: i32, susceptible: i32, exposed: i32, infected: i32, hospitalized: i32, recovered: i32, deceased: i32) -> Counts {
+        Counts { hour, susceptible, exposed, infected, hospitalized, recovered, deceased }
     }
 
     pub fn new(susceptible: i32, exposed: i32, infected: i32) -> Counts {
-        Counts { hour: 0, susceptible, exposed, infected, quarantined: 0, recovered: 0, deceased: 0 }
+        Counts { hour: 0, susceptible, exposed, infected, hospitalized: 0, recovered: 0, deceased: 0 }
     }
 
     pub fn get_susceptible(&self) -> i32 {
@@ -50,8 +50,8 @@ impl Counts {
         self.infected
     }
 
-    pub fn get_quarantined(&self) -> i32 {
-        self.quarantined
+    pub fn get_hospitalized(&self) -> i32 {
+        self.hospitalized
     }
 
     pub fn get_recovered(&self) -> i32 {
@@ -86,8 +86,8 @@ impl Counts {
         self.deceased += count;
     }
 
-    pub fn update_quarantined(&mut self, count: i32) {
-        self.quarantined += count;
+    pub fn update_hospitalized(&mut self, count: i32) {
+        self.hospitalized += count;
     }
 
     pub fn increment_hour(&mut self) {
@@ -106,7 +106,7 @@ mod tests {
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
         assert_eq!(counts.infected, 2);
-        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.hospitalized, 0);
         assert_eq!(counts.recovered, 0);
         assert_eq!(counts.deceased, 0);
         assert_eq!(counts.hour, 0);
@@ -119,7 +119,7 @@ mod tests {
         assert_eq!(counts.susceptible, 105);
         assert_eq!(counts.exposed, 1);
         assert_eq!(counts.infected, 2);
-        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.hospitalized, 0);
         assert_eq!(counts.recovered, 0);
         assert_eq!(counts.deceased, 0);
         assert_eq!(counts.hour, 0);
@@ -132,7 +132,7 @@ mod tests {
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 6);
         assert_eq!(counts.infected, 0);
-        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.hospitalized, 0);
         assert_eq!(counts.recovered, 0);
         assert_eq!(counts.deceased, 0);
         assert_eq!(counts.hour, 0);
@@ -145,7 +145,7 @@ mod tests {
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
         assert_eq!(counts.infected, 5);
-        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.hospitalized, 0);
         assert_eq!(counts.recovered, 0);
         assert_eq!(counts.deceased, 0);
         assert_eq!(counts.hour, 0);
@@ -158,7 +158,7 @@ mod tests {
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
         assert_eq!(counts.infected, 0);
-        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.hospitalized, 0);
         assert_eq!(counts.recovered, 5);
         assert_eq!(counts.deceased, 0);
         assert_eq!(counts.hour, 0);
@@ -171,7 +171,7 @@ mod tests {
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
         assert_eq!(counts.infected, 0);
-        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.hospitalized, 0);
         assert_eq!(counts.recovered, 0);
         assert_eq!(counts.deceased, 5);
         assert_eq!(counts.hour, 0);
@@ -180,11 +180,11 @@ mod tests {
     #[test]
     fn should_update_quarantined() {
         let mut counts = Counts::new(100, 1, 0);
-        counts.update_quarantined(5);
+        counts.update_hospitalized(5);
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
         assert_eq!(counts.infected, 0);
-        assert_eq!(counts.quarantined, 5);
+        assert_eq!(counts.hospitalized, 5);
         assert_eq!(counts.recovered, 0);
         assert_eq!(counts.deceased, 0);
         assert_eq!(counts.hour, 0);
@@ -197,7 +197,7 @@ mod tests {
         assert_eq!(counts.susceptible, 100);
         assert_eq!(counts.exposed, 1);
         assert_eq!(counts.infected, 0);
-        assert_eq!(counts.quarantined, 0);
+        assert_eq!(counts.hospitalized, 0);
         assert_eq!(counts.recovered, 0);
         assert_eq!(counts.deceased, 0);
         assert_eq!(counts.hour, 1);

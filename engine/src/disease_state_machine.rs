@@ -114,10 +114,10 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn quarantine(&mut self, disease: &Disease, immunity: i32) -> bool {
+    pub fn hospitalize(&mut self, disease: &Disease, immunity: i32) -> bool {
         match self.state {
-            State::Infected { symptoms: true, .. } =>
-                return disease.to_be_quarantined(self.infection_day + immunity),
+            State::Infected { symptoms: true, severity: InfectionSeverity::Severe} =>
+                return disease.to_be_hospitalized(self.infection_day + immunity),
             State::Infected { .. } => { false }
             _ => {
                 panic!("Invalid state transition!")
@@ -172,20 +172,6 @@ impl DiseaseStateMachine {
         match self.state {
             State::Infected { .. } => {
                 true
-            }
-            _ => false
-        }
-    }
-
-    pub fn is_severely_infected(&self) -> bool {
-        match self.state {
-            State::Infected { symptoms: _, severity } => {
-                match severity {
-                    InfectionSeverity::Severe {} => {
-                        true
-                    }
-                    _ => false
-                }
             }
             _ => false
         }
@@ -314,7 +300,7 @@ mod tests {
     fn should_panic() {
         let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
         let mut machine = DiseaseStateMachine::new();
-        machine.quarantine(&disease, 2);
+        machine.hospitalize(&disease, 2);
     }
 
     #[test]

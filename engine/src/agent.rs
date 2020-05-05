@@ -80,7 +80,6 @@ pub struct Citizen {
     hospitalized: bool,
     pub transport_location: Point,
     pub state_machine: DiseaseStateMachine,
-    quarantined: bool,
     isolated: bool,
     current_area: Area,
     work_status: WorkStatus,
@@ -109,7 +108,6 @@ impl Citizen {
             working,
             hospitalized: false,
             state_machine: DiseaseStateMachine::new(),
-            quarantined: false,
             isolated: false,
             current_area: home_location,
             work_status,
@@ -130,7 +128,6 @@ impl Citizen {
             hospitalized: false,
             transport_location,
             state_machine: traveller.state_machine,
-            quarantined: false,
             isolated: false,
             current_area,
             work_status: WorkStatus::NA {},
@@ -154,7 +151,6 @@ impl Citizen {
             working: record.working,
             hospitalized: false,
             state_machine: DiseaseStateMachine::new(),
-            quarantined: false,
             isolated: false,
             current_area: home_location,
             work_status,
@@ -170,12 +166,8 @@ impl Citizen {
         self.vaccinated = vaccinated;
     }
 
-    pub fn is_quarantined(&self) -> bool {
-        self.quarantined
-    }
-
     pub fn can_move(&self) -> bool {
-        if self.is_quarantined() || self.hospitalized || self.state_machine.is_deceased() || self.isolated {
+        if self.hospitalized || self.state_machine.is_deceased() || self.isolated {
             return false;
         }
         true
@@ -219,7 +211,7 @@ impl Citizen {
         match current_hour {
             constants::ROUTINE_START_TIME => {
                 self.update_infection_day();
-                new_cell = self.quarantine_all(cell, &grid.hospital_area, map, counts, disease);
+                new_cell = self.hospitalize(cell, &grid.hospital_area, map, counts, disease);
             }
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {
                 if !self.is_hospital_staff() {
@@ -341,26 +333,23 @@ impl Citizen {
     }
 
     fn update_infection_day(&mut self) {
-        if self.state_machine.is_infected() || self.is_quarantined() {
+        if self.state_machine.is_infected() {
             self.state_machine.increment_infection_day();
         }
     }
 
-    fn quarantine_all(&mut self, cell: Point, hospital: &Area, map: &AgentLocationMap, counts: &mut Counts,
-                      disease: &Disease) -> Point {
+    fn hospitalize(&mut self, cell: Point, hospital: &Area, map: &AgentLocationMap, counts: &mut Counts,
+                   disease: &Disease) -> Point {
         let mut new_cell = cell;
-        if self.state_machine.is_infected() && !self.is_quarantined() {
-            let to_be_quarantined = self.state_machine.quarantine(disease, self.immunity);
-            if to_be_quarantined {
-                self.quarantined = true;
-                if self.state_machine.is_severely_infected() {
-                    new_cell = AgentLocationMap::goto_hospital(map, hospital, cell, self);
-                    if new_cell != cell {
-                        self.hospitalized = true;
-                    }
+        if self.state_machine.is_infected() && !self.hospitalized {
+            let to_be_hospitalized = self.state_machine.hospitalize(disease, self.immunity);
+            if to_be_hospitalized {
+                new_cell = AgentLocationMap::goto_hospital(map, hospital, cell, self);
+                if new_cell != cell {
+                    self.hospitalized = true;
+                    counts.update_hospitalized(1);
+                    counts.update_infected(-1);
                 }
-                counts.update_quarantined(1);
-                counts.update_infected(-1);
             }
         }
         new_cell
@@ -390,7 +379,7 @@ impl Citizen {
             let neighbor_that_spreads_infection = neighbours
                 .filter(|p| map.is_point_in_grid(p))
                 .filter_map(|cell| { map.get_agent_for(&cell) })
-                .filter(|agent| (agent.state_machine.is_infected() || agent.is_quarantined()) && !agent.hospitalized)
+                .filter(|agent| agent.state_machine.is_infected() && !agent.hospitalized)
                 .find(|neighbor| rng.get().gen_bool(neighbor.get_infection_transmission_rate(disease)));
 
             if neighbor_that_spreads_infection.is_some() {
@@ -421,7 +410,7 @@ impl Citizen {
         let mut new_cell = cell;
         if self.state_machine.is_infected() {
             let result = self.state_machine.decease(rng, disease);
-            if !self.quarantined && result.1 == 1 {
+            if !self.hospitalized && result.1 == 1 {
                 counts.update_infected(-1);
             }
             if result.1 == 1 {
@@ -429,12 +418,11 @@ impl Citizen {
             }
             counts.update_deceased(result.0);
             counts.update_recovered(result.1);
-            if self.quarantined {
-                counts.update_quarantined(-(result.0 + result.1));
-            }
             if result != (0, 0) {
-                self.hospitalized = false;
-                self.quarantined = false;
+                if self.hospitalized{
+                    counts.update_hospitalized(-(result.0 + result.1));
+                    self.hospitalized = false;
+                }
             }
         }
         new_cell

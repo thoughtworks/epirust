@@ -74,7 +74,7 @@ impl Disease {
         0.0
     }
 
-    pub fn to_be_quarantined(&self, infection_day: i32) -> bool {
+    pub fn to_be_hospitalized(&self, infection_day: i32) -> bool {
         let transmission_rate = self.get_current_transmission_rate(infection_day);
         if transmission_rate >= self.high_transmission_rate {
             return true;
@@ -144,10 +144,10 @@ mod tests {
     #[test]
     fn to_be_quarantined() {
         let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
-        let actual = disease.to_be_quarantined(12);
+        let actual = disease.to_be_hospitalized(12);
         assert_eq!(actual, false);
 
-        let actual = disease.to_be_quarantined(22);
+        let actual = disease.to_be_hospitalized(22);
         assert_eq!(actual, true);
     }
 

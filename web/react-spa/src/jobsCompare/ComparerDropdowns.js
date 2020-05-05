@@ -21,15 +21,15 @@ import React from "react";
 import JobsDropdown from "./JobsDropdown";
 import PropTypes from "prop-types";
 
-export default function ComparerDropdowns({jobs, updateSelectedJobs}) {
+export default function ComparerDropdowns({jobs, onChange}) {
   return (
     <div className='comparer-dropdowns container'>
       <div className='row justify-content-md-center'>
         <div className="form-group col-4">
-          <JobsDropdown jobs={jobs} label='Job 1'/>
+          <JobsDropdown jobs={jobs} label='Job 1' onChange={onChange}/>
         </div>
         <div className="form-group col-4">
-          <JobsDropdown jobs={jobs} label='Job 2'/>
+          <JobsDropdown jobs={jobs} label='Job 2' onChange={onChange}/>
         </div>
       </div>
     </div>

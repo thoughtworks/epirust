@@ -64,7 +64,7 @@ router.get('/tags', (req, res) => {
 
 router.get('/', (req, res) => {
   const jobIds = req.query.jobIds && req.query.jobIds.split(",")
-  JobService.fetchJobs(jobIds)
+  JobService.fetchJobsWithTagDetails(jobIds)
   .then(jobsStatus => {
     return res.send(jobsStatus);
   })

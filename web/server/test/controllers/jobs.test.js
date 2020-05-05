@@ -26,9 +26,8 @@ app.use(express.urlencoded({extended: false}));
 app.use("/", jobs_controller);
 const request = supertest(app);
 const NotFound = require('../../db/exceptions/NotFound')
-const {SimulationStatus} = require('../../db/models/Simulation')
 const {updateSimulationStatus} = require('../../db/services/SimulationService');
-const {saveJob, fetchJob, fetchJobs} = require('../../db/services/JobService');
+const {saveJob, fetchJob, fetchJobs, fetchJobsWithTagDetails} = require('../../db/services/JobService');
 
 jest.mock('../../services/kafka');
 jest.mock("../../db/services/SimulationService");
@@ -297,60 +296,67 @@ describe('jobs controller', () => {
   });
 
   describe('/', () => {
+    it('should return given jobs with their status when job ids are NOT specified', async () => {
+      let jobsForIds = [
+        {jobId: "jobId", config: {tags: [{}], grid_size: 100}, simulations: [{}]},
+        {jobId: "jobId2", config: {tags: [{}], grid_size: 100}, simulations: [{}]}
+      ];
+
+      fetchJobsWithTagDetails.mockResolvedValueOnce(jobsForIds);
+
+      const response = await request.get("/jobs");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(jobsForIds);
+      expect(fetchJobsWithTagDetails).toHaveBeenCalledTimes(1);
+      expect(fetchJobsWithTagDetails).toHaveBeenCalledWith(undefined)
+    });
+
     it('should return given jobs with their status when job ids are specified', async () => {
       const jobId = "jobId";
       const jobId2 = "jobId2";
 
-      const jobStatus = {jobId: jobId, status: SimulationStatus.RUNNING}
-      const jobStatus2 = {jobId: jobId2, status: SimulationStatus.FINISHED};
+      const jobStatus = {
+        jobId: jobId,
+        config: {tags: [{id: "test-id", name: 'test-disease'}], grid_size: 100},
+        simulations: [{}]
+      };
+      const jobStatus2 = {
+        jobId: jobId2,
+        config: {tags: [{id: "test-id", name: 'test-disease'}], grid_size: 100},
+        simulations: [{}]
+      };
 
-      fetchJobs.mockResolvedValueOnce([jobStatus, jobStatus2])
+      fetchJobsWithTagDetails.mockResolvedValueOnce([jobStatus, jobStatus2]);
 
-      const response = await request.get("/jobs")
+      const response = await request.get("/jobs").query({jobIds: `${jobId},${jobId2}`});
 
-      expect(response.status).toBe(200)
-      expect(response.body).toEqual([jobStatus, jobStatus2])
-      expect(fetchJobs).toHaveBeenCalledTimes(1)
-      expect(fetchJobs).toHaveBeenCalledWith(undefined)
-    })
-
-    it('should return given jobs with their status when no job ids are specified', async () => {
-      const jobId = "jobId";
-      const jobId2 = "jobId2";
-
-      const jobStatus = {jobId: jobId, status: SimulationStatus.RUNNING}
-      const jobStatus2 = {jobId: jobId2, status: SimulationStatus.FINISHED};
-
-      fetchJobs.mockResolvedValueOnce([jobStatus, jobStatus2])
-
-      const response = await request.get("/jobs").query({jobIds: `${jobId},${jobId2}`})
-
-      expect(response.status).toBe(200)
-      expect(response.body).toEqual([jobStatus, jobStatus2])
-      expect(fetchJobs).toHaveBeenCalledTimes(1)
-      expect(fetchJobs).toHaveBeenCalledWith([jobId, jobId2])
-    })
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([jobStatus, jobStatus2]);
+      expect(fetchJobsWithTagDetails).toHaveBeenCalledTimes(1);
+      expect(fetchJobsWithTagDetails).toHaveBeenCalledWith([jobId, jobId2])
+    });
 
     it('should return error status for error occurred while fetching from db', async () => {
       const jobId = "jobId";
       const jobId2 = "jobId2";
 
-      fetchJobs.mockRejectedValueOnce({message: 'Problem while fetching'})
+      fetchJobsWithTagDetails.mockRejectedValueOnce({message: 'Problem while fetching'});
 
       const response = await request
         .get("/jobs")
-        .query({jobIds: `${jobId},${jobId2}`})
+        .query({jobIds: `${jobId},${jobId2}`});
 
-      expect(response.status).toBe(500)
-      expect(fetchJobs).toHaveBeenCalledWith([jobId, jobId2])
+      expect(response.status).toBe(500);
+      expect(fetchJobsWithTagDetails).toHaveBeenCalledWith([jobId, jobId2])
     })
-  })
+  });
 
   describe('/tags', () => {
 
     it('should return all tags', async () => {
       const response = await request
-          .get("/jobs/tags");
+        .get("/jobs/tags");
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual([

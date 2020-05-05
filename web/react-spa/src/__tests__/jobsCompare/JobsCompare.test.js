@@ -23,13 +23,14 @@ import {render} from '@testing-library/react'
 import JobsCompare from "../../jobsCompare/JobsCompare";
 import {get} from '../../common/apiCall'
 import {flushPromises} from "../helper/promiseHelper";
+import {act} from "react-dom/test-utils";
 
 jest.mock('../../common/apiCall')
 
 describe('Jobs Compare', function () {
   it('should render with default state', function () {
     const renderer = new ShallowRenderer();
-    renderer.render(<JobsCompare />)
+    renderer.render(<JobsCompare/>)
 
     expect(renderer.getRenderOutput()).toMatchSnapshot()
   });
@@ -37,9 +38,22 @@ describe('Jobs Compare', function () {
   it('should render with jobs fetched', async function () {
     const jobs = [{_id: 1}, {_id: 2}];
     get.mockResolvedValueOnce({json: jest.fn().mockResolvedValueOnce(jobs)})
-    const {container} = render(<JobsCompare />)
+    const {container} = render(<JobsCompare/>)
 
-    await flushPromises()
+    await act(async () => {
+      await flushPromises()
+    })
+
+    expect(container).toMatchSnapshot()
+  });
+
+  it('should display failed message when fetching jobs has failed', async function () {
+    get.mockRejectedValue()
+    const {container} = render(<JobsCompare/>)
+
+    await act(async () => {
+      await flushPromises()
+    })
 
     expect(container).toMatchSnapshot()
   });

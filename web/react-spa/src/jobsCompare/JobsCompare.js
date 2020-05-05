@@ -20,16 +20,25 @@
 import React, {useEffect, useState} from "react";
 import ComparerDropdowns from "./ComparerDropdowns";
 import {get} from "../common/apiCall";
+import {LoadingComponent} from "../common/LoadingComponent";
+import {LOADING_STATES} from "../common/constants";
 
 export default function JobsCompare() {
   const [jobs, updateJobs] = useState([])
+  const [loadingState,updateLoadingState] = useState(LOADING_STATES.LOADING)
   useEffect(() => {
     get('/jobs')
         .then((res) => res.json())
-        .then((jobsResponse) => updateJobs(jobsResponse))
+        .then((jobsResponse) => {
+          updateJobs(jobsResponse)
+          updateLoadingState(LOADING_STATES.FINISHED)
+        })
+      .catch(() => updateLoadingState(LOADING_STATES.FAILED))
   }, [])
 
   return <>
-    <ComparerDropdowns jobs={jobs}/>
+    <LoadingComponent loadingState={loadingState}>
+      <ComparerDropdowns jobs={jobs}/>
+    </LoadingComponent>
   </>
 }

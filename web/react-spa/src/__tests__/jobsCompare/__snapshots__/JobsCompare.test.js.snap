@@ -1,10 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Jobs Compare should display failed message when fetching jobs has failed 1`] = `
+<div>
+  <div>
+    Failed to load
+  </div>
+</div>
+`;
+
 exports[`Jobs Compare should render with default state 1`] = `
 <React.Fragment>
-  <ComparerDropdowns
-    jobs={Array []}
-  />
+  <LoadingComponent
+    loadingState={1}
+  >
+    <ComparerDropdowns
+      jobs={Array []}
+    />
+  </LoadingComponent>
 </React.Fragment>
 `;
 

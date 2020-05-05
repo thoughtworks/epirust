@@ -23,6 +23,7 @@ const JobService = require('../../../db/services/JobService');
 const {Job} = require('../../../db/models/Job');
 const { mockObjectId } = require('../../helpers');
 const { SimulationStatus } = require('../../../db/models/Simulation')
+const {predefinedTags} =require("../../../db/resources/predefined-tags");
 
 jest.mock('../../../db/services/SimulationService')
 
@@ -95,11 +96,24 @@ describe('Job Service', () => {
     });
   });
 
+  describe('fetchJobsWithTagDetails', ()=>{
+    it('should return jobs with config', async () => {
+      const job1 = await createTestJob({tags:[predefinedTags[0].id]});
+      const job2 = await createTestJob({tags:[predefinedTags[1].id, predefinedTags[2].id]});
+
+      const jobs = await JobService.fetchJobsWithTagDetails([job1._id, job2._id]);
+
+      expect(jobs).toHaveLength(2);
+      expect(jobs[0].config.tags).toEqual([predefinedTags[0]]);
+      expect(jobs[1].config.tags).toEqual([predefinedTags[1], predefinedTags[2]]);
+    });
+  });
+
   const testConfig = {'key': 'value', 'field1': 12}
 
-  const createTestJob = () => {
-    return new Job({ config: testConfig }).save()
-  }
+  const createTestJob = (config = testConfig) => {
+    return new Job({ config }).save()
+  };
 
   beforeAll(async () => await dbHandler.connect());
   afterEach(async () => await dbHandler.clearDatabase());

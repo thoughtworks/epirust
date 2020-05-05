@@ -20,6 +20,7 @@ const NotFound = require('../exceptions/NotFound')
 const {Job} = require('../models/Job');
 const {range} = require('../../common/util');
 const {SimulationStatus} = require('../models/Simulation')
+const {predefinedTags} = require("../resources/predefined-tags");
 
 const saveJob = (config, numSimulations) => {
   const simulations = range(numSimulations).map(() => ({status: SimulationStatus.INQUEUE}))
@@ -29,17 +30,36 @@ const saveJob = (config, numSimulations) => {
 const fetchJob = (jobId) => {
   return Job.findOne({_id: jobId}).exec()
     .then(doc => {
-      if(!doc)
+      if (!doc)
         throw new NotFound(jobId)
       return doc;
     })
 }
 
 const fetchJobs = (jobIds) => {
-  if(jobIds && jobIds.length > 0){
+  if (jobIds && jobIds.length > 0) {
     return Job.find({_id: {$in: jobIds}})
   }
   return Job.find()
-}
+};
 
-module.exports = { saveJob, fetchJob, fetchJobs }
+//Remove this when fetching tags from db, kept the function above intact since it has usages elsewhere
+const fetchJobsWithTagDetails = (jobIds) => {
+  const jobIdToJobMap = predefinedTags
+    .reduce((idToJobMap, job) => ({...idToJobMap, [job.id]: job}), {});
+
+  return fetchJobs(jobIds)
+    .then(jobs => jobs.map(jobDocument => {
+      const job = jobDocument.toObject();
+
+      return {
+        ...job,
+        config: {
+          ...job.config,
+          tags: job.config.tags.map(tagId => jobIdToJobMap[tagId])
+        }
+      }
+    }))
+};
+
+module.exports = {saveJob, fetchJob, fetchJobs, fetchJobsWithTagDetails}

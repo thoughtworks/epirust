@@ -23,16 +23,18 @@ import {fireEvent, render} from '@testing-library/react'
 import ComparerDropdowns from "../../jobsCompare/ComparerDropdowns";
 
 describe('Comparer Dropdowns', () => {
+  const testJobs = [{_id: 'id1'}, {_id: 'id2'}];
+
   it('should render inputs to select jobs to compare', () => {
     const renderer = new ShallowRenderer()
-    renderer.render(<ComparerDropdowns jobs={[{_id: 'id1'}, {_id: 'id2'}]}/>);
+    renderer.render(<ComparerDropdowns jobs={testJobs}/>);
 
     expect(renderer.getRenderOutput()).toMatchSnapshot()
   });
 
   it('should return selected jobs when compare button clicked', () => {
     const mockOnCompare = jest.fn()
-    const {container} = render(<ComparerDropdowns jobs={[{_id: 'id1'}, {_id: 'id2'}]} onCompare={mockOnCompare}/>);
+    const {container} = render(<ComparerDropdowns jobs={testJobs} onCompare={mockOnCompare}/>);
 
     const dropdowns = container.querySelectorAll('.form-control');
     fireEvent.change(dropdowns[0], {target: {value: 'id1'}})
@@ -41,6 +43,17 @@ describe('Comparer Dropdowns', () => {
 
     expect(mockOnCompare).toHaveBeenCalledTimes(1)
     expect(mockOnCompare).toHaveBeenCalledWith({job1: 'id1', job2: 'id2'})
+  });
+
+  it('should show error message if both the selected jobs are same on compare click', () => {
+    const {container} = render(<ComparerDropdowns jobs={testJobs}/>);
+
+    const dropdowns = container.querySelectorAll('.form-control');
+    fireEvent.change(dropdowns[0], {target: {value: 'id1'}})
+    fireEvent.change(dropdowns[1], {target: {value: 'id1'}})
+    fireEvent.click(container.querySelector('button'))
+
+    expect(container.querySelector('.error-message').textContent).toBe("Can't compare same jobs!")
   });
 });
 

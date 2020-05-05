@@ -17,16 +17,22 @@
  *
  */
 
-import React from "react";
+import React, {useState} from "react";
 import JobsDropdown from "./JobsDropdown";
 import PropTypes from "prop-types";
 
 export default function ComparerDropdowns({jobs, onCompare}) {
+  const [showError, updateShowError] = useState(false);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const formsData = new FormData(e.target);
     const selectedJobs = Object.fromEntries(formsData.entries())
-    onCompare(selectedJobs)
+    if (selectedJobs['job1'] === selectedJobs['job2']) {
+      updateShowError(true)
+    } else {
+      onCompare(selectedJobs)
+    }
   }
 
   return (
@@ -41,6 +47,7 @@ export default function ComparerDropdowns({jobs, onCompare}) {
         <div className="col-2 margin-top-auto">
           <button className="btn btn-primary">Compare</button>
         </div>
+        {showError && <div className="error-message alert-danger">Can't compare same jobs!</div>}
       </form>
     </div>
   );

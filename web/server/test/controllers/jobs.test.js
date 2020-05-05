@@ -345,4 +345,19 @@ describe('jobs controller', () => {
       expect(fetchJobs).toHaveBeenCalledWith([jobId, jobId2])
     })
   })
+
+  describe('/tags', () => {
+
+    it('should return all tags', async () => {
+      const response = await request
+          .get("/jobs/tags");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([
+        {id: "small-pox", name: "Small Pox"},
+        {id: "sars", name: "SARS"},
+        {id: "covid", name: "COVID-19"}
+      ]);
+    })
+  })
 });

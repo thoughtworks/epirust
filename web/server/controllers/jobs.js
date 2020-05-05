@@ -26,6 +26,7 @@ const JobService = require('../db/services/JobService');
 const {toObjectId} = require("../common/util")
 const {fetchJob} = require("../db/services/JobService")
 const NotFound = require("../db/exceptions/NotFound")
+const {predefinedTags} = require("../db/resources/predefined-tags")
 
 router.post('/init', (req, res) => {
   const simulation_config = makeSimulationConfig(req.body);
@@ -57,6 +58,10 @@ router.post('/init', (req, res) => {
     });
 });
 
+router.get('/tags', (req, res) => {
+  res.send(predefinedTags);
+});
+
 router.get('/', (req, res) => {
   const jobIds = req.query.jobIds && req.query.jobIds.split(",")
   JobService.fetchJobs(jobIds)
@@ -67,7 +72,7 @@ router.get('/', (req, res) => {
     console.log("Error occurred while fetching document")
     res.sendStatus(500)
   })
-})
+});
 
 router.get('/:job_id', (req, res) => {
   fetchJob(toObjectId(req.params.job_id))

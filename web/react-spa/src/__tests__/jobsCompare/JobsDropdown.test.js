@@ -37,7 +37,7 @@ describe('Jobs DropDown', () => {
     fireEvent.change(container.querySelector('.form-control'), {target: {value: 'id1'}})
 
     expect(mockOnChange).toHaveBeenCalledTimes(1)
-    expect(mockOnChange).toHaveBeenCalledWith("id1")
+    expect(mockOnChange).toHaveBeenCalledWith("id1", "job1")
   });
 
   it('should not break when dropdown is updated', function () {

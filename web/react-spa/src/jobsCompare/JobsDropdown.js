@@ -21,9 +21,10 @@ import React from "react";
 import PropTypes from 'prop-types'
 
 export default function JobsDropdown({jobs, label, onChange}) {
+  const id = label.split(' ').join('');
   return <>
-    <label htmlFor={label.trim()}>{label}</label>
-    <select className="form-control" id={label.trim()} onChange={e => onChange && onChange(e.target.value)}>
+    <label htmlFor={id}>{label}</label>
+    <select className="form-control" id={id} onChange={e => onChange && onChange(e.target.value, id)}>
       <option disabled selected value> -- select a job -- </option>
       {jobs.map(j => <option key={j._id}>{j._id}</option>)}
     </select>

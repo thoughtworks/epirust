@@ -3,13 +3,13 @@
 exports[`Jobs DropDown should render dropdown with job id list 1`] = `
 <div>
   <label
-    for="job 1"
+    for="job1"
   >
     job 1
   </label>
   <select
     class="form-control"
-    id="job 1"
+    id="job1"
   >
     <option
       disabled=""

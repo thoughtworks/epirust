@@ -23,7 +23,7 @@ import Interventions from './Interventions'
 import MiscellaneousConfig from "./MiscellaneousConfig";
 import {useHistory} from "react-router-dom";
 import {post} from "../common/apiCall";
-import Tags from "./Tags";
+import TagsSelect from "./TagsSelect";
 
 export default function SimulationConfiguration() {
   const [buttonDisabled, setButtonDisabled] = useState(false);
@@ -140,7 +140,7 @@ export default function SimulationConfiguration() {
             <Interventions/>
           </div>
           <div className="form-row tag-action">
-            <Tags/>
+            <TagsSelect/>
             {/*<div className="col actions">*/}
             <button type="submit" className="btn btn-primary btn-lg" id="submitBtn" disabled={buttonDisabled}>
               {buttonDisabled ? loading() : "Submit"}

@@ -28,7 +28,7 @@ function modelTags(tags) {
   })
 }
 
-export default function Tags() {
+export default function TagsSelect() {
 
   const [tags, setTags] = useState([]);
   const [isLoading, setIsLoading] = useState(false);

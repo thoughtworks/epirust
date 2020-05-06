@@ -17,7 +17,7 @@
  *
  */
 
-import Tags from '../../simulation-configuration/Tags'
+import TagsSelect from '../../simulation-configuration/TagsSelect'
 import {render} from '@testing-library/react'
 import React from 'react'
 import selectEvent from 'react-select-event'
@@ -25,7 +25,7 @@ import {get} from "../../common/apiCall";
 
 jest.mock("../../common/apiCall")
 
-describe("Tags", () => {
+describe("TagsSelect", () => {
 
   test('should render component with predefined tags', () => {
     get.mockResolvedValueOnce({
@@ -34,7 +34,7 @@ describe("Tags", () => {
       ])
     });
 
-    const {asFragment} = render(<Tags/>);
+    const {asFragment} = render(<TagsSelect/>);
     expect(asFragment()).toMatchSnapshot();
   });
 
@@ -49,7 +49,7 @@ describe("Tags", () => {
 
     const {getByTestId, getByLabelText} = render(
       <form data-testid={'test-form'}>
-        <Tags/>
+        <TagsSelect/>
       </form>
     );
 

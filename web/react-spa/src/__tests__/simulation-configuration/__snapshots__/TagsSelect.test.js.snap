@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Tags should render component with predefined tags 1`] = `
+exports[`TagsSelect should render component with predefined tags 1`] = `
 <DocumentFragment>
   <div
     class="input-control tags-wrap"

@@ -49,14 +49,14 @@ export default function JobsCompare() {
     new GraphUpdater(updateBuffer, selectedJobs.job1, selectedJobs.job2).start()
   }
 
-  return <>
+  return <div className='jobs-compare'>
     <LoadingComponent loadingState={loadingState}>
       <ComparerDropdowns jobs={jobs} onCompare={onCompare}/>
-      <div style={{width: "1400px", height: "720px"}}>
+      <div className='jobs-compare-chart'>
         {graphData.length > 0 && <Graph dataBuffer={makeCSV(graphData)}/>}
       </div>
     </LoadingComponent>
-  </>
+  </div>
 }
 
 const rowToCsv = (row) => {

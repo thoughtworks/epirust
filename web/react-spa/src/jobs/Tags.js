@@ -22,7 +22,7 @@ import PropTypes from "prop-types";
 
 export default function Tags({tags = []}) {
   return (
-    <ul>
+    <ul className="tags">
       {tags.map(tag => <li key={tag.id} data-testid={`tag-${tag.id}`}>{tag.name}</li>)}
     </ul>
   );

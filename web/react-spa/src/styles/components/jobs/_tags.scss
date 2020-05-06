@@ -17,24 +17,20 @@
  *
  */
 
-.job-details {
-  color: black;
-  box-sizing: content-box;
-  height: 100%;
-  display: flex;
-  flex-flow: column;
-}
-
-.job-details-content {
-  flex-grow : 1;
-}
-
-.job-meta {
-  p {
-    margin-bottom: 0;
+.tags {
+  ul {
+    list-style: none;
+    padding: 0;
   }
 
-  code {
-    color: var(--gray-dark);
+  li {
+    padding: 2px 4px;
+    margin-right: 4px;
+    border-radius: 2px;
+    background: darkgrey;
+    color: white;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: bold;
   }
 }

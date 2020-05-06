@@ -22,74 +22,94 @@ import config from "../config";
 const RENDER_COUNT = 300;
 
 export default class GraphUpdater {
+  #updateBuffer
+  #jobData1
+  #jobData2
+  #lastSent
+
   constructor(updateBuffer, jobId1, jobId2) {
-    this.updateBuffer = updateBuffer;
-    this.jobId1 = jobId1
-    this.jobId2 = jobId2
-    this.csvData = {}
-    this.lastSent = 0;
-    this.job1Ended = false;
-    this.job2Ended = false;
+    this.#updateBuffer = updateBuffer;
+
+    this.#jobData1 = new JobTimeSeriesData(jobId1)
+    this.#jobData2 = new JobTimeSeriesData(jobId2)
+    this.#lastSent = 0;
   }
 
   start() {
-    this.startJob(this.jobId1, "job1");
-    this.startJob(this.jobId2, "job2");
+    this.#startJob(this.#jobData1);
+    this.#startJob(this.#jobData2);
   }
 
-  #checkAndSend = (sendLimit) => {
-    let shouldSend = true;
-    const tempBuffer = []
-    for (let i = this.lastSent + 1; i <= this.lastSent + sendLimit; i++) {
-      if (this.csvData[i]) {
-        if (!this.job1Ended && !this.job2Ended) {
-          const bothPresent = this.csvData[i]["job1"] && this.csvData[i]["job2"]
-          if (!bothPresent) {
-            shouldSend = false;
-            break;
-          }
-        }
-      } else {
-        shouldSend = false;
-        break;
-      }
-      tempBuffer.push({...this.csvData[i], hour: i})
-    }
+  #checkConsistencyAndSend = (sendLimit) => {
+    const start = this.#lastSent + 1;
+    const end = start + sendLimit - 1;
+    const isConsistent = this.#checkConsistency(start, end)
 
-    if (shouldSend) {
-      this.updateBuffer(tempBuffer)
-      this.lastSent = this.lastSent + sendLimit;
+    if (isConsistent) {
+      const data = this.#buildData(start, end)
+      this.#updateBuffer(data)
+      this.#lastSent = end;
     }
   }
 
-  startJob(jobId, jobName) {
-    let consumedCount = 0;
+  #startJob = (jobData) => {
     const socket = io(`${config.API_HOST}/counts`)
-    socket.emit('get', {jobId});
+    socket.emit('get', {jobId: jobData.jobId});
 
     socket.on('epidemicStats', (message) => {
       if ("simulation_ended" in message) {
-        if (jobName === 'job1') this.job1Ended = true
-        else this.job2Ended = true;
-        if (this.job1Ended && this.job2Ended) {
-          this.#checkAndSend(consumedCount - this.lastSent)
-        }
+        jobData.fetchFinished = true;
+        if (this.#bothJobsFinished())
+          this.#checkConsistencyAndSend(jobData.consumedCount() - this.#lastSent)
         socket.close()
-        return;
-      }
-
-      const hour = message.hour;
-
-      if (this.csvData[hour]) {
-        this.csvData[hour][jobName] = message
       } else {
-        this.csvData[hour] = {[jobName]: message}
-      }
-
-      consumedCount += 1;
-      if (jobName === "job1" && consumedCount % RENDER_COUNT === 0) {
-        this.#checkAndSend(RENDER_COUNT)
+        jobData.insertData(message.hour, message)
+        if (jobData.consumedCount() % RENDER_COUNT === 0) {
+          this.#checkConsistencyAndSend(RENDER_COUNT)
+        }
       }
     })
   }
+
+  #bothJobsFinished = () => {
+    return this.#jobData1.fetchFinished && this.#jobData2.fetchFinished;
+  }
+
+  #checkConsistency = (from, till) => {
+    for (let i = from; i <= till; i++) {
+      if (!this.#bothJobsFinished()) {
+        const bothPresent = this.#jobData1.dataBuffer.hasOwnProperty(i) && this.#jobData2.dataBuffer.hasOwnProperty(i)
+        if (!bothPresent) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  #buildData = (from, till) => {
+    const data = []
+    for (let i = from; i <= till; i++) {
+      data.push({'hour': i, 'job1': this.#jobData1.dataBuffer[i], 'job2': this.#jobData2.dataBuffer[i]})
+    }
+    return data;
+  }
+}
+
+class JobTimeSeriesData {
+  #consumedMessageCount
+
+  constructor(jobId) {
+    this.jobId = jobId
+    this.fetchFinished = false;
+    this.dataBuffer = {}
+    this.#consumedMessageCount = 0;
+  }
+
+  insertData = (hour, message) => {
+    this.dataBuffer[hour] = message
+    this.#consumedMessageCount += 1
+  }
+
+  consumedCount = () => this.#consumedMessageCount
 }

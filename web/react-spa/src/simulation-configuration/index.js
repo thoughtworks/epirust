@@ -46,7 +46,6 @@ export default function SimulationConfiguration() {
     setButtonDisabled(true);
     e.preventDefault();
     let paramsData = {};
-    console.log(new FormData(e.target), "---------------");
     new FormData(e.target).forEach(function (value, key) {
       if ([
         "number_of_agents",

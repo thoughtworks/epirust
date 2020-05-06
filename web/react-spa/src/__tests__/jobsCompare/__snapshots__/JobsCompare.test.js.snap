@@ -109,3 +109,291 @@ exports[`Jobs Compare should render with jobs fetched 1`] = `
   />
 </div>
 `;
+
+exports[`Jobs Compare should update graph when graph updater updates value 1`] = `
+<div>
+  <div
+    class="comparer-dropdowns container"
+  >
+    <form
+      class="row justify-content-md-center"
+    >
+      <div
+        class="col-4"
+      >
+        <label
+          for="job1"
+        >
+          Job 1
+        </label>
+        <select
+          class="form-control"
+          id="job1"
+          name="job1"
+          required=""
+        >
+          <option
+            disabled=""
+            value=""
+          >
+             -- select a job -- 
+          </option>
+          <option>
+            1
+          </option>
+          <option>
+            2
+          </option>
+        </select>
+      </div>
+      <div
+        class="col-4"
+      >
+        <label
+          for="job2"
+        >
+          Job 2
+        </label>
+        <select
+          class="form-control"
+          id="job2"
+          name="job2"
+          required=""
+        >
+          <option
+            disabled=""
+            value=""
+          >
+             -- select a job -- 
+          </option>
+          <option>
+            1
+          </option>
+          <option>
+            2
+          </option>
+        </select>
+      </div>
+      <div
+        class="col-2 margin-top-auto"
+      >
+        <button
+          class="btn btn-primary"
+        >
+          Compare
+        </button>
+      </div>
+    </form>
+  </div>
+  <div
+    style="width: 1400px; height: 720px;"
+  >
+    <div
+      class="graph-wrap"
+    >
+      <div
+        class="graph-actions"
+      >
+        <p
+          class="action"
+        >
+          Zoom: 
+          <code
+            class="control"
+          >
+            click-drag
+          </code>
+        </p>
+        <p
+          class="action"
+        >
+          Pan: 
+          <code
+            class="control"
+          >
+            shift-click-drag
+          </code>
+        </p>
+        <p
+          class="action"
+        >
+          Restore: 
+          <code
+            class="control"
+          >
+            double-click
+          </code>
+        </p>
+        <button
+          class="btn btn-sm btn-secondary"
+          disabled=""
+        >
+          Export graph data
+        </button>
+      </div>
+      <div
+        data-testid="visualization"
+        id="vis"
+        style="height: 320px; width: 480px;"
+      >
+        <div
+          style="text-align: left; position: relative; width: 0px; height: 0px;"
+        >
+          <canvas
+            height="0"
+            style="position: absolute; width: 0px; height: 0px;"
+            width="0"
+          />
+          <canvas
+            height="0"
+            style="position: absolute; width: 0px; height: 0px;"
+            width="0"
+          />
+          <input
+            class="dygraph-roller"
+            size="2"
+            style="display: block; top: -63px; left: 57px;"
+            type="text"
+          />
+          <div
+            style="position: absolute; left: 0px; top: 0px; width: -5px; height: 28px; font-size: 20px;"
+          >
+            <div
+              class="dygraph-label dygraph-title"
+            >
+              Time Series Graph
+            </div>
+          </div>
+          <div
+            style="position: absolute; left: 0px; top: -18px; width: -5px; height: 18px; font-size: 16px;"
+          >
+            <div
+              class="dygraph-label dygraph-xlabel"
+            >
+              Hours
+            </div>
+          </div>
+          <div
+            style="position: absolute; left: 0px; top: 28px; width: 0px; height: -46px; font-size: 16px;"
+          >
+            <div
+              class="dygraph-label-rotate-right"
+              style="position: absolute; width: -46px; height: 0px; top: -23px; left: 23px;"
+            >
+              <div
+                class="dygraph-label dygraph-ylabel"
+              >
+                Number of Agents
+              </div>
+            </div>
+          </div>
+          <div
+            class="dygraph-legend"
+            style="left: -6px; top: 28px;"
+          >
+            <span
+              style="font-weight: bold; color: rgb(128,70,0);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(128,70,0);"
+              />
+               susceptible_job1
+            </span>
+             
+            <span
+              style="font-weight: bold; color: rgb(0,93,128);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(0,93,128);"
+              />
+               infected_job1
+            </span>
+             
+            <span
+              style="font-weight: bold; color: rgb(116,128,0);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(116,128,0);"
+              />
+               quarantined_job1
+            </span>
+             
+            <span
+              style="font-weight: bold; color: rgb(0,23,128);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(0,23,128);"
+              />
+               recovered_job1
+            </span>
+             
+            <span
+              style="font-weight: bold; color: rgb(46,128,0);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(46,128,0);"
+              />
+               deceased_job1
+            </span>
+             
+            <span
+              style="font-weight: bold; color: rgb(46,0,128);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(46,0,128);"
+              />
+               susceptible_job2
+            </span>
+             
+            <span
+              style="font-weight: bold; color: rgb(0,128,23);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(0,128,23);"
+              />
+               infected_job2
+            </span>
+             
+            <span
+              style="font-weight: bold; color: rgb(116,0,128);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(116,0,128);"
+              />
+               quarantined_job2
+            </span>
+             
+            <span
+              style="font-weight: bold; color: rgb(0,128,93);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(0,128,93);"
+              />
+               recovered_job2
+            </span>
+             
+            <span
+              style="font-weight: bold; color: rgb(128,0,70);"
+            >
+              <div
+                class="dygraph-legend-line"
+                style="border-bottom-color: rgb(128,0,70);"
+              />
+               deceased_job2
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

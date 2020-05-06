@@ -19,15 +19,19 @@
 
 import React from "react";
 import ShallowRenderer from 'react-test-renderer/shallow';
-import {render} from '@testing-library/react'
+import {fireEvent, render} from '@testing-library/react'
 import JobsCompare from "../../jobsCompare/JobsCompare";
 import {get} from '../../common/apiCall'
 import {flushPromises} from "../helper/promiseHelper";
 import {act} from "react-dom/test-utils";
+import GraphUpdater from '../../jobsCompare/GraphUpdater'
 
 jest.mock('../../common/apiCall')
+jest.mock('../../jobsCompare/GraphUpdater')
 
 describe('Jobs Compare', function () {
+  const jobs = [{_id: 1}, {_id: 2}];
+
   it('should render with default state', function () {
     const renderer = new ShallowRenderer();
     renderer.render(<JobsCompare/>)
@@ -56,5 +60,47 @@ describe('Jobs Compare', function () {
     })
 
     expect(container).toMatchSnapshot()
+  });
+
+  it('should start jobs fetcher on compare click', async () => {
+    get.mockResolvedValueOnce({json: jest.fn().mockResolvedValueOnce(jobs)})
+    const mockStart = jest.fn();
+    GraphUpdater.mockImplementation(() => ({'start': mockStart}))
+    const {container} = render(<JobsCompare/>)
+
+    await act(async () => await flushPromises())
+
+    const dropdowns = container.querySelectorAll('.form-control');
+    fireEvent.change(dropdowns[0], {target: {value: '1'}})
+    fireEvent.change(dropdowns[1], {target: {value: '2'}})
+    fireEvent.click(container.querySelector('button'))
+
+    expect(GraphUpdater).toHaveBeenCalledTimes(1)
+    expect(GraphUpdater).toHaveBeenCalledWith(expect.any(Function), '1', '2')
+    expect(mockStart).toHaveBeenCalledTimes(1)
+  });
+
+  it('should update graph when graph updater updates value', async () => {
+    get.mockResolvedValueOnce({json: jest.fn().mockResolvedValueOnce(jobs)})
+    const mockStart = jest.fn();
+    GraphUpdater.mockImplementation(() => ({'start': mockStart}))
+    const {container} = render(<JobsCompare/>)
+
+    await act(async () => await flushPromises())
+
+    const dropdowns = container.querySelectorAll('.form-control');
+    fireEvent.change(dropdowns[0], {target: {value: '1'}})
+    fireEvent.change(dropdowns[1], {target: {value: '2'}})
+    fireEvent.click(container.querySelector('button'))
+
+    const updateFunction = GraphUpdater.mock.calls[0][0]
+    act(() => {
+      updateFunction([{hour: 1, job1: null, job2: null}])
+    })
+    expect(container).toMatchSnapshot()
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 });

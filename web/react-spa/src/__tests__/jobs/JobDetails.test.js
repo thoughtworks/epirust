@@ -67,27 +67,6 @@ describe('Job Details', () => {
     expect(component.container).toMatchSnapshot()
   });
 
-  it('should render render tags associated with the job', async () => {
-    let tagId = "111", tagName = "tagName";
-    let tagId1 = "112", tagName1 = "tagName";
-
-    const {getByTestId} = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
-      {getComponent('123', {
-        ...defaultConfig, enable_citizen_state_messages: true,
-        tags: [
-          {id: tagId, name: tagName},
-          {id: tagId1, name: tagName1}
-        ]
-      })}
-    </MemoryRouter>);
-
-    expect(getByTestId(`tag-${tagId}`)).toBeInTheDocument();
-    expect(getByTestId(`tag-${tagId}`)).toHaveTextContent(tagName);
-
-    expect(getByTestId(`tag-${tagId1}`)).toBeInTheDocument();
-    expect(getByTestId(`tag-${tagId1}`)).toHaveTextContent(tagName1)
-  });
-
   beforeEach(() => {
     jest.clearAllMocks();
   });

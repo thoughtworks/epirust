@@ -23,7 +23,7 @@ import PropTypes from "prop-types";
 export default function Tags({tags = [], isSmall = false}) {
   const classes = ['tags', ...(isSmall ? ['small'] : [])].join(' ');
   return (
-    <ul className={classes}>
+    <ul data-testid="tags" className={classes}>
       {tags.map(tag =>
         <li key={tag.id} data-testid={`tag-${tag.id}`}>{tag.name}</li>
       )}

@@ -36,18 +36,27 @@
   border-right: 20px solid white;
   position: relative;
 
+  .title {
+    font-size: 14px;
+    margin-bottom: 0;
+
+    code {
+      color: #666666;
+    }
+  }
+
   &.running {
     --statusColor: #F6BB43;
   }
-  
+
   &.failed {
     --statusColor: #F9694C;
   }
-  
+
   &.finished {
     --statusColor: #8BC253;
   }
-  
+
   &.in-queue {
     --statusColor: #3CAEDA;
   }
@@ -62,20 +71,11 @@
 
 }
 
-.job-status { 
-  font-size: 16px;
+.job-status {
+  font-size: 12px;
   font-weight: bold;
-  line-height: 26px;
   margin-bottom: 0;
-}
-
-.minor-details {
-  font-size: 16px;
-  margin-bottom: 0;
-
-  code {
-    color: #666666;
-  }
+  text-transform: uppercase;
 }
 
 .no-link-formatting {
@@ -86,8 +86,7 @@
     color: white;
   }
 }
-
-.no-link-formatting:visited, 
+.no-link-formatting:visited,
 .no-link-formatting:link {
   color: #666666;
 }

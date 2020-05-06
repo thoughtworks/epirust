@@ -19,18 +19,17 @@ Object {
               class="card-body card-body-less-padding"
             >
               <p
+                class="card-title title"
+              >
+                <code>
+                  a12d34
+                </code>
+              </p>
+              <p
                 class="job-status"
                 data-testid="job-status-a12d34"
               >
                 In-Progress
-              </p>
-              <p
-                class="minor-details"
-              >
-                Id: 
-                <code>
-                  a12d34
-                </code>
               </p>
             </div>
           </div>
@@ -53,18 +52,17 @@ Object {
             class="card-body card-body-less-padding"
           >
             <p
+              class="card-title title"
+            >
+              <code>
+                a12d34
+              </code>
+            </p>
+            <p
               class="job-status"
               data-testid="job-status-a12d34"
             >
               In-Progress
-            </p>
-            <p
-              class="minor-details"
-            >
-              Id: 
-              <code>
-                a12d34
-              </code>
             </p>
           </div>
         </div>
@@ -144,18 +142,17 @@ Object {
               class="card-body card-body-less-padding"
             >
               <p
+                class="card-title title"
+              >
+                <code>
+                  a1d234
+                </code>
+              </p>
+              <p
                 class="job-status"
                 data-testid="job-status-a1d234"
               >
                 In-Progress
-              </p>
-              <p
-                class="minor-details"
-              >
-                Id: 
-                <code>
-                  a1d234
-                </code>
               </p>
             </div>
           </div>
@@ -178,18 +175,17 @@ Object {
             class="card-body card-body-less-padding"
           >
             <p
+              class="card-title title"
+            >
+              <code>
+                a1d234
+              </code>
+            </p>
+            <p
               class="job-status"
               data-testid="job-status-a1d234"
             >
               In-Progress
-            </p>
-            <p
-              class="minor-details"
-            >
-              Id: 
-              <code>
-                a1d234
-              </code>
             </p>
           </div>
         </div>

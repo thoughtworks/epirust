@@ -23,7 +23,7 @@
         display: inline-block;
     }
   }
-  
+
   /* styles for a solid line in the legend */
   .dygraph-legend-line {
     display: inline-block;
@@ -35,7 +35,7 @@
     border-bottom-style: solid;
     /* border-bottom-color is set based on the series color */
   }
-  
+
   /* styles for a dashed line in the legend, e.g. when strokePattern is set */
   .dygraph-legend-dash {
     display: inline-block;
@@ -48,19 +48,19 @@
     /* margin-right is set based on the stroke pattern */
     /* padding-left is set based on the stroke pattern */
   }
-  
+
   .dygraph-roller {
     position: absolute;
     z-index: 10;
   }
-  
+
   /* This class is shared by all annotations, including those with icons */
   .dygraph-annotation {
     position: absolute;
     z-index: 10;
     overflow: hidden;
   }
-  
+
   /* This class only applies to annotations without icons */
   /* Old class name: .dygraphDefaultAnnotation */
   .dygraph-default-annotation {
@@ -68,7 +68,7 @@
     background-color: white;
     text-align: center;
   }
-  
+
   .dygraph-axis-label {
     /* position: absolute; */
     /* font-size: 14px; */
@@ -77,28 +77,28 @@
     overflow: hidden;
     color: black;  /* replaces old axisLabelColor option */
   }
-  
+
   .dygraph-axis-label-x {
   }
-  
+
   .dygraph-axis-label-y {
   }
-  
+
   .dygraph-axis-label-y2 {
   }
-  
+
   .dygraph-title {
     font-weight: bold;
     z-index: 10;
     text-align: center;
     /* font-size: based on titleHeight option */
   }
-  
+
   .dygraph-xlabel {
     text-align: center;
     /* font-size: based on xLabelHeight option */
   }
-  
+
   /* For y-axis label */
   .dygraph-label-rotate-left {
     text-align: center;
@@ -109,7 +109,7 @@
     -o-transform: rotate(90deg);
     -ms-transform: rotate(90deg);
   }
-  
+
   /* For y2-axis label */
   .dygraph-label-rotate-right {
     left: -340px !important;
@@ -139,13 +139,13 @@
       justify-content: center;
       position: relative;
     }
-  
+
     .action {
       margin-right: 15px;
       font-size: 0.9rem;
       margin-bottom: 0;
       color: rgb(41, 134, 233);
-  
+
       .control {
         padding: 4px;
         color: gray;
@@ -153,7 +153,7 @@
         background-color: #f1f1f1;
         border-radius: 2px;
       }
-  
+
       &:last-child {
         margin-right: 0;
       }

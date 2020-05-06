@@ -54,18 +54,17 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
                 class="card-body card-body-less-padding"
               >
                 <p
+                  class="card-title title"
+                >
+                  <code>
+                    123456dc
+                  </code>
+                </p>
+                <p
                   class="job-status"
                   data-testid="job-status-123456dc"
                 >
                   Finished
-                </p>
-                <p
-                  class="minor-details"
-                >
-                  Id: 
-                  <code>
-                    123456dc
-                  </code>
                 </p>
               </div>
             </div>
@@ -85,18 +84,17 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
                 class="card-body card-body-less-padding"
               >
                 <p
+                  class="card-title title"
+                >
+                  <code>
+                    567890gv
+                  </code>
+                </p>
+                <p
                   class="job-status"
                   data-testid="job-status-567890gv"
                 >
                   Finished
-                </p>
-                <p
-                  class="minor-details"
-                >
-                  Id: 
-                  <code>
-                    567890gv
-                  </code>
                 </p>
               </div>
             </div>

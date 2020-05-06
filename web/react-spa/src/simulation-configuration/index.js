@@ -139,7 +139,7 @@ export default function SimulationConfiguration() {
             <Interventions/>
           </div>
           <div className="form-row tag-action">
-            <TagsSelect/>
+            <TagsSelect label="Tags" placeholder={"Start typing tag name ..."}/>
             {/*<div className="col actions">*/}
             <button type="submit" className="btn btn-primary btn-lg" id="submitBtn" disabled={buttonDisabled}>
               {buttonDisabled ? loading() : "Submit"}

@@ -34,7 +34,7 @@ describe("TagsSelect", () => {
       ])
     });
 
-    const {asFragment} = render(<TagsSelect/>);
+    const {asFragment} = render(<TagsSelect placeholder={"placeholderText"} label={"Tags"}/>);
     expect(asFragment()).toMatchSnapshot();
   });
 
@@ -49,7 +49,7 @@ describe("TagsSelect", () => {
 
     const {getByTestId, getByLabelText} = render(
       <form data-testid={'test-form'}>
-        <TagsSelect/>
+        <TagsSelect placeholder={"placeholderText"} label={"Tags"}/>
       </form>
     );
 

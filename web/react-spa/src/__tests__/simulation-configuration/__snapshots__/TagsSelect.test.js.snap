@@ -23,7 +23,7 @@ exports[`TagsSelect should render component with predefined tags 1`] = `
           <div
             class=" css-1wa3eu0-placeholder"
           >
-            Select...
+            placeholderText
           </div>
           <div
             class="css-b8ldur-Input"

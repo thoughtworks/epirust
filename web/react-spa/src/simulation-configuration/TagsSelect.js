@@ -21,6 +21,7 @@ import React, {useEffect, useState} from "react";
 import Select from "react-select"
 import {predefinedTags} from "./predefined-tags"
 import {get} from "../common/apiCall";
+import PropTypes from "prop-types";
 
 function modelTags(tags) {
   return tags.map(tag => {
@@ -28,7 +29,7 @@ function modelTags(tags) {
   })
 }
 
-export default function TagsSelect() {
+export default function TagsSelect({label, placeholder}) {
 
   const [tags, setTags] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,11 +45,12 @@ export default function TagsSelect() {
 
   return (
     <div className="input-control tags-wrap">
-      <label className="font-weight-bold col-form-label-sm" htmlFor="tag-input">Tags</label>
+      <label className="font-weight-bold col-form-label-sm" htmlFor="tag-input">{label}</label>
       <Select
         options={modelTags(tags)}
         isLoading={isLoading}
         isMulti
+        placeholder={placeholder}
         inputId="tag-input"
         name="tags"
         aria-label="tags"
@@ -56,3 +58,8 @@ export default function TagsSelect() {
     </div>
   )
 }
+
+TagsSelect.propTypes = {
+  label: PropTypes.string,
+  placeholder: PropTypes.string,
+};

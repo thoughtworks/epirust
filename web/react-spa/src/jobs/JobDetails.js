@@ -24,6 +24,7 @@ import {Redirect, Route, Switch} from "react-router-dom";
 import GridPage from "../grid";
 import PropTypes from 'prop-types';
 import {TimeSeries} from "../time-series";
+import Tags from "./Tags";
 
 export const JobDetails = ({jobId, config}) => {
   const linkPrefix = `/jobs/${jobId}`;
@@ -45,9 +46,7 @@ export const JobDetails = ({jobId, config}) => {
         <div className="col-4">
           <div className="job-meta">
             <p>{`Job: `}<code>{jobId}</code></p>
-            <ul>
-              {config.tags.map(tag => <li key={tag.id} data-testid={`tag-${tag.id}`}>{tag.name}</li>)}
-            </ul>
+            <Tags tags={config.tags}/>
           </div>
         </div>
       </div>

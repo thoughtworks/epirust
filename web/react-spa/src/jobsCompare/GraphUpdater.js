@@ -19,7 +19,6 @@
 import io from "socket.io-client";
 import config from "../config";
 
-const RENDER_COUNT = 300;
 
 export default class GraphUpdater {
   #updateBuffer
@@ -54,8 +53,6 @@ export default class GraphUpdater {
 
   #startJob = (jobData) => {
     const socket = io(`${config.API_HOST}/counts`)
-    socket.emit('get', {jobId: jobData.jobId});
-
     socket.on('epidemicStats', (message) => {
       if ("simulation_ended" in message) {
         jobData.fetchFinished = true;
@@ -64,11 +61,12 @@ export default class GraphUpdater {
         socket.close()
       } else {
         jobData.insertData(message.hour, message)
-        if (jobData.consumedCount() % RENDER_COUNT === 0) {
-          this.#checkConsistencyAndSend(RENDER_COUNT)
+        if (jobData.consumedCount() % config.RENDER_COUNT === 0) {
+          this.#checkConsistencyAndSend(config.RENDER_COUNT)
         }
       }
     })
+    socket.emit('get', {jobId: jobData.jobId});
   }
 
   #bothJobsFinished = () => {

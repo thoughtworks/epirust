@@ -142,14 +142,17 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
           <div
             class="col-4"
           >
-            <h4
-              class="simulation-id"
+            <div
+              class="job-meta"
             >
-              Simulation: 
-              <code>
-                123456dc
-              </code>
-            </h4>
+              <p>
+                Job: 
+                <code>
+                  123456dc
+                </code>
+              </p>
+              <ul />
+            </div>
           </div>
         </div>
         <div

@@ -49,14 +49,17 @@ exports[`Job Details should render grid if grid is enabled in config 1`] = `
       <div
         class="col-4"
       >
-        <h4
-          class="simulation-id"
+        <div
+          class="job-meta"
         >
-          Simulation: 
-          <code>
-            123
-          </code>
-        </h4>
+          <p>
+            Job: 
+            <code>
+              123
+            </code>
+          </p>
+          <ul />
+        </div>
       </div>
     </div>
     <div
@@ -134,14 +137,17 @@ exports[`Job Details should render loader initially when no info received from s
       <div
         class="col-4"
       >
-        <h4
-          class="simulation-id"
+        <div
+          class="job-meta"
         >
-          Simulation: 
-          <code>
-            123
-          </code>
-        </h4>
+          <p>
+            Job: 
+            <code>
+              123
+            </code>
+          </p>
+          <ul />
+        </div>
       </div>
     </div>
     <div
@@ -215,14 +221,17 @@ exports[`Job Details should render the config 1`] = `
       <div
         class="col-4"
       >
-        <h4
-          class="simulation-id"
+        <div
+          class="job-meta"
         >
-          Simulation: 
-          <code>
-            123
-          </code>
-        </h4>
+          <p>
+            Job: 
+            <code>
+              123
+            </code>
+          </p>
+          <ul />
+        </div>
       </div>
     </div>
     <div
@@ -230,7 +239,8 @@ exports[`Job Details should render the config 1`] = `
     >
       <pre>
         {
-    "enable_citizen_state_messages": false
+    "enable_citizen_state_messages": false,
+    "tags": []
 }
       </pre>
     </div>
@@ -277,14 +287,17 @@ exports[`Job Details should render the time series if the view is time-series 1`
       <div
         class="col-4"
       >
-        <h4
-          class="simulation-id"
+        <div
+          class="job-meta"
         >
-          Simulation: 
-          <code>
-            123
-          </code>
-        </h4>
+          <p>
+            Job: 
+            <code>
+              123
+            </code>
+          </p>
+          <ul />
+        </div>
       </div>
     </div>
     <div

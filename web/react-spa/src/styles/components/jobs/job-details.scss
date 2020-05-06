@@ -29,10 +29,25 @@
   flex-grow : 1;
 }
 
-.simulation-id {
-  padding-top: 4px;
-  text-align: center;
-  
+.job-meta {
+  p {
+    margin-bottom: 0;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  li {
+    padding: 2px 4px;
+    margin-right: 4px;
+    border-radius: 2px;
+    background: darkgrey;
+    color: white;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
   code {
     color: var(--gray-dark);
   }

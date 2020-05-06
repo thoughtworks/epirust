@@ -24,49 +24,71 @@ import {MemoryRouter} from "react-router-dom";
 import {act} from "react-dom/test-utils";
 
 
-function getComponent(jobId, isGridEnabled) {
-    return <JobDetails jobId={jobId} config={{enable_citizen_state_messages: isGridEnabled}}/>
+let defaultConfig = {enable_citizen_state_messages: false, tags: []};
+
+function getComponent(jobId, config = defaultConfig) {
+  return <JobDetails jobId={jobId} config={config}/>
 }
 
 describe('Job Details', () => {
-    it('should render the time series if the view is time-series', async () => {
-        const component = render(<MemoryRouter initialEntries={['/jobs/123/time-series']}>
-            {getComponent('123', false)}
-        </MemoryRouter>);
+  it('should render the time series if the view is time-series', async () => {
+    const component = render(<MemoryRouter initialEntries={['/jobs/123/time-series']}>
+      {getComponent('123')}
+    </MemoryRouter>);
 
 
-        //TODO: Find a better way to assert. Changes irrelevant to the test would fail this test
-        expect(component.container).toMatchSnapshot()
-    });
+    //TODO: Find a better way to assert. Changes irrelevant to the test would fail this test
+    expect(component.container).toMatchSnapshot()
+  });
 
-    it('should render the config', async () => {
-        const component = render(<MemoryRouter initialEntries={['/jobs/123/config']}>
-            {getComponent('123', false)}
-        </MemoryRouter>);
+  it('should render the config', async () => {
+    const component = render(<MemoryRouter initialEntries={['/jobs/123/config']}>
+      {getComponent('123')}
+    </MemoryRouter>);
 
-        expect(component.container).toMatchSnapshot()
-    });
+    expect(component.container).toMatchSnapshot()
+  });
 
-    it('should render loader initially when no info received from socket', async () => {
+  it('should render loader initially when no info received from socket', async () => {
 
-        const { asFragment } = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
-            {getComponent('123', false)}
-        </MemoryRouter>);
-
-
-        expect(asFragment()).toMatchSnapshot()
-    });
-
-    it('should render grid if grid is enabled in config', async () => {
-        const component = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
-            {getComponent('123',true)}
-        </MemoryRouter>);
+    const {asFragment} = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
+      {getComponent('123')}
+    </MemoryRouter>);
 
 
-        expect(component.container).toMatchSnapshot()
-    });
+    expect(asFragment()).toMatchSnapshot()
+  });
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
+  it('should render grid if grid is enabled in config', async () => {
+    const component = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
+      {getComponent('123', {...defaultConfig, enable_citizen_state_messages: true})}
+    </MemoryRouter>);
+
+    expect(component.container).toMatchSnapshot()
+  });
+
+  it('should render render tags associated with the job', async () => {
+    let tagId = "111", tagName = "tagName";
+    let tagId1 = "112", tagName1 = "tagName";
+
+    const {getByTestId} = render(<MemoryRouter initialEntries={['/jobs/123/grid']}>
+      {getComponent('123', {
+        ...defaultConfig, enable_citizen_state_messages: true,
+        tags: [
+          {id: tagId, name: tagName},
+          {id: tagId1, name: tagName1}
+        ]
+      })}
+    </MemoryRouter>);
+
+    expect(getByTestId(`tag-${tagId}`)).toBeInTheDocument();
+    expect(getByTestId(`tag-${tagId}`)).toHaveTextContent(tagName);
+
+    expect(getByTestId(`tag-${tagId1}`)).toBeInTheDocument();
+    expect(getByTestId(`tag-${tagId1}`)).toHaveTextContent(tagName1)
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 });

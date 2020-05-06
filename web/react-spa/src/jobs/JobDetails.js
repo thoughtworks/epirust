@@ -43,7 +43,12 @@ export const JobDetails = ({jobId, config}) => {
         </div>
 
         <div className="col-4">
-          <h4 className="simulation-id">{`Simulation: `}<code>{jobId}</code></h4>
+          <div className="job-meta">
+            <p>{`Job: `}<code>{jobId}</code></p>
+            <ul>
+              {config.tags.map(tag => <li key={tag.id} data-testid={`tag-${tag.id}`}>{tag.name}</li>)}
+            </ul>
+          </div>
         </div>
       </div>
     );

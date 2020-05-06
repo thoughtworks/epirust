@@ -42,7 +42,7 @@ impl AgentLocationMap {
 
     pub fn new(grid_size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
-        let mut map: FnvHashMap<Point, agent::Citizen> = FnvHashMap::default();
+        let mut map: FnvHashMap<Point, agent::Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
         for i in 0..agent_list.len() {
             map.insert(points[i], agent_list[i]);
         }

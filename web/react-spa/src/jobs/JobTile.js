@@ -20,9 +20,10 @@
 import React from "react";
 import '../styles/components/jobs/job.scss'
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
+import {Link} from "react-router-dom";
+import Tags from "./Tags";
 
-export const JobTile = ({jobId, status, isActive }) => {
+export const JobTile = ({jobId, status, tags = [], isActive = false}) => {
   const statusText = {
     "running": "In-Progress",
     "finished": "Finished",
@@ -38,15 +39,17 @@ export const JobTile = ({jobId, status, isActive }) => {
           <div className="card-body card-body-less-padding">
             <p className="card-title title"><code>{jobId}</code></p>
             <p data-testid={`job-status-${jobId}`} className="job-status">{statusText[status]}</p>
+            <Tags isSmall={true} tags={tags}/>
           </div>
         </div>
       </Link>
-
     </li>
   );
 };
 
 JobTile.propTypes = {
   jobId: PropTypes.string.isRequired,
-  status: PropTypes.oneOf(["running", "finished", "failed", "in-queue"]).isRequired
+  status: PropTypes.oneOf(["running", "finished", "failed", "in-queue"]).isRequired,
+  isActive: PropTypes.bool,
+  tags: PropTypes.arrayOf(PropTypes.object)
 };

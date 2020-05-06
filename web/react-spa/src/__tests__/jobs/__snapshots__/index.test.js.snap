@@ -66,6 +66,9 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
                 >
                   Finished
                 </p>
+                <ul
+                  class="tags small"
+                />
               </div>
             </div>
           </a>
@@ -96,6 +99,9 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
                 >
                   Finished
                 </p>
+                <ul
+                  class="tags small"
+                />
               </div>
             </div>
           </a>

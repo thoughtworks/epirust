@@ -8,16 +8,19 @@ exports[`JobsList should render jobs list with no active active job if it is inv
     isActive={false}
     jobId="12344"
     status="finished"
+    tags={Array []}
   />
   <JobTile
     isActive={false}
     jobId="12345"
     status="finished"
+    tags={Array []}
   />
   <JobTile
     isActive={false}
     jobId="12346"
     status="finished"
+    tags={Array []}
   />
 </ul>
 `;
@@ -30,16 +33,19 @@ exports[`JobsList should render jobs with active job if valid active job 1`] = `
     isActive={false}
     jobId="12344"
     status="finished"
+    tags={Array []}
   />
   <JobTile
     isActive={true}
     jobId="12345"
     status="finished"
+    tags={Array []}
   />
   <JobTile
     isActive={false}
     jobId="12346"
     status="finished"
+    tags={Array []}
   />
 </ul>
 `;

@@ -23,12 +23,13 @@ import React from "react";
 export const JobsList = ({jobs, activeJob}) => {
   return (
     <ul className="list-group scrollable">
-      {jobs.map(s =>
+      {jobs.map(job =>
         <JobTile
-          key={s._id}
-          jobId={s._id}
-          status={s.status}
-          isActive={activeJob ? s._id === activeJob._id: false}
+          key={job._id}
+          jobId={job._id}
+          status={job.status}
+          tags={job.config.tags}
+          isActive={activeJob ? job._id === activeJob._id: false}
         />)
       }
     </ul>

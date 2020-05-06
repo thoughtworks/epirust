@@ -20,15 +20,19 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-export default function Tags({tags = []}) {
+export default function Tags({tags = [], isSmall = false}) {
+  const classes = ['tags', ...(isSmall ? ['small'] : [])].join(' ');
   return (
-    <ul className="tags">
-      {tags.map(tag => <li key={tag.id} data-testid={`tag-${tag.id}`}>{tag.name}</li>)}
+    <ul className={classes}>
+      {tags.map(tag =>
+        <li key={tag.id} data-testid={`tag-${tag.id}`}>{tag.name}</li>
+      )}
     </ul>
   );
 }
 
 const TagType = PropTypes.shape({id: PropTypes.string, name: PropTypes.string});
 Tags.propTypes = {
-  tags: PropTypes.arrayOf(TagType).isRequired
+  tags: PropTypes.arrayOf(TagType).isRequired,
+  isSmall: PropTypes.bool
 };

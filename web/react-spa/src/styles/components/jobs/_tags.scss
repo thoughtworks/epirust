@@ -18,17 +18,21 @@
  */
 
 .tags {
+  padding: 5px 0 0 0;
   list-style: none;
-  padding: 0;
+  font-size: 12px;
 
   li {
     padding: 2px 4px;
-    margin-right: 4px;
+    margin: 0 4px 4px 0;
     border-radius: 2px;
     background: darkgrey;
     color: white;
     display: inline-block;
-    font-size: 12px;
     font-weight: bold;
+  }
+
+  &.small {
+    font-size: 10px;
   }
 }

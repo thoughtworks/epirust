@@ -23,9 +23,9 @@ import React from "react";
 
 describe('JobsList', () => {
   const testJobs = [
-    {_id: "12344", status: "finished"},
-    {_id: "12345", status: "finished"},
-    {_id: "12346", status: "finished"}
+    {_id: "12344", status: "finished", config: {tags:[]}},
+    {_id: "12345", status: "finished", config: {tags:[]}},
+    {_id: "12346", status: "finished", config: {tags:[]}}
   ]
 
   it('should render jobs with active job if valid active job', () => {

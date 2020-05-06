@@ -31,6 +31,9 @@ Object {
               >
                 In-Progress
               </p>
+              <ul
+                class="tags small"
+              />
             </div>
           </div>
         </a>
@@ -64,6 +67,9 @@ Object {
             >
               In-Progress
             </p>
+            <ul
+              class="tags small"
+            />
           </div>
         </div>
       </a>
@@ -154,6 +160,9 @@ Object {
               >
                 In-Progress
               </p>
+              <ul
+                class="tags small"
+              />
             </div>
           </div>
         </a>
@@ -187,6 +196,9 @@ Object {
             >
               In-Progress
             </p>
+            <ul
+              class="tags small"
+            />
           </div>
         </div>
       </a>

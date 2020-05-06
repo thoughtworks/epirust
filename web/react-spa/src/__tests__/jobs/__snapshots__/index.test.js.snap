@@ -151,7 +151,9 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
                   123456dc
                 </code>
               </p>
-              <ul />
+              <ul
+                class="tags"
+              />
             </div>
           </div>
         </div>

@@ -58,7 +58,9 @@ exports[`Job Details should render grid if grid is enabled in config 1`] = `
               123
             </code>
           </p>
-          <ul />
+          <ul
+            class="tags"
+          />
         </div>
       </div>
     </div>
@@ -146,7 +148,9 @@ exports[`Job Details should render loader initially when no info received from s
               123
             </code>
           </p>
-          <ul />
+          <ul
+            class="tags"
+          />
         </div>
       </div>
     </div>
@@ -230,7 +234,9 @@ exports[`Job Details should render the config 1`] = `
               123
             </code>
           </p>
-          <ul />
+          <ul
+            class="tags"
+          />
         </div>
       </div>
     </div>
@@ -296,7 +302,9 @@ exports[`Job Details should render the time series if the view is time-series 1`
               123
             </code>
           </p>
-          <ul />
+          <ul
+            class="tags"
+          />
         </div>
       </div>
     </div>

@@ -1,9 +1,13 @@
 .jobs-compare {
   display: flex;
   flex-flow: column;
-  height: 89vh;
+  height: 80vh;
 }
 
 .jobs-compare-chart {
   flex-grow: 1;
+}
+
+.comparer-config {
+  padding: 10px;
 }

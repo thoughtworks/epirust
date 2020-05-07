@@ -54,37 +54,46 @@ export default function JobsCompare() {
   const dygraphOptions = () => (
     {
       colors: ["#0A1045", "#00C2D1", "#F9E900", "#F6AF65", "#ED33B9",
-      "#8588a2", "#80e1e8", "#fcf480", "#fbd7b2", "#f699dc"],
+        "#8588a2", "#80e1e8", "#fcf480", "#fbd7b2", "#f699dc"],
       labels: ["hour",
         "susceptible_job1", "infected_job1", "hospitalized_job1", "recovered_job1", "deceased_job1",
         "susceptible_job2", "infected_job2", "hospitalized_job2", "recovered_job2", "deceased_job2"
       ]
     })
 
-  return <div className='jobs-compare'>
+  return <div>
     <LoadingComponent loadingState={loadingState}>
       <div className='row justify-content-md-center'>
         <div className='col-7'>
           <ComparerDropdowns jobs={jobs} onCompare={onCompare}/>
         </div>
-        <div className='col-3 margin-top-auto'>
-          <Select
-              options={[{value: 'susceptible', label: 'susceptible'}, {value: 'infected', label: 'infected'}]}
-              isMulti
-              inputId="tag-input"
-              name="tags"
-              aria-label="tags"
-              onChange={(cs) => updateSelectedCurves(cs ? cs.map(c => c.value) : []) }
-          />
+      </div>
+      {graphData.length > 0 && (
+        <div className="row">
+          <div className="col-2">
+            <div className="comparer-config">
+              <label htmlFor="series-filer">Select line-graphs to show:</label>
+              <Select
+                options={[{value: 'susceptible', label: 'susceptible'}, {value: 'infected', label: 'infected'}]}
+                isMulti
+                inputId="series-filer"
+                name="tags"
+                aria-label="tags"
+                onChange={(cs) => updateSelectedCurves(cs ? cs.map(c => c.value) : [])}
+              />
+            </div>
+          </div>
+          <div className="col-10 jobs-compare">
+            <div className="jobs-compare-chart">
+              <Graph
+                dataBuffer={makeCSV(graphData)}
+                dygraphsOptions={dygraphOptions()}
+                visibility={visibility(selectedCurves)}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-      <div className='jobs-compare-chart'>
-        {graphData.length > 0 && <Graph
-            dataBuffer={makeCSV(graphData)}
-            dygraphsOptions={dygraphOptions()}
-            visibility={visibility(selectedCurves)}
-        />}
-      </div>
+      )}
     </LoadingComponent>
   </div>
 }

@@ -56,7 +56,8 @@ describe('Jobs Compare', function () {
       await flushPromises()
     })
 
-    expect(container).toMatchSnapshot()
+    const dropdowns = container.querySelectorAll('select')
+    expect(dropdowns).toMatchSnapshot()
   });
 
   it('should display failed message when fetching jobs has failed', async function () {

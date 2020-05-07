@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'
 import { modelAnnotation } from './utils';
 
-export default function Graph({ dataBuffer, enableExport = false, annotations = [], dygraphsOptions = {} }) {
+export default function Graph({ dataBuffer, enableExport = false, annotations = [], dygraphsOptions = {}, visibility }) {
     const [graph, setGraph] = useState(null);
 
     useEffect(() => {
@@ -33,6 +33,15 @@ export default function Graph({ dataBuffer, enableExport = false, annotations = 
             graph.updateOptions({ 'file': dataBuffer });
         }
     }, [graph, dataBuffer])
+
+    useEffect(() => {
+        if (!graph)
+            return
+
+        graph.setVisibility(visibility)
+
+    }, [graph, visibility])
+
 
     useEffect(() => {
         if (!graph || !annotations.length)

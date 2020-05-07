@@ -37,11 +37,11 @@ export default function ComparerDropdowns({jobs, onCompare}) {
 
   return (
     <div className='comparer-dropdowns container'>
-      <form className='row justify-content-md-center' onSubmit={handleSubmit}>
-        <div className="col-4">
+      <form className='row' onSubmit={handleSubmit}>
+        <div className="col-5">
           <JobsDropdown jobs={jobs} label='Job 1'/>
         </div>
-        <div className="col-4">
+        <div className="col-5">
           <JobsDropdown jobs={jobs} label='Job 2'/>
         </div>
         <div className="col-2 margin-top-auto">

@@ -25,11 +25,13 @@ import {LOADING_STATES} from "../common/constants";
 import Graph from "../time-series/LineGraph";
 import GraphUpdater from "./GraphUpdater";
 import {reduceStatus} from "../jobs/JobTransformer";
+import Select from "react-select";
 
 export default function JobsCompare() {
   const [jobs, updateJobs] = useState([])
   const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING)
   const [graphData, updateGraphData] = useState([])
+  const [selectedCurves, updateSelectedCurves] = useState([])
 
   useEffect(() => {
     get('/jobs')
@@ -54,12 +56,41 @@ export default function JobsCompare() {
 
   return <div className='jobs-compare'>
     <LoadingComponent loadingState={loadingState}>
-      <ComparerDropdowns jobs={jobs} onCompare={onCompare}/>
+      <div className='row justify-content-md-center'>
+        <div className='col-7'>
+          <ComparerDropdowns jobs={jobs} onCompare={onCompare}/>
+        </div>
+        <div className='col-3 margin-top-auto'>
+          <Select
+              options={[{value: 'susceptible', label: 'susceptible'}, {value: 'infected', label: 'infected'}]}
+              isMulti
+              inputId="tag-input"
+              name="tags"
+              aria-label="tags"
+              onChange={(cs) => updateSelectedCurves(cs ? cs.map(c => c.value) : []) }
+          />
+        </div>
+      </div>
       <div className='jobs-compare-chart'>
-        {graphData.length > 0 && <Graph dataBuffer={makeCSV(graphData)} dygraphsOptions={dygraphOptions()}/>}
+        {graphData.length > 0 && <Graph
+            dataBuffer={makeCSV(graphData)}
+            dygraphsOptions={dygraphOptions()}
+            visibility={visibility(selectedCurves)}
+        />}
       </div>
     </LoadingComponent>
   </div>
+}
+
+const visibility = (curvesSelected) => {
+  const curves = [
+    "susceptible_job1", "infected_job1", "quarantined_job1", "recovered_job1", "deceased_job1",
+    "susceptible_job2", "infected_job2", "quarantined_job2", "recovered_job2", "deceased_job2"
+  ];
+  if (curvesSelected.length > 0) {
+    return curves.map(l => curvesSelected.some(cs => l.includes(cs)))
+  }
+  return curves.map(_ => true)
 }
 
 const rowToCsv = (row) => {

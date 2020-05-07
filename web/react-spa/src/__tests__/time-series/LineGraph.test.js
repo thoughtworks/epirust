@@ -60,7 +60,7 @@ test('should invoke dygraph when data buffer length is not 0 and graph is null',
         errorBars: true,
         rollPeriod: 24
     }
-    const dygraphMockFn = Dygraph.mockImplementationOnce(() => { graph: "mockGraph" })
+    const dygraphMockFn = Dygraph.mockImplementationOnce(() => ({ graph: "mockGraph", updateOptions: jest.fn(), setVisibility: jest.fn() }))
     render(<Graph dataBuffer={simulationData.join('\n')} />)
 
     expect(dygraphMockFn).toHaveBeenCalledTimes(1)
@@ -71,7 +71,7 @@ test('should invoke dygraph when data buffer length is not 0 and graph is null',
 test('should update dygraph chart when data buffer is not 0 and graph is not null', () => {
 
     const updateSpyFn = jest.fn()
-    const dygraphMockFn = Dygraph.mockImplementation(() => ({ updateOptions: updateSpyFn }))
+    const dygraphMockFn = Dygraph.mockImplementation(() => ({ updateOptions: updateSpyFn, setVisibility: jest.fn() }))
 
     const { rerender } = render(<Graph dataBuffer={simulationData.join('\n')} />)
     expect(dygraphMockFn).toHaveBeenCalled()

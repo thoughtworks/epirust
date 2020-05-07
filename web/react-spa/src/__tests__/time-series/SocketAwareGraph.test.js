@@ -83,7 +83,8 @@ test('should display loader and stop displaying when data arrives', () => {
 
     const updateSpyFn = jest.fn()
     Dygraph.mockImplementation(() => ({
-        updateOptions: updateSpyFn
+        updateOptions: updateSpyFn,
+        setVisibility: jest.fn()
     }))
 
     const hourStatistics = { ...hourStatisticsFor100thHour}
@@ -178,7 +179,8 @@ test("should render the annotations for lockdown applied intervention ", () => {
 
     Dygraph.mockImplementation(() => ({
         setAnnotations: setAnnotationSpy,
-        updateOptions: jest.fn()
+        updateOptions: jest.fn(),
+        setVisibility: jest.fn()
     }))
 
     render(<SocketAwareGraph jobId={jobId} />);
@@ -216,7 +218,8 @@ test("should render the annotations for lockdown revoked intervention ", () => {
 
     Dygraph.mockImplementation(() => ({
         setAnnotations: setAnnotationSpy,
-        updateOptions: jest.fn()
+        updateOptions: jest.fn(),
+        setVisibility: jest.fn()
     }))
 
     render(<SocketAwareGraph jobId={jobId} />);
@@ -254,7 +257,8 @@ test("should render the annotations for interventions for BuildNewHospital", () 
 
     Dygraph.mockImplementation(() => ({
         setAnnotations: setAnnotationSpy,
-        updateOptions: jest.fn()
+        updateOptions: jest.fn(),
+        setVisibility: jest.fn()
     }))
 
     render(<SocketAwareGraph jobId={jobId} />);
@@ -289,7 +293,8 @@ test("should render the annotations for interventions for Vaccination", () => {
 
     Dygraph.mockImplementation(() => ({
         setAnnotations: setAnnotationSpy,
-        updateOptions: jest.fn()
+        updateOptions: jest.fn(),
+        setVisibility: jest.fn()
     }))
 
     render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />);
@@ -324,7 +329,8 @@ test("should render the annotations for interventions and apply height to the ti
 
     Dygraph.mockImplementation(() => ({
         setAnnotations: setAnnotationSpy,
-        updateOptions: jest.fn()
+        updateOptions: jest.fn(),
+        setVisibility: jest.fn()
     }))
 
     render(<SocketAwareGraph socket={socket.socketClient} jobId={jobId} />);

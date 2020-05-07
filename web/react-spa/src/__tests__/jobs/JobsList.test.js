@@ -22,6 +22,10 @@ import React from "react";
 import {render} from "@testing-library/react";
 import {MemoryRouter} from "react-router-dom";
 
+import selectEvent from "react-select-event";
+import {get} from "../../common/apiCall";
+jest.mock("../../common/apiCall");
+
 describe('JobsList', () => {
   let sarsTag = {id: "12", name: "SARS"}, covidTag = {id: "11", name: "covid-19"};
   let sarsJobId = "12345", covidJobId = "12344", sarsCovidJob = "12346", noTagsJob = '123';
@@ -33,6 +37,13 @@ describe('JobsList', () => {
     {_id: noTagsJob, status: "finished", config: {tags: []}}
   ];
 
+  get.mockImplementation((url) => {
+    if (/jobs\/tags/.test(url))
+      return Promise.resolve({json: jest.fn().mockResolvedValueOnce([])});
+
+    return Promise.resolve({json: jest.fn().mockResolvedValueOnce({})});
+  });
+
   it('should render jobs with active job if valid active job', () => {
     const {asFragment} = render(<MemoryRouter><JobsList jobs={testJobs} activeJob={testJobs[1]}/></MemoryRouter>);
     expect(asFragment()).toMatchSnapshot()
@@ -41,5 +52,43 @@ describe('JobsList', () => {
   it('should render jobs list with no active active job if it is invalid', () => {
     const {asFragment} = render(<MemoryRouter><JobsList jobs={testJobs} activeJob={null}/></MemoryRouter>);
     expect(asFragment()).toMatchSnapshot()
+  });
+
+  //TODO: should render jobs list with no active active job if it is invalid
+
+  it('should filter elements by selected tags', async () => {
+
+    get.mockImplementation((url) => {
+      if (/jobs\/tags/.test(url))
+        return Promise.resolve({json: jest.fn().mockResolvedValueOnce([covidTag, sarsTag])});
+
+      return Promise.resolve({json: jest.fn().mockResolvedValueOnce({})});
+    });
+
+    const {getByTestId, getByLabelText, getByText} = render(
+      <MemoryRouter>
+        <JobsList jobs={testJobs} activeJob={testJobs[1]}/>
+      </MemoryRouter>
+    );
+
+    //display all by default
+    expect(getByTestId('job-list').children.length).toBe(4)
+
+    //display for selected tag
+    await selectEvent.select(getByLabelText('Filter'), [sarsTag.name]);
+    expect(getByTestId('job-list').children.length).toBe(2)
+    expect(getByText(sarsJobId)).toBeInTheDocument();
+    expect(getByText(sarsCovidJob)).toBeInTheDocument();
+
+    await selectEvent.select(getByLabelText('Filter'), [covidTag.name]);
+    expect(getByTestId('job-list').children.length).toBe(3);
+    expect(getByText(sarsJobId)).toBeInTheDocument();
+    expect(getByText(sarsCovidJob)).toBeInTheDocument();
+    expect(getByText(covidJobId)).toBeInTheDocument();
+
+    //display all when cleared tags
+    await selectEvent.clearAll(getByLabelText('Filter'));
+    expect(getByTestId('job-list').children.length).toBe(4)
+
   });
 });

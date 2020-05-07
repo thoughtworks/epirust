@@ -55,6 +55,25 @@ export default function TagsSelect({label, placeholder, onChange}) {
         name="tags"
         aria-label="tags"
         onChange={onChange}
+        styles={{
+          placeholder: (provided) => ({
+            ...provided,
+            fontSize: '14px'
+          }),
+          input: (provided) => ({
+            ...provided,
+            fontSize: '14px',
+            margin: 0
+          }),
+          control: (provided) => ({
+            ...provided,
+            fontSize: '14px'
+          }),
+          option: (provided) => ({
+            ...provided,
+            padding: "6px 12px"
+          })
+        }}
       />
     </div>
   )

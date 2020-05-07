@@ -24,6 +24,7 @@ import {LoadingComponent} from "../common/LoadingComponent";
 import {LOADING_STATES} from "../common/constants";
 import Graph from "../time-series/LineGraph";
 import GraphUpdater from "./GraphUpdater";
+import {reduceStatus} from "../jobs/JobTransformer";
 
 export default function JobsCompare() {
   const [jobs, updateJobs] = useState([])
@@ -34,7 +35,7 @@ export default function JobsCompare() {
     get('/jobs')
       .then((res) => res.json())
       .then((jobsResponse) => {
-        updateJobs(jobsResponse)
+        updateJobs(jobsResponse.map(reduceStatus).filter(j => j.status === 'finished'))
         updateLoadingState(LOADING_STATES.FINISHED)
       })
       .catch(() => updateLoadingState(LOADING_STATES.FAILED))

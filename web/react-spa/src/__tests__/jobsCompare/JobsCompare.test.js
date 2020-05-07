@@ -25,12 +25,14 @@ import {get} from '../../common/apiCall'
 import {flushPromises} from "../helper/promiseHelper";
 import {act} from "react-dom/test-utils";
 import GraphUpdater from '../../jobsCompare/GraphUpdater'
+import {reduceStatus} from "../../jobs/JobTransformer";
 
 jest.mock('../../common/apiCall')
 jest.mock('../../jobsCompare/GraphUpdater')
+jest.mock('../../jobs/JobTransformer')
 
 describe('Jobs Compare', function () {
-  const jobs = [{_id: 1}, {_id: 2}];
+  const jobs = [{_id: 1, status: 'finished'}, {_id: 2, status: 'finished'}];
 
   it('should render with default state', function () {
     const renderer = new ShallowRenderer();
@@ -39,8 +41,14 @@ describe('Jobs Compare', function () {
     expect(renderer.getRenderOutput()).toMatchSnapshot()
   });
 
-  it('should render with jobs fetched', async function () {
-    const jobs = [{_id: 1}, {_id: 2}];
+  it('should render with jobs fetched that are finished', async function () {
+    const jobs = [
+      {_id: 1, status: 'finished'},
+      {_id: 2, status: 'running'},
+      {_id: 3, status: 'in-queue'},
+      {_id: 4, status: 'finished'},
+      {_id: 5, status: 'failed'}
+    ];
     get.mockResolvedValueOnce({json: jest.fn().mockResolvedValueOnce(jobs)})
     const {container} = render(<JobsCompare/>)
 
@@ -101,6 +109,10 @@ describe('Jobs Compare', function () {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    reduceStatus.mockImplementation(data => data)
   });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  })
 });

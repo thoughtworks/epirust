@@ -30,7 +30,7 @@ exports[`Jobs Compare should render with default state 1`] = `
 </div>
 `;
 
-exports[`Jobs Compare should render with jobs fetched 1`] = `
+exports[`Jobs Compare should render with jobs fetched that are finished 1`] = `
 <div>
   <div
     class="jobs-compare"
@@ -65,7 +65,7 @@ exports[`Jobs Compare should render with jobs fetched 1`] = `
               1
             </option>
             <option>
-              2
+              4
             </option>
           </select>
         </div>
@@ -93,7 +93,7 @@ exports[`Jobs Compare should render with jobs fetched 1`] = `
               1
             </option>
             <option>
-              2
+              4
             </option>
           </select>
         </div>

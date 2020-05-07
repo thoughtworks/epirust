@@ -27,6 +27,8 @@ import GraphUpdater from "./GraphUpdater";
 import {reduceStatus} from "../jobs/JobTransformer";
 import Select from "react-select";
 
+const epiCurves = ["susceptible", "infected", "hospitalized", "recovered", "deceased"]
+
 export default function JobsCompare() {
   const [jobs, updateJobs] = useState([])
   const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING)
@@ -51,13 +53,14 @@ export default function JobsCompare() {
     updateGraphData([])
     new GraphUpdater(updateBuffer, selectedJobs.job1, selectedJobs.job2).start()
   }
+
   const dygraphOptions = () => (
     {
       colors: ["#0A1045", "#00C2D1", "#F9E900", "#F6AF65", "#ED33B9",
         "#8588a2", "#80e1e8", "#fcf480", "#fbd7b2", "#f699dc"],
       labels: ["hour",
-        "susceptible_job1", "infected_job1", "hospitalized_job1", "recovered_job1", "deceased_job1",
-        "susceptible_job2", "infected_job2", "hospitalized_job2", "recovered_job2", "deceased_job2"
+        ...epiCurves.map(e => `${e}_job1`),
+        ...epiCurves.map(e => `${e}_job2`),
       ]
     })
 
@@ -74,7 +77,7 @@ export default function JobsCompare() {
             <div className="comparer-config">
               <label htmlFor="series-filer">Select line-graphs to show:</label>
               <Select
-                options={[{value: 'susceptible', label: 'susceptible'}, {value: 'infected', label: 'infected'}]}
+                options={epiCurves.map(e => ({value: e, label: e}))}
                 isMulti
                 inputId="series-filer"
                 name="tags"
@@ -99,10 +102,7 @@ export default function JobsCompare() {
 }
 
 const visibility = (curvesSelected) => {
-  const curves = [
-    "susceptible_job1", "infected_job1", "quarantined_job1", "recovered_job1", "deceased_job1",
-    "susceptible_job2", "infected_job2", "quarantined_job2", "recovered_job2", "deceased_job2"
-  ];
+  const curves = [...epiCurves.map(e => `${e}_job1`), ...epiCurves.map(e => `${e}_job2`)];
   if (curvesSelected.length > 0) {
     return curves.map(l => curvesSelected.some(cs => l.includes(cs)))
   }

@@ -49,12 +49,14 @@ export default function JobsCompare() {
     updateGraphData([])
     new GraphUpdater(updateBuffer, selectedJobs.job1, selectedJobs.job2).start()
   }
+  const dygraphOptions = () => ({colors: ["#0A1045", "#00C2D1", "#F9E900", "#F6AF65", "#ED33B9",
+      "#8588a2", "#80e1e8", "#fcf480", "#fbd7b2", "#f699dc"]})
 
   return <div className='jobs-compare'>
     <LoadingComponent loadingState={loadingState}>
       <ComparerDropdowns jobs={jobs} onCompare={onCompare}/>
       <div className='jobs-compare-chart'>
-        {graphData.length > 0 && <Graph dataBuffer={makeCSV(graphData)}/>}
+        {graphData.length > 0 && <Graph dataBuffer={makeCSV(graphData)} dygraphsOptions={dygraphOptions()}/>}
       </div>
     </LoadingComponent>
   </div>

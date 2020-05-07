@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'
 import { modelAnnotation } from './utils';
 
-export default function Graph({ dataBuffer, enableExport = false, annotations = [] }) {
+export default function Graph({ dataBuffer, enableExport = false, annotations = [], dygraphsOptions = {} }) {
     const [graph, setGraph] = useState(null);
 
     useEffect(() => {
@@ -22,7 +22,8 @@ export default function Graph({ dataBuffer, enableExport = false, annotations = 
                 xlabel: 'Hours',
                 showRoller: true,
                 errorBars: true,
-                rollPeriod: 24
+                rollPeriod: 24,
+                ...dygraphsOptions
             }
             const visualisationDiv = document.getElementById("vis");
             const graphInstance = new Dygraph(visualisationDiv, dataBuffer, options);

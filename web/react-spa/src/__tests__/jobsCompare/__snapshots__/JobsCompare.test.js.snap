@@ -300,101 +300,101 @@ exports[`Jobs Compare should update graph when graph updater updates value 1`] =
               style="left: -6px; top: 28px;"
             >
               <span
-                style="font-weight: bold; color: rgb(128,70,0);"
+                style="font-weight: bold; color: #0A1045;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(128,70,0);"
+                  style="border-bottom-color: #0A1045;"
                 />
                  susceptible_job1
               </span>
                
               <span
-                style="font-weight: bold; color: rgb(0,93,128);"
+                style="font-weight: bold; color: #00C2D1;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(0,93,128);"
+                  style="border-bottom-color: #00C2D1;"
                 />
                  infected_job1
               </span>
                
               <span
-                style="font-weight: bold; color: rgb(116,128,0);"
+                style="font-weight: bold; color: #F9E900;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(116,128,0);"
+                  style="border-bottom-color: #F9E900;"
                 />
                  quarantined_job1
               </span>
                
               <span
-                style="font-weight: bold; color: rgb(0,23,128);"
+                style="font-weight: bold; color: #F6AF65;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(0,23,128);"
+                  style="border-bottom-color: #F6AF65;"
                 />
                  recovered_job1
               </span>
                
               <span
-                style="font-weight: bold; color: rgb(46,128,0);"
+                style="font-weight: bold; color: #ED33B9;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(46,128,0);"
+                  style="border-bottom-color: #ED33B9;"
                 />
                  deceased_job1
               </span>
                
               <span
-                style="font-weight: bold; color: rgb(46,0,128);"
+                style="font-weight: bold; color: #8588a2;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(46,0,128);"
+                  style="border-bottom-color: #8588a2;"
                 />
                  susceptible_job2
               </span>
                
               <span
-                style="font-weight: bold; color: rgb(0,128,23);"
+                style="font-weight: bold; color: #80e1e8;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(0,128,23);"
+                  style="border-bottom-color: #80e1e8;"
                 />
                  infected_job2
               </span>
                
               <span
-                style="font-weight: bold; color: rgb(116,0,128);"
+                style="font-weight: bold; color: #fcf480;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(116,0,128);"
+                  style="border-bottom-color: #fcf480;"
                 />
                  quarantined_job2
               </span>
                
               <span
-                style="font-weight: bold; color: rgb(0,128,93);"
+                style="font-weight: bold; color: #fbd7b2;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(0,128,93);"
+                  style="border-bottom-color: #fbd7b2;"
                 />
                  recovered_job2
               </span>
                
               <span
-                style="font-weight: bold; color: rgb(128,0,70);"
+                style="font-weight: bold; color: #f699dc;"
               >
                 <div
                   class="dygraph-legend-line"
-                  style="border-bottom-color: rgb(128,0,70);"
+                  style="border-bottom-color: #f699dc;"
                 />
                  deceased_job2
               </span>

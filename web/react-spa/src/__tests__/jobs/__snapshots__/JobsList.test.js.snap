@@ -18,18 +18,18 @@ exports[`JobsList should render jobs list with no active active job if it is inv
         class=" css-2b097c-container"
       >
         <div
-          class=" css-yk16xz-control"
+          class=" css-uddrns-control"
         >
           <div
             class=" css-g1d714-ValueContainer"
           >
             <div
-              class=" css-1wa3eu0-placeholder"
+              class=" css-q70w24-placeholder"
             >
               Type tag name...
             </div>
             <div
-              class="css-b8ldur-Input"
+              class="css-drs5yf-Input"
             >
               <div
                 class=""
@@ -288,18 +288,18 @@ exports[`JobsList should render jobs with active job if valid active job 1`] = `
         class=" css-2b097c-container"
       >
         <div
-          class=" css-yk16xz-control"
+          class=" css-uddrns-control"
         >
           <div
             class=" css-g1d714-ValueContainer"
           >
             <div
-              class=" css-1wa3eu0-placeholder"
+              class=" css-q70w24-placeholder"
             >
               Type tag name...
             </div>
             <div
-              class="css-b8ldur-Input"
+              class="css-drs5yf-Input"
             >
               <div
                 class=""

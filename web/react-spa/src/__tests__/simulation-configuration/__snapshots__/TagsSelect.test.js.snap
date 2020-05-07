@@ -15,18 +15,18 @@ exports[`TagsSelect should render component with predefined tags 1`] = `
       class=" css-2b097c-container"
     >
       <div
-        class=" css-yk16xz-control"
+        class=" css-uddrns-control"
       >
         <div
           class=" css-g1d714-ValueContainer"
         >
           <div
-            class=" css-1wa3eu0-placeholder"
+            class=" css-q70w24-placeholder"
           >
             placeholderText
           </div>
           <div
-            class="css-b8ldur-Input"
+            class="css-drs5yf-Input"
           >
             <div
               class=""

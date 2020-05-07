@@ -53,18 +53,18 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
             class=" css-2b097c-container"
           >
             <div
-              class=" css-yk16xz-control"
+              class=" css-uddrns-control"
             >
               <div
                 class=" css-g1d714-ValueContainer"
               >
                 <div
-                  class=" css-1wa3eu0-placeholder"
+                  class=" css-q70w24-placeholder"
                 >
                   Type tag name...
                 </div>
                 <div
-                  class="css-b8ldur-Input"
+                  class="css-drs5yf-Input"
                 >
                   <div
                     class=""

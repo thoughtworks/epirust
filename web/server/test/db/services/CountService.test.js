@@ -128,6 +128,20 @@ describe('CountService', () => {
     });
   });
 
+  describe('fetchInterventionsForSimulation', () => {
+    it('should fetch all the interventiosn for the simulation', async () => {
+      const simulationId = mockObjectId()
+      await new Count({simulation_id: simulationId, hour:1, interventions: [{intervention: "hospital"}]}).save()
+      await new Count({simulation_id: simulationId, hour:2, interventions: [{intervention: "lockdown-start"}]}).save()
+      await new Count({simulation_id: simulationId, hour:3}).save()
+      await new Count({simulation_id: mockObjectId(), hour:1, interventions: [{intervention: "lockdown-start"}]}).save()
+      const interventions = await CountService.fetchInterventionsForSimulation(simulationId)
+
+      expect(interventions).toEqual([{hour:1, interventions: [{intervention: "hospital"}]},
+      {hour:2, interventions: [{intervention: "lockdown-start"}]}])
+    });
+  });
+
   beforeAll(async () => await dbHandler.connect());
   afterEach(async () => await dbHandler.clearDatabase());
   afterAll(async () => await dbHandler.closeDatabase());

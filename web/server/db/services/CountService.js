@@ -67,4 +67,9 @@ const aggregateSimulations = (simulationIds) => {
     ])
 }
 
-module.exports = {addIntervention, upsertCount, fetchCountsInSimulation, aggregateSimulations};
+const fetchInterventionsForSimulation = (simulationId) => {
+  return Count.find({simulation_id: simulationId, "interventions.0": {$exists: 1}}, {hour: 1, interventions: 1, _id: 0}, {sort: {hour: 1}})
+    .then(x => x.map(d => d.toObject()))
+}
+
+module.exports = {addIntervention, upsertCount, fetchCountsInSimulation, aggregateSimulations, fetchInterventionsForSimulation};

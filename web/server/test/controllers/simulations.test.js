@@ -17,19 +17,19 @@
  *
  */
 
-const jobs_controller = require("../../routes/router")
+const router = require("../../routes/router")
 const express = require("express");
 const app = express();
 const supertest = require('supertest');
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
-app.use("/", jobs_controller);
+app.use("/", router);
 const request = supertest(app);
 const {mockObjectId} = require("../helpers")
 const CountsService = require("../../db/services/CountService")
 jest.mock("../../db/services/CountService")
 
-describe('jobs controller', () => {
+describe('Simulation Controller', () => {
   afterAll(async () => {
     await app.close()
   });

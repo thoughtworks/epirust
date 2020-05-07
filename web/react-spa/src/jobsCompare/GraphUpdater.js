@@ -42,7 +42,7 @@ export default class GraphUpdater {
   #checkConsistencyAndSend = (sendLimit) => {
     const start = this.#lastSent + 1;
     const end = start + sendLimit - 1;
-    const isConsistent = this.#checkConsistency(start, end)
+    const isConsistent = this.#checkConsistency(end)
 
     if (isConsistent) {
       const data = this.#buildData(start, end)
@@ -73,16 +73,9 @@ export default class GraphUpdater {
     return this.#jobData1.fetchFinished && this.#jobData2.fetchFinished;
   }
 
-  #checkConsistency = (from, till) => {
-    for (let i = from; i <= till; i++) {
-      if (!this.#bothJobsFinished()) {
-        const bothPresent = this.#jobData1.dataBuffer.hasOwnProperty(i) && this.#jobData2.dataBuffer.hasOwnProperty(i)
-        if (!bothPresent) {
-          return false;
-        }
-      }
-    }
-    return true;
+  #checkConsistency = (till) => {
+    const eitherJobsNotConsistent = this.#jobData1.consumedCount() < till || this.#jobData2.consumedCount() < till
+    return !(!this.#bothJobsFinished() && eitherJobsNotConsistent);
   }
 
   #buildData = (from, till) => {

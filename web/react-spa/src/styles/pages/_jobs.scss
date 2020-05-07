@@ -1,4 +1,4 @@
-/*
+/*!
  * EpiRust
  * Copyright (c) 2020  ThoughtWorks, Inc.
  *
@@ -17,10 +17,14 @@
  *
  */
 
-.job-filter-controls {
-  margin-bottom: 0.4rem;
+.jobs-list {
+  .details {
+    padding: 0 20px;
+    height: 90vh;
+  }
 }
 
-.job-list {
-  height: 81vh;
+.left-border {
+  border-style: none none none dashed;
+  border-color: #ccc;
 }

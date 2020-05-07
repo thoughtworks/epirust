@@ -528,7 +528,7 @@ exports[`Jobs Compare should update graph when graph updater updates value 1`] =
                   class="dygraph-legend-line"
                   style="border-bottom-color: #F9E900;"
                 />
-                 quarantined_job1
+                 hospitalized_job1
               </span>
                
               <span
@@ -578,7 +578,7 @@ exports[`Jobs Compare should update graph when graph updater updates value 1`] =
                   class="dygraph-legend-line"
                   style="border-bottom-color: #fcf480;"
                 />
-                 quarantined_job2
+                 hospitalized_job2
               </span>
                
               <span

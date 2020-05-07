@@ -23,7 +23,7 @@ import React from "react";
 
 export const Jobs = ({jobs, activeJob}) => {
   return (
-    <div className="row jobs-list">
+    <div className="row jobs-page">
       <div className="col-2">
         <JobsList jobs={jobs} activeJob={activeJob}/>
       </div>

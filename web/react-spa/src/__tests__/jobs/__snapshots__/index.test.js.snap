@@ -32,7 +32,7 @@ exports[`JobsView should render components with updated state on refresh 1`] = `
 exports[`JobsView should render components with updated state on refresh 2`] = `
 <div>
   <div
-    class="row jobs-list"
+    class="row jobs-page"
   >
     <div
       class="col-2"

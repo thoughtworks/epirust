@@ -24,7 +24,7 @@ import React from "react";
 export const Jobs = ({jobs, activeJob}) => {
   return (
     <div className="row jobs-page">
-      <div className="col-2">
+      <div className="col-2 jobs">
         <JobsList jobs={jobs} activeJob={activeJob}/>
       </div>
       <div className="col-10 left-border scrollable details">

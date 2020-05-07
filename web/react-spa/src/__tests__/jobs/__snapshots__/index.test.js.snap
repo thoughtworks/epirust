@@ -35,7 +35,7 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
     class="row jobs-page"
   >
     <div
-      class="col-2"
+      class="col-2 jobs"
     >
       <form
         class="job-filter-controls"
@@ -47,7 +47,7 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
             class="font-weight-bold col-form-label-sm"
             for="tag-input"
           >
-            Filter Jobs
+            Filter
           </label>
           <div
             class=" css-2b097c-container"
@@ -139,6 +139,8 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
       </form>
       <ul
         class="list-group scrollable job-list"
+        data-testid="job-list"
+        style="max-height: 0;"
       >
         <li
           class="list-group-item borderless item-less-padding"

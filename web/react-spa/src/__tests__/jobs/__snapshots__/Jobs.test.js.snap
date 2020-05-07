@@ -5,7 +5,7 @@ exports[`Jobs should render invalid job message if active job is invalid 1`] = `
   className="row jobs-page"
 >
   <div
-    className="col-2"
+    className="col-2 jobs"
   >
     <JobsList
       activeJob={null}
@@ -45,7 +45,7 @@ exports[`Jobs should render jobs list and jobs details 1`] = `
   className="row jobs-page"
 >
   <div
-    className="col-2"
+    className="col-2 jobs"
   >
     <JobsList
       activeJob={

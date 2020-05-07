@@ -18,7 +18,7 @@
  */
 
 import {JobTile} from "./JobTile";
-import React, {useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import TagsSelect from "../simulation-configuration/TagsSelect";
 
 const REACT_SELECT_ACTIONS = {
@@ -31,6 +31,8 @@ const REACT_SELECT_ACTIONS = {
 
 export const JobsList = ({jobs, activeJob}) => {
   const [tagIdsToFilter, updateTagIdsToFilter] = useState([]);
+  const [listHeight, updateListHeight] = useState(0);
+  const filterFormRef = React.useRef(null);
 
   function handleOnSubmit(e) {
     e.preventDefault();
@@ -52,7 +54,6 @@ export const JobsList = ({jobs, activeJob}) => {
       case REACT_SELECT_ACTIONS.REMOVE:
         updateTagIdsToFilter(changedIds);
         break;
-
     }
   }
 
@@ -63,12 +64,22 @@ export const JobsList = ({jobs, activeJob}) => {
     return job.config.tags.some(({id}) => tagIdsToFilter.includes(id));
   }
 
+  useEffect(() => {
+    if (!filterFormRef)
+      return;
+
+    const parentElementHeight = filterFormRef.current.parentElement.clientHeight,
+      formHeight = filterFormRef.current.clientHeight;
+
+    updateListHeight(parentElementHeight - formHeight)
+  }, [filterFormRef, tagIdsToFilter]);
+
   return (
     <>
-      <form className="job-filter-controls" onSubmit={handleOnSubmit}>
-        <TagsSelect label={"Filter Jobs"} placeholder={"Type tag name..."} onChange={handleSelectChange}/>
+      <form ref={filterFormRef} className="job-filter-controls" onSubmit={handleOnSubmit}>
+        <TagsSelect label={"Filter"} placeholder={"Type tag name..."} onChange={handleSelectChange}/>
       </form>
-      <ul className="list-group scrollable job-list">
+      <ul className="list-group scrollable job-list" data-testid="job-list" style={{maxHeight: listHeight}}>
         {jobs
           .filter(jobIsTagged)
           .map(job =>

@@ -17,12 +17,18 @@
  *
  */
 
+const {toObjectId} = require("../common/util")
+
 const express = require('express');
 const router = express.Router();
-const jobs = require('../controllers/jobs');
-const simulations = require('../controllers/simulations');
+const CountsService = require("../db/services/CountService")
 
-router.use('/jobs', jobs);
-router.use('/simulations', simulations);
+router.get('/:sim_id/interventions', (req, res) => {
+  const simulationId = toObjectId(req.params.sim_id)
+  CountsService.fetchInterventionsForSimulation(simulationId)
+    .then(interventions => {
+      res.send(interventions)
+    })
+})
 
 module.exports = router;

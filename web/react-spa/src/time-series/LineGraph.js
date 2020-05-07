@@ -32,7 +32,7 @@ export default function Graph({ dataBuffer, enableExport = false, annotations = 
         else {
             graph.updateOptions({ 'file': dataBuffer });
         }
-    }, [graph, dataBuffer])
+    }, [graph, dataBuffer, dygraphsOptions])
 
     useEffect(() => {
         if (!graph)

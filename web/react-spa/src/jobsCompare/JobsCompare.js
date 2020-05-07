@@ -51,8 +51,15 @@ export default function JobsCompare() {
     updateGraphData([])
     new GraphUpdater(updateBuffer, selectedJobs.job1, selectedJobs.job2).start()
   }
-  const dygraphOptions = () => ({colors: ["#0A1045", "#00C2D1", "#F9E900", "#F6AF65", "#ED33B9",
-      "#8588a2", "#80e1e8", "#fcf480", "#fbd7b2", "#f699dc"]})
+  const dygraphOptions = () => (
+    {
+      colors: ["#0A1045", "#00C2D1", "#F9E900", "#F6AF65", "#ED33B9",
+      "#8588a2", "#80e1e8", "#fcf480", "#fbd7b2", "#f699dc"],
+      labels: ["hour",
+        "susceptible_job1", "infected_job1", "hospitalized_job1", "recovered_job1", "deceased_job1",
+        "susceptible_job2", "infected_job2", "hospitalized_job2", "recovered_job2", "deceased_job2"
+      ]
+    })
 
   return <div className='jobs-compare'>
     <LoadingComponent loadingState={loadingState}>
@@ -94,15 +101,11 @@ const visibility = (curvesSelected) => {
 }
 
 const rowToCsv = (row) => {
-  if (row) return [row.susceptible, row.susceptible_std, row.infected, row.infected_std, row.quarantined,
-    row.quarantined_std, row.recovered, row.recovered_std, row.deceased, row.deceased_std]
-  return ['', 0, '', 0, '', 0, '', 0, '', 0]
+  if (row) return [[row.susceptible, row.susceptible_std], [row.infected, row.infected_std],
+    [row.hospitalized, row.hospitalized_std], [row.recovered, row.recovered_std], [row.deceased, row.deceased_std]]
+  return [[], [], [], [], []]
 }
 
 const makeCSV = (graphData) => {
-
-  return [["hour",
-    "susceptible_job1", "infected_job1", "quarantined_job1", "recovered_job1", "deceased_job1",
-    "susceptible_job2", "infected_job2", "quarantined_job2", "recovered_job2", "deceased_job2"
-  ]].concat(graphData.map(d => ([d.hour, ...rowToCsv(d.job1), ...rowToCsv(d.job2)]))).join('\n')
+  return graphData.map(d => ([d.hour, ...rowToCsv(d.job1), ...rowToCsv(d.job2)]))
 }

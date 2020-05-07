@@ -26,3 +26,14 @@ exports[`JobsContainer should render jobs component if jobId and view are presen
   }
 />
 `;
+
+exports[`JobsContainer should show no jobs message if the fetched jobs list is empty 1`] = `
+<div>
+  No Jobs exists, 
+  <ForwardRef
+    to="/"
+  >
+    Create a new Job 
+  </ForwardRef>
+</div>
+`;

@@ -49,4 +49,11 @@ describe('JobsContainer', () => {
 
     expect(renderer.getRenderOutput()).toMatchSnapshot()
   });
+
+  it('should show no jobs message if the fetched jobs list is empty', () => {
+    const renderer = new ShallowRenderer()
+    renderer.render(<JobsContainer jobs={[]}/>)
+
+    expect(renderer.getRenderOutput()).toMatchSnapshot()
+  });
 });

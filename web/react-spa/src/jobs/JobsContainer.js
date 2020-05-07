@@ -17,11 +17,13 @@
  *
  */
 
-import {Redirect} from "react-router-dom";
+import {Link, Redirect} from "react-router-dom";
 import {Jobs} from "./Jobs";
 import React from "react";
 
 export const JobsContainer = ({activeJobId, currentView, jobs}) => {
+  if (jobs.length <= 0)
+    return <div>No Jobs exists, <Link to="/">Create a new Job </Link></div>
   if (!activeJobId)
     return (<Redirect to={`/jobs/${jobs[0]._id}/time-series`}/>);
   if (!currentView)

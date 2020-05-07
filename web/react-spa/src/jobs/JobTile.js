@@ -18,7 +18,7 @@
  */
 
 import React from "react";
-import '../styles/components/jobs/job.scss'
+import '../styles/components/jobs/_job.scss'
 import PropTypes from "prop-types";
 import {Link} from "react-router-dom";
 import Tags from "./Tags";

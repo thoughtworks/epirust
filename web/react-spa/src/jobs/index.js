@@ -18,7 +18,7 @@
  */
 
 import React, {useEffect, useState} from "react";
-import '../styles/components/jobs/jobs-list.scss'
+import '../styles/components/jobs/_jobs-list.scss'
 import {useParams} from 'react-router-dom';
 import {LOADING_STATES} from "../common/constants";
 import {JobsContainer} from "./JobsContainer";

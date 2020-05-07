@@ -18,20 +18,69 @@
  */
 
 import {JobTile} from "./JobTile";
-import React from "react";
+import React, {useState} from "react";
+import TagsSelect from "../simulation-configuration/TagsSelect";
+
+const REACT_SELECT_ACTIONS = {
+  CLEAR: 'clear',
+  SELECT: 'select-option',
+  POP: 'pop-value',
+  REMOVE: 'remove-value'
+};
+
 
 export const JobsList = ({jobs, activeJob}) => {
+  const [tagIdsToFilter, updateTagIdsToFilter] = useState([]);
+
+  function handleOnSubmit(e) {
+    e.preventDefault();
+  }
+
+  function handleSelectChange(changeValues, {action}) {
+    const changedIds = changeValues ? changeValues.map(option => option.value) : [];
+
+    switch (action) {
+      case REACT_SELECT_ACTIONS.SELECT:
+        updateTagIdsToFilter(changedIds);
+        break;
+
+      case REACT_SELECT_ACTIONS.CLEAR:
+        updateTagIdsToFilter([]);
+        break;
+
+      case REACT_SELECT_ACTIONS.POP:
+      case REACT_SELECT_ACTIONS.REMOVE:
+        updateTagIdsToFilter(changedIds);
+        break;
+
+    }
+  }
+
+  function jobIsTagged(job) {
+    if (!tagIdsToFilter.length)
+      return true;
+
+    return job.config.tags.some(({id}) => tagIdsToFilter.includes(id));
+  }
+
   return (
-    <ul className="list-group scrollable">
-      {jobs.map(job =>
-        <JobTile
-          key={job._id}
-          jobId={job._id}
-          status={job.status}
-          tags={job.config.tags}
-          isActive={activeJob ? job._id === activeJob._id: false}
-        />)
-      }
-    </ul>
+    <>
+      <form className="job-filter-controls" onSubmit={handleOnSubmit}>
+        <TagsSelect label={"Filter Jobs"} placeholder={"Type tag name..."} onChange={handleSelectChange}/>
+      </form>
+      <ul className="list-group scrollable job-list">
+        {jobs
+          .filter(jobIsTagged)
+          .map(job =>
+            <JobTile
+              key={job._id}
+              jobId={job._id}
+              status={job.status}
+              tags={job.config.tags}
+              isActive={activeJob ? job._id === activeJob._id : false}
+            />)
+        }
+      </ul>
+    </>
   );
-}
+};

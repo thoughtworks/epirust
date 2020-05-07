@@ -29,7 +29,7 @@ function modelTags(tags) {
   })
 }
 
-export default function TagsSelect({label, placeholder}) {
+export default function TagsSelect({label, placeholder, onChange}) {
 
   const [tags, setTags] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +54,7 @@ export default function TagsSelect({label, placeholder}) {
         inputId="tag-input"
         name="tags"
         aria-label="tags"
+        onChange={onChange}
       />
     </div>
   )
@@ -62,4 +63,5 @@ export default function TagsSelect({label, placeholder}) {
 TagsSelect.propTypes = {
   label: PropTypes.string,
   placeholder: PropTypes.string,
+  onChange: PropTypes.func,
 };

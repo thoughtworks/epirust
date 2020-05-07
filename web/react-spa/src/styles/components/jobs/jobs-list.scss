@@ -18,17 +18,10 @@
  */
 
 .jobs-list {
-  .tabs {
-  }
   .details {
     padding: 0 20px;
+    height: 90vh;
   }
-}
-
-.scrollable {
-  height: 90vh;
-  position: relative;
-  overflow: auto;
 }
 
 .left-border {
@@ -36,6 +29,10 @@
   border-color:#ccc;
 }
 
-.padded-list {
-  padding: 0 16px 0 0;
+.job-filter-controls {
+  margin-bottom: 0.4rem;
+}
+
+.job-list {
+  height: 81vh;
 }

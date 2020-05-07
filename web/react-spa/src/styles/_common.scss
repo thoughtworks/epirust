@@ -11,3 +11,12 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.scrollable {
+  position: relative;
+  overflow: auto;
+}
+
+.padded-list {
+  padding: 0 16px 0 0;
+}

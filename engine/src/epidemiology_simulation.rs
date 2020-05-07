@@ -75,10 +75,16 @@ impl Epidemiology {
         Epidemiology { agent_location_map, write_agent_location_map, grid, disease, sim_id }
     }
 
-    fn stop_simulation(run_mode: &RunMode, row: Counts) -> bool {
+    fn stop_simulation(lock_down_details: &mut LockdownIntervention, run_mode: &RunMode, row: Counts) -> bool {
         let zero_active_cases = row.get_exposed() == 0 && row.get_infected() == 0 && row.get_hospitalized() == 0;
         match run_mode {
-            RunMode::MultiEngine { .. } => { false }
+            RunMode::MultiEngine { .. } => {
+                if lock_down_details.is_locked_down() && zero_active_cases{
+                    lock_down_details.set_zero_infection_hour(row.get_hour());
+                    println!("last_infection_hour {}", lock_down_details.zero_infection_hour);
+                }
+                false
+            }
             _ => zero_active_cases
         }
     }
@@ -161,8 +167,9 @@ impl Epidemiology {
         let mut n_incoming = 0;
         let mut n_outgoing = 0;
 
-        info!("S: {}, E:{}, I: {}, H: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_exposed(), counts_at_hr.get_infected(),
-              counts_at_hr.get_hospitalized(), counts_at_hr.get_recovered(), counts_at_hr.get_deceased());
+        info!("S: {}, E:{}, I: {}, H: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_exposed(),
+              counts_at_hr.get_infected(), counts_at_hr.get_hospitalized(), counts_at_hr.get_recovered(),
+              counts_at_hr.get_deceased());
         for simulation_hour in 1..config.get_hours() {
             let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour).await;
             match &tick {
@@ -227,7 +234,7 @@ impl Epidemiology {
             hospital_intervention.counts_updated(&counts_at_hr);
 
             if lock_down_details.should_apply(&counts_at_hr) {
-                lock_down_details.apply(&counts_at_hr);
+                lock_down_details.apply();
                 Epidemiology::lock_city(simulation_hour, &mut write_buffer_reference);
                 listeners.intervention_applied(simulation_hour, &lock_down_details)
             }
@@ -247,7 +254,7 @@ impl Epidemiology {
                 simulation_hour,
             );
 
-            if Epidemiology::stop_simulation(&run_mode, counts_at_hr) {
+            if Epidemiology::stop_simulation(&mut lock_down_details, &run_mode, counts_at_hr) {
                 break;
             }
 

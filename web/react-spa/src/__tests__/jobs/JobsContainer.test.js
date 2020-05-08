@@ -60,9 +60,9 @@ describe('JobsContainer', () => {
   });
 
   it('should show no jobs message if the fetched jobs list is empty', () => {
-    const renderer = new ShallowRenderer()
-    renderer.render(<JobsContainer jobs={[]}/>)
-
-    expect(renderer.getRenderOutput()).toMatchSnapshot()
+    const {asFragment} = renderWithRouter(
+      <JobsContainer jobs={[]}/>, {initialEntries: ["/jobs/12346"]}
+    );
+    expect(asFragment()).toMatchSnapshot()
   });
 });

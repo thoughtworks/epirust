@@ -4,98 +4,129 @@ exports[`Comparer Config should render Select for time-series filer and form for
 <div
   className="comparer-config"
 >
-  <label
-    htmlFor="series-filer"
+  <div
+    className="user-inputs"
   >
-    Select line-graphs to show:
-  </label>
-  <StateManager
-    aria-label="tags"
-    defaultInputValue=""
-    defaultMenuIsOpen={false}
-    defaultValue={null}
-    inputId="series-filer"
-    isMulti={true}
-    name="tags"
-    onChange={[Function]}
-    options={
-      Array [
-        Object {
-          "label": "susceptible",
-          "value": "susceptible",
-        },
-        Object {
-          "label": "infected",
-          "value": "infected",
-        },
-        Object {
-          "label": "hospitalized",
-          "value": "hospitalized",
-        },
-        Object {
-          "label": "recovered",
-          "value": "recovered",
-        },
-        Object {
-          "label": "deceased",
-          "value": "deceased",
-        },
-      ]
-    }
-  />
+    <div
+      className="form-row"
+    >
+      <h5>
+        <b>
+          <label
+            htmlFor="series-filer"
+          >
+            Select line-graphs:
+          </label>
+        </b>
+      </h5>
+      <StateManager
+        aria-label="tags"
+        defaultInputValue=""
+        defaultMenuIsOpen={false}
+        defaultValue={null}
+        inputId="series-filer"
+        isMulti={true}
+        name="tags"
+        onChange={[Function]}
+        options={
+          Array [
+            Object {
+              "label": "susceptible",
+              "value": "susceptible",
+            },
+            Object {
+              "label": "infected",
+              "value": "infected",
+            },
+            Object {
+              "label": "hospitalized",
+              "value": "hospitalized",
+            },
+            Object {
+              "label": "recovered",
+              "value": "recovered",
+            },
+            Object {
+              "label": "deceased",
+              "value": "deceased",
+            },
+          ]
+        }
+      />
+    </div>
+  </div>
   <form
+    className="user-inputs"
     onSubmit={[Function]}
   >
-    <label>
-      Select interventions to show
-    </label>
-    Job 1:
-    <StateManager
-      aria-label="tags"
-      defaultInputValue=""
-      defaultMenuIsOpen={false}
-      defaultValue={null}
-      inputId="job1-interventions-filter"
-      isMulti={true}
-      name="job1-interventions"
-      onChange={[Function]}
-      options={
-        Array [
-          Object {
-            "label": "4567uhg",
-            "value": "4567uhg",
-          },
-          Object {
-            "label": "4567uyhghjn",
-            "value": "4567uyhghjn",
-          },
-        ]
-      }
-    />
-    Job 2:
-    <StateManager
-      aria-label="tags"
-      defaultInputValue=""
-      defaultMenuIsOpen={false}
-      defaultValue={null}
-      inputId="job2-interventions-filter"
-      isMulti={true}
-      name="job2-interventions"
-      onChange={[Function]}
-      options={
-        Array [
-          Object {
-            "label": "456776tgh",
-            "value": "456776tgh",
-          },
-        ]
-      }
-    />
-    <button
-      className="btn btn-primary"
+    <div
+      className="form-row"
     >
-      Show Interventions
-    </button>
+      <h5>
+        <b>
+          <label>
+            Select interventions:
+          </label>
+        </b>
+      </h5>
+      <label>
+        Job 1:
+      </label>
+      <StateManager
+        aria-label="tags"
+        defaultInputValue=""
+        defaultMenuIsOpen={false}
+        defaultValue={null}
+        inputId="job1-interventions-filter"
+        isMulti={true}
+        name="job1-interventions"
+        onChange={[Function]}
+        options={
+          Array [
+            Object {
+              "label": "4567uhg",
+              "value": "4567uhg",
+            },
+            Object {
+              "label": "4567uyhghjn",
+              "value": "4567uyhghjn",
+            },
+          ]
+        }
+      />
+    </div>
+    <div
+      className="form-row"
+    >
+      Job 2:
+      <StateManager
+        aria-label="tags"
+        defaultInputValue=""
+        defaultMenuIsOpen={false}
+        defaultValue={null}
+        inputId="job2-interventions-filter"
+        isMulti={true}
+        name="job2-interventions"
+        onChange={[Function]}
+        options={
+          Array [
+            Object {
+              "label": "456776tgh",
+              "value": "456776tgh",
+            },
+          ]
+        }
+      />
+    </div>
+    <div
+      className="form-row"
+    >
+      <button
+        className="btn btn-primary"
+      >
+        Show Interventions
+      </button>
+    </div>
   </form>
 </div>
 `;

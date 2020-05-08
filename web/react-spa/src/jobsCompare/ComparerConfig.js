@@ -30,44 +30,53 @@ export function ComparerConfig({selectedJobs, updateSelectedCurves, updateInterv
     e.preventDefault();
 
     const interventionsToAsk = []
-    if(selectedInterventions.job1) interventionsToAsk.push(...selectedInterventions.job1)
-    if(selectedInterventions.job2) interventionsToAsk.push(...selectedInterventions.job2)
+    if (selectedInterventions.job1) interventionsToAsk.push(...selectedInterventions.job1)
+    if (selectedInterventions.job2) interventionsToAsk.push(...selectedInterventions.job2)
     updateInterventions(interventionsToAsk)
   }
 
   return <div className="comparer-config">
-    <label htmlFor="series-filer">Select line-graphs to show:</label>
-    <Select
-      options={epiCurves.map(e => ({value: e, label: e}))}
-      isMulti
-      inputId="series-filer"
-      name="tags"
-      aria-label="tags"
-      onChange={(cs) => updateSelectedCurves(cs ? cs.map(c => c.value) : [])}
-    />
+    <div className="user-inputs">
+      <div className="form-row">
+        <h5><b><label htmlFor="series-filer">Select line-graphs:</label></b></h5>
+        <Select
+          options={epiCurves.map(e => ({value: e, label: e}))}
+          isMulti
+          inputId="series-filer"
+          name="tags"
+          aria-label="tags"
+          onChange={(cs) => updateSelectedCurves(cs ? cs.map(c => c.value) : [])}
+        />
+      </div>
+    </div>
 
-    <form onSubmit={handleSubmit}>
-      <label>Select interventions to show</label>
-      Job 1:
-      <Select
-        options={selectedJobs.job1.simulations.map(s => ({value: s._id, label: s._id}))}
-        isMulti
-        inputId="job1-interventions-filter"
-        name="job1-interventions"
-        aria-label="tags"
-        onChange={(cs) => updateSelectedInterventions("job1", cs ? cs.map(c => c.value) : [])}
-      />
-
-      Job 2:
-      <Select
-        options={selectedJobs.job2.simulations.map(s => ({value: s._id, label: s._id}))}
-        isMulti
-        inputId="job2-interventions-filter"
-        name="job2-interventions"
-        aria-label="tags"
-        onChange={(cs) => updateSelectedInterventions("job2", cs ? cs.map(c => c.value) : [])}
-      />
-      <button className="btn btn-primary">Show Interventions</button>
+    <form onSubmit={handleSubmit} className="user-inputs">
+      <div className="form-row">
+        <h5><b><label>Select interventions:</label></b></h5>
+        <label>Job 1:</label>
+        <Select
+          options={selectedJobs.job1.simulations.map(s => ({value: s._id, label: s._id}))}
+          isMulti
+          inputId="job1-interventions-filter"
+          name="job1-interventions"
+          aria-label="tags"
+          onChange={(cs) => updateSelectedInterventions("job1", cs ? cs.map(c => c.value) : [])}
+        />
+      </div>
+      <div className="form-row">
+        Job 2:
+        <Select
+          options={selectedJobs.job2.simulations.map(s => ({value: s._id, label: s._id}))}
+          isMulti
+          inputId="job2-interventions-filter"
+          name="job2-interventions"
+          aria-label="tags"
+          onChange={(cs) => updateSelectedInterventions("job2", cs ? cs.map(c => c.value) : [])}
+        />
+      </div>
+      <div className="form-row">
+        <button className="btn btn-primary">Show Interventions</button>
+      </div>
     </form>
   </div>
 }

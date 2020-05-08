@@ -29,7 +29,7 @@ function modelTags(tags) {
   })
 }
 
-export default function TagsSelect({label, placeholder, onChange}) {
+export default function TagsSelect({label, placeholder, onChange, tagIdsSelected = []}) {
 
   const [tags, setTags] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,10 +43,22 @@ export default function TagsSelect({label, placeholder, onChange}) {
       .then(() => setIsLoading(false))
   }, []);
 
+  const tagIdToTag = tags.reduce((acc, tag) => {
+    return {...acc, [tag.id]: tag};
+  }, {});
+
+  const valuesSelected = (!tags.length || !tagIdsSelected.length)
+    ? []
+    : tagIdsSelected.map(id => ({
+      value: tagIdToTag[id].id,
+      label: tagIdToTag[id].name
+    }));
+
   return (
     <div className="input-control tags-wrap">
       <label className="font-weight-bold col-form-label-sm" htmlFor="tag-input">{label}</label>
       <Select
+        {...(!valuesSelected.length ? {} : {value: valuesSelected})}
         options={modelTags(tags)}
         isLoading={isLoading}
         isMulti

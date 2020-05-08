@@ -22,6 +22,7 @@ import {render} from '@testing-library/react'
 import React from 'react'
 import selectEvent from 'react-select-event'
 import {get} from "../../common/apiCall";
+import {wait} from "@testing-library/dom";
 
 jest.mock("../../common/apiCall")
 
@@ -62,5 +63,62 @@ describe("TagsSelect", () => {
     expect(getByTestId('test-form')).toHaveFormValues({
       tags: ['smallPoxId', 'sarsId', 'covidId'],
     })
+  })
+
+  test('should behave as a controlled component when passed values from outside', async () => {
+    const smallPoxId = 'smallPoxId', sarsId = 'sarsId', covidId = 'covidId';
+
+    get.mockResolvedValueOnce({
+      json: jest.fn().mockResolvedValueOnce([
+        {id: smallPoxId, name: "Smallpox"},
+        {id: sarsId, name: "SARS"},
+        {id: covidId, name: "COVID-19"}
+      ])
+    });
+
+    const onChangeSpy = jest.fn();
+
+    const {getByTestId, getByLabelText, rerender} = render(
+      <form data-testid={'test-form'}>
+        <TagsSelect
+          placeholder={"placeholderText"}
+          label={"Tags"}
+          tagIdsSelected={[smallPoxId, sarsId]}
+          onChange={onChangeSpy}
+        />
+      </form>
+    );
+
+    await wait(() => {
+      expect(getByTestId('test-form')).toHaveFormValues({tags: [smallPoxId, sarsId]});
+    });
+
+
+    //selecting a value on a controlled component does have not effect on the selection, it has to come as value prop to Select
+    await selectEvent.select(getByLabelText('Tags'), 'COVID-19');
+
+    expect(getByTestId('test-form')).toHaveFormValues({tags: [smallPoxId, sarsId]});
+    expect(onChangeSpy).toHaveBeenCalledWith(
+      [{label: "Smallpox", value: smallPoxId}, {label: "SARS", value: sarsId}, {label: "COVID-19", value: covidId}],
+      {
+        action: "select-option",
+        name: "tags",
+        option: {"label": "COVID-19", "value": covidId}
+      });
+
+
+    //it is expected that it gets re-rendered with the expected values later
+    rerender(
+      <form data-testid={'test-form'}>
+        <TagsSelect
+          placeholder={"placeholderText"}
+          label={"Tags"}
+          tagIdsSelected={[smallPoxId, sarsId, covidId]}
+          onChange={onChangeSpy}
+        />
+      </form>
+    );
+
+    expect(getByTestId('test-form')).toHaveFormValues({tags: [smallPoxId, sarsId, covidId]});
   })
 });

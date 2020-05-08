@@ -74,19 +74,9 @@ export default function JobsCompare() {
       {graphData.length > 0 && (
         <div className="row">
           <div className="col-2">
-            <div className="comparer-config">
-              <label htmlFor="series-filer">Select line-graphs to show:</label>
-              <Select
-                options={epiCurves.map(e => ({value: e, label: e}))}
-                isMulti
-                inputId="series-filer"
-                name="tags"
-                aria-label="tags"
-                onChange={(cs) => updateSelectedCurves(cs ? cs.map(c => c.value) : [])}
-              />
-            </div>
+            <ComparerConfig updateSelectedCurves={updateSelectedCurves}/>
           </div>
-          <div className="col-10 jobs-compare">
+          <div className="col-10">
             <div className="jobs-compare-chart">
               <Graph
                 dataBuffer={makeCSV(graphData)}
@@ -117,4 +107,19 @@ const rowToCsv = (row) => {
 
 const makeCSV = (graphData) => {
   return graphData.map(d => ([d.hour, ...rowToCsv(d.job1), ...rowToCsv(d.job2)]))
+}
+
+
+function ComparerConfig({updateSelectedCurves}) {
+  return <div className="comparer-config">
+    <label htmlFor="series-filer">Select line-graphs to show:</label>
+    <Select
+      options={epiCurves.map(e => ({value: e, label: e}))}
+      isMulti
+      inputId="series-filer"
+      name="tags"
+      aria-label="tags"
+      onChange={(cs) => updateSelectedCurves(cs ? cs.map(c => c.value) : [])}
+    />
+  </div>
 }

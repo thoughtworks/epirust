@@ -247,7 +247,7 @@ exports[`Jobs Compare should update graph when graph updater updates value 1`] =
         </div>
       </div>
       <div
-        class="col-10 jobs-compare"
+        class="col-10"
       >
         <div
           class="jobs-compare-chart"

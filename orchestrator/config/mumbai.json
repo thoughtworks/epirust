@@ -656,13 +656,13 @@
   "simulation": [
     {
       "config": {
-        "grid_size": 1000,
+        "grid_size": 6800,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -670,15 +670,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 27,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -692,13 +698,13 @@
     },
     {
       "config": {
-        "grid_size": 1000,
+        "grid_size": 1600,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -706,15 +712,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 29,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -734,7 +746,7 @@
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -742,15 +754,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 11,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -764,13 +782,13 @@
     },
     {
       "config": {
-        "grid_size": 1500,
+        "grid_size": 2500,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -778,15 +796,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 107,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -800,13 +824,13 @@
     },
     {
       "config": {
-        "grid_size": 1500,
+        "grid_size": 2700,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -814,15 +838,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 125,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -836,13 +866,13 @@
     },
     {
       "config": {
-        "grid_size": 1800,
+        "grid_size": 4200,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -850,15 +880,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 54,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -872,13 +908,13 @@
     },
     {
       "config": {
-        "grid_size": 1500,
+        "grid_size": 5400,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -886,15 +922,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 41,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -908,13 +950,13 @@
     },
     {
       "config": {
-        "grid_size": 1500,
+        "grid_size": 3500,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -922,15 +964,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 83,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -944,13 +992,13 @@
     },
     {
       "config": {
-        "grid_size": 2000,
+        "grid_size": 3000,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -958,15 +1006,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 308,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -980,13 +1034,13 @@
     },
     {
       "config": {
-        "grid_size": 1400,
+        "grid_size": 5700,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -994,15 +1048,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 85,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1016,13 +1076,13 @@
     },
     {
       "config": {
-        "grid_size": 1800,
+        "grid_size": 3600,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1030,15 +1090,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 34,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1052,13 +1118,13 @@
     },
     {
       "config": {
-        "grid_size": 2200,
+        "grid_size": 6400,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1066,15 +1132,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 83,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1088,13 +1160,13 @@
     },
     {
       "config": {
-        "grid_size": 2200,
+        "grid_size": 6300,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1102,15 +1174,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 80,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1124,13 +1202,13 @@
     },
     {
       "config": {
-        "grid_size": 2400,
+        "grid_size": 3900,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1138,15 +1216,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 81,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1160,13 +1244,13 @@
     },
     {
       "config": {
-        "grid_size": 2200,
+        "grid_size": 8500,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1174,15 +1258,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 86,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1196,13 +1286,13 @@
     },
     {
       "config": {
-        "grid_size": 1600,
+        "grid_size": 7100,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1210,15 +1300,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 55,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1232,13 +1328,13 @@
     },
     {
       "config": {
-        "grid_size": 2000,
+        "grid_size": 7700,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1246,15 +1342,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 36,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1268,13 +1370,13 @@
     },
     {
       "config": {
-        "grid_size": 2400,
+        "grid_size": 4600,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1282,15 +1384,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 55,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1304,13 +1412,13 @@
     },
     {
       "config": {
-        "grid_size": 1700,
+        "grid_size": 8400,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1318,15 +1426,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 33,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1340,13 +1454,13 @@
     },
     {
       "config": {
-        "grid_size": 1900,
+        "grid_size": 15500,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1354,15 +1468,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 26,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1376,13 +1496,13 @@
     },
     {
       "config": {
-        "grid_size": 1600,
+        "grid_size": 6400,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1390,15 +1510,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 13,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1412,13 +1538,13 @@
     },
     {
       "config": {
-        "grid_size": 2100,
+        "grid_size": 5000,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1426,15 +1552,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 36,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1448,13 +1580,13 @@
     },
     {
       "config": {
-        "grid_size": 2100,
+        "grid_size": 17300,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1462,15 +1594,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 52,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
@@ -1484,13 +1622,13 @@
     },
     {
       "config": {
-        "grid_size": 1500,
+        "grid_size": 18100,
         "interventions": [
           {
             "Lockdown": {
               "lock_down_period": 21,
               "essential_workers_population": 0.1,
-              "at_number_of_infections": 100
+              "at_number_of_infections": 1
             }
           }
         ],
@@ -1498,15 +1636,21 @@
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
-          "last_day": 40,
-          "regular_transmission_rate": 0.025,
+          "last_day": 26,
+          "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,
-          "high_transmission_start_day": 20,
+          "high_transmission_start_day": 6,
           "high_transmission_rate": 0.25,
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "starting_infections": {
+          "exposed": 9,
+          "infected_mild_asymptomatic": 0,
+          "infected_mild_symptomatic": 0,
+          "infected_severe": 0
+        },
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {

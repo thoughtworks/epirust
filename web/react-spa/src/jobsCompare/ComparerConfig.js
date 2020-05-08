@@ -18,14 +18,16 @@
  */
 
 import Select from "react-select";
-import React from "react";
+import React, {useState} from "react";
 import {epiCurves} from "../common/constants";
 
 export function ComparerConfig({selectedJobs, updateSelectedCurves, updateInterventions}) {
-  const selectedInterventions = {}
-  const updateSelectedInterventions = (job, info) => {
-    selectedInterventions[job] = info
+  const [selectedInterventions, updateSelectedInterventions] = useState({})
+
+  const handleUpdateInterventions = (job, info) => {
+    updateSelectedInterventions(prevState => ({...prevState, [job]: info}))
   }
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -60,7 +62,7 @@ export function ComparerConfig({selectedJobs, updateSelectedCurves, updateInterv
           inputId="job1-interventions-filter"
           name="job1-interventions"
           aria-label="tags"
-          onChange={(cs) => updateSelectedInterventions("job1", cs ? cs.map(c => c.value) : [])}
+          onChange={(cs) => handleUpdateInterventions("job1", cs ? cs.map(c => c.value) : [])}
         />
       </div>
       <div className="form-row">
@@ -71,7 +73,7 @@ export function ComparerConfig({selectedJobs, updateSelectedCurves, updateInterv
           inputId="job2-interventions-filter"
           name="job2-interventions"
           aria-label="tags"
-          onChange={(cs) => updateSelectedInterventions("job2", cs ? cs.map(c => c.value) : [])}
+          onChange={(cs) => handleUpdateInterventions("job2", cs ? cs.map(c => c.value) : [])}
         />
       </div>
       <div className="form-row">

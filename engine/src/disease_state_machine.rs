@@ -20,6 +20,7 @@
 use crate::disease::Disease;
 use crate::random_wrapper::RandomWrapper;
 use rand::Rng;
+use crate::constants;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum State {
@@ -137,8 +138,14 @@ impl DiseaseStateMachine {
                     return (0, 1);
                 }
             }
+            State::Infected { symptoms:true, severity: InfectionSeverity::Mild{} } => {
+                if self.infection_day == constants::MILD_INFECTED_LAST_DAY {
+                    self.state = State::Recovered {};
+                    return (0, 1);
+                }
+            }
             State::Infected { .. } => {
-                if self.infection_day == disease.get_disease_last_day() {
+                if self.infection_day == constants::ASYMPTOMATIC_LAST_DAY {
                     self.state = State::Recovered {};
                     return (0, 1);
                 }

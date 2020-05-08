@@ -41,3 +41,7 @@ pub const HOSPITAL_STAFF_PERCENTAGE:f64 = 0.02;
 
 pub const HOME_SIZE: i32 = 2;
 pub const OFFICE_SIZE: i32 = 10;
+
+//TODO: Quick fix, move these field to input parameters
+pub const ASYMPTOMATIC_LAST_DAY: i32 = 9;
+pub const MILD_INFECTED_LAST_DAY: i32 = 12;

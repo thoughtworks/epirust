@@ -8,47 +8,6 @@ Object {
       <li
         class="list-group-item borderless item-less-padding"
       >
-        <a
-          class="no-link-formatting"
-          href="/jobs/a12d34"
-        >
-          <div
-            class="simulation-tab  running"
-          >
-            <div
-              class="card-body card-body-less-padding"
-            >
-              <p
-                class="card-title title"
-              >
-                <code>
-                  a12d34
-                </code>
-              </p>
-              <p
-                class="job-status"
-                data-testid="job-status-a12d34"
-              >
-                In-Progress
-              </p>
-              <ul
-                class="tags small"
-                data-testid="tags"
-              />
-            </div>
-          </div>
-        </a>
-      </li>
-    </div>
-  </body>,
-  "container": <div>
-    <li
-      class="list-group-item borderless item-less-padding"
-    >
-      <a
-        class="no-link-formatting"
-        href="/jobs/a12d34"
-      >
         <div
           class="simulation-tab  running"
         >
@@ -74,7 +33,38 @@ Object {
             />
           </div>
         </div>
-      </a>
+      </li>
+    </div>
+  </body>,
+  "container": <div>
+    <li
+      class="list-group-item borderless item-less-padding"
+    >
+      <div
+        class="simulation-tab  running"
+      >
+        <div
+          class="card-body card-body-less-padding"
+        >
+          <p
+            class="card-title title"
+          >
+            <code>
+              a12d34
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-a12d34"
+          >
+            In-Progress
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          />
+        </div>
+      </div>
     </li>
   </div>,
   "debug": [Function],
@@ -139,47 +129,6 @@ Object {
       <li
         class="list-group-item borderless item-less-padding"
       >
-        <a
-          class="no-link-formatting"
-          href="/jobs/a1d234"
-        >
-          <div
-            class="simulation-tab active shadow running"
-          >
-            <div
-              class="card-body card-body-less-padding"
-            >
-              <p
-                class="card-title title"
-              >
-                <code>
-                  a1d234
-                </code>
-              </p>
-              <p
-                class="job-status"
-                data-testid="job-status-a1d234"
-              >
-                In-Progress
-              </p>
-              <ul
-                class="tags small"
-                data-testid="tags"
-              />
-            </div>
-          </div>
-        </a>
-      </li>
-    </div>
-  </body>,
-  "container": <div>
-    <li
-      class="list-group-item borderless item-less-padding"
-    >
-      <a
-        class="no-link-formatting"
-        href="/jobs/a1d234"
-      >
         <div
           class="simulation-tab active shadow running"
         >
@@ -205,7 +154,38 @@ Object {
             />
           </div>
         </div>
-      </a>
+      </li>
+    </div>
+  </body>,
+  "container": <div>
+    <li
+      class="list-group-item borderless item-less-padding"
+    >
+      <div
+        class="simulation-tab active shadow running"
+      >
+        <div
+          class="card-body card-body-less-padding"
+        >
+          <p
+            class="card-title title"
+          >
+            <code>
+              a1d234
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-a1d234"
+          >
+            In-Progress
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          />
+        </div>
+      </div>
     </li>
   </div>,
   "debug": [Function],

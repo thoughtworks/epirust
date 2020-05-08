@@ -19,23 +19,21 @@
 
 import React, {useEffect, useState} from "react";
 import '../styles/components/jobs/_jobs-list.scss'
-import {useParams} from 'react-router-dom';
 import {LOADING_STATES} from "../common/constants";
 import {JobsContainer} from "./JobsContainer";
 import {LoadingComponent} from "../common/LoadingComponent";
 import {JobsRefresher} from "./JobsRefresher";
 
 export const JobsView = () => {
-  const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING)
-  const [jobs, updateJobs] = useState([])
-  const {id: activeJobId, view} = useParams();
+  const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING);
+  const [jobs, updateJobs] = useState([]);
 
   useEffect(() => {
-    const jobsRefresher = new JobsRefresher(updateJobs, updateLoadingState)
+    const jobsRefresher = new JobsRefresher(updateJobs, updateLoadingState);
     jobsRefresher.start()
   }, []);
 
   return <LoadingComponent loadingState={loadingState}>
-    <JobsContainer activeJobId={activeJobId} currentView={view} jobs={jobs}/>
+    <JobsContainer jobs={jobs}/>
   </LoadingComponent>;
-}
+};

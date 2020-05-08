@@ -145,70 +145,60 @@ exports[`JobsView should render components with updated state on refresh 2`] = `
         <li
           class="list-group-item borderless item-less-padding"
         >
-          <a
-            class="no-link-formatting"
-            href="/jobs/123456dc"
+          <div
+            class="simulation-tab active shadow finished"
           >
             <div
-              class="simulation-tab active shadow finished"
+              class="card-body card-body-less-padding"
             >
-              <div
-                class="card-body card-body-less-padding"
+              <p
+                class="card-title title"
               >
-                <p
-                  class="card-title title"
-                >
-                  <code>
-                    123456dc
-                  </code>
-                </p>
-                <p
-                  class="job-status"
-                  data-testid="job-status-123456dc"
-                >
-                  Finished
-                </p>
-                <ul
-                  class="tags small"
-                  data-testid="tags"
-                />
-              </div>
+                <code>
+                  123456dc
+                </code>
+              </p>
+              <p
+                class="job-status"
+                data-testid="job-status-123456dc"
+              >
+                Finished
+              </p>
+              <ul
+                class="tags small"
+                data-testid="tags"
+              />
             </div>
-          </a>
+          </div>
         </li>
         <li
           class="list-group-item borderless item-less-padding"
         >
-          <a
-            class="no-link-formatting"
-            href="/jobs/567890gv"
+          <div
+            class="simulation-tab  finished"
           >
             <div
-              class="simulation-tab  finished"
+              class="card-body card-body-less-padding"
             >
-              <div
-                class="card-body card-body-less-padding"
+              <p
+                class="card-title title"
               >
-                <p
-                  class="card-title title"
-                >
-                  <code>
-                    567890gv
-                  </code>
-                </p>
-                <p
-                  class="job-status"
-                  data-testid="job-status-567890gv"
-                >
-                  Finished
-                </p>
-                <ul
-                  class="tags small"
-                  data-testid="tags"
-                />
-              </div>
+                <code>
+                  567890gv
+                </code>
+              </p>
+              <p
+                class="job-status"
+                data-testid="job-status-567890gv"
+              >
+                Finished
+              </p>
+              <ul
+                class="tags small"
+                data-testid="tags"
+              />
             </div>
-          </a>
+          </div>
         </li>
       </ul>
     </div>

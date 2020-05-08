@@ -18,19 +18,22 @@
  */
 
 import React from 'react'
-import { Router } from 'react-router-dom'
-import { render } from '@testing-library/react'
-import { createMemoryHistory } from 'history'
+import {Route, Router} from 'react-router-dom'
+import {render} from '@testing-library/react'
+import {createMemoryHistory} from 'history'
 
-export function renderWithRouter(
-  ui,
-  {
-    route = '/',
-    history = createMemoryHistory({ initialEntries: [route] }),
-  } = {}
-) {
+export function renderWithRouter(component, {initialEntries = []}) {
+  let history = createMemoryHistory();
+  history.push(...initialEntries);
+
   return {
-    ...render(<Router history={history}>{ui}</Router>),
-    history,
+    ...render(
+      <Router history={history}>
+        <Route path={"/jobs/:id?/:view?"}>
+          {component}
+        </Route>
+      </Router>
+    ),
+    history
   }
 }

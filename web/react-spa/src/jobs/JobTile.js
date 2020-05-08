@@ -23,7 +23,7 @@ import PropTypes from "prop-types";
 import {Link} from "react-router-dom";
 import Tags from "./Tags";
 
-export const JobTile = ({jobId, status, tags = [], isActive = false}) => {
+export const JobTile = ({jobId, status, tags = [], isActive = false, onClick}) => {
   const statusText = {
     "running": "In-Progress",
     "finished": "Finished",
@@ -33,16 +33,13 @@ export const JobTile = ({jobId, status, tags = [], isActive = false}) => {
 
   return (
     <li className="list-group-item borderless item-less-padding">
-
-      <Link to={`/jobs/${jobId}`} className={'no-link-formatting'}>
-        <div className={`simulation-tab ${isActive ? "active shadow" : ""} ${status}`}>
-          <div className="card-body card-body-less-padding">
-            <p className="card-title title"><code>{jobId}</code></p>
-            <p data-testid={`job-status-${jobId}`} className="job-status">{statusText[status]}</p>
-            <Tags isSmall={true} tags={tags}/>
-          </div>
+      <div onClick={() => onClick(jobId)} className={`simulation-tab ${isActive ? "active shadow" : ""} ${status}`}>
+        <div className="card-body card-body-less-padding">
+          <p className="card-title title"><code>{jobId}</code></p>
+          <p data-testid={`job-status-${jobId}`} className="job-status">{statusText[status]}</p>
+          <Tags isSmall={true} tags={tags}/>
         </div>
-      </Link>
+      </div>
     </li>
   );
 };

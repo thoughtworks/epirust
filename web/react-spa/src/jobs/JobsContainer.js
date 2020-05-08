@@ -20,15 +20,20 @@
 import {Link, Redirect} from "react-router-dom";
 import {Jobs} from "./Jobs";
 import React from "react";
+import {useParams, useLocation} from 'react-router-dom';
 
-export const JobsContainer = ({activeJobId, currentView, jobs}) => {
+export const JobsContainer = ({jobs}) => {
+  const {id: activeJobId, view} = useParams();
+  const location = useLocation();
+
   if (jobs.length <= 0)
     return <div>No Jobs exists, <Link to="/">Create a new Job </Link></div>
-  if (!activeJobId)
-    return (<Redirect to={`/jobs/${jobs[0]._id}/time-series`}/>);
-  if (!currentView)
-    return (<Redirect to={`/jobs/${activeJobId}/time-series`}/>);
 
-  const activeJob = jobs.find(j => j._id === activeJobId)
+  if (!activeJobId)
+    return (<Redirect to={`/jobs/${jobs[0]._id}/time-series${location.search}`}/>);
+  if (!view)
+    return (<Redirect to={`/jobs/${activeJobId}/time-series${location.search}`}/>);
+
+  const activeJob = jobs.find(j => j._id === activeJobId);
   return <Jobs jobs={jobs} activeJob={activeJob}/>
-}
+};

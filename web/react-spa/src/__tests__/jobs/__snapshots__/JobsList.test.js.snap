@@ -110,161 +110,141 @@ exports[`JobsList should render jobs list with no active active job if it is inv
     <li
       class="list-group-item borderless item-less-padding"
     >
-      <a
-        class="no-link-formatting"
-        href="/jobs/12344"
+      <div
+        class="simulation-tab  finished"
       >
         <div
-          class="simulation-tab  finished"
+          class="card-body card-body-less-padding"
         >
-          <div
-            class="card-body card-body-less-padding"
+          <p
+            class="card-title title"
           >
-            <p
-              class="card-title title"
+            <code>
+              12344
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-12344"
+          >
+            Finished
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          >
+            <li
+              data-testid="tag-11"
             >
-              <code>
-                12344
-              </code>
-            </p>
-            <p
-              class="job-status"
-              data-testid="job-status-12344"
-            >
-              Finished
-            </p>
-            <ul
-              class="tags small"
-              data-testid="tags"
-            >
-              <li
-                data-testid="tag-11"
-              >
-                covid-19
-              </li>
-            </ul>
-          </div>
+              covid-19
+            </li>
+          </ul>
         </div>
-      </a>
+      </div>
     </li>
     <li
       class="list-group-item borderless item-less-padding"
     >
-      <a
-        class="no-link-formatting"
-        href="/jobs/12345"
+      <div
+        class="simulation-tab  finished"
       >
         <div
-          class="simulation-tab  finished"
+          class="card-body card-body-less-padding"
         >
-          <div
-            class="card-body card-body-less-padding"
+          <p
+            class="card-title title"
           >
-            <p
-              class="card-title title"
+            <code>
+              12345
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-12345"
+          >
+            Finished
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          >
+            <li
+              data-testid="tag-12"
             >
-              <code>
-                12345
-              </code>
-            </p>
-            <p
-              class="job-status"
-              data-testid="job-status-12345"
-            >
-              Finished
-            </p>
-            <ul
-              class="tags small"
-              data-testid="tags"
-            >
-              <li
-                data-testid="tag-12"
-              >
-                SARS
-              </li>
-            </ul>
-          </div>
+              SARS
+            </li>
+          </ul>
         </div>
-      </a>
+      </div>
     </li>
     <li
       class="list-group-item borderless item-less-padding"
     >
-      <a
-        class="no-link-formatting"
-        href="/jobs/12346"
+      <div
+        class="simulation-tab  finished"
       >
         <div
-          class="simulation-tab  finished"
+          class="card-body card-body-less-padding"
         >
-          <div
-            class="card-body card-body-less-padding"
+          <p
+            class="card-title title"
           >
-            <p
-              class="card-title title"
+            <code>
+              12346
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-12346"
+          >
+            Finished
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          >
+            <li
+              data-testid="tag-11"
             >
-              <code>
-                12346
-              </code>
-            </p>
-            <p
-              class="job-status"
-              data-testid="job-status-12346"
+              covid-19
+            </li>
+            <li
+              data-testid="tag-12"
             >
-              Finished
-            </p>
-            <ul
-              class="tags small"
-              data-testid="tags"
-            >
-              <li
-                data-testid="tag-11"
-              >
-                covid-19
-              </li>
-              <li
-                data-testid="tag-12"
-              >
-                SARS
-              </li>
-            </ul>
-          </div>
+              SARS
+            </li>
+          </ul>
         </div>
-      </a>
+      </div>
     </li>
     <li
       class="list-group-item borderless item-less-padding"
     >
-      <a
-        class="no-link-formatting"
-        href="/jobs/123"
+      <div
+        class="simulation-tab  finished"
       >
         <div
-          class="simulation-tab  finished"
+          class="card-body card-body-less-padding"
         >
-          <div
-            class="card-body card-body-less-padding"
+          <p
+            class="card-title title"
           >
-            <p
-              class="card-title title"
-            >
-              <code>
-                123
-              </code>
-            </p>
-            <p
-              class="job-status"
-              data-testid="job-status-123"
-            >
-              Finished
-            </p>
-            <ul
-              class="tags small"
-              data-testid="tags"
-            />
-          </div>
+            <code>
+              123
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-123"
+          >
+            Finished
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          />
         </div>
-      </a>
+      </div>
     </li>
   </ul>
 </DocumentFragment>
@@ -380,161 +360,141 @@ exports[`JobsList should render jobs with active job if valid active job 1`] = `
     <li
       class="list-group-item borderless item-less-padding"
     >
-      <a
-        class="no-link-formatting"
-        href="/jobs/12344"
+      <div
+        class="simulation-tab  finished"
       >
         <div
-          class="simulation-tab  finished"
+          class="card-body card-body-less-padding"
         >
-          <div
-            class="card-body card-body-less-padding"
+          <p
+            class="card-title title"
           >
-            <p
-              class="card-title title"
+            <code>
+              12344
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-12344"
+          >
+            Finished
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          >
+            <li
+              data-testid="tag-11"
             >
-              <code>
-                12344
-              </code>
-            </p>
-            <p
-              class="job-status"
-              data-testid="job-status-12344"
-            >
-              Finished
-            </p>
-            <ul
-              class="tags small"
-              data-testid="tags"
-            >
-              <li
-                data-testid="tag-11"
-              >
-                covid-19
-              </li>
-            </ul>
-          </div>
+              covid-19
+            </li>
+          </ul>
         </div>
-      </a>
+      </div>
     </li>
     <li
       class="list-group-item borderless item-less-padding"
     >
-      <a
-        class="no-link-formatting"
-        href="/jobs/12345"
+      <div
+        class="simulation-tab active shadow finished"
       >
         <div
-          class="simulation-tab active shadow finished"
+          class="card-body card-body-less-padding"
         >
-          <div
-            class="card-body card-body-less-padding"
+          <p
+            class="card-title title"
           >
-            <p
-              class="card-title title"
+            <code>
+              12345
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-12345"
+          >
+            Finished
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          >
+            <li
+              data-testid="tag-12"
             >
-              <code>
-                12345
-              </code>
-            </p>
-            <p
-              class="job-status"
-              data-testid="job-status-12345"
-            >
-              Finished
-            </p>
-            <ul
-              class="tags small"
-              data-testid="tags"
-            >
-              <li
-                data-testid="tag-12"
-              >
-                SARS
-              </li>
-            </ul>
-          </div>
+              SARS
+            </li>
+          </ul>
         </div>
-      </a>
+      </div>
     </li>
     <li
       class="list-group-item borderless item-less-padding"
     >
-      <a
-        class="no-link-formatting"
-        href="/jobs/12346"
+      <div
+        class="simulation-tab  finished"
       >
         <div
-          class="simulation-tab  finished"
+          class="card-body card-body-less-padding"
         >
-          <div
-            class="card-body card-body-less-padding"
+          <p
+            class="card-title title"
           >
-            <p
-              class="card-title title"
+            <code>
+              12346
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-12346"
+          >
+            Finished
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          >
+            <li
+              data-testid="tag-11"
             >
-              <code>
-                12346
-              </code>
-            </p>
-            <p
-              class="job-status"
-              data-testid="job-status-12346"
+              covid-19
+            </li>
+            <li
+              data-testid="tag-12"
             >
-              Finished
-            </p>
-            <ul
-              class="tags small"
-              data-testid="tags"
-            >
-              <li
-                data-testid="tag-11"
-              >
-                covid-19
-              </li>
-              <li
-                data-testid="tag-12"
-              >
-                SARS
-              </li>
-            </ul>
-          </div>
+              SARS
+            </li>
+          </ul>
         </div>
-      </a>
+      </div>
     </li>
     <li
       class="list-group-item borderless item-less-padding"
     >
-      <a
-        class="no-link-formatting"
-        href="/jobs/123"
+      <div
+        class="simulation-tab  finished"
       >
         <div
-          class="simulation-tab  finished"
+          class="card-body card-body-less-padding"
         >
-          <div
-            class="card-body card-body-less-padding"
+          <p
+            class="card-title title"
           >
-            <p
-              class="card-title title"
-            >
-              <code>
-                123
-              </code>
-            </p>
-            <p
-              class="job-status"
-              data-testid="job-status-123"
-            >
-              Finished
-            </p>
-            <ul
-              class="tags small"
-              data-testid="tags"
-            />
-          </div>
+            <code>
+              123
+            </code>
+          </p>
+          <p
+            class="job-status"
+            data-testid="job-status-123"
+          >
+            Finished
+          </p>
+          <ul
+            class="tags small"
+            data-testid="tags"
+          />
         </div>
-      </a>
+      </div>
     </li>
   </ul>
 </DocumentFragment>

@@ -34,4 +34,4 @@ export const Jobs = ({jobs, activeJob}) => {
       </div>
     </div>
   )
-}
+};

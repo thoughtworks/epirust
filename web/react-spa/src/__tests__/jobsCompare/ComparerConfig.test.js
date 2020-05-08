@@ -16,11 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+import ShallowRenderer from 'react-test-renderer/shallow';
+import {ComparerConfig} from "../../jobsCompare/ComparerConfig";
+import React from "react";
 
-export const LOADING_STATES = Object.freeze({
-  LOADING: 1,
-  FINISHED: 2,
-  FAILED: 3
-})
+describe('Comparer Config', () => {
+  it('should render Select for time-series filer and form for selecting interventions', () => {
+    const renderer = new ShallowRenderer()
+    const selectedJobs = {
+      job1: {simulations: [{_id:"4567uhg"}, {_id: "4567uyhghjn"}]},
+      job2: {simulations: [{_id:"456776tgh"}]}
+    }
+    renderer.render(<ComparerConfig selectedJobs={selectedJobs}/>)
 
-export const epiCurves = ["susceptible", "infected", "hospitalized", "recovered", "deceased"]
+    expect(renderer.getRenderOutput()).toMatchSnapshot()
+  });
+});

@@ -1,0 +1,101 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Comparer Config should render Select for time-series filer and form for selecting interventions 1`] = `
+<div
+  className="comparer-config"
+>
+  <label
+    htmlFor="series-filer"
+  >
+    Select line-graphs to show:
+  </label>
+  <StateManager
+    aria-label="tags"
+    defaultInputValue=""
+    defaultMenuIsOpen={false}
+    defaultValue={null}
+    inputId="series-filer"
+    isMulti={true}
+    name="tags"
+    onChange={[Function]}
+    options={
+      Array [
+        Object {
+          "label": "susceptible",
+          "value": "susceptible",
+        },
+        Object {
+          "label": "infected",
+          "value": "infected",
+        },
+        Object {
+          "label": "hospitalized",
+          "value": "hospitalized",
+        },
+        Object {
+          "label": "recovered",
+          "value": "recovered",
+        },
+        Object {
+          "label": "deceased",
+          "value": "deceased",
+        },
+      ]
+    }
+  />
+  <form
+    onSubmit={[Function]}
+  >
+    <label>
+      Select interventions to show
+    </label>
+    Job 1:
+    <StateManager
+      aria-label="tags"
+      defaultInputValue=""
+      defaultMenuIsOpen={false}
+      defaultValue={null}
+      inputId="job1-interventions-filer"
+      isMulti={true}
+      name="job1-interventions"
+      onChange={[Function]}
+      options={
+        Array [
+          Object {
+            "label": "4567uhg",
+            "value": "4567uhg",
+          },
+          Object {
+            "label": "4567uyhghjn",
+            "value": "4567uyhghjn",
+          },
+        ]
+      }
+    />
+    Job 2:
+    <StateManager
+      aria-label="tags"
+      defaultInputValue=""
+      defaultMenuIsOpen={false}
+      defaultValue={null}
+      inputId="job1-interventions-filer"
+      isMulti={true}
+      name="job2-interventions"
+      onChange={[Function]}
+      options={
+        Array [
+          Object {
+            "label": "456776tgh",
+            "value": "456776tgh",
+          },
+        ]
+      }
+    />
+    <button
+      className="btn btn-primary"
+    >
+      Show Interventions
+    </button>
+  </form>
+</div>
+`;

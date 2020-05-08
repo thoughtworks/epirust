@@ -25,15 +25,15 @@ import {LOADING_STATES} from "../common/constants";
 import Graph from "../time-series/LineGraph";
 import GraphUpdater from "./GraphUpdater";
 import {reduceStatus} from "../jobs/JobTransformer";
-import Select from "react-select";
-
-const epiCurves = ["susceptible", "infected", "hospitalized", "recovered", "deceased"]
+import {epiCurves} from "../common/constants";
+import {ComparerConfig} from "./ComparerConfig";
 
 export default function JobsCompare() {
   const [jobs, updateJobs] = useState([])
   const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING)
   const [graphData, updateGraphData] = useState([])
   const [selectedCurves, updateSelectedCurves] = useState([])
+  const [selectedJobs, updateSelectedJobs] = useState({})
 
   useEffect(() => {
     get('/jobs')
@@ -51,6 +51,10 @@ export default function JobsCompare() {
 
   const onCompare = (selectedJobs) => {
     updateGraphData([])
+    updateSelectedJobs({
+      job1: jobs.find(x => x._id === selectedJobs.job1),
+      job2: jobs.find(x => x._id === selectedJobs.job2)
+    })
     new GraphUpdater(updateBuffer, selectedJobs.job1, selectedJobs.job2).start()
   }
 
@@ -74,7 +78,7 @@ export default function JobsCompare() {
       {graphData.length > 0 && (
         <div className="row">
           <div className="col-2">
-            <ComparerConfig updateSelectedCurves={updateSelectedCurves}/>
+            <ComparerConfig updateSelectedCurves={updateSelectedCurves} selectedJobs={selectedJobs}/>
           </div>
           <div className="col-10">
             <div className="jobs-compare-chart">
@@ -107,19 +111,4 @@ const rowToCsv = (row) => {
 
 const makeCSV = (graphData) => {
   return graphData.map(d => ([d.hour, ...rowToCsv(d.job1), ...rowToCsv(d.job2)]))
-}
-
-
-function ComparerConfig({updateSelectedCurves}) {
-  return <div className="comparer-config">
-    <label htmlFor="series-filer">Select line-graphs to show:</label>
-    <Select
-      options={epiCurves.map(e => ({value: e, label: e}))}
-      isMulti
-      inputId="series-filer"
-      name="tags"
-      aria-label="tags"
-      onChange={(cs) => updateSelectedCurves(cs ? cs.map(c => c.value) : [])}
-    />
-  </div>
 }

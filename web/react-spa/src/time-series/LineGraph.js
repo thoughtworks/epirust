@@ -83,5 +83,5 @@ export default function Graph({ dataBuffer, enableExport = false, annotations = 
 Graph.propTypes = {
     enableExport: PropTypes.bool,
     annotations: PropTypes.arrayOf(PropTypes.object),
-    dataBuffer: PropTypes.string,
+    dataBuffer: PropTypes.oneOfType([PropTypes.string, PropTypes.array])
 }

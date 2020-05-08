@@ -29,8 +29,10 @@ export function ComparerConfig({selectedJobs, updateSelectedCurves, updateInterv
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    console.log(selectedInterventions)
-    updateInterventions(selectedInterventions)
+    const interventionsToAsk = []
+    if(selectedInterventions.job1) interventionsToAsk.push(...selectedInterventions.job1)
+    if(selectedInterventions.job2) interventionsToAsk.push(...selectedInterventions.job2)
+    updateInterventions(interventionsToAsk)
   }
 
   return <div className="comparer-config">
@@ -50,7 +52,7 @@ export function ComparerConfig({selectedJobs, updateSelectedCurves, updateInterv
       <Select
         options={selectedJobs.job1.simulations.map(s => ({value: s._id, label: s._id}))}
         isMulti
-        inputId="job1-interventions-filer"
+        inputId="job1-interventions-filter"
         name="job1-interventions"
         aria-label="tags"
         onChange={(cs) => updateSelectedInterventions("job1", cs ? cs.map(c => c.value) : [])}
@@ -60,7 +62,7 @@ export function ComparerConfig({selectedJobs, updateSelectedCurves, updateInterv
       <Select
         options={selectedJobs.job2.simulations.map(s => ({value: s._id, label: s._id}))}
         isMulti
-        inputId="job1-interventions-filer"
+        inputId="job2-interventions-filter"
         name="job2-interventions"
         aria-label="tags"
         onChange={(cs) => updateSelectedInterventions("job2", cs ? cs.map(c => c.value) : [])}

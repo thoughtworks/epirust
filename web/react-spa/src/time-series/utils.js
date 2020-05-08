@@ -32,10 +32,10 @@ export function parseAnnotations(interventions, hour) {
     })
 }
 
-export function modelAnnotation({ x, label, className }, i) {
+export function modelAnnotation({ x, label, className, series }, i) {
     const newLocal = i % 2 === 0;
     return {
-        series: 'susceptible',
+        series: series ? series : 'susceptible',
         x,
         shortText: label,
         text: `${label} at ${x}`,

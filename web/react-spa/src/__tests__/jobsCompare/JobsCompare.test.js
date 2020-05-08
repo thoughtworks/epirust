@@ -32,7 +32,10 @@ jest.mock('../../jobsCompare/GraphUpdater')
 jest.mock('../../jobs/JobTransformer')
 
 describe('Jobs Compare', function () {
-  const jobs = [{_id: 1, status: 'finished'}, {_id: 2, status: 'finished'}];
+  const jobs = [
+    {_id: '1', status: 'finished', simulations: [{_id: "345678iugf"}]},
+    {_id: '2', status: 'finished', simulations: [{_id: "45678iugjj"}]}
+  ];
 
   it('should render with default state', function () {
     const renderer = new ShallowRenderer();

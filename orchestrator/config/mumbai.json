@@ -657,7 +657,15 @@
     {
       "config": {
         "grid_size": 6800,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -691,7 +699,15 @@
     {
       "config": {
         "grid_size": 1600,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -725,7 +741,15 @@
     {
       "config": {
         "grid_size": 1000,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -759,7 +783,15 @@
     {
       "config": {
         "grid_size": 2500,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -793,7 +825,15 @@
     {
       "config": {
         "grid_size": 2700,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -827,7 +867,15 @@
     {
       "config": {
         "grid_size": 4200,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -861,7 +909,15 @@
     {
       "config": {
         "grid_size": 5400,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -895,7 +951,15 @@
     {
       "config": {
         "grid_size": 3500,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -929,7 +993,15 @@
     {
       "config": {
         "grid_size": 3000,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -963,7 +1035,15 @@
     {
       "config": {
         "grid_size": 5700,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -997,7 +1077,15 @@
     {
       "config": {
         "grid_size": 3600,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1031,7 +1119,15 @@
     {
       "config": {
         "grid_size": 6400,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1065,7 +1161,15 @@
     {
       "config": {
         "grid_size": 6300,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1099,7 +1203,15 @@
     {
       "config": {
         "grid_size": 3900,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1133,7 +1245,15 @@
     {
       "config": {
         "grid_size": 8500,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1167,7 +1287,15 @@
     {
       "config": {
         "grid_size": 7100,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1201,7 +1329,15 @@
     {
       "config": {
         "grid_size": 7700,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1235,7 +1371,15 @@
     {
       "config": {
         "grid_size": 4600,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1269,7 +1413,15 @@
     {
       "config": {
         "grid_size": 8400,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1303,7 +1455,15 @@
     {
       "config": {
         "grid_size": 15500,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1337,7 +1497,15 @@
     {
       "config": {
         "grid_size": 6400,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1371,7 +1539,15 @@
     {
       "config": {
         "grid_size": 5000,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1405,7 +1581,15 @@
     {
       "config": {
         "grid_size": 17300,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,
@@ -1439,7 +1623,15 @@
     {
       "config": {
         "grid_size": 18100,
-        "interventions": [],
+        "interventions": [
+          {
+            "Lockdown": {
+              "lock_down_period": 21,
+              "essential_workers_population": 0.1,
+              "at_number_of_infections": 1
+            }
+          }
+        ],
         "disease": {
           "death_rate": 0.035,
           "percentage_asymptomatic_population": 0.3,

@@ -112,14 +112,14 @@
 
   /* For y2-axis label */
   .dygraph-label-rotate-right {
-    left: -340px !important;
+    //left: -320px !important;
     text-align: center;
     /* See http://caniuse.com/#feat=transforms2d */
-    transform: rotate(-90deg);
-    -webkit-transform: rotate(-90deg);
-    -moz-transform: rotate(-90deg);
-    -o-transform: rotate(-90deg);
-    -ms-transform: rotate(-90deg);
+    transform: translateX(-10px) rotate(-90deg);
+    -webkit-transform: translateX(-10px) rotate(-90deg);
+    -moz-transform: translateX(-10px) rotate(-90deg);
+    -o-transform: translateX(-10px) rotate(-90deg);
+    -ms-transform: translateX(-10px) rotate(-90deg);
   }
 
   .graph-wrap {

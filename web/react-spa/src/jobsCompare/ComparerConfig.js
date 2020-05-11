@@ -55,7 +55,7 @@ export function ComparerConfig({selectedJobs, updateSelectedCurves, updateInterv
     <form onSubmit={handleSubmit} className="user-inputs">
       <div className="form-row">
         <h5><b><label>Select interventions:</label></b></h5>
-        <label>Job 1:</label>
+        <label htmlFor="job1-interventions-filter">Job 1:</label>
         <Select
           options={selectedJobs.job1.simulations.map(s => ({value: s._id, label: s._id}))}
           isMulti
@@ -66,7 +66,7 @@ export function ComparerConfig({selectedJobs, updateSelectedCurves, updateInterv
         />
       </div>
       <div className="form-row">
-        Job 2:
+        <label htmlFor="job2-interventions-filter">Job 2:</label>
         <Select
           options={selectedJobs.job2.simulations.map(s => ({value: s._id, label: s._id}))}
           isMulti

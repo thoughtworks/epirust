@@ -18,42 +18,38 @@
  */
 
 import React from "react";
-import ShallowRenderer from 'react-test-renderer/shallow';
-import {fireEvent, render} from '@testing-library/react'
+import {render} from '@testing-library/react'
 import ComparerDropdowns from "../../jobsCompare/ComparerDropdowns";
+import userEvent from "@testing-library/user-event";
 
 describe('Comparer Dropdowns', () => {
   const testJobs = [{_id: 'id1'}, {_id: 'id2'}];
 
   it('should render inputs to select jobs to compare', () => {
-    const renderer = new ShallowRenderer()
-    renderer.render(<ComparerDropdowns jobs={testJobs}/>);
-
-    expect(renderer.getRenderOutput()).toMatchSnapshot()
+    const {asFragment} = render(<ComparerDropdowns jobs={testJobs}/>);
+    expect(asFragment()).toMatchSnapshot()
   });
 
   it('should return selected jobs when compare button clicked', () => {
     const mockOnCompare = jest.fn()
-    const {container} = render(<ComparerDropdowns jobs={testJobs} onCompare={mockOnCompare}/>);
+    const {getByRole, getByLabelText} = render(<ComparerDropdowns jobs={testJobs} onCompare={mockOnCompare}/>);
 
-    const dropdowns = container.querySelectorAll('.form-control');
-    fireEvent.change(dropdowns[0], {target: {value: 'id1'}})
-    fireEvent.change(dropdowns[1], {target: {value: 'id2'}})
-    fireEvent.click(container.querySelector('button'))
+    userEvent.selectOptions(getByLabelText('Job 1'), ['id1']);
+    userEvent.selectOptions(getByLabelText('Job 2'), ['id2']);
+    userEvent.click(getByRole('button', /Compare/));
 
     expect(mockOnCompare).toHaveBeenCalledTimes(1)
     expect(mockOnCompare).toHaveBeenCalledWith({job1: 'id1', job2: 'id2'})
   });
 
   it('should show error message if both the selected jobs are same on compare click', () => {
-    const {container} = render(<ComparerDropdowns jobs={testJobs}/>);
+    const {queryByText, getByRole, getByLabelText} = render(<ComparerDropdowns jobs={testJobs}/>);
 
-    const dropdowns = container.querySelectorAll('.form-control');
-    fireEvent.change(dropdowns[0], {target: {value: 'id1'}})
-    fireEvent.change(dropdowns[1], {target: {value: 'id1'}})
-    fireEvent.click(container.querySelector('button'))
+    userEvent.selectOptions(getByLabelText('Job 1'), ['id1']);
+    userEvent.selectOptions(getByLabelText('Job 2'), ['id1']);
+    userEvent.click(getByRole('button', /Compare/));
 
-    expect(container.querySelector('.error-message').textContent).toBe("Can't compare same jobs!")
+    expect(queryByText("Can't compare same jobs!")).toBeInTheDocument()
   });
 });
 

@@ -21,135 +21,42 @@ import React, {useEffect, useState} from "react";
 import ComparerDropdowns from "./ComparerDropdowns";
 import {get} from "../common/apiCall";
 import {LoadingComponent} from "../common/LoadingComponent";
-import {epiCurves, LOADING_STATES} from "../common/constants";
-import Graph from "../time-series/LineGraph";
-import GraphUpdater from "./GraphUpdater";
+import {LOADING_STATES} from "../common/constants";
 import {reduceStatus} from "../jobs/JobTransformer";
-import {ComparerConfig} from "./ComparerConfig";
-import {parseAnnotations} from "../time-series/utils";
+import {CompareView} from "./CompareView";
 
 export default function JobsCompare() {
-  const [jobs, updateJobs] = useState([])
-  const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING)
-  const [graphData, updateGraphData] = useState([])
-  const [selectedCurves, updateSelectedCurves] = useState([])
-  const [selectedJobs, updateSelectedJobs] = useState({})
-  const [annotations, updateAnnotations] = useState([]);
+  const [jobs, updateJobs] = useState([]);
+  const [loadingState, updateLoadingState] = useState(LOADING_STATES.LOADING);
+  const [selectedJobs, updateSelectedJobs] = useState(null);
 
   useEffect(() => {
     get('/jobs')
       .then((res) => res.json())
       .then((jobsResponse) => {
-        updateJobs(jobsResponse.map(reduceStatus).filter(j => j.status === 'finished'))
+        updateJobs(jobsResponse.map(reduceStatus).filter(j => j.status === 'finished'));
         updateLoadingState(LOADING_STATES.FINISHED)
       })
       .catch(() => updateLoadingState(LOADING_STATES.FAILED))
-  }, [])
-
-  const updateBuffer = (buffer) => {
-    updateGraphData(prevData => prevData.concat(buffer))
-  }
-
-  function clearGraphDataAndConfig() {
-    updateGraphData([])
-    updateAnnotations([])
-    updateSelectedCurves([])
-  }
+  }, []);
 
   const onCompare = (jobPair) => {
-    clearGraphDataAndConfig();
-
     updateSelectedJobs({
       job1: jobs.find(x => x._id === jobPair.job1),
       job2: jobs.find(x => x._id === jobPair.job2)
     })
-    new GraphUpdater(updateBuffer, jobPair.job1, jobPair.job2).start()
-  }
+  };
 
-  const onUpdateInterventions = (interventionsAskedFor) => {
-    const series = selectedCurves.length > 0 ? `${selectedCurves[0]}_job1` : "susceptible_job1"
-    function getInterventionsForSimulation(simulationId) {
-      return get(`/simulations/${simulationId}/interventions`)
-        .then(j => j.json())
-        .then(res => {
-          return res
-            .map(i => parseAnnotations(i.interventions, i.hour))
-            .reduce((acc, cur) => acc.concat(cur), [])
-            .map(i => ({...i, series}))
-        })
-    }
-
-    Promise.all(interventionsAskedFor.map(getInterventionsForSimulation))
-      .then(multiParsedAnnotations => {
-        const annotations = multiParsedAnnotations
-          .reduce((acc, cur) => acc.concat(cur), [])
-          .sort((a, b) => a.x < b.x)
-        updateAnnotations(annotations)
-      })
-      .catch(err => {
-        console.log("Failed to load all interventions", err)
-      })
-  }
-
-  const handleSelectedCurvesUpdate = (curves) => {
-    if(curves.length > 0) {
-      updateAnnotations(prevState => prevState.map(x => ({...x, series: `${curves[0]}_job1`})))
-    }
-    updateSelectedCurves(curves)
-  }
-
-  return <div>
-    <LoadingComponent loadingState={loadingState}>
-      <div className='row justify-content-md-center'>
-        <div className='col-7'>
-          <ComparerDropdowns jobs={jobs} onCompare={onCompare}/>
-        </div>
-      </div>
-      {graphData.length > 0 && (
-        <div className="row">
-          <div className="col-2">
-            <ComparerConfig selectedJobs={selectedJobs} updateSelectedCurves={handleSelectedCurvesUpdate}
-                            updateInterventions={onUpdateInterventions}/>
-          </div>
-          <div className="col-10">
-            <div className="jobs-compare-chart">
-              <Graph
-                dataBuffer={makeCSV(graphData)}
-                dygraphsOptions={dygraphOptions()}
-                visibility={visibility(selectedCurves)}
-                annotations={annotations}
-              />
-            </div>
+  return (
+    <div>
+      <LoadingComponent loadingState={loadingState}>
+        <div className='row justify-content-md-center'>
+          <div className='col-7'>
+            <ComparerDropdowns jobs={jobs} onCompare={onCompare}/>
           </div>
         </div>
-      )}
-    </LoadingComponent>
-  </div>
-}
-
-const dygraphOptions = () => ({
-  colors: ["#0A1045", "#00C2D1", "#F9E900", "#F6AF65", "#ED33B9",
-    "#8588a2", "#80e1e8", "#fcf480", "#fbd7b2", "#f699dc"],
-  labels: ["hour",
-    ...epiCurves.map(e => `${e}_job1`),
-    ...epiCurves.map(e => `${e}_job2`),
-  ]
-})
-
-const visibility = (curvesSelected) => {
-  const curves = [...epiCurves.map(e => `${e}_job1`), ...epiCurves.map(e => `${e}_job2`)];
-  if (curvesSelected.length > 0) {
-    return curves.map(l => curvesSelected.some(cs => l.includes(cs)))
-  }
-  return curves.map(_ => true)
-}
-
-const rowToCsv = (row) => {
-  if (row) return [[row.susceptible, row.susceptible_std], [row.infected, row.infected_std],
-    [row.hospitalized, row.hospitalized_std], [row.recovered, row.recovered_std], [row.deceased, row.deceased_std]]
-  return [[], [], [], [], []]
-}
-
-const makeCSV = (graphData) => {
-  return graphData.map(d => ([d.hour, ...rowToCsv(d.job1), ...rowToCsv(d.job2)]))
+        {selectedJobs && <CompareView selectedJobs={selectedJobs}/>}
+      </LoadingComponent>
+    </div>
+  )
 }

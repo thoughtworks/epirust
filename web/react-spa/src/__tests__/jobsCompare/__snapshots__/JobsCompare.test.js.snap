@@ -269,7 +269,9 @@ exports[`Jobs Compare should update graph when graph updater updates value 1`] =
                   </label>
                 </b>
               </h5>
-              <label>
+              <label
+                for="job1-interventions-filter"
+              >
                 Job 1:
               </label>
               <div
@@ -348,7 +350,11 @@ exports[`Jobs Compare should update graph when graph updater updates value 1`] =
             <div
               class="form-row"
             >
-              Job 2:
+              <label
+                for="job2-interventions-filter"
+              >
+                Job 2:
+              </label>
               <div
                 class=" css-2b097c-container"
               >

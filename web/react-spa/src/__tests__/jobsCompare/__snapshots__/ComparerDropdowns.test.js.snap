@@ -1,56 +1,79 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Comparer Dropdowns should render inputs to select jobs to compare 1`] = `
-<div
-  className="comparer-dropdowns container"
->
-  <form
-    className="row"
-    onSubmit={[Function]}
+<DocumentFragment>
+  <div
+    class="comparer-dropdowns container"
   >
-    <div
-      className="col-5"
+    <form
+      class="row"
     >
-      <JobsDropdown
-        jobs={
-          Array [
-            Object {
-              "_id": "id1",
-            },
-            Object {
-              "_id": "id2",
-            },
-          ]
-        }
-        label="Job 1"
-      />
-    </div>
-    <div
-      className="col-5"
-    >
-      <JobsDropdown
-        jobs={
-          Array [
-            Object {
-              "_id": "id1",
-            },
-            Object {
-              "_id": "id2",
-            },
-          ]
-        }
-        label="Job 2"
-      />
-    </div>
-    <div
-      className="col-2 margin-top-auto"
-    >
-      <button
-        className="btn btn-primary"
+      <div
+        class="col-5"
       >
-        Compare
-      </button>
-    </div>
-  </form>
-</div>
+        <label
+          for="job1"
+        >
+          Job 1
+        </label>
+        <select
+          class="form-control"
+          id="job1"
+          name="job1"
+          required=""
+        >
+          <option
+            disabled=""
+            value=""
+          >
+             -- select a job -- 
+          </option>
+          <option>
+            id1
+          </option>
+          <option>
+            id2
+          </option>
+        </select>
+      </div>
+      <div
+        class="col-5"
+      >
+        <label
+          for="job2"
+        >
+          Job 2
+        </label>
+        <select
+          class="form-control"
+          id="job2"
+          name="job2"
+          required=""
+        >
+          <option
+            disabled=""
+            value=""
+          >
+             -- select a job -- 
+          </option>
+          <option>
+            id1
+          </option>
+          <option>
+            id2
+          </option>
+        </select>
+      </div>
+      <div
+        class="col-2 margin-top-auto"
+      >
+        <button
+          class="btn btn-primary"
+        >
+          Compare
+        </button>
+      </div>
+    </form>
+  </div>
+</DocumentFragment>
 `;

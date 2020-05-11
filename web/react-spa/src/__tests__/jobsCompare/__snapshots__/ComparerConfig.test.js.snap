@@ -69,7 +69,9 @@ exports[`Comparer Config should render Select for time-series filer and form for
           </label>
         </b>
       </h5>
-      <label>
+      <label
+        htmlFor="job1-interventions-filter"
+      >
         Job 1:
       </label>
       <StateManager
@@ -98,7 +100,11 @@ exports[`Comparer Config should render Select for time-series filer and form for
     <div
       className="form-row"
     >
-      Job 2:
+      <label
+        htmlFor="job2-interventions-filter"
+      >
+        Job 2:
+      </label>
       <StateManager
         aria-label="tags"
         defaultInputValue=""

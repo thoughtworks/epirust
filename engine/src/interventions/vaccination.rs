@@ -20,7 +20,7 @@
 use std::collections::HashMap;
 
 use crate::config::Config;
-use crate::interventions::Intervention;
+use crate::interventions::InterventionConfig;
 use crate::listeners::events::counts::Counts;
 use crate::interventions::intervention_type::InterventionType;
 
@@ -52,7 +52,7 @@ impl VaccinateIntervention {
         let mut vaccinations: HashMap<i32, f64> = HashMap::new();
         config.get_interventions().iter().filter_map(|i| {
             match i {
-                Intervention::Vaccinate(v) => Some(v),
+                InterventionConfig::Vaccinate(v) => Some(v),
                 _ => None,
             }
         }).for_each(|v| {

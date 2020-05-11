@@ -47,6 +47,7 @@ use crate::travel_plan::{EngineTravelPlan, TravellersByRegion, Traveller};
 use futures::join;
 use crate::listeners::travel_counter::TravelCounter;
 use crate::listeners::intervention_reporter::InterventionReporter;
+use crate::interventions::Interventions;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -79,7 +80,7 @@ impl Epidemiology {
         let zero_active_cases = row.get_exposed() == 0 && row.get_infected() == 0 && row.get_hospitalized() == 0;
         match run_mode {
             RunMode::MultiEngine { .. } => {
-                if lock_down_details.is_locked_down() && zero_active_cases{
+                if lock_down_details.is_locked_down() && zero_active_cases {
                     lock_down_details.set_zero_infection_hour(row.get_hour());
                     println!("last_infection_hour {}", lock_down_details.zero_infection_hour);
                 }
@@ -130,6 +131,55 @@ impl Epidemiology {
         Counts::new(s, e, i)
     }
 
+    fn init_interventions(&mut self, config: &Config, rng: &mut RandomWrapper) -> Interventions {
+        let vaccinations = VaccinateIntervention::init(config);
+        let lock_down_details = LockdownIntervention::init(config);
+        let hospital_intervention = BuildNewHospital::init(config);
+        let essential_workers_population = lock_down_details.get_essential_workers_percentage();
+
+        for (_, agent) in self.agent_location_map.iter_mut() {
+            agent.assign_essential_worker(essential_workers_population, rng);
+        }
+        Interventions {
+            vaccinate: vaccinations,
+            lockdown: lock_down_details,
+            build_new_hospital: hospital_intervention,
+        }
+    }
+
+    fn process_interventions(interventions: &mut Interventions, counts_at_hr: &Counts,
+                             listeners: &mut Listeners, rng: &mut RandomWrapper, write_buffer: &mut AgentLocationMap,
+                             config: &Config, grid: &mut Grid) {
+        Epidemiology::apply_vaccination_intervention(
+            &interventions.vaccinate,
+            counts_at_hr,
+            write_buffer,
+            rng,
+            listeners,
+        );
+
+        if interventions.lockdown.should_apply(&counts_at_hr) {
+            interventions.lockdown.apply();
+            Epidemiology::lock_city(counts_at_hr.get_hour(), write_buffer);
+            listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
+        }
+        if interventions.lockdown.should_unlock(&counts_at_hr) {
+            Epidemiology::unlock_city(counts_at_hr.get_hour(), write_buffer);
+            interventions.lockdown.unapply();
+            listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
+        }
+
+        interventions.build_new_hospital.counts_updated(&counts_at_hr);
+        if interventions.build_new_hospital.should_apply(counts_at_hr) {
+            info!("Increasing the hospital size");
+            grid.increase_hospital_size(config.get_grid_size());
+            interventions.build_new_hospital.apply();
+
+            listeners.grid_updated(grid);
+            listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.build_new_hospital);
+        }
+    }
+
     pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
@@ -139,14 +189,7 @@ impl Epidemiology {
 
         self.write_agent_location_map.init_with_capacity(population as usize);
 
-        let vaccinations = VaccinateIntervention::init(config);
-        let mut lock_down_details = LockdownIntervention::init(config);
-        let mut hospital_intervention = BuildNewHospital::init(config);
-        let essential_workers_population = lock_down_details.get_essential_workers_percentage();
-
-        for (_, agent) in self.agent_location_map.iter_mut() {
-            agent.assign_essential_worker(essential_workers_population, &mut rng);
-        }
+        let mut interventions = self.init_interventions(config, &mut rng);
 
         listeners.grid_updated(&self.grid);
         let mut producer = KafkaProducer::new();
@@ -167,9 +210,7 @@ impl Epidemiology {
         let mut n_incoming = 0;
         let mut n_outgoing = 0;
 
-        info!("S: {}, E:{}, I: {}, H: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_exposed(),
-              counts_at_hr.get_infected(), counts_at_hr.get_hospitalized(), counts_at_hr.get_recovered(),
-              counts_at_hr.get_deceased());
+        counts_at_hr.log();
         for simulation_hour in 1..config.get_hours() {
             let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour).await;
             match &tick {
@@ -200,15 +241,6 @@ impl Epidemiology {
             }
             engine_travel_plan.set_current_population(read_buffer_reference.current_population());
 
-            if hospital_intervention.should_apply(&counts_at_hr) {
-                info!("Increasing the hospital size");
-                self.grid.increase_hospital_size(config.get_grid_size());
-                hospital_intervention.apply();
-
-                listeners.grid_updated(&self.grid);
-                listeners.intervention_applied(simulation_hour, &hospital_intervention);
-            }
-
             let grid = &self.grid;
             let disease = &self.disease;
 
@@ -231,41 +263,20 @@ impl Epidemiology {
             write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, &mut counts_at_hr, &mut rng);
 
             listeners.counts_updated(counts_at_hr);
-            hospital_intervention.counts_updated(&counts_at_hr);
+            Epidemiology::process_interventions(&mut interventions, &counts_at_hr, &mut listeners,
+                                       &mut rng, write_buffer_reference, config, &mut self.grid);
 
-            if lock_down_details.should_apply(&counts_at_hr) {
-                lock_down_details.apply();
-                Epidemiology::lock_city(simulation_hour, &mut write_buffer_reference);
-                listeners.intervention_applied(simulation_hour, &lock_down_details)
-            }
-
-            if lock_down_details.should_unlock(&counts_at_hr) {
-                Epidemiology::unlock_city(simulation_hour, &mut write_buffer_reference);
-                lock_down_details.unapply();
-                listeners.intervention_applied(simulation_hour, &lock_down_details)
-            }
-
-            Epidemiology::apply_vaccination_intervention(
-                &vaccinations,
-                &counts_at_hr,
-                &mut write_buffer_reference,
-                &mut rng,
-                &mut listeners,
-                simulation_hour,
-            );
-
-            if Epidemiology::stop_simulation(&mut lock_down_details, &run_mode, counts_at_hr) {
+            if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, counts_at_hr) {
                 break;
             }
 
-            Epidemiology::send_ack(run_mode, &mut producer, counts_at_hr, simulation_hour, &lock_down_details).await;
+            Epidemiology::send_ack(run_mode, &mut producer, counts_at_hr, simulation_hour, &interventions.lockdown).await;
 
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
                       simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
                       simulation_hour, config.get_hours());
-                info!("S: {}, E:{}, I: {}, H: {}, R: {}, D: {}", counts_at_hr.get_susceptible(), counts_at_hr.get_exposed(), counts_at_hr.get_infected(),
-                      counts_at_hr.get_hospitalized(), counts_at_hr.get_recovered(), counts_at_hr.get_deceased());
+                counts_at_hr.log();
                 info!("Incoming: {}, Outgoing: {}, Current Population: {}", n_incoming, n_outgoing,
                       write_buffer_reference.current_population());
                 n_incoming = 0;
@@ -359,12 +370,12 @@ impl Epidemiology {
 
     fn apply_vaccination_intervention(vaccinations: &VaccinateIntervention, counts: &Counts,
                                       write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper,
-                                      listeners: &mut Listeners, simulation_hour: i32) {
+                                      listeners: &mut Listeners) {
         match vaccinations.get_vaccination_percentage(counts) {
             Some(vac_percent) => {
                 info!("Vaccination");
                 Epidemiology::vaccinate(*vac_percent, write_buffer_reference, rng);
-                listeners.intervention_applied(simulation_hour, vaccinations)
+                listeners.intervention_applied(counts.get_hour(), vaccinations)
             }
             _ => {}
         };
@@ -435,7 +446,7 @@ mod tests {
     use crate::config::AutoPopulation;
     use crate::geography::Area;
     use crate::geography::Point;
-    use crate::interventions::Intervention;
+    use crate::interventions::InterventionConfig;
     use crate::interventions::vaccination::VaccinateConfig;
 
     use super::*;
@@ -453,7 +464,7 @@ mod tests {
             percent: 0.2,
         };
         let config = Config::new(Population::Auto(pop), disease, vec![], 100, 10000,
-                                 vec![Intervention::Vaccinate(vac)], None);
+                                 vec![InterventionConfig::Vaccinate(vac)], None);
         let epidemiology: Epidemiology = Epidemiology::new(&config, "id".to_string());
         let expected_housing_area = Area::new(Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);

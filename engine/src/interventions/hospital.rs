@@ -18,7 +18,7 @@
  */
 
 use crate::listeners::events::counts::Counts;
-use crate::interventions::Intervention;
+use crate::interventions::InterventionConfig;
 use crate::interventions::intervention_type::InterventionType;
 use crate::config::Config;
 
@@ -37,7 +37,7 @@ impl BuildNewHospital {
     pub fn get_hospital_intervention(config: &Config) -> Option<BuildNewHospitalConfig> {
         return config.get_interventions().iter().filter_map(|i| {
             match i {
-                Intervention::BuildNewHospital(x) => Some(x),
+                InterventionConfig::BuildNewHospital(x) => Some(x),
                 _ => None
             }
         }).next().copied();

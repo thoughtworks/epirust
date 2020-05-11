@@ -93,6 +93,12 @@ impl Counts {
     pub fn increment_hour(&mut self) {
         self.hour += 1;
     }
+
+    pub fn log(&self) {
+        info!("S: {}, E:{}, I: {}, H: {}, R: {}, D: {}", self.get_susceptible(), self.get_exposed(),
+              self.get_infected(), self.get_hospitalized(), self.get_recovered(),
+              self.get_deceased())
+    }
 }
 
 

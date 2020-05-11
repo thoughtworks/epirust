@@ -21,7 +21,7 @@ use std::error::Error;
 use std::fs::File;
 
 use crate::disease::{Disease, DiseaseOverride};
-use crate::interventions::{Intervention};
+use crate::interventions::{InterventionConfig};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Config {
@@ -31,7 +31,7 @@ pub struct Config {
     disease_overrides: Vec<DiseaseOverride>,
     grid_size: i32,
     hours: i32,
-    interventions: Vec<Intervention>,
+    interventions: Vec<InterventionConfig>,
     output_file: Option<String>,
     #[serde(default)]
     enable_citizen_state_messages: bool,
@@ -64,7 +64,7 @@ impl Config {
         self.hours
     }
 
-    pub fn get_interventions(&self) -> Vec<Intervention> {
+    pub fn get_interventions(&self) -> Vec<InterventionConfig> {
         self.interventions.clone()
     }
 
@@ -78,7 +78,7 @@ impl Config {
 
     #[cfg(test)]
     pub fn new(population: Population, disease: Disease, disease_overrides: Vec<DiseaseOverride>,
-               grid: i32, hours: i32, interventions: Vec<Intervention>, output_file: Option<String>)
+               grid: i32, hours: i32, interventions: Vec<InterventionConfig>, output_file: Option<String>)
                -> Config {
         Config {
             population,
@@ -201,7 +201,7 @@ mod tests {
             disease_overrides: vec![disease_override],
             grid_size: 5660,
             hours: 10000,
-            interventions: vec![Intervention::Vaccinate(vaccinate)],
+            interventions: vec![InterventionConfig::Vaccinate(vaccinate)],
             output_file: None,
             enable_citizen_state_messages: false,
             starting_infections: StartingInfections::default(),
@@ -228,7 +228,7 @@ mod tests {
             disease_overrides: vec![],
             grid_size: 250,
             hours: 10000,
-            interventions: vec![Intervention::Vaccinate(vaccinate)],
+            interventions: vec![InterventionConfig::Vaccinate(vaccinate)],
             output_file: Some("simulation_default_config".to_string()),
             enable_citizen_state_messages: false,
             starting_infections: StartingInfections::new(2, 3, 4, 5),

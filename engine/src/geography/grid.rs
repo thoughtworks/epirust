@@ -232,10 +232,6 @@ impl Grid {
 mod tests {
     use super::*;
     use crate::geography::define_geography;
-    use serde_json::map::Keys;
-    use ndarray::Array;
-    use futures::sink::Buffer;
-    use serde_json::Value;
 
     #[test]
     fn should_generate_population() {

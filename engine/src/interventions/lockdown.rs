@@ -19,7 +19,7 @@
 
 use crate::config::Config;
 use crate::constants;
-use crate::interventions::Intervention::Lockdown;
+use crate::interventions::InterventionConfig::Lockdown;
 use crate::listeners::events::counts::Counts;
 use crate::interventions::intervention_type::InterventionType;
 

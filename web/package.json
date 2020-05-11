@@ -8,7 +8,8 @@
     "build": "cd react-spa && npm run build && cp -a build/. ../server/public/ ",
     "start": "npm run build && cd server && npm start",
     "test": "concurrently \"cd server && npm test -- --watchAll=false\" \"cd react-spa && npm test -- --watchAll=false\" ",
-    "coveralls": "cd server && npm test -- --watchAll=false --coverage && cd ../react-spa && npm test -- --watchAll=false --coverage"
+    "coveralls": "cd server && npm test -- --watchAll=false --coverage && cd ../react-spa && npm test -- --watchAll=false --coverage",
+    "postinstall": "concurrently \"cd server && npm install\" \"cd react-spa && npm install\""
   },
   "keywords": [],
   "author": "",

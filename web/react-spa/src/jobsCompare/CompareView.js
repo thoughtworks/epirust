@@ -24,6 +24,7 @@ import {epiCurves} from "../common/constants";
 import {get} from "../common/apiCall";
 import {parseAnnotations} from "../time-series/utils";
 import GraphUpdater from "./GraphUpdater";
+import SideBarContainer from "../common/SideBarContainer";
 
 export function CompareView({selectedJobs}) {
   const [graphData, updateGraphData] = useState([]);
@@ -84,25 +85,23 @@ export function CompareView({selectedJobs}) {
   };
 
   return (
-    <div className="row">
-      <div className="col-2">
+    <div>
+      <SideBarContainer >
         <ComparerConfig
           selectedJobs={selectedJobs}
           updateSelectedCurves={handleSelectedCurvesUpdate}
           updateInterventions={onUpdateInterventions}
         />
-      </div>
-      <div className="col-10">
-        <div className="jobs-compare-chart">
-          {graphData.length > 0 &&
-          <Graph
-            dataBuffer={makeCSV(graphData)}
-            dygraphsOptions={dygraphOptions()}
-            visibility={visibility(selectedCurves)}
-            annotations={annotations}
-          />
-          }
-        </div>
+      </SideBarContainer>
+      <div className="jobs-compare-chart">
+        {graphData.length > 0 &&
+        <Graph
+          dataBuffer={makeCSV(graphData)}
+          dygraphsOptions={dygraphOptions()}
+          visibility={visibility(selectedCurves)}
+          annotations={annotations}
+        />
+        }
       </div>
     </div>
   );

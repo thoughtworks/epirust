@@ -51,8 +51,7 @@ sample = """
         {
           "Lockdown": {
             "at_number_of_infections": 100,
-            "essential_workers_population": 0.1,
-            "lock_down_period": 21
+            "essential_workers_population": 0.1
           }
         }
       ]

@@ -660,7 +660,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -704,7 +703,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -748,7 +746,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -792,7 +789,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -836,7 +832,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -880,7 +875,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -924,7 +918,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -968,7 +961,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1012,7 +1004,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1056,7 +1047,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1100,7 +1090,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1144,7 +1133,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1188,7 +1176,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1232,7 +1219,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1276,7 +1262,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1320,7 +1305,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1364,7 +1348,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1408,7 +1391,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1452,7 +1434,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1496,7 +1477,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1540,7 +1520,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1584,7 +1563,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1628,7 +1606,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }
@@ -1672,7 +1649,6 @@
         "interventions": [
           {
             "Lockdown": {
-              "lock_down_period": 21,
               "essential_workers_population": 0.1,
               "at_number_of_infections": 1
             }

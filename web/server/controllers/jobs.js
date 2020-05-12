@@ -162,8 +162,7 @@ function modelInterventions(message) {
     lockdownIntervention = {
       "Lockdown": {
         "at_number_of_infections": lockdown_at_number_of_infections,
-        "essential_workers_population": essential_workers_population,
-        "lock_down_period": 21
+        "essential_workers_population": essential_workers_population
       }
     };
 

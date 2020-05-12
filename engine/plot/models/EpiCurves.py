@@ -95,7 +95,7 @@ class EpiCurves:
             'recovered': '#2ca02c',
             'susceptible': '#ff7f0e',
             'deceased': '#9467bd',
-            'quarantined': '#1f77b4',
+            'hospitalized': '#1f77b4',
             'exposed': 'purple'
         }
         fig, axes = plt.subplots()

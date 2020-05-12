@@ -43,7 +43,10 @@ export function CompareView({selectedJobs}) {
   useEffect(() => {
     clearGraphDataAndConfig();
     const {job1, job2} = selectedJobs;
-    new GraphUpdater(updateBuffer, job1._id, job2._id).start();
+    const graphUpdater = new GraphUpdater(updateBuffer, job1._id, job2._id);
+    graphUpdater.start();
+
+    return () => graphUpdater.stop();
 
   }, [selectedJobs]);
 

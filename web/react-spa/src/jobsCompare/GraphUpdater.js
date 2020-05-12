@@ -25,6 +25,7 @@ export default class GraphUpdater {
   #jobData1
   #jobData2
   #lastSent
+  #stopAll
 
   constructor(updateBuffer, jobId1, jobId2) {
     this.#updateBuffer = updateBuffer;
@@ -32,11 +33,17 @@ export default class GraphUpdater {
     this.#jobData1 = new JobTimeSeriesData(jobId1)
     this.#jobData2 = new JobTimeSeriesData(jobId2)
     this.#lastSent = 0;
+    this.#stopAll = false;
   }
 
   start() {
     this.#startJob(this.#jobData1);
     this.#startJob(this.#jobData2);
+  }
+
+  stop() {
+    this.#jobData1.closeSocket();
+    this.#jobData2.closeSocket();
   }
 
   #checkConsistencyAndSend = (sendLimit) => {
@@ -46,13 +53,16 @@ export default class GraphUpdater {
 
     if (isConsistent) {
       const data = this.#buildData(start, end)
-      this.#updateBuffer(data)
-      this.#lastSent = end;
+      if(!this.#stopAll) {
+        this.#updateBuffer(data)
+        this.#lastSent = end;
+      }
     }
   }
 
   #startJob = (jobData) => {
     const socket = io(`${config.API_HOST}/counts`)
+    jobData.setSocket(socket);
     socket.on('epidemicStats', (message) => {
       if ("simulation_ended" in message) {
         jobData.fetchFinished = true;
@@ -89,6 +99,7 @@ export default class GraphUpdater {
 
 class JobTimeSeriesData {
   #consumedMessageCount
+  #socket
 
   constructor(jobId) {
     this.jobId = jobId
@@ -103,4 +114,8 @@ class JobTimeSeriesData {
   }
 
   consumedCount = () => this.#consumedMessageCount
+
+  setSocket = (socket) => this.#socket = socket;
+
+  closeSocket = () => this.#socket.close();
 }

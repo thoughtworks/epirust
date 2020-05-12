@@ -41,8 +41,11 @@ describe('CompareView', () => {
     const startFnMockReturningEmpty = updateBuffer => jest.fn().mockImplementationOnce(() => updateBuffer([]));
 
     GraphUpdater
-      .mockImplementationOnce((updateBuffer) => ({'start': startFnMock(updateBuffer)}))
-      .mockImplementationOnce((updateBuffer) => ({'start': startFnMockReturningEmpty(updateBuffer)}));
+      .mockImplementationOnce((updateBuffer) => ({'start': startFnMock(updateBuffer), 'stop': jest.fn()}))
+      .mockImplementationOnce((updateBuffer) => ({
+        'start': startFnMockReturningEmpty(updateBuffer),
+        'stop': jest.fn()
+      }));
 
     const setVisibilitySpy = jest.fn();
     const updateOptionsSpy = jest.fn();
@@ -70,7 +73,7 @@ describe('CompareView', () => {
 
     const graphData = [{hour: 1, job1: null, job2: null}];
     const startFnMock = updateBuffer => jest.fn().mockImplementationOnce(() => updateBuffer(graphData));
-    GraphUpdater.mockImplementation((updateBuffer) => ({'start': startFnMock(updateBuffer)}));
+    GraphUpdater.mockImplementation((updateBuffer) => ({'start': startFnMock(updateBuffer), 'stop': jest.fn()}));
 
     const setVisibilitySpy = jest.fn();
     const updateOptionsSpy = jest.fn();
@@ -105,7 +108,7 @@ describe('CompareView', () => {
       });
 
     const startFnMock = updateBuffer => jest.fn().mockImplementationOnce(() => updateBuffer(graphData));
-    GraphUpdater.mockImplementation((updateBuffer) => ({'start': startFnMock(updateBuffer)}));
+    GraphUpdater.mockImplementation((updateBuffer) => ({'start': startFnMock(updateBuffer), 'stop': jest.fn()}));
 
     const setVisibilitySpy = jest.fn();
     const setAnnotationsSpy = jest.fn();
@@ -170,7 +173,7 @@ describe('CompareView', () => {
       });
 
     const startFnMock = updateBuffer => jest.fn().mockImplementationOnce(() => updateBuffer(graphData));
-    GraphUpdater.mockImplementation((updateBuffer) => ({'start': startFnMock(updateBuffer)}));
+    GraphUpdater.mockImplementation((updateBuffer) => ({'start': startFnMock(updateBuffer), 'stop': jest.fn()}));
 
     const setVisibilitySpy = jest.fn();
     const setAnnotationsSpy = jest.fn();
@@ -210,7 +213,7 @@ describe('CompareView', () => {
       });
 
     const startFnMock = updateBuffer => jest.fn().mockImplementationOnce(() => updateBuffer(graphData));
-    GraphUpdater.mockImplementation((updateBuffer) => ({'start': startFnMock(updateBuffer)}));
+    GraphUpdater.mockImplementation((updateBuffer) => ({'start': startFnMock(updateBuffer), 'stop': jest.fn()}));
 
     const setVisibilitySpy = jest.fn();
     const setAnnotationsSpy = jest.fn();

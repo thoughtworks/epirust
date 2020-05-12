@@ -91,12 +91,14 @@ export function CompareView({selectedJobs}) {
       </div>
       <div className="col-10">
         <div className="jobs-compare-chart">
+          {graphData.length > 0 &&
           <Graph
             dataBuffer={makeCSV(graphData)}
             dygraphsOptions={dygraphOptions()}
             visibility={visibility(selectedCurves)}
             annotations={annotations}
           />
+          }
         </div>
       </div>
     </div>

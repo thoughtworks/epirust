@@ -34,6 +34,38 @@ jest.mock("../../common/apiCall");
 
 describe('CompareView', () => {
 
+  it('should unmount and render the graph again on new comparison', () => {
+
+    const graphData = [{hour: 1, job1: null, job2: null}];
+    const startFnMock = updateBuffer => jest.fn().mockImplementationOnce(() => updateBuffer(graphData));
+    const startFnMockReturningEmpty = updateBuffer => jest.fn().mockImplementationOnce(() => updateBuffer([]));
+
+    GraphUpdater
+      .mockImplementationOnce((updateBuffer) => ({'start': startFnMock(updateBuffer)}))
+      .mockImplementationOnce((updateBuffer) => ({'start': startFnMockReturningEmpty(updateBuffer)}));
+
+    const setVisibilitySpy = jest.fn();
+    const updateOptionsSpy = jest.fn();
+
+    const dygraphMockFn = Dygraph.mockImplementation(() => ({
+      updateOptions: updateOptionsSpy,
+      setVisibility: setVisibilitySpy
+    }));
+
+    const jobId1 = "111", jobId2 = "222";
+    const job1 = {_id: jobId1, simulations: []}, job2 = {_id: jobId2, simulations: []};
+
+    const {rerender} = render(<CompareView selectedJobs={{job1, job2}}/>);
+
+    const job1Data = [[], [], [], [], []];
+    const job2Data = [[], [], [], [], []];
+    expect(dygraphMockFn).toHaveBeenCalledWith(expect.any(HTMLElement), [[1, ...job1Data, ...job2Data]], expectedGraphOptions);
+    dygraphMockFn.mockClear();
+
+    rerender(<CompareView selectedJobs={{job1, job2}}/>);
+    expect(dygraphMockFn).not.toHaveBeenCalled();
+  });
+
   it('should render comparing graph on updates from GraphUpdater', () => {
 
     const graphData = [{hour: 1, job1: null, job2: null}];

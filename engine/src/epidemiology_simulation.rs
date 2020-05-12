@@ -104,19 +104,29 @@ impl Epidemiology {
 
         let csv_listener = CsvListener::new(counts_file_name);
         let population = self.agent_location_map.current_population();
-        let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), population as usize,
-                                                      config.enable_citizen_state_messages());
+
         let hotspot_tracker = Hotspot::new();
         let intervention_reporter = InterventionReporter::new(format!("{}_interventions.json", output_file_format));
         let mut listeners_vec: Vec<Box<dyn Listener>> = vec![Box::new(csv_listener),
-                                                             Box::new(kafka_listener),
                                                              Box::new(hotspot_tracker),
                                                              Box::new(intervention_reporter)];
 
-        if let RunMode::MultiEngine { engine_id: _e } = run_mode {
-            let travels_file_name = format!("{}_outgoing_travels.csv", output_file_format);
-            let travel_counter = TravelCounter::new(travels_file_name);
-            listeners_vec.push(Box::new(travel_counter));
+        match run_mode {
+            RunMode::Standalone => {},
+            RunMode::SingleDaemon => {
+                let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), population as usize,
+                                                              config.enable_citizen_state_messages());
+                listeners_vec.push(Box::new(kafka_listener));
+            },
+            RunMode::MultiEngine { .. } => {
+                let travels_file_name = format!("{}_outgoing_travels.csv", output_file_format);
+                let travel_counter = TravelCounter::new(travels_file_name);
+                listeners_vec.push(Box::new(travel_counter));
+
+                let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), population as usize,
+                                                              config.enable_citizen_state_messages());
+                listeners_vec.push(Box::new(kafka_listener));
+            },
         }
 
         Listeners::from(listeners_vec)

@@ -106,8 +106,8 @@ export function CompareView({selectedJobs}) {
 }
 
 const dygraphOptions = () => ({
-  colors: ["#0A1045", "#00C2D1", "#F9E900", "#F6AF65", "#ED33B9",
-    "#8588a2", "#80e1e8", "#fcf480", "#fbd7b2", "#f699dc"],
+  colors: ["#00a987", "#005b98", "#8900c1", "#e46b00", "#2c3e50",
+    "#1abc9ccc", "#3498dbcc", "#9b59b6cc", "#e67e22cc", "#7f8c8d"],
   labels: ["hour",
     ...epiCurves.map(e => `${e}_job1`),
     ...epiCurves.map(e => `${e}_job2`),

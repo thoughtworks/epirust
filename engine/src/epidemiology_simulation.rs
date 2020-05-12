@@ -114,12 +114,12 @@ impl Epidemiology {
                                                              Box::new(intervention_reporter)];
 
         match run_mode {
-            RunMode::Standalone => {},
+            RunMode::Standalone => {}
             RunMode::SingleDaemon => {
                 let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), population as usize,
                                                               config.enable_citizen_state_messages());
                 listeners_vec.push(Box::new(kafka_listener));
-            },
+            }
             RunMode::MultiEngine { .. } => {
                 let travels_file_name = format!("{}_outgoing_travels.csv", output_file_format);
                 let travel_counter = TravelCounter::new(travels_file_name);
@@ -128,7 +128,7 @@ impl Epidemiology {
                 let kafka_listener = EventsKafkaProducer::new(self.sim_id.clone(), population as usize,
                                                               config.enable_citizen_state_messages());
                 listeners_vec.push(Box::new(kafka_listener));
-            },
+            }
         }
 
         Listeners::from(listeners_vec)
@@ -196,13 +196,76 @@ impl Epidemiology {
         let population = self.agent_location_map.current_population();
         let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
         let mut rng = RandomWrapper::new();
-        let start_time = Instant::now();
 
         self.write_agent_location_map.init_with_capacity(population as usize);
 
         let mut interventions = self.init_interventions(config, &mut rng);
 
         listeners.grid_updated(&self.grid);
+        match run_mode {
+            RunMode::MultiEngine { .. } => {
+                self.run_multi_engine(config, run_mode, &mut listeners, &mut counts_at_hr,
+                                      &mut interventions, &mut rng).await
+            }
+            _ => {
+                self.run_single_engine(config, run_mode, &mut listeners, &mut counts_at_hr,
+                                       &mut interventions, &mut rng).await
+            }
+        }
+    }
+
+    pub async fn run_single_engine(&mut self, config: &Config, run_mode: &RunMode, listeners: &mut Listeners,
+                                   counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper) {
+        let start_time = Instant::now();
+        let mut outgoing = Vec::new();
+        let percent_outgoing = 0.0;
+
+        counts_at_hr.log();
+        for simulation_hour in 1..config.get_hours() {
+            counts_at_hr.increment_hour();
+
+            let mut read_buffer_reference = self.agent_location_map.borrow();
+            let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
+
+            if simulation_hour % 2 == 0 {
+                read_buffer_reference = self.write_agent_location_map.borrow();
+                write_buffer_reference = self.agent_location_map.borrow_mut();
+            }
+
+            let population_before_travel = read_buffer_reference.current_population();
+
+            if population_before_travel == 0 {
+                panic!("No citizens!");
+            }
+
+            Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
+                                   &self.grid, listeners, rng, &self.disease, percent_outgoing,
+                                   &mut outgoing, config.enable_citizen_state_messages());
+
+            listeners.counts_updated(*counts_at_hr);
+            Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
+                                                rng, write_buffer_reference, config, &mut self.grid);
+
+            if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
+                break;
+            }
+
+            if simulation_hour % 100 == 0 {
+                info!("Throughput: {} iterations/sec; simulation hour {} of {}",
+                      simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
+                      simulation_hour, config.get_hours());
+                counts_at_hr.log();
+            }
+        }
+        let elapsed_time = start_time.elapsed().as_secs_f32();
+        info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
+        info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
+        listeners.simulation_ended();
+    }
+
+    pub async fn run_multi_engine(&mut self, config: &Config, run_mode: &RunMode, listeners: &mut Listeners,
+                                  counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper) {
+        let start_time = Instant::now();
         let mut producer = KafkaProducer::new();
 
         //todo stream should be started only in case of multi-sim mode
@@ -212,7 +275,7 @@ impl Epidemiology {
         } else {
             &standalone_engine_id
         };
-        let mut engine_travel_plan = EngineTravelPlan::new(engine_id, population);
+        let mut engine_travel_plan = EngineTravelPlan::new(engine_id, self.agent_location_map.current_population());
         let ticks_consumer = ticks_consumer::start(engine_id);
         let mut ticks_stream = ticks_consumer.start_with(Duration::from_millis(1), false);
         let travellers_consumer = travellers_consumer::start(engine_id);
@@ -258,8 +321,8 @@ impl Epidemiology {
             let percent_outgoing = engine_travel_plan.percent_outgoing();
             let recv_travellers = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan);
             let sim = async {
-                Epidemiology::simulate(&mut counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
-                                       grid, &mut listeners, &mut rng, disease, percent_outgoing,
+                Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
+                                       grid, listeners, rng, disease, percent_outgoing,
                                        &mut outgoing, config.enable_citizen_state_messages());
                 let outgoing_travellers_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
                 if simulation_hour % 24 == 0 {
@@ -270,18 +333,18 @@ impl Epidemiology {
             let (mut incoming, ()) = join!(recv_travellers, sim);
             n_incoming += incoming.len();
             n_outgoing += outgoing.len();
-            write_buffer_reference.remove_citizens(&outgoing, &mut counts_at_hr, &mut self.grid);
-            write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, &mut counts_at_hr, &mut rng);
+            write_buffer_reference.remove_citizens(&outgoing, counts_at_hr, &mut self.grid);
+            write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, counts_at_hr, rng);
 
-            listeners.counts_updated(counts_at_hr);
-            Epidemiology::process_interventions(&mut interventions, &counts_at_hr, &mut listeners,
-                                       &mut rng, write_buffer_reference, config, &mut self.grid);
+            listeners.counts_updated(*counts_at_hr);
+            Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
+                                                rng, write_buffer_reference, config, &mut self.grid);
 
-            if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, counts_at_hr) {
+            if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
             }
 
-            Epidemiology::send_ack(run_mode, &mut producer, counts_at_hr, simulation_hour, &interventions.lockdown).await;
+            Epidemiology::send_ack(run_mode, &mut producer, *counts_at_hr, simulation_hour, &interventions.lockdown).await;
 
             if simulation_hour % 100 == 0 {
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",

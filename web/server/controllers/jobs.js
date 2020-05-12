@@ -30,7 +30,7 @@ const {predefinedTags} = require("../db/resources/predefined-tags")
 
 router.post('/init', (req, res) => {
   const simulation_config = makeSimulationConfig(req.body);
-
+  console.log(JSON.stringify(simulation_config));
   const kafkaProducer = new KafkaServices.KafkaProducerService();
   let jobId;
 
@@ -101,6 +101,8 @@ function makeSimulationConfig(message) {
     regular_transmission_start_day,
     high_transmission_start_day,
     last_day,
+    asymptomatic_last_day,
+    mild_infected_last_day,
     regular_transmission_rate,
     high_transmission_rate,
     death_rate,
@@ -128,6 +130,8 @@ function makeSimulationConfig(message) {
       "regular_transmission_start_day": regular_transmission_start_day,
       "high_transmission_start_day": high_transmission_start_day,
       "last_day": last_day,
+      "asymptomatic_last_day": asymptomatic_last_day,
+      "mild_infected_last_day": mild_infected_last_day,
       "regular_transmission_rate": regular_transmission_rate,
       "high_transmission_rate": high_transmission_rate,
       "death_rate": death_rate,

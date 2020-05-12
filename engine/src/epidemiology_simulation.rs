@@ -82,7 +82,6 @@ impl Epidemiology {
             RunMode::MultiEngine { .. } => {
                 if lock_down_details.is_locked_down() && zero_active_cases {
                     lock_down_details.set_zero_infection_hour(row.get_hour());
-                    println!("last_infection_hour {}", lock_down_details.zero_infection_hour);
                 }
                 false
             }
@@ -458,7 +457,7 @@ mod tests {
             public_transport_percentage: 1.0,
             working_percentage: 1.0,
         };
-        let disease = Disease::new(0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0);
+        let disease = Disease::new(0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0);
         let vac = VaccinateConfig {
             at_hour: 5000,
             percent: 0.2,

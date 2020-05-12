@@ -18,7 +18,7 @@
 .actions {
     margin-top: 15px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
 }
 
 .button-text {
@@ -95,10 +95,4 @@
       left: unset;
       right: calc(0.75rem + 2px);
     }
-  }
-
-  .input-control{
-      &.tags-wrap {
-        flex-basis: 500px;
-      }
   }

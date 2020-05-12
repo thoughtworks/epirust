@@ -273,7 +273,7 @@ mod tests {
     #[test]
     fn should_infect() {
         let mut machine = DiseaseStateMachine::new();
-        let disease = Disease::new(10, 20, 40, 0.025, 0.25, 0.02, 0.3, 0.3, 24, 24);
+        let disease = Disease::new(10, 20, 40, 9, 12, 0.025, 0.25, 0.02, 0.3, 0.3, 24, 24);
         machine.expose(100);
         machine.infect(&mut RandomWrapper::new(), 140, &disease);
 
@@ -289,7 +289,7 @@ mod tests {
     #[test]
     fn should_not_infect() {
         let mut machine = DiseaseStateMachine::new();
-        let disease = Disease::new(10, 20, 40, 0.025, 0.25, 0.02, 0.3, 0.3, 24, 24);
+        let disease = Disease::new(10, 20, 40, 9, 12, 0.025, 0.25, 0.02, 0.3, 0.3, 24, 24);
 
         machine.expose(100);
         machine.infect(&mut RandomWrapper::new(), 110, &disease);
@@ -313,7 +313,7 @@ mod tests {
     #[test]
     fn should_change_infection_severity() {
         let mut machine = DiseaseStateMachine::new();
-        let disease = Disease::new(10, 20, 40, 0.025, 0.25, 0.02, 0.3, 0.3, 24, 24);
+        let disease = Disease::new(10, 20, 40, 9, 12, 0.025, 0.25, 0.02, 0.3, 0.3, 24, 24);
         let mut rng = RandomWrapper::new();
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 100 } };
@@ -338,7 +338,7 @@ mod tests {
     #[test]
     fn should_not_change_infection_severity() {
         let mut machine = DiseaseStateMachine::new();
-        let disease = Disease::new(10, 20, 40, 0.025, 0.25, 0.02, 0.3, 0.3, 24, 24);
+        let disease = Disease::new(10, 20, 40, 9, 12, 0.025, 0.25, 0.02, 0.3, 0.3, 24, 24);
         let mut rng = RandomWrapper::new();
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 100 } };

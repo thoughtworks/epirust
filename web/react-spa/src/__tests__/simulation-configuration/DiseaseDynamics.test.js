@@ -24,12 +24,26 @@ import React from 'react'
 test('should update disease dynamics for a disease selected', () => {
     const { getByPlaceholderText, getByTestId } = render(<DiseaseDynamics />);
 
-    fireEvent.change(getByTestId("select-disease"), {target: {value: "sars"}})
+    fireEvent.change(getByTestId("select-disease"), {target: {value: "sars"}});
 
-    expect(getByPlaceholderText("Regular Transmission Start Day").value).toBe("5")
-    expect(getByPlaceholderText("High Transmission Start Day").value).toBe("10")
-    expect(getByPlaceholderText("Last Day").value).toBe("23")
-    expect(getByPlaceholderText("Regular Transmission Rate").value).toBe("0.025")
-    expect(getByPlaceholderText("High Transmission Rate").value).toBe("0.25")
-    expect(getByPlaceholderText("Death Rate").value).toBe("0.1")
-})
+    expect(getByPlaceholderText("Regular Transmission Start Day").value).toBe("5");
+    expect(getByPlaceholderText("High Transmission Start Day").value).toBe("10");
+    expect(getByPlaceholderText("Last Day").value).toBe("23");
+    expect(getByPlaceholderText("Asymptomatic Last Day").parentElement).toHaveClass("d-none");
+    expect(getByPlaceholderText("Mild Infected Last Day").parentElement).toHaveClass("d-none");
+    expect(getByPlaceholderText("Regular Transmission Rate").value).toBe("0.025");
+    expect(getByPlaceholderText("High Transmission Rate").value).toBe("0.25");
+    expect(getByPlaceholderText("Death Rate").value).toBe("0.1");
+});
+
+test('should display last day variants for covid', () => {
+    const { getByPlaceholderText, getByTestId } = render(<DiseaseDynamics />);
+
+    fireEvent.change(getByTestId("select-disease"), {target: {value: "covid_19"}});
+
+    expect(getByPlaceholderText("Asymptomatic Last Day").parentElement).not.toHaveClass("d-none");
+    expect(getByPlaceholderText("Asymptomatic Last Day").value).toBe("9");
+    expect(getByPlaceholderText("Mild Infected Last Day").parentElement).not.toHaveClass("d-none");
+    expect(getByPlaceholderText("Mild Infected Last Day").value).toBe("12");
+
+});

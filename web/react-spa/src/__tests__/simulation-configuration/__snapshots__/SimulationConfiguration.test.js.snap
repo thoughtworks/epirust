@@ -15,7 +15,9 @@ exports[`Simulation Configuration should disable submit button and show loading 
         <div
           class="col inputs"
         >
-          <div>
+          <div
+            style="max-width: 25%;"
+          >
             <fieldset>
               <legend>
                 Population
@@ -165,6 +167,21 @@ exports[`Simulation Configuration should disable submit button and show loading 
                 </small>
               </div>
             </fieldset>
+            <div
+              class="input-control tags-wrap"
+            >
+              <label
+                class="font-weight-bold col-form-label-sm"
+                for="tag-input"
+              >
+                Tags
+              </label>
+              <select
+                data-testid="select"
+                id="tags"
+                name="tags"
+              />
+            </div>
           </div>
           <fieldset>
             <legend>
@@ -188,7 +205,6 @@ exports[`Simulation Configuration should disable submit button and show loading 
                 placeholder="Disease Name"
               >
                 <option
-                  selected=""
                   value="small_pox"
                 >
                   Small Pox
@@ -260,6 +276,46 @@ exports[`Simulation Configuration should disable submit button and show loading 
                 id="last_day"
                 name="last_day"
                 placeholder="Last Day"
+                step="any"
+                type="number"
+                value="22"
+              />
+            </div>
+            <div
+              class="input-control d-none"
+            >
+              <label
+                class="col-form-label-sm"
+                for="asymptomatic_last_day"
+              >
+                Asymptomatic Last Day
+              </label>
+              <input
+                aria-describedby="asymptomatic_last_day"
+                class="form-control form-control-sm"
+                id="asymptomatic_last_day"
+                name="asymptomatic_last_day"
+                placeholder="Asymptomatic Last Day"
+                step="any"
+                type="number"
+                value="22"
+              />
+            </div>
+            <div
+              class="input-control d-none"
+            >
+              <label
+                class="col-form-label-sm"
+                for="mild_infected_last_day"
+              >
+                Mild Infected Last Day
+              </label>
+              <input
+                aria-describedby="mild_infected_last_day"
+                class="form-control form-control-sm"
+                id="mild_infected_last_day"
+                name="mild_infected_last_day"
+                placeholder="Mild Infected Last Day"
                 step="any"
                 type="number"
                 value="22"
@@ -575,23 +631,8 @@ exports[`Simulation Configuration should disable submit button and show loading 
           </fieldset>
         </div>
         <div
-          class="form-row tag-action"
+          class="col actions"
         >
-          <div
-            class="input-control tags-wrap"
-          >
-            <label
-              class="font-weight-bold col-form-label-sm"
-              for="tag-input"
-            >
-              Tags
-            </label>
-            <select
-              data-testid="select"
-              id="tags"
-              name="tags"
-            />
-          </div>
           <button
             class="btn btn-primary btn-lg"
             disabled=""
@@ -616,6 +657,7 @@ exports[`Simulation Configuration should disable submit button and show loading 
 
 exports[`Simulation Configuration should invoke fetch on form submit 1`] = `
 Object {
+  "asymptomatic_last_day": 22,
   "death_rate": 0.2,
   "disease_name": "small_pox",
   "enable_citizen_state_messages": false,
@@ -627,6 +669,7 @@ Object {
   "hospital_spread_rate_threshold": 100,
   "last_day": 22,
   "lockdown_at_number_of_infections": 100,
+  "mild_infected_last_day": 22,
   "number_of_agents": 10000,
   "number_of_simulations": 1,
   "percentage_asymptomatic_population": 0,
@@ -657,7 +700,9 @@ exports[`Simulation Configuration should render with defaults 1`] = `
         <div
           class="col inputs"
         >
-          <div>
+          <div
+            style="max-width: 25%;"
+          >
             <fieldset>
               <legend>
                 Population
@@ -807,6 +852,21 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                 </small>
               </div>
             </fieldset>
+            <div
+              class="input-control tags-wrap"
+            >
+              <label
+                class="font-weight-bold col-form-label-sm"
+                for="tag-input"
+              >
+                Tags
+              </label>
+              <select
+                data-testid="select"
+                id="tags"
+                name="tags"
+              />
+            </div>
           </div>
           <fieldset>
             <legend>
@@ -830,7 +890,6 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                 placeholder="Disease Name"
               >
                 <option
-                  selected=""
                   value="small_pox"
                 >
                   Small Pox
@@ -902,6 +961,46 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                 id="last_day"
                 name="last_day"
                 placeholder="Last Day"
+                step="any"
+                type="number"
+                value="22"
+              />
+            </div>
+            <div
+              class="input-control d-none"
+            >
+              <label
+                class="col-form-label-sm"
+                for="asymptomatic_last_day"
+              >
+                Asymptomatic Last Day
+              </label>
+              <input
+                aria-describedby="asymptomatic_last_day"
+                class="form-control form-control-sm"
+                id="asymptomatic_last_day"
+                name="asymptomatic_last_day"
+                placeholder="Asymptomatic Last Day"
+                step="any"
+                type="number"
+                value="22"
+              />
+            </div>
+            <div
+              class="input-control d-none"
+            >
+              <label
+                class="col-form-label-sm"
+                for="mild_infected_last_day"
+              >
+                Mild Infected Last Day
+              </label>
+              <input
+                aria-describedby="mild_infected_last_day"
+                class="form-control form-control-sm"
+                id="mild_infected_last_day"
+                name="mild_infected_last_day"
+                placeholder="Mild Infected Last Day"
                 step="any"
                 type="number"
                 value="22"
@@ -1217,23 +1316,8 @@ exports[`Simulation Configuration should render with defaults 1`] = `
           </fieldset>
         </div>
         <div
-          class="form-row tag-action"
+          class="col actions"
         >
-          <div
-            class="input-control tags-wrap"
-          >
-            <label
-              class="font-weight-bold col-form-label-sm"
-              for="tag-input"
-            >
-              Tags
-            </label>
-            <select
-              data-testid="select"
-              id="tags"
-              name="tags"
-            />
-          </div>
           <button
             class="btn btn-primary btn-lg"
             id="submitBtn"

@@ -59,6 +59,8 @@ export default function SimulationConfiguration() {
         "high_transmission_rate",
         "high_transmission_start_day",
         "last_day",
+        "asymptomatic_last_day",
+        "mild_infected_last_day",
         "regular_transmission_rate",
         "regular_transmission_start_day",
         "lockdown_at_number_of_infections",
@@ -131,21 +133,20 @@ export default function SimulationConfiguration() {
         <div className="form-row">
 
           <div className="col inputs">
-            <div>
+            <div style={{maxWidth : "25%"}}>
               {renderPopulation()}
               <MiscellaneousConfig/>
+                <TagsSelect label="Tags" placeholder={"Start typing tag name ..."}/>
             </div>
             <DiseaseDynamics/>
             <Interventions/>
           </div>
-          <div className="form-row tag-action">
-            <TagsSelect label="Tags" placeholder={"Start typing tag name ..."}/>
-            {/*<div className="col actions">*/}
-            <button type="submit" className="btn btn-primary btn-lg" id="submitBtn" disabled={buttonDisabled}>
+
+            <div className="col actions">
+          <button type="submit" className="btn btn-primary btn-lg" id="submitBtn" disabled={buttonDisabled}>
               {buttonDisabled ? loading() : "Submit"}
             </button>
-            {/*</div>*/}
-          </div>
+            </div>
           {errorOccurred && <div className="error-message alert-danger">Error Occurred please try again!</div>}
         </div>
 

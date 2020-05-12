@@ -187,7 +187,7 @@ mod tests {
         let disease_override = DiseaseOverride::new(
             String::from("age"),
             vec!["60-64".to_string(), "65-69".to_string(), "70-74".to_string(), "75-79".to_string(), "80+".to_string()],
-            Disease::new(5, 20, 40, 0.025, 0.25, 0.2, 0.3, 0.3, 48, 48));
+            Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.2, 0.3, 0.3, 48, 48));
 
         let population = Population::Csv(CsvPopulation {
             file: "config/pune_population.csv".to_string(),
@@ -197,7 +197,7 @@ mod tests {
 
         let expected_config = Config {
             population,
-            disease: Disease::new(5, 20, 40, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
+            disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
             disease_overrides: vec![disease_override],
             grid_size: 5660,
             hours: 10000,
@@ -224,7 +224,7 @@ mod tests {
 
         let expected_config = Config {
             population,
-            disease: Disease::new(5, 20, 40, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
+            disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
             disease_overrides: vec![],
             grid_size: 250,
             hours: 10000,

@@ -36,6 +36,8 @@ sample = """
           "percentage_asymptomatic_population": 0.3,
           "exposed_duration": 48,
           "last_day": 26,
+          "asymptomatic_last_day": 9,
+          "mild_infected_last_day": 12,
           "regular_transmission_rate": 0.25,
           "pre_symptomatic_duration": 48,
           "percentage_severe_infected_population": 0.3,

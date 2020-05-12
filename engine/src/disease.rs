@@ -27,6 +27,8 @@ pub struct Disease {
     regular_transmission_start_day: i32,
     high_transmission_start_day: i32,
     last_day: i32,
+    asymptomatic_last_day: i32,
+    mild_infected_last_day: i32,
     regular_transmission_rate: f64,
     high_transmission_rate: f64,
     death_rate: f64,
@@ -49,12 +51,14 @@ impl Disease {
     }
 
     #[cfg(test)]
-    pub fn new(regular_transmission_start_day: i32, high_transmission_start_day: i32, last_day: i32,
-               regular_transmission_rate: f64, high_transmission_rate: f64, death_rate: f64, percentage_asymptomatic_population: f64, percentage_severe_infected_population: f64, exposed_duration: i32, pre_symptomatic_duration: i32) -> Disease {
+    pub fn new(regular_transmission_start_day: i32, high_transmission_start_day: i32, last_day: i32, asymptomatic_last_day: i32,
+               mild_infected_last_day: i32, regular_transmission_rate: f64, high_transmission_rate: f64, death_rate: f64, percentage_asymptomatic_population: f64, percentage_severe_infected_population: f64, exposed_duration: i32, pre_symptomatic_duration: i32) -> Disease {
         Disease {
             regular_transmission_start_day,
             high_transmission_start_day,
             last_day,
+            asymptomatic_last_day,
+            mild_infected_last_day,
             regular_transmission_rate,
             high_transmission_rate,
             death_rate,
@@ -158,6 +162,8 @@ mod tests {
             regular_transmission_start_day: 10,
             high_transmission_start_day: 16,
             last_day: 22,
+            asymptomatic_last_day: 22,
+            mild_infected_last_day: 22,
             regular_transmission_rate: 0.05,
             high_transmission_rate: 0.5,
             death_rate: 0.2,

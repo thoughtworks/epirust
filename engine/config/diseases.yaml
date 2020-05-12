@@ -3,6 +3,8 @@ small_pox:
   regular_transmission_start_day: 10
   high_transmission_start_day: 16
   last_day: 22
+  asymptomatic_last_day: 22
+  mild_infected_last_day: 22
   regular_transmission_rate: 0.05
   high_transmission_rate: 0.5
   death_rate: 0.2
@@ -15,6 +17,8 @@ sars: #Guesstimated
   regular_transmission_start_day: 5
   high_transmission_start_day: 10
   last_day: 23
+  asymptomatic_last_day: 23
+  mild_infected_last_day: 23
   regular_transmission_rate: 0.025
   high_transmission_rate: 0.25
   death_rate: 0.1
@@ -26,7 +30,9 @@ sars: #Guesstimated
 covid_19: #Guesstimated
   regular_transmission_start_day: 5
   high_transmission_start_day: 20
-  last_day: 40
+  last_day: 26
+  asymptomatic_last_day: 9
+  mild_infected_last_day: 12
   regular_transmission_rate: 0.025
   high_transmission_rate: 0.25
   death_rate: 0.035

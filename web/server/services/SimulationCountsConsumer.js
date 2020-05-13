@@ -33,21 +33,25 @@ class SimulationCountsConsumer {
 
   async start() {
     for await (const data of this.kafkaConsumer.consumerStream) {
-      const parsedMessage = JSON.parse(data.value);
+      await this.handleMessage(data);
+    }
+  }
 
-      const simulationId = toObjectId(data.key.toString());
+  async handleMessage(data) {
+    const parsedMessage = JSON.parse(data.value);
 
-      const simulationEnded = "simulation_ended" in parsedMessage;
-      const isInterventionMessage = "intervention" in parsedMessage;
+    const simulationId = toObjectId(data.key.toString());
 
-      if (simulationEnded) {
-        await SimulationService.updateSimulationStatus(simulationId, SimulationStatus.FINISHED);
-        console.log("Consumed all messages for ", simulationId);
-      } else if (isInterventionMessage) {
-        await CountService.addIntervention(simulationId, parsedMessage);
-      } else {
-        await this.handleCountMessage(parsedMessage, simulationId);
-      }
+    const simulationEnded = "simulation_ended" in parsedMessage;
+    const isInterventionMessage = "intervention" in parsedMessage;
+
+    if (simulationEnded) {
+      await SimulationService.updateSimulationStatus(simulationId, SimulationStatus.FINISHED);
+      console.log("Consumed all messages for ", simulationId);
+    } else if (isInterventionMessage) {
+      await CountService.addIntervention(simulationId, parsedMessage);
+    } else {
+      await this.handleCountMessage(parsedMessage, simulationId);
     }
   }
 

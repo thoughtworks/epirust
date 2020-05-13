@@ -30,6 +30,16 @@ class KafkaGroupConsumer {
     }
 }
 
+class KafkaConsumerStream {
+    constructor(host, topic, kafkaOptions) {
+        const clientOptions = {kafkaHost: host};
+        const client = new kafka.KafkaClient(clientOptions);
+        this._consumerStream = new kafka.ConsumerStream(client, [topic], kafkaOptions);
+    }
+
+    getStream() { return this._consumerStream }
+}
+
 class KafkaConsumerService {
     constructor(host, topic, id) {
         const consumerOptions = {
@@ -73,5 +83,5 @@ class KafkaProducerService {
 }
 
 module.exports = {
-    KafkaConsumerService, KafkaProducerService, KafkaGroupConsumer
+    KafkaConsumerService, KafkaProducerService, KafkaGroupConsumer, KafkaConsumerStream
 };

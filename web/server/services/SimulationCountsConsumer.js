@@ -17,8 +17,6 @@
  *
  */
 
-const KafkaServices = require('../services/kafka');
-const config = require("../config");
 const {SimulationStatus} = require("../db/models/Simulation");
 const SimulationService = require('../db/services/SimulationService');
 const CountService = require('../db/services/CountService');
@@ -26,17 +24,6 @@ const CountService = require('../db/services/CountService');
 const {toObjectId} = require('../common/util')
 
 class SimulationCountsConsumer {
-  constructor() {
-    this.kafkaConsumer =
-      new KafkaServices.KafkaGroupConsumer(config.KAFKA_URL, config.COUNTS_TOPIC, config.KAFKA_GROUP);
-  }
-
-  async start() {
-    for await (const data of this.kafkaConsumer.consumerStream) {
-      await this.handleMessage(data);
-    }
-  }
-
   async handleMessage(data) {
     const parsedMessage = JSON.parse(data.value);
 
@@ -51,14 +38,13 @@ class SimulationCountsConsumer {
     } else if (isInterventionMessage) {
       await CountService.addIntervention(simulationId, parsedMessage);
     } else {
-      await this.handleCountMessage(parsedMessage, simulationId);
+      await this._handleCountMessage(parsedMessage, simulationId);
     }
   }
 
-  async handleCountMessage(parsedMessage, simulationId) {
-    if (parsedMessage.hour === 1) {
+  async _handleCountMessage(parsedMessage, simulationId) {
+    if (parsedMessage.hour === 1)
       SimulationService.updateSimulationStatus(simulationId, SimulationStatus.RUNNING)
-    }
 
     await CountService.upsertCount(simulationId, parsedMessage);
   }

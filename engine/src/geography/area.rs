@@ -72,6 +72,10 @@ impl Area {
         self.start_offset.x <= point.x && self.end_offset.x >= point.x
             && self.start_offset.y <= point.y && self.end_offset.y >= point.y
     }
+
+    pub fn get_number_of_cells(&self) -> i32 {
+        (self.end_offset.x - self.start_offset.x) * (self.end_offset.y - self.start_offset.y)
+    }
 }
 
 // We need to ignore the iter_index when comparing
@@ -236,5 +240,12 @@ mod tests {
 
         let random_point = area.get_random_point(&mut RandomWrapper::new());
         assert_eq!(area.contains(&random_point), true);
+    }
+
+    #[test]
+    fn should_get_number_of_cells(){
+        let area = get_area();
+
+        assert_eq!(area.get_number_of_cells(), 25);
     }
 }

@@ -68,6 +68,7 @@ impl Epidemiology {
             Population::Csv(csv_pop) => grid.read_population(&csv_pop, &start_infections, &mut rng),
             Population::Auto(auto_pop) => grid.generate_population(&auto_pop, &start_infections, &mut rng),
         };
+        grid.resize_hospital(agent_list.len() as i32);
 
         let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
         let write_agent_location_map = agent_location_map.clone();
@@ -474,7 +475,7 @@ mod tests {
         let expected_work_area = Area::new(Point::new(50, 0), Point::new(69, 100));
         assert_eq!(epidemiology.grid.work_area, expected_work_area);
 
-        let expected_hospital_area = Area::new(Point::new(70, 0), Point::new(79, 100));
+        let expected_hospital_area = Area::new(Point::new(70, 0), Point::new(79, 0));
         assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.agent_location_map.current_population(), 10);

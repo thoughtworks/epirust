@@ -99,11 +99,11 @@ export default function SimulationConfiguration() {
         <div className="form-row">
 
           <div className="col inputs">
-            <div style={{maxWidth: "25%"}}>
+            <fieldset>
               <Population/>
               <MiscellaneousConfig/>
               <TagsSelect label="Tags" placeholder={"Start typing tag name ..."}/>
-            </div>
+            </fieldset>
             <DiseaseDynamics/>
             <Interventions/>
           </div>

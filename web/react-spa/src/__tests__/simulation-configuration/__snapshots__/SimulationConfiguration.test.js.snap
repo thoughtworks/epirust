@@ -15,9 +15,7 @@ exports[`Simulation Configuration should disable submit button and show loading 
         <div
           class="col inputs"
         >
-          <div
-            style="max-width: 25%;"
-          >
+          <fieldset>
             <fieldset>
               <legend>
                 Population
@@ -206,7 +204,7 @@ exports[`Simulation Configuration should disable submit button and show loading 
                 name="tags"
               />
             </div>
-          </div>
+          </fieldset>
           <fieldset>
             <legend>
               Disease Dynamics
@@ -725,9 +723,7 @@ exports[`Simulation Configuration should render with defaults 1`] = `
         <div
           class="col inputs"
         >
-          <div
-            style="max-width: 25%;"
-          >
+          <fieldset>
             <fieldset>
               <legend>
                 Population
@@ -916,7 +912,7 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                 name="tags"
               />
             </div>
-          </div>
+          </fieldset>
           <fieldset>
             <legend>
               Disease Dynamics

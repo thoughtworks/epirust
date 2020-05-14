@@ -95,7 +95,7 @@ exports[`Simulation Configuration should disable submit button and show loading 
                 <input
                   aria-describedby="hospital_staff_percentage"
                   class="form-control form-control-sm"
-                  id="grid_size"
+                  id="hospital_staff_percentage"
                   max="1"
                   min="0"
                   name="hospital_staff_percentage"
@@ -139,7 +139,7 @@ exports[`Simulation Configuration should disable submit button and show loading 
                   <input
                     aria-describedby="hospital_beds_percentage"
                     class="form-control form-control-sm"
-                    id="grid_size"
+                    id="hospital_beds_percentage"
                     max="1"
                     min="0"
                     name="hospital_beds_percentage"
@@ -828,7 +828,7 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                 <input
                   aria-describedby="hospital_staff_percentage"
                   class="form-control form-control-sm"
-                  id="grid_size"
+                  id="hospital_staff_percentage"
                   max="1"
                   min="0"
                   name="hospital_staff_percentage"
@@ -872,7 +872,7 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                   <input
                     aria-describedby="hospital_beds_percentage"
                     class="form-control form-control-sm"
-                    id="grid_size"
+                    id="hospital_beds_percentage"
                     max="1"
                     min="0"
                     name="hospital_beds_percentage"

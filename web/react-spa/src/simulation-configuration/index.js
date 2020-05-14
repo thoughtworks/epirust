@@ -24,6 +24,7 @@ import MiscellaneousConfig from "./MiscellaneousConfig";
 import {useHistory} from "react-router-dom";
 import {post} from "../common/apiCall";
 import TagsSelect from "./TagsSelect";
+import Population from "./Population";
 
 function getNumericInputNamesFromForm(simulationConfigInputForm) {
   const formElement = simulationConfigInputForm.current,
@@ -85,33 +86,6 @@ export default function SimulationConfiguration() {
     pushData(paramsData)
   }
 
-  function renderPopulation() {
-    return (
-      <fieldset>
-        <legend>Population</legend>
-        <div className="input-control">
-          <label className="col-form-label-sm" htmlFor="number_of_agents">Number of Agents</label>
-          <input type="number" name="number_of_agents" className="form-control form-control-sm" id="number_of_agents"
-                 aria-describedby="number_of_agents" placeholder="Number of Agents" defaultValue="10000"/>
-        </div>
-
-        <div className="input-control">
-          <label className="col-form-label-sm" htmlFor="public_transport_percentage">Public Transport Percentage</label>
-          <input type="number" name="public_transport_percentage" className="form-control form-control-sm"
-                 id="public_transport_percentage" aria-describedby="public_transport_percentage"
-                 placeholder="Public Transport Percentage" defaultValue="0.2" step="any"/>
-        </div>
-
-        <div className="input-control">
-          <label className="col-form-label-sm" htmlFor="working_percentage">Working Percentage</label>
-          <input type="number" name="working_percentage" className="form-control form-control-sm"
-                 id="working_percentage" aria-describedby="working_percentage" placeholder="Working Percentage" min="0"
-                 max="1" defaultValue="0.7" step="any"/>
-        </div>
-      </fieldset>
-    )
-  }
-
   const loading = () => (<>
     <span className="spinner-grow spinner-grow-lg"/>
     <span className="button-text"> Submitting..</span>
@@ -126,7 +100,7 @@ export default function SimulationConfiguration() {
 
           <div className="col inputs">
             <div style={{maxWidth: "25%"}}>
-              {renderPopulation()}
+              <Population/>
               <MiscellaneousConfig/>
               <TagsSelect label="Tags" placeholder={"Start typing tag name ..."}/>
             </div>

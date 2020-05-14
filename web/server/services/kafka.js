@@ -20,16 +20,6 @@
 const kafka = require('kafka-node');
 const config = require('../config');
 
-class KafkaGroupConsumer {
-    constructor(host, topic, groupId) {
-        const consumerOptions = {
-            kafkaHost: host,
-            groupId: groupId
-        };
-        this.consumerStream = new kafka.ConsumerGroupStream(consumerOptions, [topic]);
-    }
-}
-
 class KafkaConsumerStream {
     constructor(host, topic, kafkaOptions) {
         const clientOptions = {kafkaHost: host};
@@ -38,21 +28,6 @@ class KafkaConsumerStream {
     }
 
     getStream() { return this._consumerStream }
-}
-
-class KafkaConsumerService {
-    constructor(host, topic, id) {
-        const consumerOptions = {
-            kafkaHost: host,
-            id: id
-        };
-        const client = new kafka.KafkaClient(consumerOptions);
-        this.consumer = new kafka.Consumer(client, [{ topic: topic }], {});
-    }
-
-    close() {
-        this.consumer.close(() => {});
-    }
 }
 
 class KafkaProducerService {
@@ -83,5 +58,5 @@ class KafkaProducerService {
 }
 
 module.exports = {
-    KafkaConsumerService, KafkaProducerService, KafkaGroupConsumer, KafkaConsumerStream
+    KafkaProducerService, KafkaConsumerStream
 };

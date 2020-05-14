@@ -174,9 +174,9 @@ impl Grid {
         self.hospital_area = Area::new(start_offset, end_offset)
     }
 
-    pub fn resize_hospital(&mut self, number_of_agents: i32) {
-        let hospital_bed_count = (number_of_agents as f64 * constants::HOSPITAL_BEDS_PER_THOUSAND +
-            number_of_agents as f64 * constants::HOSPITAL_STAFF_PERCENTAGE).ceil() as i32;
+    pub fn resize_hospital(&mut self, number_of_agents: i32, hospital_staff_percentage: f64, hospital_beds_percentage: f64) {
+        let hospital_bed_count = (number_of_agents as f64 * hospital_beds_percentage +
+            number_of_agents as f64 * hospital_staff_percentage).ceil() as i32;
 
         if !(hospital_bed_count > self.hospital_area.get_number_of_cells()) {
             let hospital_end_y: i32 = hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x);
@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn should_resize_hospital() {
         let mut grid = define_geography(100);
-        grid.resize_hospital(1000);
+        grid.resize_hospital(1000, 0.02, 0.01);
 
         assert_eq!(grid.hospital_area.start_offset, Point::new(70, 0));
         assert_eq!(grid.hospital_area.end_offset, Point::new(79, 3));
@@ -312,7 +312,7 @@ mod tests {
     #[test]
     fn should_not_resize_hospital_if_population_is_too_high() {
         let mut grid = define_geography(100);
-        grid.resize_hospital(50000);
+        grid.resize_hospital(50000, 0.02, 0.01);
 
         assert_eq!(grid.hospital_area.start_offset, Point::new(70, 0));
         assert_eq!(grid.hospital_area.end_offset, Point::new(79, 100));

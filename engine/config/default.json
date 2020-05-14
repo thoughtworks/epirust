@@ -21,7 +21,10 @@
     "high_transmission_rate": 0.25,
     "regular_transmission_start_day": 5
   },
-  "grid_size": 250,
+  "geography_parameters": {
+    "grid_size": 250,
+    "hospital_beds_percentage": 0.003
+  },
   "hours": 10000,
   "interventions": [
     {

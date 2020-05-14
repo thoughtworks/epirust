@@ -29,7 +29,7 @@ pub struct Config {
     disease: Disease,
     #[serde(default)]
     disease_overrides: Vec<DiseaseOverride>,
-    grid_size: i32,
+    geography_parameters: GeographyParameters,
     hours: i32,
     interventions: Vec<InterventionConfig>,
     output_file: Option<String>,
@@ -57,7 +57,7 @@ impl Config {
     // }
 
     pub fn get_grid_size(&self) -> i32 {
-        self.grid_size
+        self.geography_parameters.grid_size
     }
 
     pub fn get_hours(&self) -> i32 {
@@ -76,20 +76,39 @@ impl Config {
         self.enable_citizen_state_messages
     }
 
+    pub fn get_geography_parameters(&self) -> GeographyParameters {
+        self.geography_parameters.clone()
+    }
+
     #[cfg(test)]
-    pub fn new(population: Population, disease: Disease, disease_overrides: Vec<DiseaseOverride>,
-               grid: i32, hours: i32, interventions: Vec<InterventionConfig>, output_file: Option<String>)
+    pub fn new(population: Population, disease: Disease, geography_parameters: GeographyParameters, disease_overrides: Vec<DiseaseOverride>,
+               hours: i32, interventions: Vec<InterventionConfig>, output_file: Option<String>)
                -> Config {
         Config {
             population,
             disease,
             disease_overrides,
-            grid_size: grid,
+            geography_parameters,
             hours,
             interventions,
             output_file,
             enable_citizen_state_messages: true,
             starting_infections: StartingInfections::default(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub struct GeographyParameters {
+    pub grid_size: i32,
+    pub hospital_beds_percentage: f64,
+}
+
+impl GeographyParameters{
+    #[cfg(test)]
+    pub fn new(grid_size: i32, hospital_beds_percentage: f64) -> GeographyParameters {
+        GeographyParameters{
+            grid_size, hospital_beds_percentage
         }
     }
 }
@@ -199,7 +218,7 @@ mod tests {
             population,
             disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
             disease_overrides: vec![disease_override],
-            grid_size: 5660,
+            geography_parameters: GeographyParameters::new(5660, 0.003),
             hours: 10000,
             interventions: vec![InterventionConfig::Vaccinate(vaccinate)],
             output_file: None,
@@ -226,7 +245,7 @@ mod tests {
             population,
             disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
             disease_overrides: vec![],
-            grid_size: 250,
+            geography_parameters: GeographyParameters::new(250, 0.003),
             hours: 10000,
             interventions: vec![InterventionConfig::Vaccinate(vaccinate)],
             output_file: Some("simulation_default_config".to_string()),

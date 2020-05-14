@@ -50,7 +50,10 @@
       }
     }
   ],
-  "grid_size": 5660,
+  "geography_parameters": {
+    "grid_size": 5660,
+    "hospital_beds_percentage": 0.003
+  },
   "hours": 10000,
   "interventions": [
     {

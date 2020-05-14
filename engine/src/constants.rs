@@ -37,8 +37,7 @@ pub const HOURS_IN_A_DAY: i32 = 24;
 pub const QUARANTINE_DAYS: i32 = 14;
 pub const IMMUNITY_RANGE: [i32; 5] = [-2, -1, 0, 1, 2];
 
-pub const HOSPITAL_STAFF_PERCENTAGE:f64 = 0.02;
-pub const HOSPITAL_BEDS_PER_THOUSAND: f64 = 0.01;
+pub const HOSPITAL_STAFF_PERCENTAGE:f64 = 0.002;
 
 pub const HOME_SIZE: i32 = 2;
 pub const OFFICE_SIZE: i32 = 10;

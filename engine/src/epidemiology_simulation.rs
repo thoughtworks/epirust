@@ -48,6 +48,7 @@ use futures::join;
 use crate::listeners::travel_counter::TravelCounter;
 use crate::listeners::intervention_reporter::InterventionReporter;
 use crate::interventions::Interventions;
+use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -68,7 +69,7 @@ impl Epidemiology {
             Population::Csv(csv_pop) => grid.read_population(&csv_pop, &start_infections, &mut rng),
             Population::Auto(auto_pop) => grid.generate_population(&auto_pop, &start_infections, &mut rng),
         };
-        grid.resize_hospital(agent_list.len() as i32);
+        grid.resize_hospital(agent_list.len() as i32, HOSPITAL_STAFF_PERCENTAGE, config.get_geography_parameters().hospital_beds_percentage);
 
         let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
         let write_agent_location_map = agent_location_map.clone();
@@ -443,7 +444,7 @@ impl Epidemiology {
 
 #[cfg(test)]
 mod tests {
-    use crate::config::AutoPopulation;
+    use crate::config::{AutoPopulation, GeographyParameters};
     use crate::geography::Area;
     use crate::geography::Point;
     use crate::interventions::InterventionConfig;
@@ -463,8 +464,8 @@ mod tests {
             at_hour: 5000,
             percent: 0.2,
         };
-        let config = Config::new(Population::Auto(pop), disease, vec![], 100, 10000,
-                                 vec![InterventionConfig::Vaccinate(vac)], None);
+        let geography_parameters = GeographyParameters::new(100, 0.003);
+        let config = Config::new(Population::Auto(pop), disease, geography_parameters, vec![], 100, vec![InterventionConfig::Vaccinate(vac)], None);
         let epidemiology: Epidemiology = Epidemiology::new(&config, "id".to_string());
         let expected_housing_area = Area::new(Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);

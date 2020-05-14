@@ -21,7 +21,10 @@
     "exposed_duration": 48,
     "pre_symptomatic_duration": 48
   },
-  "grid_size": 250,
+  "geography_parameters": {
+    "grid_size": 250,
+    "hospital_beds_percentage": 0.003
+  },
   "hours": 10000,
   "interventions": [
     {

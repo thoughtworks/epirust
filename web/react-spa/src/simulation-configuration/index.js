@@ -17,7 +17,7 @@
  *
  */
 
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import DiseaseDynamics from './DiseaseDynamics'
 import Interventions from './Interventions'
 import MiscellaneousConfig from "./MiscellaneousConfig";
@@ -25,9 +25,25 @@ import {useHistory} from "react-router-dom";
 import {post} from "../common/apiCall";
 import TagsSelect from "./TagsSelect";
 
+function getNumericInputNamesFromForm(simulationConfigInputForm) {
+  const formElement = simulationConfigInputForm.current,
+    totalElements = formElement.length,
+    numericInputNames = [];
+
+  for (let i = 0; i < totalElements; i++) {
+    const element = formElement.elements.item(i);
+
+    if (element.constructor.name === 'HTMLInputElement' &&
+      element.type === 'number')
+      numericInputNames.push(element.name);
+  }
+  return numericInputNames;
+}
+
 export default function SimulationConfiguration() {
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [errorOccurred, setErrorOccurred] = useState(false);
+  const simulationConfigInputForm = useRef();
 
   const history = useHistory();
 
@@ -45,43 +61,16 @@ export default function SimulationConfiguration() {
   function handleSubmit(e) {
     setButtonDisabled(true);
     e.preventDefault();
-    let paramsData = {};
-    new FormData(e.target).forEach(function (value, key) {
-      if ([
-        "number_of_agents",
-        "grid_size",
-        "simulation_hrs",
-        "public_transport_percentage",
-        "working_percentage",
-        "vaccinate_at",
-        "vaccinate_percentage",
-        "death_rate",
-        "high_transmission_rate",
-        "high_transmission_start_day",
-        "last_day",
-        "asymptomatic_last_day",
-        "mild_infected_last_day",
-        "regular_transmission_rate",
-        "regular_transmission_start_day",
-        "lockdown_at_number_of_infections",
-        "essential_workers_population",
-        "hospital_spread_rate_threshold",
-        "percentage_asymptomatic_population",
-        "percentage_severe_infected_population",
-        "exposed_duration",
-        "pre_symptomatic_duration",
-        "number_of_simulations",
-        "hospital_staff_percentage",
-        "hospital_beds_percentage"
-      ].includes(key)) {
-        value = Number(value);
-      }
-      if (key === "tags") {
 
+    const numericInputNames = getNumericInputNamesFromForm(simulationConfigInputForm);
+    let paramsData = {};
+
+    new FormData(e.target).forEach(function (value, key) {
+      if (numericInputNames.includes(key)) value = Number(value);
+      if (key === "tags") {
         paramsData["tags"] = Array.isArray(paramsData["tags"])
           ? [...paramsData["tags"], value]
           : (value ? [value] : [])
-
       } else paramsData[key] = value;
     });
 
@@ -130,7 +119,8 @@ export default function SimulationConfiguration() {
 
   return (
     <div className="graph-input">
-      <form className="user-inputs" onSubmit={handleSubmit} data-testid='simulationForm'>
+      <form ref={simulationConfigInputForm} className="user-inputs" onSubmit={handleSubmit}
+            data-testid='simulationForm'>
 
         <div className="form-row">
 

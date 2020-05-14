@@ -83,28 +83,6 @@ exports[`Simulation Configuration should disable submit button and show loading 
                   value="0.7"
                 />
               </div>
-              <div
-                class="input-control"
-              >
-                <label
-                  class="col-form-label-sm"
-                  for="hospital_staff_percentage"
-                >
-                  Hospital Staff Percentage
-                </label>
-                <input
-                  aria-describedby="hospital_staff_percentage"
-                  class="form-control form-control-sm"
-                  id="hospital_staff_percentage"
-                  max="1"
-                  min="0"
-                  name="hospital_staff_percentage"
-                  placeholder="Hospital Staff Percentage"
-                  step="any"
-                  type="number"
-                  value="0.001"
-                />
-              </div>
             </fieldset>
             <fieldset>
               <fieldset>
@@ -714,7 +692,6 @@ Object {
   "high_transmission_start_day": 16,
   "hospital_beds_percentage": 0.003,
   "hospital_spread_rate_threshold": 100,
-  "hospital_staff_percentage": 0.001,
   "last_day": 22,
   "lockdown_at_number_of_infections": 100,
   "mild_infected_last_day": 22,
@@ -814,28 +791,6 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                   step="any"
                   type="number"
                   value="0.7"
-                />
-              </div>
-              <div
-                class="input-control"
-              >
-                <label
-                  class="col-form-label-sm"
-                  for="hospital_staff_percentage"
-                >
-                  Hospital Staff Percentage
-                </label>
-                <input
-                  aria-describedby="hospital_staff_percentage"
-                  class="form-control form-control-sm"
-                  id="hospital_staff_percentage"
-                  max="1"
-                  min="0"
-                  name="hospital_staff_percentage"
-                  placeholder="Hospital Staff Percentage"
-                  step="any"
-                  type="number"
-                  value="0.001"
                 />
               </div>
             </fieldset>

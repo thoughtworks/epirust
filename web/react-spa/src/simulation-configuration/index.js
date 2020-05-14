@@ -108,13 +108,6 @@ export default function SimulationConfiguration() {
                  id="working_percentage" aria-describedby="working_percentage" placeholder="Working Percentage" min="0"
                  max="1" defaultValue="0.7" step="any"/>
         </div>
-
-        <div className="input-control">
-          <label className="col-form-label-sm" htmlFor="hospital_staff_percentage">Hospital Staff Percentage</label>
-          <input type="number" name="hospital_staff_percentage" className="form-control form-control-sm" id="hospital_staff_percentage"
-                 aria-describedby="hospital_staff_percentage" placeholder="Hospital Staff Percentage"
-                 defaultValue="0.001" min="0" max="1" step="any"/>
-        </div>
       </fieldset>
     )
   }

@@ -3,13 +3,13 @@
 exports[`jobs controller /init should create a job with id and config 1`] = `
 Object {
   "disease": Object {
-    "asymptomatic_last_day": undefined,
+    "asymptomatic_last_day": 22,
     "death_rate": 0.2,
     "exposed_duration": 48,
     "high_transmission_rate": 0.5,
     "high_transmission_start_day": 16,
     "last_day": 22,
-    "mild_infected_last_day": undefined,
+    "mild_infected_last_day": 5,
     "percentage_asymptomatic_population": 0.3,
     "percentage_severe_infected_population": 0.3,
     "pre_symptomatic_duration": 0,
@@ -17,7 +17,10 @@ Object {
     "regular_transmission_start_day": 10,
   },
   "enable_citizen_state_messages": false,
-  "grid_size": 250,
+  "geography_parameters": Object {
+    "grid_size": 250,
+    "hospital_beds_percentage": 0.003,
+  },
   "hours": 10000,
   "interventions": Array [
     Object {

@@ -114,7 +114,8 @@ function makeSimulationConfig(message) {
     exposed_duration,
     pre_symptomatic_duration,
     number_of_simulations,
-    tags
+    tags,
+    hospital_beds_percentage
   } = message;
 
   return {
@@ -140,7 +141,10 @@ function makeSimulationConfig(message) {
       "exposed_duration": exposed_duration,
       "pre_symptomatic_duration": pre_symptomatic_duration
     },
-    "grid_size": grid_size,
+    "geography_parameters" : {
+      "grid_size": grid_size,
+      "hospital_beds_percentage":hospital_beds_percentage,
+    },
     "hours": simulation_hrs,
     "interventions": modelInterventions(message),
     "number_of_simulations": number_of_simulations,

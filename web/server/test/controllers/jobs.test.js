@@ -63,7 +63,11 @@ describe('jobs controller', () => {
     "exposed_duration": 48,
     "pre_symptomatic_duration": 0,
     "number_of_simulations": 2,
-    "tags": []
+    "tags": [],
+    "hospital_beds_percentage": 0.003,
+    "asymptomatic_last_day": 22,
+    "mild_infected_last_day": 5,
+
   };
   afterAll(async () => {
     await app.close()
@@ -142,6 +146,8 @@ describe('jobs controller', () => {
           },
         disease:
           {
+            asymptomatic_last_day: 22,
+            mild_infected_last_day: 5,
             regular_transmission_start_day: 10,
             high_transmission_start_day: 16,
             last_day: 22,
@@ -153,7 +159,10 @@ describe('jobs controller', () => {
             exposed_duration: 48,
             pre_symptomatic_duration: 0
           },
-        grid_size: 250,
+        geography_parameters: {
+          grid_size: 250,
+          hospital_beds_percentage: 0.003
+        },
         hours: 10000,
         number_of_simulations: 1,
         tags: [],
@@ -213,33 +222,36 @@ describe('jobs controller', () => {
                 working_percentage: 0.7
               }
           },
-        disease:
-          {
-            regular_transmission_start_day: 10,
-            high_transmission_start_day: 16,
-            last_day: 22,
-            regular_transmission_rate: 0.05,
-            high_transmission_rate: 0.5,
-            death_rate: 0.2,
-            percentage_asymptomatic_population: 0.3,
-            percentage_severe_infected_population: 0.3,
-            exposed_duration: 48,
-            pre_symptomatic_duration: 0
-          },
-        grid_size: 250,
+        disease: {
+          asymptomatic_last_day: 22,
+          mild_infected_last_day: 5,
+          regular_transmission_start_day: 10,
+          high_transmission_start_day: 16,
+          last_day: 22,
+          regular_transmission_rate: 0.05,
+          high_transmission_rate: 0.5,
+          death_rate: 0.2,
+          percentage_asymptomatic_population: 0.3,
+          percentage_severe_infected_population: 0.3,
+          exposed_duration: 48,
+          pre_symptomatic_duration: 0
+        },
+        geography_parameters: {
+          grid_size: 250,
+          hospital_beds_percentage: 0.003
+        },
         hours: 10000,
-        interventions:
-          [{
-            Lockdown: {
-              at_number_of_infections: 100,
-              essential_workers_population: 0.1,
+        interventions: [{
+          Lockdown: {
+            at_number_of_infections: 100,
+            essential_workers_population: 0.1,
+          }
+        },
+          {
+            BuildNewHospital: {
+              spread_rate_threshold: 100
             }
-          },
-            {
-              BuildNewHospital: {
-                spread_rate_threshold: 100
-              }
-            }],
+          }],
         number_of_simulations: 1,
         tags: []
       };

@@ -85,25 +85,71 @@ exports[`Simulation Configuration should disable submit button and show loading 
               </div>
             </fieldset>
             <fieldset>
-              <div
-                class="input-control"
-              >
-                <label
-                  class="col-form-label-sm"
-                  for="grid_size"
+              <fieldset>
+                <div
+                  class="input-control"
                 >
-                  Grid Size
-                </label>
-                <input
-                  aria-describedby="grid_size"
-                  class="form-control form-control-sm"
-                  id="grid_size"
-                  name="grid_size"
-                  placeholder="Grid Size"
-                  type="number"
-                  value="250"
-                />
-              </div>
+                  <label
+                    class="col-form-label-sm"
+                    for="grid_size"
+                  >
+                    Grid Size
+                  </label>
+                  <input
+                    aria-describedby="grid_size"
+                    class="form-control form-control-sm"
+                    id="grid_size"
+                    name="grid_size"
+                    placeholder="Grid Size"
+                    type="number"
+                    value="250"
+                  />
+                </div>
+                <div
+                  class="input-control"
+                >
+                  <label
+                    class="col-form-label-sm"
+                    for="hospital_staff_percentage"
+                  >
+                    Hospital Staff Percentage
+                  </label>
+                  <input
+                    aria-describedby="hospital_staff_percentage"
+                    class="form-control form-control-sm"
+                    id="grid_size"
+                    max="1"
+                    min="0"
+                    name="hospital_staff_percentage"
+                    placeholder="Hospital Staff Percentage"
+                    step="any"
+                    type="number"
+                    value="0.001"
+                  />
+                </div>
+                <div
+                  class="input-control"
+                >
+                  <label
+                    class="col-form-label-sm"
+                    for="hospital_beds_percentage"
+                  >
+                    Hospital Beds Percentage
+                  </label>
+                  <input
+                    aria-describedby="hospital_beds_percentage"
+                    class="form-control form-control-sm"
+                    id="grid_size"
+                    max="1"
+                    min="0"
+                    name="hospital_beds_percentage"
+                    placeholder="Hospital Beds Percentage"
+                    step="any"
+                    type="number"
+                    value="0.003"
+                  />
+                </div>
+              </fieldset>
               <div
                 class="input-control"
               >
@@ -666,7 +712,9 @@ Object {
   "grid_size": 250,
   "high_transmission_rate": 0.5,
   "high_transmission_start_day": 16,
+  "hospital_beds_percentage": 0.003,
   "hospital_spread_rate_threshold": 100,
+  "hospital_staff_percentage": 0.001,
   "last_day": 22,
   "lockdown_at_number_of_infections": 100,
   "mild_infected_last_day": 22,
@@ -770,25 +818,71 @@ exports[`Simulation Configuration should render with defaults 1`] = `
               </div>
             </fieldset>
             <fieldset>
-              <div
-                class="input-control"
-              >
-                <label
-                  class="col-form-label-sm"
-                  for="grid_size"
+              <fieldset>
+                <div
+                  class="input-control"
                 >
-                  Grid Size
-                </label>
-                <input
-                  aria-describedby="grid_size"
-                  class="form-control form-control-sm"
-                  id="grid_size"
-                  name="grid_size"
-                  placeholder="Grid Size"
-                  type="number"
-                  value="250"
-                />
-              </div>
+                  <label
+                    class="col-form-label-sm"
+                    for="grid_size"
+                  >
+                    Grid Size
+                  </label>
+                  <input
+                    aria-describedby="grid_size"
+                    class="form-control form-control-sm"
+                    id="grid_size"
+                    name="grid_size"
+                    placeholder="Grid Size"
+                    type="number"
+                    value="250"
+                  />
+                </div>
+                <div
+                  class="input-control"
+                >
+                  <label
+                    class="col-form-label-sm"
+                    for="hospital_staff_percentage"
+                  >
+                    Hospital Staff Percentage
+                  </label>
+                  <input
+                    aria-describedby="hospital_staff_percentage"
+                    class="form-control form-control-sm"
+                    id="grid_size"
+                    max="1"
+                    min="0"
+                    name="hospital_staff_percentage"
+                    placeholder="Hospital Staff Percentage"
+                    step="any"
+                    type="number"
+                    value="0.001"
+                  />
+                </div>
+                <div
+                  class="input-control"
+                >
+                  <label
+                    class="col-form-label-sm"
+                    for="hospital_beds_percentage"
+                  >
+                    Hospital Beds Percentage
+                  </label>
+                  <input
+                    aria-describedby="hospital_beds_percentage"
+                    class="form-control form-control-sm"
+                    id="grid_size"
+                    max="1"
+                    min="0"
+                    name="hospital_beds_percentage"
+                    placeholder="Hospital Beds Percentage"
+                    step="any"
+                    type="number"
+                    value="0.003"
+                  />
+                </div>
+              </fieldset>
               <div
                 class="input-control"
               >

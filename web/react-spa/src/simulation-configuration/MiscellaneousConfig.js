@@ -17,7 +17,7 @@
  *
  */
 
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 
 export default function MiscellaneousConfig() {
   const disableGrid = (gs, ns) => gs > 100 || ns > 1;
@@ -41,23 +41,45 @@ export default function MiscellaneousConfig() {
 
   return (
     <fieldset>
-      <div className="input-control">
-        <label className="col-form-label-sm" htmlFor="grid_size">Grid Size</label>
-        <input onChange={handleSizeChange} type="number" name="grid_size" className="form-control form-control-sm" id="grid_size" aria-describedby="grid_size" placeholder="Grid Size" defaultValue={gridSize} />
-      </div>
+      <fieldset>
+        <div className="input-control">
+          <label className="col-form-label-sm" htmlFor="grid_size">Grid Size</label>
+          <input onChange={handleSizeChange} type="number" name="grid_size" className="form-control form-control-sm"
+                 id="grid_size" aria-describedby="grid_size" placeholder="Grid Size" defaultValue={gridSize}/>
+        </div>
+
+        <div className="input-control">
+          <label className="col-form-label-sm" htmlFor="hospital_staff_percentage">Hospital Staff Percentage</label>
+          <input type="number" name="hospital_staff_percentage" className="form-control form-control-sm" id="grid_size"
+                 aria-describedby="hospital_staff_percentage" placeholder="Hospital Staff Percentage"
+                 defaultValue={0.001} min={0} max={1} step="any"/>
+        </div>
+
+        <div className="input-control">
+          <label className="col-form-label-sm" htmlFor="hospital_beds_percentage">Hospital Beds Percentage</label>
+          <input type="number" name="hospital_beds_percentage" className="form-control form-control-sm" id="grid_size"
+                 aria-describedby="hospital_beds_percentage" placeholder="Hospital Beds Percentage"
+                 defaultValue={0.003} min={0} max={1} step="any"/>
+        </div>
+      </fieldset>
 
       <div className="input-control">
         <label className="col-form-label-sm" htmlFor="simulation_hrs">Simulation Hours</label>
-        <input type="number" name="simulation_hrs" className="form-control form-control-sm" id="simulation_hrs" aria-describedby="simulation_hrs" placeholder="Simulation Hours" defaultValue="10000" />
+        <input type="number" name="simulation_hrs" className="form-control form-control-sm" id="simulation_hrs"
+               aria-describedby="simulation_hrs" placeholder="Simulation Hours" defaultValue="10000"/>
       </div>
 
       <div className="input-control">
         <label className="col-form-label-sm" htmlFor="number_of_simulations">Number of simulations</label>
-        <input type="number" name="number_of_simulations" onChange={handleNumberOfSimulationChange} className="form-control form-control-sm" id="number_of_simulations" aria-describedby="number_of_simulations" placeholder="Number of simulations" step="1" min="1" value={numberOfSimulations}/>
+        <input type="number" name="number_of_simulations" onChange={handleNumberOfSimulationChange}
+               className="form-control form-control-sm" id="number_of_simulations"
+               aria-describedby="number_of_simulations" placeholder="Number of simulations" step="1" min="1"
+               value={numberOfSimulations}/>
       </div>
 
       <div className="custom-control custom-switch switch-right">
-        <input type="checkbox" name="generate_grid_vis" onChange={handleCheckedChange} checked={gridChecked} disabled={gridDisable} className="custom-control-input" id="generate_grid_vis" />
+        <input type="checkbox" name="generate_grid_vis" onChange={handleCheckedChange} checked={gridChecked}
+               disabled={gridDisable} className="custom-control-input" id="generate_grid_vis"/>
         <label className="custom-control-label col-form-label-sm" htmlFor="generate_grid_vis">Grid Visualization</label>
         <small className="form-text text-muted">Allowed when grid size less than 101 and single simulation ran</small>
       </div>

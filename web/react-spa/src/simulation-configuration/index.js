@@ -70,7 +70,9 @@ export default function SimulationConfiguration() {
         "percentage_severe_infected_population",
         "exposed_duration",
         "pre_symptomatic_duration",
-        "number_of_simulations"
+        "number_of_simulations",
+        "hospital_staff_percentage",
+        "hospital_beds_percentage"
       ].includes(key)) {
         value = Number(value);
       }

@@ -17,7 +17,7 @@
  *
  */
 
-const {SimulationCountsConsumer} = require('../../services/SimulationCountsConsumer');
+const {CountsMessageHandler} = require('../../services/CountsMessageHandler');
 jest.mock("../../db/models/Simulation");
 jest.mock("../../db/models/Count");
 jest.mock('../../db/services/SimulationService');
@@ -35,7 +35,7 @@ describe('Simulation Counts Consumer', () => {
   it('should updated the status of simulation to be finished', async () => {
     const simulationId = mockObjectId();
     const data = {value: '{"simulation_ended":true}', key: simulationId.toString()};
-    const simulationCountsConsumer = new SimulationCountsConsumer();
+    const simulationCountsConsumer = new CountsMessageHandler();
 
     await simulationCountsConsumer.handleMessage(data);
 
@@ -47,7 +47,7 @@ describe('Simulation Counts Consumer', () => {
     const countMessage = {"infected":78, "hour": 12};
     const simulationId = mockObjectId();
     const data = {value: JSON.stringify(countMessage), key: simulationId.toString()};
-    const simulationCountsConsumer = new SimulationCountsConsumer();
+    const simulationCountsConsumer = new CountsMessageHandler();
 
     await simulationCountsConsumer.handleMessage(data);
 
@@ -61,7 +61,7 @@ describe('Simulation Counts Consumer', () => {
       value: '{"dummyKey":"dummyValue", "hour":1}',
       key: simulationId.toString()
     };
-    const simulationCountsConsumer = new SimulationCountsConsumer();
+    const simulationCountsConsumer = new CountsMessageHandler();
 
     await simulationCountsConsumer.handleMessage(data);
 
@@ -76,7 +76,7 @@ describe('Simulation Counts Consumer', () => {
     const intervention = {"hour": 12, "intervention": "lockdown", "data": {"status": "locked_down"}}
     const simulationId = mockObjectId();
     const data = {value: JSON.stringify(intervention), key: simulationId.toString()};
-    const simulationCountsConsumer = new SimulationCountsConsumer();
+    const simulationCountsConsumer = new CountsMessageHandler();
 
     await simulationCountsConsumer.handleMessage(data)
 

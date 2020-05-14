@@ -19,7 +19,7 @@
 
 const {KafkaStreamProcessor} = require("./services/KafkaStreamProcessor");
 const mongoose = require('mongoose');
-const {SimulationCountsConsumer} = require("./services/SimulationCountsConsumer");
+const {CountsMessageHandler} = require("./services/CountsMessageHandler");
 const {GridMessageHandler} = require("./services/GridMessageHandler");
 const config = require('./config');
 
@@ -30,8 +30,8 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 mongoose.set('useCreateIndex', true);
 
 
-const simulationCountsConsumer = new SimulationCountsConsumer();
-const kafkaCountsStreamProcessor = new KafkaStreamProcessor(simulationCountsConsumer, config.COUNTS_TOPIC)
+const countsMessageHandler = new CountsMessageHandler();
+const kafkaCountsStreamProcessor = new KafkaStreamProcessor(countsMessageHandler, config.COUNTS_TOPIC)
 
 const gridMessageHandler = new GridMessageHandler();
 const kafkaGridStreamProcessor = new KafkaStreamProcessor(gridMessageHandler, config.GRID_MESSAGE_TOPIC)

@@ -23,7 +23,7 @@ const CountService = require('../db/services/CountService');
 
 const {toObjectId} = require('../common/util')
 
-class SimulationCountsConsumer {
+class CountsMessageHandler {
   async handleMessage(data) {
     const parsedMessage = JSON.parse(data.value);
 
@@ -50,4 +50,4 @@ class SimulationCountsConsumer {
   }
 }
 
-module.exports = {SimulationCountsConsumer};
+module.exports = {CountsMessageHandler};

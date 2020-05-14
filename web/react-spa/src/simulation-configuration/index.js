@@ -102,7 +102,7 @@ export default function SimulationConfiguration() {
             <fieldset>
               <Population/>
               <MiscellaneousConfig/>
-              <TagsSelect label="Tags" placeholder={"Start typing tag name ..."}/>
+              <TagsSelect label="Tags" placeholder={"Start typing ..."}/>
             </fieldset>
             <DiseaseDynamics/>
             <Interventions/>

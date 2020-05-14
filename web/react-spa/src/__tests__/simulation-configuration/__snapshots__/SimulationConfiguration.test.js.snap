@@ -83,6 +83,28 @@ exports[`Simulation Configuration should disable submit button and show loading 
                   value="0.7"
                 />
               </div>
+              <div
+                class="input-control"
+              >
+                <label
+                  class="col-form-label-sm"
+                  for="hospital_staff_percentage"
+                >
+                  Hospital Staff Percentage
+                </label>
+                <input
+                  aria-describedby="hospital_staff_percentage"
+                  class="form-control form-control-sm"
+                  id="grid_size"
+                  max="1"
+                  min="0"
+                  name="hospital_staff_percentage"
+                  placeholder="Hospital Staff Percentage"
+                  step="any"
+                  type="number"
+                  value="0.001"
+                />
+              </div>
             </fieldset>
             <fieldset>
               <fieldset>
@@ -103,28 +125,6 @@ exports[`Simulation Configuration should disable submit button and show loading 
                     placeholder="Grid Size"
                     type="number"
                     value="250"
-                  />
-                </div>
-                <div
-                  class="input-control"
-                >
-                  <label
-                    class="col-form-label-sm"
-                    for="hospital_staff_percentage"
-                  >
-                    Hospital Staff Percentage
-                  </label>
-                  <input
-                    aria-describedby="hospital_staff_percentage"
-                    class="form-control form-control-sm"
-                    id="grid_size"
-                    max="1"
-                    min="0"
-                    name="hospital_staff_percentage"
-                    placeholder="Hospital Staff Percentage"
-                    step="any"
-                    type="number"
-                    value="0.001"
                   />
                 </div>
                 <div
@@ -816,6 +816,28 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                   value="0.7"
                 />
               </div>
+              <div
+                class="input-control"
+              >
+                <label
+                  class="col-form-label-sm"
+                  for="hospital_staff_percentage"
+                >
+                  Hospital Staff Percentage
+                </label>
+                <input
+                  aria-describedby="hospital_staff_percentage"
+                  class="form-control form-control-sm"
+                  id="grid_size"
+                  max="1"
+                  min="0"
+                  name="hospital_staff_percentage"
+                  placeholder="Hospital Staff Percentage"
+                  step="any"
+                  type="number"
+                  value="0.001"
+                />
+              </div>
             </fieldset>
             <fieldset>
               <fieldset>
@@ -836,28 +858,6 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                     placeholder="Grid Size"
                     type="number"
                     value="250"
-                  />
-                </div>
-                <div
-                  class="input-control"
-                >
-                  <label
-                    class="col-form-label-sm"
-                    for="hospital_staff_percentage"
-                  >
-                    Hospital Staff Percentage
-                  </label>
-                  <input
-                    aria-describedby="hospital_staff_percentage"
-                    class="form-control form-control-sm"
-                    id="grid_size"
-                    max="1"
-                    min="0"
-                    name="hospital_staff_percentage"
-                    placeholder="Hospital Staff Percentage"
-                    step="any"
-                    type="number"
-                    value="0.001"
                   />
                 </div>
                 <div

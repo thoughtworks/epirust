@@ -49,13 +49,6 @@ export default function MiscellaneousConfig() {
         </div>
 
         <div className="input-control">
-          <label className="col-form-label-sm" htmlFor="hospital_staff_percentage">Hospital Staff Percentage</label>
-          <input type="number" name="hospital_staff_percentage" className="form-control form-control-sm" id="grid_size"
-                 aria-describedby="hospital_staff_percentage" placeholder="Hospital Staff Percentage"
-                 defaultValue={0.001} min={0} max={1} step="any"/>
-        </div>
-
-        <div className="input-control">
           <label className="col-form-label-sm" htmlFor="hospital_beds_percentage">Hospital Beds Percentage</label>
           <input type="number" name="hospital_beds_percentage" className="form-control form-control-sm" id="grid_size"
                  aria-describedby="hospital_beds_percentage" placeholder="Hospital Beds Percentage"

@@ -20,7 +20,7 @@
 const {KafkaStreamProcessor} = require("./services/KafkaStreamProcessor");
 const mongoose = require('mongoose');
 const {SimulationCountsConsumer} = require("./services/SimulationCountsConsumer");
-const {SimulationGridConsumer} = require("./services/SimulationGridConsumer");
+const {GridMessageHandler} = require("./services/GridMessageHandler");
 const config = require('./config');
 
 mongoose.connect(config.DATABASE_URL, {useNewUrlParser: true, useUnifiedTopology: true});
@@ -32,6 +32,9 @@ mongoose.set('useCreateIndex', true);
 
 const simulationCountsConsumer = new SimulationCountsConsumer();
 const kafkaCountsStreamProcessor = new KafkaStreamProcessor(simulationCountsConsumer, config.COUNTS_TOPIC)
-kafkaCountsStreamProcessor.start()
 
-new SimulationGridConsumer().start();
+const gridMessageHandler = new GridMessageHandler();
+const kafkaGridStreamProcessor = new KafkaStreamProcessor(gridMessageHandler, config.GRID_MESSAGE_TOPIC)
+
+kafkaCountsStreamProcessor.start()
+kafkaGridStreamProcessor.start();

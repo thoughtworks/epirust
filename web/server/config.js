@@ -8,7 +8,7 @@ module.exports = {
     // Kafka Config
     KAFKA_URL: process.env.KAFKA_URL || 'localhost:9092',
     COUNTS_TOPIC: 'counts_updated',
-    CITIZEN_STATES_UPDATED: 'citizen_states_updated',
+    GRID_MESSAGE_TOPIC: 'citizen_states_updated',
     KAFKA_GROUP: process.env.KAFKA_GROUP || 'dev_server_consumer',
 
     //Client Config

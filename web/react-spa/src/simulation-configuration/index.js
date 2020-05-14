@@ -133,20 +133,20 @@ export default function SimulationConfiguration() {
         <div className="form-row">
 
           <div className="col inputs">
-            <div style={{maxWidth : "25%"}}>
+            <div style={{maxWidth: "25%"}}>
               {renderPopulation()}
               <MiscellaneousConfig/>
-                <TagsSelect label="Tags" placeholder={"Start typing tag name ..."}/>
+              <TagsSelect label="Tags" placeholder={"Start typing tag name ..."}/>
             </div>
             <DiseaseDynamics/>
             <Interventions/>
           </div>
 
-            <div className="col actions">
-          <button type="submit" className="btn btn-primary btn-lg" id="submitBtn" disabled={buttonDisabled}>
+          <div className="col actions">
+            <button type="submit" className="btn btn-primary btn-lg" id="submitBtn" disabled={buttonDisabled}>
               {buttonDisabled ? loading() : "Submit"}
             </button>
-            </div>
+          </div>
           {errorOccurred && <div className="error-message alert-danger">Error Occurred please try again!</div>}
         </div>
 

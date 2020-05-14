@@ -59,7 +59,7 @@ export default function MiscellaneousConfig() {
       <div className="custom-control custom-switch switch-right">
         <input type="checkbox" name="generate_grid_vis" onChange={handleCheckedChange} checked={gridChecked} disabled={gridDisable} className="custom-control-input" id="generate_grid_vis" />
         <label className="custom-control-label col-form-label-sm" htmlFor="generate_grid_vis">Grid Visualization</label>
-        <small className="form-text text-muted">Allowed when grid size less than 101 </small>
+        <small className="form-text text-muted">Allowed when grid size less than 101 and single simulation ran</small>
       </div>
 
     </fieldset>

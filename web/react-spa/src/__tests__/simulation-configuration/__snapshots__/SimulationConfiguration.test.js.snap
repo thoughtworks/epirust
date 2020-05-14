@@ -163,7 +163,7 @@ exports[`Simulation Configuration should disable submit button and show loading 
                 <small
                   class="form-text text-muted"
                 >
-                  Allowed when grid size less than 101 
+                  Allowed when grid size less than 101 and single simulation ran
                 </small>
               </div>
             </fieldset>
@@ -848,7 +848,7 @@ exports[`Simulation Configuration should render with defaults 1`] = `
                 <small
                   class="form-text text-muted"
                 >
-                  Allowed when grid size less than 101 
+                  Allowed when grid size less than 101 and single simulation ran
                 </small>
               </div>
             </fieldset>

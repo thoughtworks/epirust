@@ -57,11 +57,17 @@ impl AgentLocationMap {
         old_cell
     }
 
-    pub fn goto_hospital(&self, hospital_area: &Area, cell: Point, citizen: &mut agent::Citizen) -> Point {
+    pub fn goto_hospital(&self, hospital_area: &Area, cell: Point, citizen: &mut agent::Citizen) -> (bool, Point) {
         let vacant_hospital_cell = hospital_area.iter().find(|cell| {
             self.is_cell_vacant(cell)
         });
-        self.move_agent(cell, vacant_hospital_cell.unwrap_or(citizen.home_location.get_random_point(&mut RandomWrapper::new())))
+        match vacant_hospital_cell {
+            Some(x) => (true, self.move_agent(cell, x)),
+            None => {
+                (false,
+                 self.move_agent(cell, citizen.home_location.get_random_point(&mut RandomWrapper::new())))
+            }
+        }
     }
 
 //    pub fn print(&self){
@@ -215,8 +221,10 @@ mod tests {
         let agents = vec![citizen1, citizen2];
         let map = AgentLocationMap::new(5, &agents, &points);
         let hospital = Area::new(Point::new(2, 2), Point::new(4, 4));
+        let result = map.goto_hospital(&hospital, points[0], &mut citizen1);
 
-        assert_eq!(map.goto_hospital(&hospital, points[0], &mut citizen1), Point::new(2, 2));
+        assert_eq!(result.0, true);
+        assert_eq!(result.1, Point::new(2, 2));
     }
 
     #[test]
@@ -235,7 +243,10 @@ mod tests {
         let map = AgentLocationMap::new(5, &agents, &points);
         let hospital = Area::new(Point::new(0, 0), Point::new(1, 1));
 
-        assert_eq!(citizen1.clone().home_location.contains(&map.goto_hospital(&hospital, points[0], &mut citizen1)), true);
+        let result = map.goto_hospital(&hospital, points[0], &mut citizen1);
+
+        assert_eq!(result.0, false);
+        assert_eq!(citizen1.clone().home_location.contains(&result.1), true);
     }
 
     #[test]

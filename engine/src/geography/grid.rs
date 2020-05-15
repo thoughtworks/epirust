@@ -181,6 +181,7 @@ impl Grid {
         if !(hospital_bed_count > self.hospital_area.get_number_of_cells()) {
             let hospital_end_y: i32 = hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x);
             self.hospital_area = Area::new(self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
+            info!("Hospital capacity {}: ", hospital_bed_count);
         }
     }
 

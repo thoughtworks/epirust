@@ -344,8 +344,9 @@ impl Citizen {
         if self.state_machine.is_infected() && !self.hospitalized {
             let to_be_hospitalized = self.state_machine.hospitalize(disease, self.immunity);
             if to_be_hospitalized {
-                new_cell = AgentLocationMap::goto_hospital(map, hospital, cell, self);
-                if new_cell != cell {
+                let (is_hospitalized, new_location) = AgentLocationMap::goto_hospital(map, hospital, cell, self);
+                new_cell = new_location;
+                if is_hospitalized {
                     self.hospitalized = true;
                     counts.update_hospitalized(1);
                     counts.update_infected(-1);
@@ -429,6 +430,9 @@ impl Citizen {
     }
 
     fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
+        if !self.can_move() {
+            return cell;
+        }
         let mut current_location = cell;
         if !self.current_area.contains(&cell) {
             current_location = self.current_area.get_random_point(rng);

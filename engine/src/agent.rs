@@ -167,7 +167,7 @@ impl Citizen {
     }
 
     pub fn can_move(&self) -> bool {
-        if self.hospitalized || self.state_machine.is_deceased() || self.isolated {
+        if self.state_machine.is_symptomatic() || self.hospitalized || self.state_machine.is_deceased() || self.isolated {
             return false;
         }
         true

@@ -198,6 +198,18 @@ impl DiseaseStateMachine {
         }
     }
 
+    pub fn is_symptomatic(&self) -> bool {
+        match self.state {
+            State::Infected { symptoms: true, severity} => {
+                match severity{
+                    InfectionSeverity::Pre { .. } => false,
+                    _ => true
+                }
+            }
+            _ => false
+        }
+    }
+
     pub fn is_deceased(&self) -> bool {
         match self.state {
             State::Deceased {} => {
@@ -393,5 +405,22 @@ mod tests {
         machine.set_severe_infected();
         assert_eq!(machine.state, State::Infected { symptoms: true, severity: InfectionSeverity::Severe });
         assert_eq!(machine.infection_day, 1);
+    }
+
+    #[test]
+    fn should_check_if_symptomatic() {
+        let mut machine = DiseaseStateMachine::new();
+
+        machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Mild };
+        assert_eq!(machine.is_symptomatic(), true);
+
+        machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Severe };
+        assert_eq!(machine.is_symptomatic(), true);
+
+        machine.state = State::Infected { symptoms: false, severity: InfectionSeverity::Mild};
+        assert_eq!(machine.is_symptomatic(), false);
+
+        machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 100 } };
+        assert_eq!(machine.is_symptomatic(), false);
     }
 }

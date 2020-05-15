@@ -29,6 +29,7 @@ class KafkaStreamProcessor {
       groupId: config.KAFKA_GROUP
     };
 
+    this._topic = topic;
     this._kafkaConsumer = new KafkaConsumerStream(config.KAFKA_URL, topic, kafkaOptions);
     this._dataConsumer = consumer
   }
@@ -36,6 +37,8 @@ class KafkaStreamProcessor {
   async start() {
     const consumerStream = this._kafkaConsumer.getStream();
     const commitStream = consumerStream.createCommitStream();
+
+    console.log(`Started consumer stream on topic ${this._topic}`)
 
     consumerStream
       .pipe(through2.obj(async (data, enc, cb) => {

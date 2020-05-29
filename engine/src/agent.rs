@@ -392,7 +392,19 @@ impl Citizen {
     }
 
     fn goto_area(&mut self, target_area: Area, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
-        if !self.can_move() {
+        //TODO: Refactor - Jayanta
+        // If agent is working and current_area is work, target area is home and symptomatic then allow movement
+        let mut override_movement = false;
+
+        match self.work_status{
+            WorkStatus::Normal{} | WorkStatus::Essential{} => {
+                if self.work_location.contains(&cell) && target_area == self.home_location && (self.state_machine.is_mild_symptomatic() || self.state_machine.is_infected_severe()) {
+                    override_movement = true;
+                }
+            }
+            _ => {}
+        }
+        if !self.can_move() && !override_movement {
             return cell;
         }
         if self.working {

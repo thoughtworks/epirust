@@ -249,7 +249,6 @@ impl DiseaseStateMachine {
         }
     }
 
-    #[cfg(test)]
     pub fn is_mild_symptomatic(&self) -> bool {
         match self.state {
             State::Infected { symptoms: true, severity: InfectionSeverity::Mild } => { true }
@@ -257,7 +256,6 @@ impl DiseaseStateMachine {
         }
     }
 
-    #[cfg(test)]
     pub fn is_infected_severe(&self) -> bool {
         match self.state {
             State::Infected { symptoms: true, severity: InfectionSeverity::Severe } => { true }

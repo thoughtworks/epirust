@@ -52,7 +52,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 214275,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -98,7 +98,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 204644,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -144,7 +144,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 223065,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -190,7 +190,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 231620,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -236,7 +236,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 200255,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -282,7 +282,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 247828,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -328,7 +328,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 211910,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -374,7 +374,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 146333,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -420,7 +420,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 253778,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -466,7 +466,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 224265,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -512,7 +512,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 236606,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -558,7 +558,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 169423,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -604,7 +604,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 243081,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }
@@ -650,7 +650,7 @@
         "sim_id": "sim-timestamp",
         "population": {
           "Auto": {
-            "number_of_agents": 100000,
+            "number_of_agents": 155160,
             "public_transport_percentage": 0.8,
             "working_percentage": 0.7
           }

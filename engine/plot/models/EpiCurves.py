@@ -71,9 +71,9 @@ class EpiCurves:
         self.curves = self.strategies[_class](epi_curve_input)
 
     def plot(self, color_mapping):
-        fig, axes = plt.subplots()
+        fig, axes = plt.subplots(figsize=(15, 8))
         plot_lines = list(map(lambda curve: curve.plot(axes, color_mapping), self.curves))
-        legend = plt.legend()
+        legend = axes.legend(bbox_to_anchor=(1, 1), loc='upper left')
         lined = dict()
         for legend_line, plot_line in zip(legend.get_lines(), plot_lines):
             legend_line.set_picker(5)
@@ -97,7 +97,7 @@ class EpiCurves:
         data_frame.to_csv(output_path, index=None)
 
     def compare_plot(self, data_frame, color_mapping):
-        fig, axes = plt.subplots()
+        fig, axes = plt.subplots(figsize=(15, 8))
 
         plot_lines = []
 
@@ -116,7 +116,7 @@ class EpiCurves:
         plt.axvspan(lock_down_start, lock_down_start + 21, alpha=0.3)
         plt.text(lock_down_start + 8, data_frame['susceptible'].max()/3, 'Lockdown Period', rotation=90)
 
-        legend = plt.legend()
+        legend = plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
 
         lined = dict()
         for legend_line, plot_line in zip(legend.get_lines(), plot_lines):

@@ -40,7 +40,7 @@ def calculate_mean_and_standard_dev(data_frames):
     return curves
 
 
-def toggle_visibility(figure, legend_line, plots):
+def toggle_visibility(figure, legend_line, plots, ax):
     for plot in plots:
         vis = not plot.get_visible()
         plot.set_visible(vis)
@@ -48,6 +48,8 @@ def toggle_visibility(figure, legend_line, plots):
             legend_line.set_alpha(1.0)
         else:
             legend_line.set_alpha(0.2)
+        ax.relim(True)
+        ax.autoscale_view()
         figure.canvas.draw()
 
 
@@ -70,9 +72,14 @@ class EpiCurves:
 
     def plot(self):
         fig, axes = plt.subplots()
-        for curve in self.curves:
-            curve.plot(axes)
-        plt.legend()
+        plot_lines = list(map(lambda curve: curve.plot(axes), self.curves))
+        legend = plt.legend()
+        lined = dict()
+        for legend_line, plot_line in zip(legend.get_lines(), plot_lines):
+            legend_line.set_picker(5)
+            lined[legend_line] = plot_line
+
+        fig.canvas.mpl_connect('pick_event', lambda e: toggle_visibility(fig, e.artist, lined[e.artist], axes))
         plt.xlabel('Days')
         plt.ylabel('No. of individuals')
         plt.show()
@@ -125,7 +132,7 @@ class EpiCurves:
             lined[legend_line] = plot_line
             toggle_visibility(fig, legend_line, plot_line)
 
-        fig.canvas.mpl_connect('pick_event', lambda e: toggle_visibility(fig, e.artist, lined[e.artist]))
+        fig.canvas.mpl_connect('pick_event', lambda e: toggle_visibility(fig, e.artist, lined[e.artist], axes))
         plt.xlabel('Days')
         plt.ylabel('No. of individuals')
         plt.show()

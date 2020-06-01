@@ -1,8 +1,9 @@
 {
-    "infected": "#d62728",
-    "recovered": "#2ca02c",
-    "susceptible": "#ff7f0e",
-    "deceased": "#9467bd",
-    "hospitalized": "#1f77b4",
-    "exposed": "purple"
+    "susceptible"    :   "#b3c700",
+    "exposed"        :   "#fca503",
+    "infected"       :   "#ff0000",
+    "recovered"      :   "#00ff00",
+    "deceased"       :   "#100069",
+    "hospitalized"   :   "#03a5fc",
+   "totalinfected"   :   "#800000"
 }

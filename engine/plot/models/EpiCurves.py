@@ -70,9 +70,9 @@ class EpiCurves:
             raise Exception("Input has to be list of DataFrames or DataFrames")
         self.curves = self.strategies[_class](epi_curve_input)
 
-    def plot(self):
+    def plot(self, color_mapping):
         fig, axes = plt.subplots()
-        plot_lines = list(map(lambda curve: curve.plot(axes), self.curves))
+        plot_lines = list(map(lambda curve: curve.plot(axes, color_mapping), self.curves))
         legend = plt.legend()
         lined = dict()
         for legend_line, plot_line in zip(legend.get_lines(), plot_lines):
@@ -96,15 +96,7 @@ class EpiCurves:
         data_frame['hour'] = data_frame.index + 1
         data_frame.to_csv(output_path, index=None)
 
-    def compare_plot(self, data_frame):
-        color_mapping = {
-            'infected': '#d62728',
-            'recovered': '#2ca02c',
-            'susceptible': '#ff7f0e',
-            'deceased': '#9467bd',
-            'hospitalized': '#1f77b4',
-            'exposed': 'purple'
-        }
+    def compare_plot(self, data_frame, color_mapping):
         fig, axes = plt.subplots()
 
         plot_lines = []

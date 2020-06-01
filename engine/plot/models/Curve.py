@@ -24,13 +24,13 @@ class Curve:
         self.curve_mean = curve_mean
         self.curve_std = curve_std
 
-    def plot(self, axes):
+    def plot(self, axes, color_mapping):
         time_steps = np.arange(0, self.curve_mean.size, 24)
         plot_mean = self.curve_mean[time_steps]
         plot_std = self.curve_std[time_steps]
         x = np.arange(plot_mean.size)
-        line_plot, = axes.plot(x, plot_mean, label=self.name)
-        fill_plot = axes.fill_between(x, plot_mean - plot_std, plot_mean + plot_std, alpha=0.5)
+        line_plot, = axes.plot(x, plot_mean, label=self.name, color=color_mapping[self.name])
+        fill_plot = axes.fill_between(x, plot_mean - plot_std, plot_mean + plot_std, alpha=0.5, color=color_mapping[self.name])
         return [line_plot, fill_plot]
 
     def to_dictionary(self):

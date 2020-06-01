@@ -19,6 +19,7 @@
 import argparse
 import pandas as pd
 from models import EpiCurves
+import json
 
 
 def arg_parser():
@@ -27,6 +28,7 @@ def arg_parser():
     parser.add_argument('--output-path', help='path to saving the collated csvs', default=None)
     parser.add_argument('--collated-csv', help='path to the collated csvs', default=None)
     parser.add_argument('--compare-with', help='path to the csv to be compared with', default=None)
+    parser.add_argument('--color-mapping', help='path to the csv to be compared with', default='color_mapping.json')
     return parser.parse_args()
 
 
@@ -41,6 +43,9 @@ if __name__ == '__main__':
     if len(args.data_path) != 0 and args.collated_csv is not None:
         raise Exception('Either enter the simulation csvs or the collated csv file. Can not do both')
 
+    with open(args.color_mapping) as f:
+        color_mapping = json.load(f)
+
     epi_curves = None
     if len(args.data_path):
         data_frames = open_data_frames(args.data_path)
@@ -53,7 +58,7 @@ if __name__ == '__main__':
         epi_curves = EpiCurves(pd.read_csv(args.collated_csv))
 
     if args.compare_with is not None:
-        epi_curves.compare_plot(pd.read_csv(args.compare_with))
+        epi_curves.compare_plot(pd.read_csv(args.compare_with), color_mapping)
     else:
-        epi_curves.plot()
+        epi_curves.plot(color_mapping)
 

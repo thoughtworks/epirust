@@ -57,6 +57,16 @@ impl EventsKafkaProducer {
             citizen_states_topic,
         }
     }
+
+    fn publish_citizen_states_buffer(&mut self) {
+        let message = serde_json::to_string(&self.citizen_states_buffer)
+            .expect("Failed to serialize citizen states");
+        let record: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
+            .key(&self.sim_id)
+            .payload(&message);
+        self.producer.send(record, 0);
+        self.citizen_states_buffer.next_hour();
+    }
 }
 
 impl Listener for EventsKafkaProducer {
@@ -76,6 +86,7 @@ impl Listener for EventsKafkaProducer {
         self.producer.send(record, 0);
 
         if self.enable_citizen_state_messages {
+            self.publish_citizen_states_buffer();
             let record2: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
                 .key(&self.sim_id)
                 .payload(&message);
@@ -89,16 +100,9 @@ impl Listener for EventsKafkaProducer {
         }
         if self.citizen_states_buffer.hr < hr {
             //hour incremented, push out all states to kafka
-            let message = serde_json::to_string(&self.citizen_states_buffer)
-                .expect("Failed to serialize citizen states");
-            let record: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
-                .key(&self.sim_id)
-                .payload(&message);
-            self.producer.send(record, 0);
-            self.citizen_states_buffer.next_hour();
-        } else {
-            self.citizen_states_buffer.update(citizen, location);
+            self.publish_citizen_states_buffer();
         }
+        self.citizen_states_buffer.update(citizen, location);
     }
 
     fn grid_updated(&self, grid: &Grid) {

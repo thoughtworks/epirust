@@ -106,6 +106,7 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
     const getCounts = (citizens) => {
         const counts = {
             'susceptible': 0,
+            'exposed': 0,
             'infected': 0,
             'recovered': 0,
             'deceased': 0
@@ -129,10 +130,18 @@ export default function AgentPositionsWrapper({ agentPositions, simulationEnded 
         setCurrentDisplayIndex(idx => idx - 1)
     }
 
+    const dayAndHour = (index) => {
+        let day = Math.floor((index + 1) / 24);
+        let hour = (index + 1) % 24;
+        return `Day ${day}, hour: ${hour}`;
+    }
+
     return (
         <div style={{ position: "relative" }}>
             <div className="card p-4 grid-control" style={{ position: "absolute", zIndex: 5, right: 0, width: 190 }}>
                 <h4 style={{ textAlign: 'center' }} className="pb-2" data-testid="counter">{`${currentDisplayIndex + 1}/${agentPositions ? agentPositions.length : 0} hrs`}</h4>
+
+                <div style={{ textAlign: 'center' }} className="pb-2" >{ dayAndHour(currentDisplayIndex) }</div>
 
                 <div className="btn-group mb-2 justify-content-center" role="group" aria-label="Buttons to pause/play and reset">
                     {clickedPause

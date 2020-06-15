@@ -29,6 +29,7 @@ const countSchema = new Schema({
   simulation_id: {type: mongoose.ObjectId, required: true},
   hour: Number,
   susceptible: Number,
+  exposed: Number,
   infected: Number,
   hospitalized: Number,
   recovered: Number,

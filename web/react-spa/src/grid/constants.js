@@ -3,6 +3,7 @@ export const BaseColors = {
     LIGHT_YELLOW: "#fff0c2",
     PURPLE: "#3498db",
     BLUE: "#007bff",
+    ORANGE: "#ffa500",
     RED: "#e74c3c",
     GRAY_LIGHTER: "#f1f1f1",
     PINK: "#e83e8c",
@@ -30,6 +31,7 @@ export const LandmarkColors = {
 
 export const AgentStateToColor = {
     's': BaseColors.BLUE,
+    'e': BaseColors.ORANGE,
     'i': BaseColors.RED,
     'r': BaseColors.GREEN,
     'd': BaseColors.BLACK
@@ -37,6 +39,7 @@ export const AgentStateToColor = {
 
 export const AgentStateMapper = {
     's': 'susceptible',
+    'e': 'exposed',
     'i': 'infected',
     'r': 'recovered',
     'd': 'deceased'

@@ -23,14 +23,15 @@ import GridLegend from "../../grid/GridLegend";
 
 describe('Grid Legend', function () {
     it('should render counts for each state', function () {
-        const {container} = render(<GridLegend susceptible={12} infected={13} recovered={14} deceased={15}/>);
+        const {container} = render(<GridLegend susceptible={12} exposed={1} infected={13} recovered={14} deceased={15}/>);
 
         const counts = container.querySelectorAll('.agents .count');
-        expect(counts).toHaveLength(4);
+        expect(counts).toHaveLength(5);
         expect(counts[0].textContent).toEqual("12");
-        expect(counts[1].textContent).toEqual("13");
-        expect(counts[2].textContent).toEqual("14");
-        expect(counts[3].textContent).toEqual("15");
+        expect(counts[1].textContent).toEqual("1");
+        expect(counts[2].textContent).toEqual("13");
+        expect(counts[3].textContent).toEqual("14");
+        expect(counts[4].textContent).toEqual("15");
     });
 });
 

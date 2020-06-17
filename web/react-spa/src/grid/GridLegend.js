@@ -21,7 +21,7 @@ import React from 'react';
 import { AgentStateToColor, AreaColors } from './constants';
 import PropTypes from 'prop-types'
 
-export default function GridLegend({ susceptible, infected, recovered, deceased }) {
+export default function GridLegend({ susceptible, exposed, infected, recovered, deceased }) {
 
     const areasLegends = [
         { backgroundColor: AreaColors.HOUSING, text: "Housing" },
@@ -33,6 +33,7 @@ export default function GridLegend({ susceptible, infected, recovered, deceased 
 
     const agentsLegends = [
         { backgroundColor: AgentStateToColor.s, text: "Susceptible", count: susceptible },
+        { backgroundColor: AgentStateToColor.e, text: "Exposed", count: exposed },
         { backgroundColor: AgentStateToColor.i, text: "Infected", count: infected },
         { backgroundColor: AgentStateToColor.r, text: "Recovered", count: recovered },
         { backgroundColor: AgentStateToColor.d, text: "Deceased", count: deceased }
@@ -69,6 +70,7 @@ export default function GridLegend({ susceptible, infected, recovered, deceased 
 
 GridLegend.propTypes = {
     susceptible: PropTypes.number,
+    exposed: PropTypes.number,
     infected: PropTypes.number,
     recovered: PropTypes.number,
     deceased: PropTypes.number

@@ -49,6 +49,8 @@ use crate::listeners::travel_counter::TravelCounter;
 use crate::listeners::intervention_reporter::InterventionReporter;
 use crate::interventions::Interventions;
 use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
+use crate::agent::Citizen;
+use crate::disease_state_machine::State;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -463,15 +465,17 @@ impl Epidemiology {
         }
     }
 
-    fn simulate(mut csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
+    fn simulate(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
         write_buffer.clear();
+        csv_record.clear();
         for (cell, agent) in read_buffer.iter() {
             let mut current_agent = *agent;
             let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut csv_record, rng, disease);
+            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease);
+            Epidemiology::update_counts(csv_record, &current_agent);
 
             if infection_status == false && current_agent.state_machine.is_infected() == true {
                 listeners.citizen_got_infected(&cell);
@@ -493,6 +497,23 @@ impl Epidemiology {
             if publish_citizen_state {
                 listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
             }
+        }
+        assert_eq!(csv_record.total(), write_buffer.current_population());
+    }
+
+    fn update_counts(counts_at_hr: &mut Counts, citizen: &Citizen) {
+        match citizen.state_machine.state {
+            State::Susceptible { .. } => { counts_at_hr.update_susceptible(1) },
+            State::Exposed { .. } => { counts_at_hr.update_exposed(1) },
+            State::Infected { .. } => {
+                if citizen.is_hospitalized() {
+                    counts_at_hr.update_hospitalized(1);
+                } else {
+                    counts_at_hr.update_infected(1)
+                }
+            },
+            State::Recovered { .. } => { counts_at_hr.update_recovered(1) },
+            State::Deceased { .. } => { counts_at_hr.update_deceased(1) } ,
         }
     }
 

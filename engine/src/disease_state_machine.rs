@@ -72,12 +72,12 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn infect(&mut self, rng: &mut RandomWrapper, current_hour: i32, disease: &Disease) -> bool {
+    pub fn infect(&mut self, rng: &mut RandomWrapper, sim_hr: i32, disease: &Disease) -> bool {
         match self.state {
             State::Exposed { at_hour } => {
-                if current_hour - at_hour >= disease.get_exposed_duration() {
+                if sim_hr - at_hour >= disease.get_exposed_duration() {
                     let symptoms = rng.get().gen_bool(1.0 - disease.get_percentage_asymptomatic_population());
-                    let mut severity = InfectionSeverity::Pre { at_hour: current_hour };
+                    let mut severity = InfectionSeverity::Pre { at_hour: sim_hr };
                     if !symptoms {
                         severity = InfectionSeverity::Mild {};
                     }

@@ -94,6 +94,24 @@ impl Counts {
         self.hour += 1;
     }
 
+    pub fn clear(&mut self) {
+        self.susceptible = 0;
+        self.exposed = 0;
+        self.infected = 0;
+        self.hospitalized = 0;
+        self.recovered = 0;
+        self.deceased = 0;
+    }
+
+    pub fn total(&self) -> i32 {
+        self.susceptible +
+        self.exposed +
+        self.infected +
+        self.hospitalized +
+        self.recovered +
+        self.deceased
+    }
+
     pub fn log(&self) {
         info!("S: {}, E:{}, I: {}, H: {}, R: {}, D: {}", self.get_susceptible(), self.get_exposed(),
               self.get_infected(), self.get_hospitalized(), self.get_recovered(),

@@ -12,8 +12,6 @@ def arg_parser():
 
 def open_data_frames(path_to_csvs):
     dfs = list(map(lambda cf: pd.read_csv(cf), path_to_csvs))
-    for df in dfs:
-        df['totalinfected'] = df['infected'] + df['recovered'] + df['deceased'] + df['hospitalized']
     return list(map(lambda df: df.set_index('hour'), dfs))
 
 def merge_regions(data_frames):

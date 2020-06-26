@@ -23,25 +23,24 @@ import json
 
 
 def arg_parser():
-    parser = argparse.ArgumentParser(description='plot peaks from csv')
-    parser.add_argument('--data-path', nargs='+', help='pattern to the path of simulation csvs', default=[])
-    parser.add_argument('--output-path', help='path to saving the collated csvs', default=None)
-    parser.add_argument('--collated-csv', help='path to the collated csvs', default=None)
-    parser.add_argument('--compare-with', help='path to the csv to be compared with', default=None)
-    parser.add_argument('--color-mapping', help='path to the csv to be compared with', default='color_mapping.json')
+    parser = argparse.ArgumentParser(description='plot peaks from CSV')
+    parser.add_argument('--data-path', nargs='+', help='pattern to the path of simulation CSVs', default=[])
+    parser.add_argument('--output-path', help='path to saving the collated CSVs', default=None)
+    parser.add_argument('--collated-csv', help='path to the collated CSV', default=None)
+    parser.add_argument('--compare-with', help='path to the CSV to be compared with', default=None)
+    parser.add_argument('--color-mapping', help='path to the CSV to be compared with', default='color_mapping.json')
+    parser.add_argument('--title', help='title of the plot', default='Default Title')
     return parser.parse_args()
-
 
 def open_data_frames(path_to_csvs):
     return list(map(lambda cf: pd.read_csv(cf), path_to_csvs))
 
-
 if __name__ == '__main__':
     args = arg_parser()
     if len(args.data_path) == 0 and args.collated_csv is None:
-        raise Exception('Either enter the simulation csvs or the collated csv file')
+        raise Exception('Either enter the simulation CSVs or the collated CSV file')
     if len(args.data_path) != 0 and args.collated_csv is not None:
-        raise Exception('Either enter the simulation csvs or the collated csv file. Can not do both')
+        raise Exception('Either enter the simulation CSVs or the collated CSV file. Can not do both')
 
     with open(args.color_mapping) as f:
         color_mapping = json.load(f)
@@ -60,5 +59,5 @@ if __name__ == '__main__':
     if args.compare_with is not None:
         epi_curves.compare_plot(pd.read_csv(args.compare_with), color_mapping)
     else:
-        epi_curves.plot(color_mapping)
+        epi_curves.plot(color_mapping, args.title)
 

@@ -70,7 +70,7 @@ class EpiCurves:
             raise Exception("Input has to be list of DataFrames or DataFrames")
         self.curves = self.strategies[_class](epi_curve_input)
 
-    def plot(self, color_mapping):
+    def plot(self, color_mapping, title):
         fig, axes = plt.subplots(figsize=(15, 8))
         plot_lines = list(map(lambda curve: curve.plot(axes, color_mapping), self.curves))
         legend = axes.legend(bbox_to_anchor=(1, 1), loc='upper left')
@@ -80,6 +80,7 @@ class EpiCurves:
             lined[legend_line] = plot_line
 
         fig.canvas.mpl_connect('pick_event', lambda e: toggle_visibility(fig, e.artist, lined[e.artist], axes))
+        plt.title(title)
         plt.xlabel('Days')
         plt.ylabel('No. of individuals')
         plt.show()
@@ -122,7 +123,7 @@ class EpiCurves:
         for legend_line, plot_line in zip(legend.get_lines(), plot_lines):
             legend_line.set_picker(5)
             lined[legend_line] = plot_line
-            toggle_visibility(fig, legend_line, plot_line)
+            toggle_visibility(fig, legend_line, plot_line, axes)
 
         fig.canvas.mpl_connect('pick_event', lambda e: toggle_visibility(fig, e.artist, lined[e.artist], axes))
         plt.xlabel('Days')

@@ -110,10 +110,10 @@ function visualize()
 
 function usage() {
 	echo "usage: $0 <command>"
-	echo "available commands are: "
-	echo "  launch <experiment name>                     '<experiment name>.json' must exist in config directory"
-	echo "  launch-batch <experiment name> <# of runs>   '<experiment name>.json' must exist in config directory"
-	echo "  visualize [data dir]                         directory containing experiments data (default: 'launch_pad')"
+	echo "    available commands are: "
+	echo "        launch <experiment name>                     '<experiment name>.json' must exist in config directory"
+	echo "        launch-batch <experiment name> <# of runs>   '<experiment name>.json' must exist in config directory"
+	echo "        visualize [data dir]                         directory containing experiments data (default: 'launch_pad')"
 }
 
 case $1 in

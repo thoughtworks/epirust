@@ -20,11 +20,14 @@
 function setup() {
 	[ -z "$EPIRUST_HOME" ] && export EPIRUST_HOME=$PWD
 
-	export DIR_EPIRUST_LAUNCH_PAD=${EPIRUST_HOME}/launch_pad
-	export DIR_EPIRUST_EXPERIMENTS=${EPIRUST_HOME}/experiments
+	[ -z "${DIR_EPIRUST_LAUNCH_PAD}" ] && export DIR_EPIRUST_LAUNCH_PAD=${EPIRUST_HOME}/launch_pad
+	[ -z "${DIR_EPIRUST_EXPERIMENTS}" ] && export DIR_EPIRUST_EXPERIMENTS=${EPIRUST_HOME}/experiments
 
 	[ ! -d ${DIR_EPIRUST_EXPERIMENTS} ] && mkdir ${DIR_EPIRUST_EXPERIMENTS}
 	[ ! -d ${DIR_EPIRUST_LAUNCH_PAD} ] && mkdir ${DIR_EPIRUST_LAUNCH_PAD}
+
+	echo "Using ${DIR_EPIRUST_LAUNCH_PAD} as 'launch_pad'..."
+	echo "Using ${DIR_EPIRUST_EXPERIMENTS} as 'experiments store'..."
 
 	RUSTFLAGS='-C target-cpu=native -C target-feature=+sse -C target-feature=+sse2 -C target-feature=+sse3 -C target-feature=+sse4.1 -C target-feature=+sse4.2 -C target-feature=+popcnt -C target-feature=+lzcnt' 
 	RUST_LOG=info

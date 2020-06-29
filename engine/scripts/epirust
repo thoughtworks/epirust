@@ -36,7 +36,7 @@ function setup() {
 }
 
 function launch() {
-	 RUSTFLAGS="${RUSTFLAGS}" RUST_LOG="${RUST_LOG}" cargo run --release -- -c config/$1.json
+	 RUSTFLAGS="${RUSTFLAGS}" RUST_LOG="${RUST_LOG}" cargo run --release -- -c config/$1.json > $1_stdout.log 2> $1_stderr.log
 }
 
 function profile() {
@@ -70,11 +70,14 @@ function launch_batch()
 
 	for RUN in $(seq 1 ${N})
 	do
+		echo "Launching run $RUN..."
 		launch $1 
 		[ $? -ne 0 ] && break
 		mkdir ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
-		mv simulation_*.csv simulation_*.json grid.png ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
+		mv $1_*.log simulation_$1*.csv simulation_$1*.json ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
 	done
+
+	echo "Runs completed. Moving results into experiments dir..."
 
 	DIR_EPIRUST_CURRENT_EXPERIMENT=${DIR_EPIRUST_EXPERIMENTS}/$1
 
@@ -84,8 +87,9 @@ function launch_batch()
 	else
 		mkdir ${DIR_EPIRUST_CURRENT_EXPERIMENT}
 		mv ${DIR_EPIRUST_LAUNCH_PAD}/* ${DIR_EPIRUST_CURRENT_EXPERIMENT}
-		cp $1 ${DIR_EPIRUST_LAUNCH_PAD}/
+		cp config/$1.json ${DIR_EPIRUST_LAUNCH_PAD}/
 	fi
+	echo "Everything is done. Yay!"
 }
 
 function visualize()

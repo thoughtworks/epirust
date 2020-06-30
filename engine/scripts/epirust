@@ -61,6 +61,8 @@ function launch_batch()
 		exit 128
 	fi
 
+	EXP_NAME=$1
+
 	if [ -z "$2" ]
 	then
 		N=5
@@ -70,16 +72,16 @@ function launch_batch()
 
 	for RUN in $(seq 1 ${N})
 	do
-		echo "Launching run $RUN..."
-		launch $1 
+		echo "Launching run $RUN of experiment '${EXP_NAME}'..."
+		launch ${EXP_NAME}
 		[ $? -ne 0 ] && break
 		mkdir ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
-		mv $1_*.log simulation_$1*.csv simulation_$1*.json ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
+		mv ${EXP_NAME}_*.log simulation_${EXP_NAME}*.csv simulation_${EXP_NAME}*.json ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
 	done
 
 	echo "Runs completed. Moving results into experiments dir..."
 
-	DIR_EPIRUST_CURRENT_EXPERIMENT=${DIR_EPIRUST_EXPERIMENTS}/$1
+	DIR_EPIRUST_CURRENT_EXPERIMENT=${DIR_EPIRUST_EXPERIMENTS}/${EXP_NAME}
 
 	if [ -d "${DIR_EPIRUST_CURRENT_EXPERIMENT}" ]
 	then
@@ -87,7 +89,7 @@ function launch_batch()
 	else
 		mkdir ${DIR_EPIRUST_CURRENT_EXPERIMENT}
 		mv ${DIR_EPIRUST_LAUNCH_PAD}/* ${DIR_EPIRUST_CURRENT_EXPERIMENT}
-		cp config/$1.json ${DIR_EPIRUST_LAUNCH_PAD}/
+		cp config/${EXP_NAME}.json ${DIR_EPIRUST_LAUNCH_PAD}/
 	fi
 	echo "Everything is done. Yay!"
 }

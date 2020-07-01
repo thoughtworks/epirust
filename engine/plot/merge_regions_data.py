@@ -6,7 +6,7 @@ from functools import reduce
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='integrate all the regions')
-    parser.add_argument('--data-path', help='path to data csv file', required=True)
+    parser.add_argument('--data-dir', help='path to data csv file', required=True)
     return parser.parse_args()
 
 
@@ -23,8 +23,8 @@ if __name__ == '__main__':
 	
 	regions = list(filter(
 		lambda x: ('interventions' not in x) and ('outgoing_travels' not in x), 
-		glob.glob(f'{args.data_path}/simulation_*[0-9].csv')
+		glob.glob(f'{args.data_dir}/[A-Za-z]*_[0-9]_updated.csv')
 	))
 
-	merge_regions(open_data_frames(regions)).to_csv(f'{args.data_path}/integrated_regions.csv')
+	merge_regions(open_data_frames(regions)).to_csv(f'{args.data_dir}/integrated_regions.csv')
 

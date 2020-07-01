@@ -103,6 +103,13 @@ function visualize()
 		DIR_EXP=$1
 	fi
 
+	if [ -z "$2" ]
+	then
+		STR_TITLE="${DIR_EXP}"
+	else
+		STR_TITLE="$2"
+	fi
+
 	echo "Using ${DIR_EXP} as experiments directory..."
 
 	COUNT_DIR_FILES=$(ls -1 ${DIR_EXP} | wc -l)
@@ -112,9 +119,10 @@ function visualize()
 	for DIR in ${DIR_EXP}/*
 	do 
 		[ -f "${DIR}" ] && continue
-		[ ! -f $DIR/*_updated.csv ] && python3 ../analytics/update_total_infections.py --data-dir ${DIR};
+		[ ! -f $DIR/*_updated.csv ] && python3 ${EPIRUST_HOME}/plot/update_total_infections.py --data-dir ${DIR};
+		ERRNO=$? && [ $ERRNO -lt 0 ] && echo "Error encountered: $ERRNO" && exit 128
 	done
-	python3 ../analytics/collate_all_simulations.py --data-path ${DIR_EXP}/run_*/*_updated.csv --color-mapping ../analytics/color_mapping.json
+	python3 ${EPIRUST_HOME}/plot/collate_all_simulations.py --data-path ${DIR_EXP}/run_*/*_updated.csv --color-mapping ${EPIRUST_HOME}/plot/color_mapping.json --title "${STR_TITLE}"
 }
 
 function usage() {
@@ -152,10 +160,10 @@ case $1 in
 		;;
 	visualize)
 		shift
-		if [ $# -le 1 ] 
+		if [ $# -le 2 ] 
 		then
 			setup
-			visualize $1
+			visualize "$1" "$2"
 		else
 			usage
 		fi

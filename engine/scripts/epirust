@@ -76,7 +76,7 @@ function launch_batch()
 		launch ${EXP_NAME}
 		[ $? -ne 0 ] && break
 		mkdir ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
-		mv ${EXP_NAME}_*.log simulation_${EXP_NAME}*.csv simulation_${EXP_NAME}*.json ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
+		mv ${EXP_NAME}_*.log ${EXP_NAME}*.csv ${EXP_NAME}*.json ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
 	done
 
 	echo "Runs completed. Moving results into experiments dir..."
@@ -128,9 +128,9 @@ function visualize()
 function usage() {
 	echo "usage: $0 <command>"
 	echo "    available commands are: "
-	echo "        launch <experiment name>                     '<experiment name>.json' must exist in config directory"
-	echo "        launch-batch <experiment name> <# of runs>   '<experiment name>.json' must exist in config directory"
-	echo "        visualize [data dir]                         directory containing experiments data (default: 'launch_pad')"
+	echo "        launch <experiment name>                     '<experiment name>.json' must exist in config directory."
+	echo "        launch-batch <experiment name> <# of runs>   '<experiment name>.json' must exist in config directory."
+	echo "        visualize [data dir]                         'data dir' must contain data from experiments runs (default: 'launch_pad')"
 }
 
 case $1 in

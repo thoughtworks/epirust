@@ -21,6 +21,7 @@ use crate::disease::Disease;
 use crate::random_wrapper::RandomWrapper;
 use rand::Rng;
 use crate::constants;
+use rand::seq::SliceRandom;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum State {
@@ -75,7 +76,9 @@ impl DiseaseStateMachine {
     pub fn infect(&mut self, rng: &mut RandomWrapper, sim_hr: i32, disease: &Disease) -> bool {
         match self.state {
             State::Exposed { at_hour } => {
-                if sim_hr - at_hour >= disease.get_exposed_duration() {
+                let option = constants::RANGE_FOR_EXPOSED.choose(rng.get());
+                let random_factor = *option.unwrap();
+                if sim_hr - at_hour >= disease.get_exposed_duration() + random_factor {
                     let symptoms = rng.get().gen_bool(1.0 - disease.get_percentage_asymptomatic_population());
                     let mut severity = InfectionSeverity::Pre { at_hour: sim_hr };
                     if !symptoms {

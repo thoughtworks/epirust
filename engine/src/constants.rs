@@ -36,6 +36,7 @@ pub const NON_WORKING_TRAVEL_END_TIME: i32 = 12;
 pub const HOURS_IN_A_DAY: i32 = 24;
 pub const QUARANTINE_DAYS: i32 = 14;
 pub const IMMUNITY_RANGE: [i32; 5] = [-2, -1, 0, 1, 2];
+pub const RANGE_FOR_EXPOSED: [i32; 3] = [-1, 0, 1];
 
 pub const HOSPITAL_STAFF_PERCENTAGE:f64 = 0.002;
 

@@ -100,7 +100,7 @@ class Curve:
         plt.vlines(x=mean, ymin=0, ymax=self.curve_mean[int(mean)], colors='green', label='Mean(μ)')
         two_sigma = 2 * standard_deviation
         plt.vlines(x=mean - two_sigma, ymin=0, ymax=self.curve_mean[int(mean - two_sigma)], colors='red',
-                   label='Standard Deviation(σ)')
+                   label='Standard Deviation(2σ)')
         plt.vlines(x=mean + two_sigma, ymin=0, ymax=self.curve_mean[int(mean + two_sigma)], colors='red')
         plt.legend()
         plt.show()

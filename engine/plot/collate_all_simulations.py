@@ -30,10 +30,13 @@ def arg_parser():
     parser.add_argument('--compare-with', help='path to the CSV to be compared with', default=None)
     parser.add_argument('--color-mapping', help='path to the CSV to be compared with', default='color_mapping.json')
     parser.add_argument('--title', help='title of the plot', default='Default Title')
+    parser.add_argument('--fit-gaussian', help='flag to fit gaussian to infected curve', action='store_true')
     return parser.parse_args()
+
 
 def open_data_frames(path_to_csvs):
     return list(map(lambda cf: pd.read_csv(cf), path_to_csvs))
+
 
 if __name__ == '__main__':
     args = arg_parser()
@@ -60,4 +63,7 @@ if __name__ == '__main__':
         epi_curves.compare_plot(pd.read_csv(args.compare_with), color_mapping)
     else:
         epi_curves.plot(color_mapping, args.title)
+
+    if args.fit_gaussian:
+        epi_curves.fit_gaussian()
 

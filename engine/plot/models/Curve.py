@@ -16,6 +16,22 @@
 #
 
 import numpy as np
+from scipy.optimize import curve_fit
+from scipy.special import erf
+import matplotlib.pyplot as plt
+
+
+def pdf(x):
+    return 1/np.sqrt(2*np.pi) * np.exp(-x**2/2)
+
+
+def cdf(x):
+    return (1 + erf(x/np.sqrt(2))) / 2
+
+
+def skew(time, amplitude, mean, covariance, alpha):
+    t = (time - mean) / covariance
+    return amplitude * (2 / covariance * pdf(t) * cdf(alpha * t))
 
 
 class Curve:
@@ -38,3 +54,53 @@ class Curve:
             self.name: self.curve_mean,
             f'{self.name}_std': self.curve_std
         }
+
+    def fit_gaussian_to_infected(self):
+        if self.name != 'infected':
+            return False
+
+        time = np.arange(self.curve_mean.size)
+        peak = np.where(self.curve_mean == self.curve_mean.max())[0][0]
+        initial_amplitude = self.curve_mean.max()
+        initial_mean = peak
+        initial_sigma = 10
+        initial_alpha = 5
+        initial_guess = (
+            initial_amplitude,
+            initial_mean,
+            initial_sigma,
+            initial_alpha
+        )
+
+        params_fit, params_covariance = curve_fit(
+            skew,
+            time,
+            self.curve_mean,
+            p0=initial_guess,
+            maxfev=10000
+        )
+
+        params = ('Amplitude', 'Mean(μ)', 'Standard Deviation(σ)', 'Skewness(α)')
+
+        amplitude, mean, standard_deviation, skewness = params_fit
+
+        for param, param_fit in zip(params, params_fit):
+            print(f'{param}: {param_fit}')
+
+        skew_distribution = skew(time, *params_fit)
+        peak_value = skew_distribution.max()
+        time_at_peak, = np.where(skew_distribution == peak_value)
+        time_at_peak = time_at_peak[0]
+        print(f'Peak value: {peak_value}')
+        print(f'Time at peak: {time_at_peak}')
+
+        plt.plot(time, self.curve_mean, label='actual')
+        plt.plot(time, skew_distribution, label='fit skew distribution')
+        plt.vlines(x=time_at_peak, ymin=0, ymax=peak_value, label='Mode')
+        plt.vlines(x=mean, ymin=0, ymax=self.curve_mean[int(mean)], colors='green', label='Mean(μ)')
+        two_sigma = 2 * standard_deviation
+        plt.vlines(x=mean - two_sigma, ymin=0, ymax=self.curve_mean[int(mean - two_sigma)], colors='red',
+                   label='Standard Deviation(σ)')
+        plt.vlines(x=mean + two_sigma, ymin=0, ymax=self.curve_mean[int(mean + two_sigma)], colors='red')
+        plt.legend()
+        plt.show()

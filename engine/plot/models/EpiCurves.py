@@ -129,3 +129,7 @@ class EpiCurves:
         plt.xlabel('Days')
         plt.ylabel('No. of individuals')
         plt.show()
+
+    def fit_gaussian(self):
+        for curve in self.curves:
+            curve.fit_gaussian_to_infected()

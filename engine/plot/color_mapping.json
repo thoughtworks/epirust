@@ -2,8 +2,10 @@
     "susceptible"    :   "#b3c700",
     "exposed"        :   "#fca503",
     "infected"       :   "#ff0000",
+    "ma_infected"    :   "#ff5555",
     "recovered"      :   "#00ff00",
     "deceased"       :   "#100069",
+    "ma_deceased"    :   "#2600ff",
     "hospitalized"   :   "#03a5fc",
    "totalinfected"   :   "#800000"
 }

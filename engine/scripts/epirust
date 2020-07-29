@@ -119,7 +119,7 @@ function visualize()
 	for DIR in ${DIR_EXP}/*
 	do 
 		[ -f "${DIR}" ] && continue
-		[ ! -f $DIR/*_updated.csv ] && python3 ${EPIRUST_HOME}/plot/update_total_infections.py --data-dir ${DIR};
+		[ ! -f $DIR/*_updated.csv ] && python3 ${EPIRUST_HOME}/plot/update_total_infections.py --data-dir ${DIR} --moving-avg-window 14;
 		ERRNO=$? && [ $ERRNO -lt 0 ] && echo "Error encountered: $ERRNO" && exit 128
 	done
 	python3 ${EPIRUST_HOME}/plot/collate_all_simulations.py --data-path ${DIR_EXP}/run_*/*_updated.csv --color-mapping ${EPIRUST_HOME}/plot/color_mapping.json --title "${STR_TITLE}"
@@ -170,6 +170,7 @@ case $1 in
 		;;
 	profile)
 		shift
+		[ $(uname) = "Linux" ] && echo "Linux is not supported for now." && exit 128
 		if [ $# -eq 1 ]
 		then
 			setup

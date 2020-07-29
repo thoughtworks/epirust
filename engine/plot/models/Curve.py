@@ -45,7 +45,11 @@ class Curve:
         plot_mean = self.curve_mean[time_steps]
         plot_std = self.curve_std[time_steps]
         x = np.arange(plot_mean.size)
-        line_plot, = axes.plot(x, plot_mean, label=self.name, color=color_mapping[self.name])
+        if(self.name.startswith('ma_')):
+            line_plot, = axes.plot(x, plot_mean, '--', label=self.name, color=color_mapping[self.name])
+        else:
+            line_plot, = axes.plot(x, plot_mean, label=self.name, color=color_mapping[self.name])
+
         fill_plot = axes.fill_between(x, plot_mean - plot_std, plot_mean + plot_std, alpha=0.5, color=color_mapping[self.name])
         return [line_plot, fill_plot]
 

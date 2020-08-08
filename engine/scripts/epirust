@@ -26,11 +26,15 @@ function setup() {
 	[ ! -d ${DIR_EPIRUST_EXPERIMENTS} ] && mkdir ${DIR_EPIRUST_EXPERIMENTS}
 	[ ! -d ${DIR_EPIRUST_LAUNCH_PAD} ] && mkdir ${DIR_EPIRUST_LAUNCH_PAD}
 
-	echo "Using ${DIR_EPIRUST_LAUNCH_PAD} as 'launch_pad'..."
-	echo "Using ${DIR_EPIRUST_EXPERIMENTS} as 'experiments store'..."
+	echo "Using ${DIR_EPIRUST_LAUNCH_PAD} as the launch pad..."
+	echo "Using ${DIR_EPIRUST_EXPERIMENTS} as the experiments store..."
 
-	RUSTFLAGS='-C target-cpu=native -C target-feature=+sse -C target-feature=+sse2 -C target-feature=+sse3 -C target-feature=+sse4.1 -C target-feature=+sse4.2 -C target-feature=+popcnt -C target-feature=+lzcnt' 
-	RUST_LOG=info
+	[ -z "$RUST_LOG" ] && RUST_LOG=info
+
+	# Cannot build in release mode with rustc 1.45.1 with these flags
+	#   Disabling popcnt and lzcnt
+	# RUSTFLAGS='-C target-cpu=native -C target-feature=+sse -C target-feature=+sse2 -C target-feature=+sse3 -C target-feature=+sse4.1 -C target-feature=+sse4.2 -C target-feature=+popcnt -C target-feature=+lzcnt'
+	RUSTFLAGS='-C target-cpu=native -C target-feature=+sse -C target-feature=+sse2 -C target-feature=+sse3 -C target-feature=+sse4.1 -C target-feature=+sse4.2'
 
 	EPIRUST_FLAGS="RUSTFLAGS=\"${RUSTFLAGS}\" RUST_LOG=\"${RUST_LOG}\""
 }
@@ -127,10 +131,10 @@ function visualize()
 
 function usage() {
 	echo "usage: $0 <command>"
-	echo "    available commands are: "
-	echo "        launch <experiment name>                     '<experiment name>.json' must exist in config directory."
-	echo "        launch-batch <experiment name> <# of runs>   '<experiment name>.json' must exist in config directory."
-	echo "        visualize [data dir]                         'data dir' must contain data from experiments runs (default: 'launch_pad')"
+	echo "available commands are: "
+	echo "  launch <experiment name>                    '<experiment name>.json' must exist in config directory."
+	echo "  launch-batch <experiment name> <# of runs>  '<experiment name>.json' must exist in config directory."
+	echo "  visualize [data dir]                        'data dir' must contain data from experiments runs (default: 'launch_pad')"
 }
 
 case $1 in

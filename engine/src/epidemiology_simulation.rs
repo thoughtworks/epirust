@@ -224,45 +224,52 @@ impl Epidemiology {
 
         counts_at_hr.log();
         for simulation_hour in 1..config.get_hours() {
-            counts_at_hr.increment_hour();
-
-            let mut read_buffer_reference = self.agent_location_map.borrow();
-            let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
-
-            if simulation_hour % 2 == 0 {
-                read_buffer_reference = self.write_agent_location_map.borrow();
-                write_buffer_reference = self.agent_location_map.borrow_mut();
-            }
-
-            let population_before_travel = read_buffer_reference.current_population();
-
-            if population_before_travel == 0 {
-                panic!("No citizens!");
-            }
-
-            Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
-                                   &self.grid, listeners, rng, &self.disease, percent_outgoing,
-                                   &mut outgoing, config.enable_citizen_state_messages());
-
-            listeners.counts_updated(*counts_at_hr);
-            Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
-                                                rng, write_buffer_reference, config, &mut self.grid);
-
-            if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
+            let should_stop = self.kernel_single_engine_mode(config, run_mode, listeners, counts_at_hr, interventions, rng, start_time, &mut outgoing, percent_outgoing, simulation_hour);
+            if should_stop {
                 break;
-            }
-
-            if simulation_hour % 100 == 0 {
-                info!("Throughput: {} iterations/sec; simulation hour {} of {}",
-                      simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
-                      simulation_hour, config.get_hours());
-                counts_at_hr.log();
             }
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         listeners.simulation_ended();
+    }
+
+    fn kernel_single_engine_mode(&mut self, config: &Config, run_mode: &RunMode, listeners: &mut Listeners, counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper, start_time: Instant, mut outgoing: &mut Vec<(Point, Traveller)>, percent_outgoing: f64, simulation_hour: i32) -> bool {
+        counts_at_hr.increment_hour();
+
+        let mut read_buffer_reference = self.agent_location_map.borrow();
+        let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
+
+        if simulation_hour % 2 == 0 {
+            read_buffer_reference = self.write_agent_location_map.borrow();
+            write_buffer_reference = self.agent_location_map.borrow_mut();
+        }
+
+        let population_before_travel = read_buffer_reference.current_population();
+
+        if population_before_travel == 0 {
+            panic!("No citizens!");
+        }
+
+        Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
+                               &self.grid, listeners, rng, &self.disease, percent_outgoing,
+                               &mut outgoing, config.enable_citizen_state_messages());
+
+        listeners.counts_updated(*counts_at_hr);
+        Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
+                                            rng, write_buffer_reference, config, &mut self.grid);
+
+        let should_stop = Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr);
+
+        if simulation_hour % 100 == 0 && should_stop == false {
+            info!("Throughput: {} iterations/sec; simulation hour {} of {}",
+                  simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
+                  simulation_hour, config.get_hours());
+            counts_at_hr.log();
+        }
+
+        should_stop
     }
 
     pub async fn run_multi_engine(&mut self, config: &Config, run_mode: &RunMode, listeners: &mut Listeners,
@@ -472,33 +479,37 @@ impl Epidemiology {
         write_buffer.clear();
         csv_record.clear();
         for (cell, agent) in read_buffer.iter() {
-            let mut current_agent = *agent;
-            let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease);
-            Epidemiology::update_counts(csv_record, &current_agent);
-
-            if infection_status == false && current_agent.state_machine.is_infected() == true {
-                listeners.citizen_got_infected(&cell);
-            }
-
-            let agent_option = write_buffer.get(&point);
-            let new_location = match agent_option {
-                Some(mut _agent) => cell, //occupied
-                _ => &point
-            };
-
-            if simulation_hour % 24 == 0 && current_agent.can_move()
-                && rng.get().gen_bool(percent_outgoing) {
-                let traveller = Traveller::from(&current_agent);
-                outgoing.push((*new_location, traveller));
-            }
-
-            write_buffer.insert(*new_location, current_agent);
-            if publish_citizen_state {
-                listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
-            }
+            Epidemiology::kernel(csv_record, simulation_hour, read_buffer, write_buffer, &grid, listeners, rng, disease, percent_outgoing, outgoing, publish_citizen_state, &cell, agent)
         }
         assert_eq!(csv_record.total(), write_buffer.current_population());
+    }
+
+    fn kernel(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap, write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners, rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64, outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool, cell: &Point, agent: &Citizen) {
+        let mut current_agent = *agent;
+        let infection_status = current_agent.state_machine.is_infected();
+        let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease);
+        Epidemiology::update_counts(csv_record, &current_agent);
+
+        if infection_status == false && current_agent.state_machine.is_infected() == true {
+            listeners.citizen_got_infected(&cell);
+        }
+
+        let agent_option = write_buffer.get(&point);
+        let new_location = match agent_option {
+            Some(mut _agent) => cell, //occupied
+            _ => &point
+        };
+
+        if simulation_hour % 24 == 0 && current_agent.can_move()
+            && rng.get().gen_bool(percent_outgoing) {
+            let traveller = Traveller::from(&current_agent);
+            outgoing.push((*new_location, traveller));
+        }
+
+        write_buffer.insert(*new_location, current_agent);
+        if publish_citizen_state {
+            listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
+        }
     }
 
     fn update_counts(counts_at_hr: &mut Counts, citizen: &Citizen) {

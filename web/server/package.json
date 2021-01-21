@@ -15,7 +15,7 @@
     "kafka-node": "^5.0.0",
     "mongoose": "^5.9.7",
     "morgan": "^1.9.1",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "through2": "^3.0.1"
   },
   "devDependencies": {
@@ -24,7 +24,7 @@
     "mongodb-memory-server": "^6.5.2",
     "morgan": "^1.9.1",
     "nodemon": "^2.0.2",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "supertest": "^4.0.2"
   },
   "jest": {

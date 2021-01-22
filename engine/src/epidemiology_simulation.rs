@@ -25,6 +25,8 @@ use chrono::{DateTime, Local};
 use futures::StreamExt;
 use rand::Rng;
 
+use dashmap::DashMap;
+
 use crate::{allocation_map, RunMode, ticks_consumer, travellers_consumer};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population, StartingInfections};
@@ -470,6 +472,7 @@ impl Epidemiology {
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
         write_buffer.clear();
+        let write_map = DashMap::with_capacity(write_buffer.current_population() as usize);
         csv_record.clear();
         for (cell, agent) in read_buffer.iter() {
             let mut current_agent = *agent;
@@ -481,11 +484,19 @@ impl Epidemiology {
                 listeners.citizen_got_infected(&cell);
             }
 
-            let agent_option = write_buffer.get(&point);
-            let new_location = match agent_option {
-                Some(mut _agent) => cell, //occupied
-                _ => &point
-            };
+            // let agent_option = write_buffer.get(&point);
+            // let new_location = match agent_option {
+            //     Some(mut _agent) => cell, //occupied
+            //     _ => &point
+            // };
+
+            let agent_in_cell = *write_map.entry(point).or_insert(current_agent);
+            let mut new_location = &point;
+            if agent_in_cell.id!=current_agent.id {
+                // point was occupied by some other agent
+                new_location = cell;
+                write_map.insert(*cell, current_agent);
+            }
 
             if simulation_hour % 24 == 0 && current_agent.can_move()
                 && rng.get().gen_bool(percent_outgoing) {
@@ -493,10 +504,13 @@ impl Epidemiology {
                 outgoing.push((*new_location, traveller));
             }
 
-            write_buffer.insert(*new_location, current_agent);
+            // write_buffer.insert(*new_location, current_agent);
             if publish_citizen_state {
                 listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
             }
+        }
+        for refmulti in write_map.iter() {
+            write_buffer.insert(*refmulti.key(), *refmulti.value());
         }
         assert_eq!(csv_record.total(), write_buffer.current_population());
     }

@@ -28,6 +28,7 @@ plotters = "^0.2.12"
 log = "0.4"
 env_logger = "0.7"
 uuid = { version = "0.8", features = ["serde", "v4"] }
+dashmap = "4.0.2"
 
 [profile.release]
 opt-level = 3

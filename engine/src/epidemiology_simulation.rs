@@ -53,6 +53,7 @@ use crate::interventions::Interventions;
 use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
 use crate::agent::Citizen;
 use crate::disease_state_machine::State;
+use fnv::FnvBuildHasher;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -472,7 +473,7 @@ impl Epidemiology {
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
         write_buffer.clear();
-        let write_map = DashMap::with_capacity(write_buffer.current_population() as usize);
+        let write_map = DashMap::with_capacity_and_hasher(write_buffer.current_population() as usize, FnvBuildHasher::default());
         csv_record.clear();
         for (cell, agent) in read_buffer.iter() {
             let mut current_agent = *agent;

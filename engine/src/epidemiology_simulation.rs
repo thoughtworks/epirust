@@ -485,12 +485,6 @@ impl Epidemiology {
                 listeners.citizen_got_infected(&cell);
             }
 
-            // let agent_option = write_buffer.get(&point);
-            // let new_location = match agent_option {
-            //     Some(mut _agent) => cell, //occupied
-            //     _ => &point
-            // };
-
             let agent_in_cell = *write_map.entry(point).or_insert(current_agent);
             let mut new_location = &point;
             if agent_in_cell.id!=current_agent.id {
@@ -505,7 +499,6 @@ impl Epidemiology {
                 outgoing.push((*new_location, traveller));
             }
 
-            // write_buffer.insert(*new_location, current_agent);
             if publish_citizen_state {
                 listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
             }

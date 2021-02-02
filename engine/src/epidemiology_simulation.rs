@@ -26,6 +26,7 @@ use futures::StreamExt;
 use rand::Rng;
 
 use dashmap::DashMap;
+use rayon::prelude::*;
 
 use crate::{allocation_map, RunMode, ticks_consumer, travellers_consumer};
 use crate::allocation_map::AgentLocationMap;
@@ -476,15 +477,17 @@ impl Epidemiology {
         write_buffer.clear();
         let write_map = DashMap::with_capacity_and_hasher(write_buffer.current_population() as usize, FxBuildHasher::default());
         csv_record.clear();
-        for (cell, agent) in read_buffer.iter() {
-            let mut current_agent = *agent;
+        // for (cell, agent) in read_buffer.iter() {
+        read_buffer.keys().collect::<Vec<&Point>>().into_par_iter().for_each(|cell| {
+            let mut rng_thread= RandomWrapper::new();
+            let mut current_agent = *read_buffer.get(cell).unwrap();
             let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease);
-            Epidemiology::update_counts(csv_record, &current_agent);
+            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng_thread, disease);
+            // Epidemiology::update_counts(csv_record, &current_agent);
 
-            if infection_status == false && current_agent.state_machine.is_infected() == true {
-                listeners.citizen_got_infected(&cell);
-            }
+            // if infection_status == false && current_agent.state_machine.is_infected() == true {
+            //     listeners.citizen_got_infected(&cell);
+            // }
 
             let agent_in_cell = *write_map.entry(point).or_insert(current_agent);
             let mut new_location = &point;
@@ -494,18 +497,19 @@ impl Epidemiology {
                 write_map.insert(*cell, current_agent);
             }
 
-            if simulation_hour % 24 == 0 && current_agent.can_move()
-                && rng.get().gen_bool(percent_outgoing) {
-                let traveller = Traveller::from(&current_agent);
-                outgoing.push((*new_location, traveller));
-            }
-
-            if publish_citizen_state {
-                listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
-            }
-        }
+            // if simulation_hour % 24 == 0 && current_agent.can_move()
+            //     && (rng).get().gen_bool(percent_outgoing) {
+            //     let traveller = Traveller::from(&current_agent);
+            //     outgoing.push((*new_location, traveller));
+            // }
+            //
+            // if publish_citizen_state {
+            //     listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
+            // }
+        });
         for refmulti in write_map.iter() {
             write_buffer.insert(*refmulti.key(), *refmulti.value());
+            Epidemiology::update_counts(csv_record, refmulti.value());
         }
         assert_eq!(csv_record.total(), write_buffer.current_population());
     }

@@ -26,7 +26,7 @@ use crate::agent::Citizen;
 use crate::disease_state_machine::State;
 use crate::listeners::events::counts::Counts;
 use crate::travel_plan::Traveller;
-use std::collections::hash_map::{IterMut, Iter};
+use std::collections::hash_map::{IterMut, Iter, Keys};
 use fnv::FnvHashMap;
 
 #[derive(Clone)]
@@ -179,6 +179,10 @@ impl AgentLocationMap {
 
     pub fn insert(&mut self, point: Point, citizen: Citizen) -> Option<Citizen> {
         self.agent_cell.insert(point, citizen)
+    }
+
+    pub fn keys(&self) -> Keys<'_, Point, Citizen> {
+        self.agent_cell.keys()
     }
 }
 

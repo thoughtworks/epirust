@@ -37,13 +37,9 @@ use dashmap::mapref::one::Ref;
 pub struct AgentLocationMap {
     grid_size: i32,
     agent_cell: DashMap<Point, agent::Citizen, FxBuildHasher>,
-    agent_cell_read_only: ReadOnlyView<Point, agent::Citizen, FxBuildHasher>,
 }
 
 impl AgentLocationMap {
-    pub fn update_read_only_view(&mut self) {
-        self.agent_cell_read_only = self.agent_cell.clone().into_read_only();
-    }
     pub fn init_with_capacity(&mut self, size: usize) {
         self.agent_cell = DashMap::with_capacity_and_hasher(size, FxBuildHasher::default());
     }
@@ -56,8 +52,7 @@ impl AgentLocationMap {
             map.insert(points[i], agent_list[i]);
         }
 
-        let read_only = map.clone().into_read_only();
-        AgentLocationMap { grid_size, agent_cell: map, agent_cell_read_only: read_only }
+        AgentLocationMap { grid_size, agent_cell: map }
     }
 
     pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point {
@@ -86,8 +81,8 @@ impl AgentLocationMap {
 //        }
 //    }
 
-    pub fn get_agent_for(&self, cell: &Point) -> Option<&Citizen> {
-        self.agent_cell_read_only.get(cell)
+    pub fn get_agent_for(&self, cell: &Point) -> Option<Ref<Point, Citizen, FxBuildHasher>> {
+        self.agent_cell.get(cell)
     }
 
     pub fn is_point_in_grid(&self, point: &Point) -> bool {
@@ -95,7 +90,7 @@ impl AgentLocationMap {
     }
 
     pub fn is_cell_vacant(&self, cell: &Point) -> bool {
-        !self.agent_cell_read_only.contains_key(cell)
+        !self.agent_cell.contains_key(cell)
     }
 
     pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Traveller)>, counts: &mut Counts, grid: &mut Grid) {
@@ -156,13 +151,12 @@ impl AgentLocationMap {
             let result = self.agent_cell.insert(p, c);
             assert!(result.is_none());
         }
-        //TODO:: self.update_read_only_view();
     }
 
     fn random_starting_point(&self, area: &Area, rng: &mut RandomWrapper) -> Point {
         loop {
             let point = area.get_random_point(rng);
-            if !self.agent_cell_read_only.contains_key(&point) {
+            if !self.agent_cell.contains_key(&point) {
                 return point
             }
         }
@@ -184,16 +178,12 @@ impl AgentLocationMap {
         self.agent_cell.clear();
     }
 
-    pub fn get(&self, point: &Point) -> Option<&Citizen> {
-        self.agent_cell_read_only.get(point)
+    pub fn get(&self, point: &Point) -> Option<Ref<Point, Citizen, FxBuildHasher>> {
+        self.agent_cell.get(point)
     }
 
     pub fn insert(&mut self, point: Point, citizen: Citizen) -> Option<Citizen> {
         self.agent_cell.insert(point, citizen)
-    }
-
-    pub fn keys(&self) -> impl Iterator<Item = &Point> {
-        self.agent_cell_read_only.keys()
     }
 
     pub fn entry(&self, key:Point) -> dashmap::mapref::entry::Entry<Point, Citizen, FxBuildHasher> {

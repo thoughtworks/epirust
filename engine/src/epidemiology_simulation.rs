@@ -207,7 +207,6 @@ impl Epidemiology {
         self.write_agent_location_map.init_with_capacity(population as usize);
 
         let mut interventions = self.init_interventions(config, &mut rng);
-        self.agent_location_map.update_read_only_view();
 
         listeners.grid_updated(&self.grid);
         match run_mode {
@@ -254,7 +253,6 @@ impl Epidemiology {
             Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
                                                 rng, write_buffer_reference, config, &mut self.grid);
 
-            write_buffer_reference.update_read_only_view();
             if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
             }
@@ -348,7 +346,6 @@ impl Epidemiology {
             listeners.counts_updated(*counts_at_hr);
             Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
                                                 rng, write_buffer_reference, config, &mut self.grid);
-            write_buffer_reference.update_read_only_view();
             if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
             }
@@ -478,9 +475,10 @@ impl Epidemiology {
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
         write_buffer.clear();
         csv_record.clear();
-        read_buffer.keys().collect::<Vec<&Point>>().into_iter().for_each(|cell| {
+        read_buffer.iter().for_each(|refmulti| {
             let mut rng_thread= RandomWrapper::new();
-            let mut current_agent = *read_buffer.get(cell).unwrap();
+            let cell = refmulti.key();
+            let mut current_agent = *refmulti.value();
             let infection_status = current_agent.state_machine.is_infected();
             let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng_thread, disease);
             // Epidemiology::update_counts(csv_record, &current_agent);

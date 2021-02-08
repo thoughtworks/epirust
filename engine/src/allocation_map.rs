@@ -86,7 +86,7 @@ impl AgentLocationMap {
 //        }
 //    }
 
-    pub fn get_agent_for(&self, cell: &Point) -> Option<&'_ Citizen> {
+    pub fn get_agent_for(&self, cell: &Point) -> Option<&Citizen> {
         self.agent_cell_read_only.get(cell)
     }
 
@@ -172,7 +172,7 @@ impl AgentLocationMap {
         self.agent_cell.len() as i32
     }
 
-    pub fn iter(&self) -> dashmap::iter::Iter<'_, Point, Citizen, FxBuildHasher, DashMap<Point, Citizen, FxBuildHasher>> {
+    pub fn iter(&self) -> dashmap::iter::Iter<Point, Citizen, FxBuildHasher, DashMap<Point, Citizen, FxBuildHasher>> {
         self.agent_cell.iter()
     }
 
@@ -184,7 +184,7 @@ impl AgentLocationMap {
         self.agent_cell.clear();
     }
 
-    pub fn get(&self, point: &Point) -> Option<&'_ Citizen> {
+    pub fn get(&self, point: &Point) -> Option<&Citizen> {
         self.agent_cell_read_only.get(point)
     }
 
@@ -192,11 +192,11 @@ impl AgentLocationMap {
         self.agent_cell.insert(point, citizen)
     }
 
-    pub fn keys<'a>(&'a self) -> impl Iterator<Item = &'a Point> + 'a {
+    pub fn keys(&self) -> impl Iterator<Item = &Point> {
         self.agent_cell_read_only.keys()
     }
 
-    pub fn entry(&self, key:Point) -> dashmap::mapref::entry::Entry<'_, Point, Citizen, FxBuildHasher> {
+    pub fn entry(&self, key:Point) -> dashmap::mapref::entry::Entry<Point, Citizen, FxBuildHasher> {
         self.agent_cell.entry(key)
     }
 }

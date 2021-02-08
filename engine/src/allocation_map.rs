@@ -28,26 +28,36 @@ use crate::listeners::events::counts::Counts;
 use crate::travel_plan::Traveller;
 use std::collections::hash_map::{IterMut, Iter, Keys};
 use fnv::FnvHashMap;
+use fxhash::FxBuildHasher;
+use dashmap::{DashMap, ReadOnlyView};
+use serde_json::map::Entry;
+use dashmap::mapref::one::Ref;
 
 #[derive(Clone)]
 pub struct AgentLocationMap {
     grid_size: i32,
-    agent_cell: FnvHashMap<Point, agent::Citizen>,
+    agent_cell: DashMap<Point, agent::Citizen, FxBuildHasher>,
+    agent_cell_read_only: ReadOnlyView<Point, agent::Citizen, FxBuildHasher>,
 }
 
 impl AgentLocationMap {
+    pub fn update_read_only_view(&mut self) {
+        self.agent_cell_read_only = self.agent_cell.clone().into_read_only();
+    }
     pub fn init_with_capacity(&mut self, size: usize) {
-        self.agent_cell = FnvHashMap::with_capacity_and_hasher(size, Default::default());
+        self.agent_cell = DashMap::with_capacity_and_hasher(size, FxBuildHasher::default());
     }
 
     pub fn new(grid_size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
-        let mut map: FnvHashMap<Point, agent::Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
+        let map: DashMap<Point, agent::Citizen, FxBuildHasher> = DashMap::with_capacity_and_hasher(agent_list.len(), FxBuildHasher::default());
+
         for i in 0..agent_list.len() {
             map.insert(points[i], agent_list[i]);
         }
 
-        AgentLocationMap { grid_size, agent_cell: map }
+        let read_only = map.clone().into_read_only();
+        AgentLocationMap { grid_size, agent_cell: map, agent_cell_read_only: read_only }
     }
 
     pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point {
@@ -76,8 +86,8 @@ impl AgentLocationMap {
 //        }
 //    }
 
-    pub fn get_agent_for(&self, cell: &Point) -> Option<&agent::Citizen> {
-        self.agent_cell.get(cell)
+    pub fn get_agent_for(&self, cell: &Point) -> Option<&'_ Citizen> {
+        self.agent_cell_read_only.get(cell)
     }
 
     pub fn is_point_in_grid(&self, point: &Point) -> bool {
@@ -85,7 +95,7 @@ impl AgentLocationMap {
     }
 
     pub fn is_cell_vacant(&self, cell: &Point) -> bool {
-        !self.agent_cell.contains_key(cell)
+        !self.agent_cell_read_only.contains_key(cell)
     }
 
     pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Traveller)>, counts: &mut Counts, grid: &mut Grid) {
@@ -103,7 +113,7 @@ impl AgentLocationMap {
                     panic!("Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
                            traveller.id, point)
                 }
-                Some(citizen) => {
+                Some((point, citizen)) => {
                     grid.remove_house_occupant(&citizen.home_location);
                     if citizen.is_working() {
                         grid.remove_office_occupant(&citizen.work_location);
@@ -146,12 +156,13 @@ impl AgentLocationMap {
             let result = self.agent_cell.insert(p, c);
             assert!(result.is_none());
         }
+        //TODO:: self.update_read_only_view();
     }
 
     fn random_starting_point(&self, area: &Area, rng: &mut RandomWrapper) -> Point {
         loop {
             let point = area.get_random_point(rng);
-            if !self.agent_cell.contains_key(&point) {
+            if !self.agent_cell_read_only.contains_key(&point) {
                 return point
             }
         }
@@ -161,11 +172,11 @@ impl AgentLocationMap {
         self.agent_cell.len() as i32
     }
 
-    pub fn iter(&self) -> Iter<'_, Point, Citizen> {
+    pub fn iter(&self) -> dashmap::iter::Iter<'_, Point, Citizen, FxBuildHasher, DashMap<Point, Citizen, FxBuildHasher>> {
         self.agent_cell.iter()
     }
 
-    pub fn iter_mut(&mut self) -> IterMut<'_, Point, Citizen> {
+    pub fn iter_mut(&self) -> dashmap::iter::IterMut<Point, Citizen, FxBuildHasher, DashMap<Point, Citizen, FxBuildHasher>> {
         self.agent_cell.iter_mut()
     }
 
@@ -173,16 +184,20 @@ impl AgentLocationMap {
         self.agent_cell.clear();
     }
 
-    pub fn get(&self, point: &Point) -> Option<&Citizen> {
-        self.agent_cell.get(point)
+    pub fn get(&self, point: &Point) -> Option<&'_ Citizen> {
+        self.agent_cell_read_only.get(point)
     }
 
     pub fn insert(&mut self, point: Point, citizen: Citizen) -> Option<Citizen> {
         self.agent_cell.insert(point, citizen)
     }
 
-    pub fn keys(&self) -> Keys<'_, Point, Citizen> {
-        self.agent_cell.keys()
+    pub fn keys<'a>(&'a self) -> impl Iterator<Item = &'a Point> + 'a {
+        self.agent_cell_read_only.keys()
+    }
+
+    pub fn entry(&self, key:Point) -> dashmap::mapref::entry::Entry<'_, Point, Citizen, FxBuildHasher> {
+        self.agent_cell.entry(key)
     }
 }
 

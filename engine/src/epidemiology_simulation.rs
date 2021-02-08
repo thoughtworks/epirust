@@ -155,9 +155,9 @@ impl Epidemiology {
         let hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        for (_, agent) in self.agent_location_map.iter_mut() {
-            agent.assign_essential_worker(essential_workers_population, rng);
-        }
+        self.agent_location_map.iter_mut().for_each(|mut r| {
+            (*r).assign_essential_worker(essential_workers_population, rng);
+        });
         Interventions {
             vaccinate: vaccinations,
             lockdown: lock_down_details,
@@ -207,6 +207,7 @@ impl Epidemiology {
         self.write_agent_location_map.init_with_capacity(population as usize);
 
         let mut interventions = self.init_interventions(config, &mut rng);
+        self.agent_location_map.update_read_only_view();
 
         listeners.grid_updated(&self.grid);
         match run_mode {
@@ -253,6 +254,7 @@ impl Epidemiology {
             Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
                                                 rng, write_buffer_reference, config, &mut self.grid);
 
+            write_buffer_reference.update_read_only_view();
             if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
             }
@@ -346,7 +348,7 @@ impl Epidemiology {
             listeners.counts_updated(*counts_at_hr);
             Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
                                                 rng, write_buffer_reference, config, &mut self.grid);
-
+            write_buffer_reference.update_read_only_view();
             if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
             }
@@ -463,11 +465,11 @@ impl Epidemiology {
     }
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
-        for (_v, agent) in write_buffer_reference.iter_mut() {
-            if agent.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
-                agent.set_vaccination(true);
+        write_buffer_reference.iter_mut().for_each(|mut r| {
+            if r.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
+                (*r).set_vaccination(true);
             }
-        }
+        });
     }
 
     fn simulate(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
@@ -475,10 +477,8 @@ impl Epidemiology {
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
         write_buffer.clear();
-        let write_map = DashMap::with_capacity_and_hasher(write_buffer.current_population() as usize, FxBuildHasher::default());
         csv_record.clear();
-        // for (cell, agent) in read_buffer.iter() {
-        read_buffer.keys().collect::<Vec<&Point>>().into_par_iter().for_each(|cell| {
+        read_buffer.keys().collect::<Vec<&Point>>().into_iter().for_each(|cell| {
             let mut rng_thread= RandomWrapper::new();
             let mut current_agent = *read_buffer.get(cell).unwrap();
             let infection_status = current_agent.state_machine.is_infected();
@@ -489,12 +489,12 @@ impl Epidemiology {
             //     listeners.citizen_got_infected(&cell);
             // }
 
-            let agent_in_cell = *write_map.entry(point).or_insert(current_agent);
+            let agent_in_cell = *write_buffer.entry(point).or_insert(current_agent);
             let mut new_location = &point;
             if agent_in_cell.id!=current_agent.id {
                 // point was occupied by some other agent
                 new_location = cell;
-                write_map.insert(*cell, current_agent);
+                write_buffer.insert(*cell, current_agent);
             }
 
             // if simulation_hour % 24 == 0 && current_agent.can_move()
@@ -507,10 +507,9 @@ impl Epidemiology {
             //     listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
             // }
         });
-        for refmulti in write_map.iter() {
-            write_buffer.insert(*refmulti.key(), *refmulti.value());
+        write_buffer.iter().for_each(|refmulti| {
             Epidemiology::update_counts(csv_record, refmulti.value());
-        }
+        });
         assert_eq!(csv_record.total(), write_buffer.current_population());
     }
 
@@ -532,20 +531,20 @@ impl Epidemiology {
 
     fn lock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
         info!("Locking the city. Hour: {}", hr);
-        for (_v, agent) in write_buffer_reference.iter_mut() {
-            if !agent.is_essential_worker() {
-                agent.set_isolation(true);
+        write_buffer_reference.iter_mut().for_each(|mut r| {
+            if !r.is_essential_worker() {
+                (*r).set_isolation(true);
             }
-        }
+        });
     }
 
     fn unlock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
         info!("Unlocking city. Hour: {}", hr);
-        for (_v, agent) in write_buffer_reference.iter_mut() {
-            if agent.is_isolated() {
-                agent.set_isolation(false);
+        write_buffer_reference.iter_mut().for_each(|mut r| {
+            if r.is_isolated() {
+                (*r).set_isolation(false);
             }
-        }
+        });
     }
 }
 

@@ -475,7 +475,7 @@ impl Epidemiology {
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
         write_buffer.clear();
         csv_record.clear();
-        read_buffer.iter().for_each(|refmulti| {
+        read_buffer.par_iter().for_each(|refmulti| {
             let mut rng_thread= RandomWrapper::new();
             let cell = refmulti.key();
             let mut current_agent = *refmulti.value();

@@ -33,7 +33,7 @@ use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population, StartingInfections};
 use crate::disease::Disease;
 use crate::geography;
-use crate::geography::{Grid, Point};
+use crate::geography::{Grid, Point, AreaCode};
 use crate::interventions::hospital::BuildNewHospital;
 use crate::interventions::lockdown::LockdownIntervention;
 use crate::interventions::vaccination::VaccinateIntervention;
@@ -78,7 +78,7 @@ impl Epidemiology {
         };
         grid.resize_hospital(agent_list.len() as i32, HOSPITAL_STAFF_PERCENTAGE, config.get_geography_parameters().hospital_beds_percentage);
 
-        let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
+        let agent_location_map = allocation_map::AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations, &grid);
         let write_agent_location_map = agent_location_map.clone();
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
@@ -155,8 +155,8 @@ impl Epidemiology {
         let hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        self.agent_location_map.iter_mut().for_each(|mut r| {
-            (*r).assign_essential_worker(essential_workers_population, rng);
+        self.agent_location_map.iter().flat_map(|(code, area_map)| area_map.iter_mut()).for_each(|mut pair| {
+                (*pair).assign_essential_worker(essential_workers_population, rng)
         });
         Interventions {
             vaccinate: vaccinations,
@@ -204,7 +204,7 @@ impl Epidemiology {
         let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
         let mut rng = RandomWrapper::new();
 
-        self.write_agent_location_map.init_with_capacity(population as usize);
+        // self.write_agent_location_map.init_with_capacity(population as usize);
 
         let mut interventions = self.init_interventions(config, &mut rng);
 
@@ -340,8 +340,8 @@ impl Epidemiology {
             let (mut incoming, ()) = join!(recv_travellers, sim);
             n_incoming += incoming.len();
             n_outgoing += outgoing.len();
-            write_buffer_reference.remove_citizens(&outgoing, counts_at_hr, &mut self.grid);
-            write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, counts_at_hr, rng);
+            // write_buffer_reference.remove_citizens(&outgoing, counts_at_hr, &mut self.grid);
+            // write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, counts_at_hr, rng);
 
             listeners.counts_updated(*counts_at_hr);
             Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
@@ -462,7 +462,7 @@ impl Epidemiology {
     }
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
-        write_buffer_reference.iter_mut().for_each(|mut r| {
+        write_buffer_reference.iter().flat_map(|(code, area_map)| area_map.iter_mut()).for_each(|mut r| {
             if r.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
                 (*r).set_vaccination(true);
             }
@@ -475,39 +475,60 @@ impl Epidemiology {
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
         write_buffer.clear();
         csv_record.clear();
-        read_buffer.iter().for_each(|refmulti| {
-            let mut rng_thread= RandomWrapper::new();
-            let cell = refmulti.key();
-            let mut current_agent = *refmulti.value();
-            let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng_thread, disease);
-            // Epidemiology::update_counts(csv_record, &current_agent);
+        read_buffer.iter().for_each(|(code, area_map)| {
+            area_map.iter().for_each(|pair| {
+                let mut rng_map = RandomWrapper::new();
+                let cell = pair.key();
+                let mut current_agent = *pair.value();
+                let infection_status = current_agent.state_machine.is_infected();
+                let (new_cell, new_code) = current_agent.perform_operation(*cell, *code, simulation_hour, &grid, read_buffer, &mut rng_map, disease);
 
-            // if infection_status == false && current_agent.state_machine.is_infected() == true {
-            //     listeners.citizen_got_infected(&cell);
-            // }
-
-            let agent_in_cell = *write_buffer.entry(point).or_insert(current_agent);
-            let mut new_location = &point;
-            if agent_in_cell.id!=current_agent.id {
-                // point was occupied by some other agent
-                new_location = cell;
-                write_buffer.insert(*cell, current_agent);
-            }
-
-            // if simulation_hour % 24 == 0 && current_agent.can_move()
-            //     && (rng).get().gen_bool(percent_outgoing) {
-            //     let traveller = Traveller::from(&current_agent);
-            //     outgoing.push((*new_location, traveller));
-            // }
-            //
-            // if publish_citizen_state {
-            //     listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
-            // }
+                let agent_in_cell = *write_buffer.entry(new_cell, &new_code).or_insert(current_agent);
+                let mut new_location = &new_cell;
+                if agent_in_cell.id != current_agent.id {
+                    // insert old location
+                    new_location = cell;
+                    write_buffer.insert(*cell, code, current_agent);
+                }
+            });
         });
-        write_buffer.iter().for_each(|refmulti| {
-            Epidemiology::update_counts(csv_record, refmulti.value());
+        read_buffer.iter().flat_map(|(code, area_map)| area_map.iter()).for_each(|pair| {
+            Epidemiology::update_counts(csv_record, pair.value());
         });
+
+        // read_buffer.iter().for_each(|refmulti| {
+        //     let mut rng_thread= RandomWrapper::new();
+        //     let cell = refmulti.key();
+        //     let mut current_agent = *refmulti.value();
+        //     let infection_status = current_agent.state_machine.is_infected();
+        //     let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng_thread, disease);
+        //     // Epidemiology::update_counts(csv_record, &current_agent);
+        //
+        //     // if infection_status == false && current_agent.state_machine.is_infected() == true {
+        //     //     listeners.citizen_got_infected(&cell);
+        //     // }
+        //
+        //     let agent_in_cell = *write_buffer.entry(point).or_insert(current_agent);
+        //     let mut new_location = &point;
+        //     if agent_in_cell.id!=current_agent.id {
+        //         // point was occupied by some other agent
+        //         new_location = cell;
+        //         write_buffer.insert(*cell, current_agent);
+        //     }
+        //
+        //     // if simulation_hour % 24 == 0 && current_agent.can_move()
+        //     //     && (rng).get().gen_bool(percent_outgoing) {
+        //     //     let traveller = Traveller::from(&current_agent);
+        //     //     outgoing.push((*new_location, traveller));
+        //     // }
+        //     //
+        //     // if publish_citizen_state {
+        //     //     listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
+        //     // }
+        // });
+        // write_buffer.iter().for_each(|refmulti| {
+        //     Epidemiology::update_counts(csv_record, refmulti.value());
+        // });
         assert_eq!(csv_record.total(), write_buffer.current_population());
     }
 
@@ -529,7 +550,7 @@ impl Epidemiology {
 
     fn lock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
         info!("Locking the city. Hour: {}", hr);
-        write_buffer_reference.iter_mut().for_each(|mut r| {
+        write_buffer_reference.iter().flat_map(|(code, area_map)| area_map.iter_mut()).for_each(|mut r| {
             if !r.is_essential_worker() {
                 (*r).set_isolation(true);
             }
@@ -538,7 +559,7 @@ impl Epidemiology {
 
     fn unlock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
         info!("Unlocking city. Hour: {}", hr);
-        write_buffer_reference.iter_mut().for_each(|mut r| {
+        write_buffer_reference.iter().flat_map(|(code, area_map)| area_map.iter_mut()).for_each(|mut r| {
             if r.is_isolated() {
                 (*r).set_isolation(false);
             }
@@ -549,12 +570,13 @@ impl Epidemiology {
 #[cfg(test)]
 mod tests {
     use crate::config::{AutoPopulation, GeographyParameters};
-    use crate::geography::Area;
+    use crate::geography::{Area, AreaCode};
     use crate::geography::Point;
     use crate::interventions::InterventionConfig;
     use crate::interventions::vaccination::VaccinateConfig;
 
     use super::*;
+    use futures::core_reexport::sync::atomic::Ordering::AcqRel;
 
     #[test]
     fn should_init() {
@@ -571,16 +593,16 @@ mod tests {
         let geography_parameters = GeographyParameters::new(100, 0.003);
         let config = Config::new(Population::Auto(pop), disease, geography_parameters, vec![], 100, vec![InterventionConfig::Vaccinate(vac)], None);
         let epidemiology: Epidemiology = Epidemiology::new(&config, "id".to_string());
-        let expected_housing_area = Area::new(Point::new(0, 0), Point::new(39, 100));
+        let expected_housing_area = Area::new(Point::new(0, 0), Point::new(39, 100), AreaCode::House);
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);
 
-        let expected_transport_area = Area::new(Point::new(40, 0), Point::new(49, 100));
+        let expected_transport_area = Area::new(Point::new(40, 0), Point::new(49, 100), AreaCode::Transport);
         assert_eq!(epidemiology.grid.transport_area, expected_transport_area);
 
-        let expected_work_area = Area::new(Point::new(50, 0), Point::new(69, 100));
+        let expected_work_area = Area::new(Point::new(50, 0), Point::new(69, 100), AreaCode::Work);
         assert_eq!(epidemiology.grid.work_area, expected_work_area);
 
-        let expected_hospital_area = Area::new(Point::new(70, 0), Point::new(79, 0));
+        let expected_hospital_area = Area::new(Point::new(70, 0), Point::new(79, 0), AreaCode::Hospital);
         assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.agent_location_map.current_population(), 10);

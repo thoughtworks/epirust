@@ -72,7 +72,7 @@ impl CitizenStatesAtHr {
 
 #[cfg(test)]
 mod tests {
-    use crate::geography::Area;
+    use crate::geography::{Area, AreaCode};
     use crate::random_wrapper::RandomWrapper;
 
     use super::*;
@@ -94,7 +94,7 @@ mod tests {
     }
 
     fn citizen() -> Citizen {
-        let area = Area::new(Point::new(0, 0), Point::new(1, 1));
+        let area = Area::new(Point::new(0, 0), Point::new(1, 1), AreaCode::House);
         Citizen::new(area, area, Point::new(2, 2), true, true, WorkStatus::Normal {}, &mut RandomWrapper::new())
     }
 }

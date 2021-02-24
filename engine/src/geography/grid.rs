@@ -22,7 +22,7 @@ use plotters::prelude::*;
 use crate::{agent, constants};
 use crate::agent::{Citizen, PopulationRecord};
 use crate::config::{AutoPopulation, CsvPopulation, StartingInfections};
-use crate::geography::{Area, Point};
+use crate::geography::{Area, Point, AreaCode};
 use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
 use std::collections::HashMap;
@@ -171,7 +171,7 @@ impl Grid {
         let start_offset = self.hospital_area.start_offset;
         let end_offset = Point::new(grid_size, grid_size);
 
-        self.hospital_area = Area::new(start_offset, end_offset)
+        self.hospital_area = Area::new(start_offset, end_offset, AreaCode::Hospital)
     }
 
     pub fn resize_hospital(&mut self, number_of_agents: i32, hospital_staff_percentage: f64, hospital_beds_percentage: f64) {
@@ -180,7 +180,7 @@ impl Grid {
 
         if !(hospital_bed_count > self.hospital_area.get_number_of_cells()) {
             let hospital_end_y: i32 = hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x);
-            self.hospital_area = Area::new(self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
+            self.hospital_area = Area::new(self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y), AreaCode::Hospital);
             info!("Hospital capacity {}: ", hospital_bed_count);
         }
     }

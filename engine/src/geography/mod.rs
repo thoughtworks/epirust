@@ -22,9 +22,11 @@ use crate::constants;
 mod area;
 mod grid;
 mod point;
+mod areacode;
 
 pub use self::area::Area;
 pub use self::grid::Grid;
+pub use self::areacode::AreaCode;
 pub use self::point::Point;
 use std::collections::HashMap;
 
@@ -37,13 +39,13 @@ pub fn define_geography(grid_size: i32) -> Grid {
     let hospital_start = work_area_end;
     let hospital_end = work_area_end + (grid_size as f32 * constants::INITIAL_HOSPITAL_RELATIVE_SIZE).ceil() as i32;
 
-    let housing_area = Area::new(Point::new(0, 0), Point::new(home_width - 1, grid_size));
-    let transport_area = Area::new(Point::new(transport_start, 0), Point::new(transport_end - 1, grid_size));
-    let work_area = Area::new(Point::new(work_area_start, 0), Point::new(work_area_end - 1, grid_size));
-    let hospital_area = Area::new(Point::new(hospital_start, 0), Point::new(hospital_end - 1, grid_size));
+    let housing_area = Area::new(Point::new(0, 0), Point::new(home_width - 1, grid_size), AreaCode::House);
+    let transport_area = Area::new(Point::new(transport_start, 0), Point::new(transport_end - 1, grid_size), AreaCode::Transport);
+    let work_area = Area::new(Point::new(work_area_start, 0), Point::new(work_area_end - 1, grid_size), AreaCode::Work);
+    let hospital_area = Area::new(Point::new(hospital_start, 0), Point::new(hospital_end - 1, grid_size), AreaCode::Hospital);
 
-    let houses = area::area_factory(housing_area.start_offset, housing_area.end_offset, constants::HOME_SIZE);
-    let offices = area::area_factory(work_area.start_offset, work_area.end_offset, constants::OFFICE_SIZE);
+    let houses = area::area_factory(housing_area.start_offset, housing_area.end_offset, constants::HOME_SIZE, AreaCode::House);
+    let offices = area::area_factory(work_area.start_offset, work_area.end_offset, constants::OFFICE_SIZE, AreaCode::Work);
 
     Grid {
         grid_size,

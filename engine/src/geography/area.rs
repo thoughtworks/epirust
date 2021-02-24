@@ -19,7 +19,7 @@
 
 use rand::Rng;
 
-use crate::geography::Point;
+use crate::geography::{Point, AreaCode};
 use crate::random_wrapper::RandomWrapper;
 use std::collections::HashSet;
 
@@ -27,11 +27,12 @@ use std::collections::HashSet;
 pub struct Area {
     pub start_offset: Point,
     pub end_offset: Point,
+    code: AreaCode,
 }
 
 impl Area {
-    pub fn new(start_offset: Point, end_offset: Point) -> Area {
-        Area { start_offset, end_offset }
+    pub fn new(start_offset: Point, end_offset: Point, code: AreaCode) -> Area {
+        Area { start_offset, end_offset, code }
     }
 
     pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item=Point> + '_ {
@@ -76,6 +77,10 @@ impl Area {
     pub fn get_number_of_cells(&self) -> i32 {
         (self.end_offset.x - self.start_offset.x) * (self.end_offset.y - self.start_offset.y)
     }
+
+    pub fn get_code(&self) -> AreaCode {
+        self.code
+    }
 }
 
 // We need to ignore the iter_index when comparing
@@ -85,7 +90,7 @@ impl PartialEq for Area {
     }
 }
 
-pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area> {
+pub fn area_factory(start_point: Point, end_point: Point, size: i32, code: AreaCode) -> Vec<Area> {
     let feasible_houses_in_x_dim = (end_point.x - start_point.x + 1) / size;
     let feasible_houses_in_y_dim = (end_point.y - start_point.y + 1) / size;
 
@@ -96,7 +101,7 @@ pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area
         for _j in 0..feasible_houses_in_x_dim {
             let current_end_point: Point = Point::new(current_start_point.x + size - 1, current_start_point.y + size - 1);
 
-            areas.push(Area::new(current_start_point, current_end_point));
+            areas.push(Area::new(current_start_point, current_end_point, code));
 
             current_start_point.x = current_start_point.x + size;
         }
@@ -143,9 +148,10 @@ impl Iterator for AreaIterator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use futures::core_reexport::sync::atomic::Ordering::AcqRel;
 
     fn get_area() -> Area {
-        Area::new(Point { x: 0, y: 0 }, Point { x: 5, y: 5 })
+        Area::new(Point { x: 0, y: 0 }, Point { x: 5, y: 5 }, AreaCode::House)
     }
 
     #[test]
@@ -158,13 +164,13 @@ mod tests {
 
     #[test]
     fn should_iterate_over_points_in_area() {
-        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 }, AreaCode::House);
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(0, 0), Point::new(1, 0), Point::new(2, 0),
                            Point::new(0, 1), Point::new(1, 1), Point::new(2, 1),
                            Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)]);
 
-        let area = Area::new(Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
+        let area = Area::new(Point { x: 1, y: 1 }, Point { x: 2, y: 2 }, AreaCode::House);
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1),
                            Point::new(1, 2), Point::new(2, 2)])
@@ -172,7 +178,7 @@ mod tests {
 
     #[test]
     fn iterator_should_work_multiple_times() {
-        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 }, AreaCode::House);
         let x: Option<Point> = area.iter().find(|p| *p == Point::new(1,1));
         assert!(x.is_some());
 
@@ -182,7 +188,7 @@ mod tests {
 
     #[test]
     fn should_create_areas() {
-        let buildings = area_factory(Point::new(10, 0), Point::new(21, 10), 3);
+        let buildings = area_factory(Point::new(10, 0), Point::new(21, 10), 3, AreaCode::House);
 
         buildings.iter().for_each(|b| println!("start {:?}, end {:?}", b.start_offset, b.end_offset));
 

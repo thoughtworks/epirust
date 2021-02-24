@@ -34,3 +34,4 @@ rayon = "1.5"
 
 [profile.release]
 opt-level = 3
+debug = true

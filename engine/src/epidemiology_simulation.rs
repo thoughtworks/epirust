@@ -155,8 +155,8 @@ impl Epidemiology {
         let hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        self.agent_location_map.iter().flat_map(|(code, area_map)| area_map.iter_mut()).for_each(|mut pair| {
-                (*pair).assign_essential_worker(essential_workers_population, rng)
+        self.agent_location_map.iter_mut().flat_map(|(code,  area_map)| area_map.iter_mut()).for_each(| pair| {
+                (pair.1).assign_essential_worker(essential_workers_population, rng)
         });
         Interventions {
             vaccinate: vaccinations,
@@ -462,9 +462,9 @@ impl Epidemiology {
     }
 
     fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
-        write_buffer_reference.iter().flat_map(|(code, area_map)| area_map.iter_mut()).for_each(|mut r| {
-            if r.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
-                (*r).set_vaccination(true);
+        write_buffer_reference.iter_mut().flat_map(|(code,  area_map)| area_map.iter_mut()).for_each(| r| {
+            if r.1.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
+                (r.1).set_vaccination(true);
             }
         });
     }
@@ -478,8 +478,8 @@ impl Epidemiology {
         read_buffer.iter().for_each(|(code, area_map)| {
             area_map.iter().for_each(|pair| {
                 let mut rng_map = RandomWrapper::new();
-                let cell = pair.key();
-                let mut current_agent = *pair.value();
+                let cell = pair.0;
+                let mut current_agent = *pair.1;
                 let infection_status = current_agent.state_machine.is_infected();
                 let (new_cell, new_code) = current_agent.perform_operation(*cell, *code, simulation_hour, &grid, read_buffer, &mut rng_map, disease);
 
@@ -493,7 +493,7 @@ impl Epidemiology {
             });
         });
         read_buffer.iter().flat_map(|(code, area_map)| area_map.iter()).for_each(|pair| {
-            Epidemiology::update_counts(csv_record, pair.value());
+            Epidemiology::update_counts(csv_record, pair.1);
         });
 
         // read_buffer.iter().for_each(|refmulti| {
@@ -550,18 +550,18 @@ impl Epidemiology {
 
     fn lock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
         info!("Locking the city. Hour: {}", hr);
-        write_buffer_reference.iter().flat_map(|(code, area_map)| area_map.iter_mut()).for_each(|mut r| {
-            if !r.is_essential_worker() {
-                (*r).set_isolation(true);
+        write_buffer_reference.iter_mut().flat_map(|(code,  area_map)| area_map.iter_mut()).for_each(| r| {
+            if !r.1.is_essential_worker() {
+                (r.1).set_isolation(true);
             }
         });
     }
 
     fn unlock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
         info!("Unlocking city. Hour: {}", hr);
-        write_buffer_reference.iter().flat_map(|(code, area_map)| area_map.iter_mut()).for_each(|mut r| {
-            if r.is_isolated() {
-                (*r).set_isolation(false);
+        write_buffer_reference.iter_mut().flat_map(|(code,  area_map)| area_map.iter_mut()).for_each(| r| {
+            if r.1.is_isolated() {
+                (r.1).set_isolation(false);
             }
         });
     }

@@ -38,13 +38,13 @@ use dashmap::mapref::one::Ref;
 pub struct Buffer {
     // size: u32,
     code: AreaCode,
-    agent_cell: DashMap<Point, agent::Citizen, FxBuildHasher>,
+    agent_cell: FnvHashMap<Point, agent::Citizen>,
 }
 
 impl Buffer {
     pub fn new(agent_list: &[agent::Citizen], points: &[Point], area: Area, code: AreaCode) -> Self {
         let zipped = agent_list.iter().zip(points);
-        let agent_cell: DashMap<Point, agent::Citizen, FxBuildHasher> = DashMap::with_capacity_and_hasher(agent_list.len(), FxBuildHasher::default());
+        let mut agent_cell: FnvHashMap<Point, agent::Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
         zipped
             .filter(|(agent, point)| {
                 area.contains(*point)
@@ -55,24 +55,24 @@ impl Buffer {
         Buffer { code, agent_cell }
     }
 
-    pub fn get(&self, point: &Point) -> Option<Ref<Point, Citizen, FxBuildHasher>> {
+    pub fn get(&self, point: &Point) -> Option<&Citizen> {
         self.agent_cell.get(point)
     }
     pub fn contains_key(&self, point: &Point) -> bool {
         self.agent_cell.contains_key(point)
     }
     pub fn current_population(&self) -> i32 { self.agent_cell.len() as i32}
-    pub fn clear(&self) { self.agent_cell.clear() }
-    pub fn insert(&self, point: Point, agent: Citizen) -> Option<Citizen> {
+    pub fn clear(&mut self) { self.agent_cell.clear() }
+    pub fn insert(&mut self, point: Point, agent: Citizen) -> Option<Citizen> {
         self.agent_cell.insert(point, agent)
     }
-    pub fn entry(&self, key: Point) -> dashmap::mapref::entry::Entry<Point, Citizen, FxBuildHasher> {
+    pub fn entry(&mut self, key: Point) -> std::collections::hash_map::Entry<'_, Point, Citizen> {
         self.agent_cell.entry(key)
     }
-    pub fn iter(&self) -> dashmap::iter::Iter<Point, Citizen, FxBuildHasher, DashMap<Point, Citizen, FxBuildHasher>> {
+    pub fn iter(&self) -> Iter<'_, Point, Citizen> {
         self.agent_cell.iter()
     }
-    pub fn iter_mut(&self) -> dashmap::iter::IterMut<Point, Citizen, FxBuildHasher, DashMap<Point, Citizen, FxBuildHasher>> {
+    pub fn iter_mut(&mut self) -> IterMut<'_, Point, Citizen> {
         self.agent_cell.iter_mut()
     }
 }
@@ -90,6 +90,10 @@ impl AgentLocationMap {
 
     pub fn get_area_map(&self, code: &AreaCode) -> Option<&Buffer> {
         self.area_maps.get(code)
+    }
+
+    pub fn get_area_map_mut(&mut self, code: &AreaCode) -> Option<&mut Buffer> {
+        self.area_maps.get_mut(code)
     }
 
     pub fn new(grid_size: i32, agent_list: &[agent::Citizen], points: &[Point], grid: &Grid) -> AgentLocationMap {
@@ -141,7 +145,7 @@ impl AgentLocationMap {
 //        }
 //    }
 
-    pub fn get_agent_for(&self, cell: &Point, code: &AreaCode) -> Option<Ref<Point, Citizen, FxBuildHasher>> {
+    pub fn get_agent_for(&self, cell: &Point, code: &AreaCode) -> Option<&Citizen> {
         self.get_area_map(code).unwrap().get(cell)
     }
 
@@ -232,13 +236,13 @@ impl AgentLocationMap {
         self.area_maps.iter()
     }
 
-    // pub fn iter_mut(&self) -> dashmap::iter::IterMut<Point, Citizen, FxBuildHasher, DashMap<Point, Citizen, FxBuildHasher>> {
-    //     self.agent_cell.iter_mut()
-    // }
+    pub fn iter_mut(&mut self) -> IterMut<'_, AreaCode, Buffer> {
+        self.area_maps.iter_mut()
+    }
 
     pub fn clear(&mut self) {
-        self.area_maps.iter().for_each(|pair| {
-            pair.1.clear()
+        self.area_maps.iter_mut().for_each(|pair| {
+            (*pair.1).clear()
         })
     }
 
@@ -247,12 +251,12 @@ impl AgentLocationMap {
     // }
 
     pub fn insert(&mut self, point: Point, code: &AreaCode, citizen: Citizen) -> Option<Citizen> {
-        self.get_area_map(code).unwrap().insert(point, citizen)
+        self.get_area_map_mut(code).unwrap().insert(point, citizen)
     }
 
-    pub fn entry(&self, key: Point, code: &AreaCode) -> dashmap::mapref::entry::Entry<Point, Citizen, FxBuildHasher> {
+    pub fn entry(&mut self, key: Point, code: &AreaCode) -> std::collections::hash_map::Entry<'_, Point, Citizen> {
         // self.agent_cell.entry(key)
-        self.get_area_map(code).unwrap().entry(key)
+        self.get_area_map_mut(code).unwrap().entry(key)
     }
 }
 

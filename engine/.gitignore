@@ -13,3 +13,5 @@ grid.svg
 grid.png
 simulation_*.csv
 simulation_*.json
+*.svg
+Cargo.locklala

@@ -1,0 +1,191 @@
+#!/bin/bash
+
+#  EpiRust
+#  Copyright (c) 2020  ThoughtWorks, Inc.
+# 
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Affero General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+# 
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Affero General Public License for more details.
+# 
+#  You should have received a copy of the GNU Affero General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+function setup() {
+	[ -z "$EPIRUST_HOME" ] && export EPIRUST_HOME=$PWD
+
+	[ -z "${DIR_EPIRUST_LAUNCH_PAD}" ] && export DIR_EPIRUST_LAUNCH_PAD=${EPIRUST_HOME}/launch_pad
+	[ -z "${DIR_EPIRUST_EXPERIMENTS}" ] && export DIR_EPIRUST_EXPERIMENTS=${EPIRUST_HOME}/experiments
+
+	[ ! -d ${DIR_EPIRUST_EXPERIMENTS} ] && mkdir ${DIR_EPIRUST_EXPERIMENTS}
+	[ ! -d ${DIR_EPIRUST_LAUNCH_PAD} ] && mkdir ${DIR_EPIRUST_LAUNCH_PAD}
+
+	echo "Using ${DIR_EPIRUST_LAUNCH_PAD} as the launch pad..."
+	echo "Using ${DIR_EPIRUST_EXPERIMENTS} as the experiments store..."
+
+	[ -z "$RUST_LOG" ] && RUST_LOG=info
+
+	# Cannot build in release mode with rustc 1.45.1 with these flags
+	#   Disabling popcnt and lzcnt
+	# RUSTFLAGS='-C target-cpu=native -C target-feature=+sse -C target-feature=+sse2 -C target-feature=+sse3 -C target-feature=+sse4.1 -C target-feature=+sse4.2 -C target-feature=+popcnt -C target-feature=+lzcnt'
+	RUSTFLAGS='-C target-cpu=native -C target-feature=+sse -C target-feature=+sse2 -C target-feature=+sse3 -C target-feature=+sse4.1 -C target-feature=+sse4.2'
+
+	EPIRUST_FLAGS="RUSTFLAGS=\"${RUSTFLAGS}\" RUST_LOG=\"${RUST_LOG}\""
+}
+
+function launch() {
+	 RUSTFLAGS="${RUSTFLAGS}" RUST_LOG="${RUST_LOG}" cargo run --release -- -c config/$1.json > $1_stdout.log 2> $1_stderr.log
+}
+
+function profile() {
+	 RUSTFLAGS="${RUSTFLAGS}" RUST_LOG="${RUST_LOG}" cargo instruments --release -- -c config/$1.json
+}
+
+function build() {
+	 RUSTFLAGS="${RUSTFLAGS}" RUST_LOG="${RUST_LOG}" cargo build --release
+}
+
+function check() {
+	 RUSTFLAGS="${RUSTFLAGS}" RUST_LOG="${RUST_LOG}" cargo check --release
+}
+
+function launch_batch()
+{
+	COUNT=$(ls -1 ${DIR_EPIRUST_LAUNCH_PAD}/ | wc -l)
+	if [ $COUNT -ne 0 ]
+	then
+		echo "'${DIR_EPIRUST_LAUNCH_PAD}' directory is not empty and perhaps contains data from previous runs."
+		echo "Please move or delete the data to ensure the directory is empty, and try again."
+		exit 128
+	fi
+
+	EXP_NAME=$1
+
+	if [ -z "$2" ]
+	then
+		N=5
+	else
+		N=$2
+	fi
+
+	for RUN in $(seq 1 ${N})
+	do
+		echo "Launching run $RUN of experiment '${EXP_NAME}'..."
+		launch ${EXP_NAME}
+		[ $? -ne 0 ] && break
+		mkdir ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
+		mv ${EXP_NAME}_*.log ${EXP_NAME}*.csv ${EXP_NAME}*.json ${DIR_EPIRUST_LAUNCH_PAD}/run_${RUN}
+	done
+
+	echo "Runs completed. Moving results into experiments dir..."
+
+	DIR_EPIRUST_CURRENT_EXPERIMENT=${DIR_EPIRUST_EXPERIMENTS}/${EXP_NAME}
+
+	if [ -d "${DIR_EPIRUST_CURRENT_EXPERIMENT}" ]
+	then
+		echo "'${DIR_EPIRUST_CURRENT_EXPERIMENT}' already exists. Please move all data in '${DIR_EPIRUST_LAUNCH_PAD}' directory manually."
+	else
+		mkdir ${DIR_EPIRUST_CURRENT_EXPERIMENT}
+		mv ${DIR_EPIRUST_LAUNCH_PAD}/* ${DIR_EPIRUST_CURRENT_EXPERIMENT}
+		cp config/${EXP_NAME}.json ${DIR_EPIRUST_LAUNCH_PAD}/
+	fi
+	echo "Everything is done. Yay!"
+}
+
+function visualize()
+{
+	if [ -z "$1" ]
+	then
+		DIR_EXP=${DIR_EPIRUST_LAUNCH_PAD}
+	else
+		DIR_EXP=$1
+	fi
+
+	if [ -z "$2" ]
+	then
+		STR_TITLE="${DIR_EXP}"
+	else
+		STR_TITLE="$2"
+	fi
+
+	echo "Using ${DIR_EXP} as experiments directory..."
+
+	COUNT_DIR_FILES=$(ls -1 ${DIR_EXP} | wc -l)
+
+	[ $COUNT_DIR_FILES -eq 0 ] && exit 0
+
+	for DIR in ${DIR_EXP}/*
+	do 
+		[ -f "${DIR}" ] && continue
+		[ ! -f $DIR/*_updated.csv ] && python3 ${EPIRUST_HOME}/plot/update_total_infections.py --data-dir ${DIR} --moving-avg-window 14;
+		ERRNO=$? && [ $ERRNO -lt 0 ] && echo "Error encountered: $ERRNO" && exit 128
+	done
+	python3 ${EPIRUST_HOME}/plot/collate_all_simulations.py --data-path ${DIR_EXP}/run_*/*_updated.csv --color-mapping ${EPIRUST_HOME}/plot/color_mapping.json --title "${STR_TITLE}"
+}
+
+function usage() {
+	echo "usage: $0 <command>"
+	echo "available commands are: "
+	echo "  launch <experiment name>                    '<experiment name>.json' must exist in config directory."
+	echo "  launch-batch <experiment name> <# of runs>  '<experiment name>.json' must exist in config directory."
+	echo "  visualize [data dir]                        'data dir' must contain data from experiments runs (default: 'launch_pad')"
+}
+
+case $1 in
+	check)
+		setup
+		check
+		;;
+	launch)
+		shift
+		if [ $# -eq 1 ]
+		then
+			setup
+			launch $1
+		else
+			usage
+		fi
+		;;
+	launch-batch)
+		shift
+		if [ $# -eq 2 ] 
+		then 
+				setup
+				launch_batch $1 $2
+		else
+			usage
+		fi
+		;;
+	visualize)
+		shift
+		if [ $# -le 2 ] 
+		then
+			setup
+			visualize "$1" "$2"
+		else
+			usage
+		fi
+		;;
+	profile)
+		shift
+		[ $(uname) = "Linux" ] && echo "Linux is not supported for now." && exit 128
+		if [ $# -eq 1 ]
+		then
+			setup
+			profile $1
+		else
+			usage
+		fi
+		;;
+	help|*)
+		usage
+		exit 128
+		;;
+esac
+

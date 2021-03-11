@@ -51,6 +51,7 @@ use crate::interventions::Interventions;
 use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
 use crate::agent::Citizen;
 use crate::disease_state_machine::State;
+use rayon::prelude::*;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -226,13 +227,13 @@ impl Epidemiology {
         for simulation_hour in 1..config.get_hours() {
             counts_at_hr.increment_hour();
 
-            let mut read_buffer_reference = self.agent_location_map.borrow();
-            let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
-
-            if simulation_hour % 2 == 0 {
-                read_buffer_reference = self.write_agent_location_map.borrow();
-                write_buffer_reference = self.agent_location_map.borrow_mut();
-            }
+            let mut read_buffer_reference = self.agent_location_map.borrow_mut();
+            // let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
+            //
+            // if simulation_hour % 2 == 0 {
+            //     read_buffer_reference = self.write_agent_location_map.borrow();
+            //     write_buffer_reference = self.agent_location_map.borrow_mut();
+            // }
 
             let population_before_travel = read_buffer_reference.current_population();
 
@@ -240,13 +241,13 @@ impl Epidemiology {
                 panic!("No citizens!");
             }
 
-            Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
+            Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference,
                                    &self.grid, listeners, rng, &self.disease, percent_outgoing,
                                    &mut outgoing, config.enable_citizen_state_messages());
 
             listeners.counts_updated(*counts_at_hr);
             Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
-                                                rng, write_buffer_reference, config, &mut self.grid);
+                                                rng, read_buffer_reference, config, &mut self.grid);
 
             if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
@@ -302,11 +303,11 @@ impl Epidemiology {
 
             counts_at_hr.increment_hour();
 
-            let mut read_buffer_reference = self.agent_location_map.borrow();
+            let mut read_buffer_reference = self.agent_location_map.borrow_mut();
             let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
 
             if simulation_hour % 2 == 0 {
-                read_buffer_reference = self.write_agent_location_map.borrow();
+                read_buffer_reference = self.write_agent_location_map.borrow_mut();
                 write_buffer_reference = self.agent_location_map.borrow_mut();
             }
 
@@ -323,7 +324,7 @@ impl Epidemiology {
             let percent_outgoing = engine_travel_plan.percent_outgoing();
             let recv_travellers = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan);
             let sim = async {
-                Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
+                Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference,
                                        grid, listeners, rng, disease, percent_outgoing,
                                        &mut outgoing, config.enable_citizen_state_messages());
                 let outgoing_travellers_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
@@ -465,12 +466,33 @@ impl Epidemiology {
         }
     }
 
-    fn simulate(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
-                write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
+    fn simulate(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &mut AgentLocationMap,
+               grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
-        write_buffer.clear();
+        // write_buffer.clear();
         csv_record.clear();
+        let updates : Vec<((Point, Point), Citizen)> = read_buffer.iter().map(|(cell, agent)| {
+            let mut rng = RandomWrapper::new();
+            let mut current_agent = *agent;
+            let infection_status = current_agent.state_machine.is_infected();
+            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng, disease);
+            ((*cell, point), current_agent)
+        }).collect();
+        read_buffer.clear();
+        updates.iter().for_each(|pair| {
+            let old_cell = pair.0.0;
+            let new_cell = pair.0.1;
+            let agent = pair.1;
+            let agent_at_new_cell = read_buffer.entry(new_cell).or_insert(agent);
+            if agent_at_new_cell.id!=agent.id {
+                read_buffer.insert(old_cell, agent);
+            }
+            Epidemiology::update_counts(csv_record, &agent);
+        });
+
+
+        /*
         for (cell, agent) in read_buffer.iter() {
             let mut current_agent = *agent;
             let infection_status = current_agent.state_machine.is_infected();
@@ -498,7 +520,8 @@ impl Epidemiology {
                 listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
             }
         }
-        assert_eq!(csv_record.total(), write_buffer.current_population());
+         */
+        assert_eq!(csv_record.total(), read_buffer.current_population());
     }
 
     fn update_counts(counts_at_hr: &mut Counts, citizen: &Citizen) {

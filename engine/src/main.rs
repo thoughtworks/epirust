@@ -74,8 +74,13 @@ async fn main() {
             .help("An identifier for the engine. Needed in daemon mode when running a larger simulation \
             distributed across multiple engines.")
             .takes_value(true))
+        .arg(Arg::with_name("parallel")
+             .long("parallel")
+             .short("p")
+             .takes_value(false))
         .get_matches();
 
+    let parallel = matches.is_present("parallel");
     let daemon = matches.is_present("daemon");
     let has_named_engine = matches.is_present("id");
     let engine_id = matches.value_of("id").unwrap_or("default_engine");
@@ -90,7 +95,7 @@ async fn main() {
     if daemon {
         info!("Started in daemon mode");
         let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
-        consumer.listen_loop(&run_mode).await;
+        consumer.listen_loop(&run_mode, parallel).await;
         info!("Done");
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
@@ -109,7 +114,7 @@ async fn main() {
         let config = config::read(config_file.to_string()).expect("Failed to read config file");
 
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, STANDALONE_SIM_ID.to_string());
-        epidemiology.run(&config, &run_mode).await;
+        epidemiology.run(&config, &run_mode, parallel).await;
         info!("Done");
     }
 }

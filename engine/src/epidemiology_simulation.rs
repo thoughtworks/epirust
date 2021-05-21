@@ -194,7 +194,7 @@ impl Epidemiology {
         }
     }
 
-    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
+    pub async fn run(&mut self, config: &Config, run_mode: &RunMode, parallel: bool) {
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
         let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
@@ -205,20 +205,21 @@ impl Epidemiology {
         let mut interventions = self.init_interventions(config, &mut rng);
 
         listeners.grid_updated(&self.grid);
+        debug!("Running parallel = {}", parallel);
         match run_mode {
             RunMode::MultiEngine { .. } => {
                 self.run_multi_engine(config, run_mode, &mut listeners, &mut counts_at_hr,
-                                      &mut interventions, &mut rng).await
+                                      &mut interventions, &mut rng, parallel).await
             }
             _ => {
                 self.run_single_engine(config, run_mode, &mut listeners, &mut counts_at_hr,
-                                       &mut interventions, &mut rng).await
+                                       &mut interventions, &mut rng, parallel).await
             }
         }
     }
 
     pub async fn run_single_engine(&mut self, config: &Config, run_mode: &RunMode, listeners: &mut Listeners,
-                                   counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper) {
+                                   counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper, parallel: bool) {
         let start_time = Instant::now();
         let mut outgoing = Vec::new();
         let percent_outgoing = 0.0;
@@ -227,13 +228,13 @@ impl Epidemiology {
         for simulation_hour in 1..config.get_hours() {
             counts_at_hr.increment_hour();
 
-            let mut read_buffer_reference = self.agent_location_map.borrow_mut();
-            // let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
-            //
-            // if simulation_hour % 2 == 0 {
-            //     read_buffer_reference = self.write_agent_location_map.borrow();
-            //     write_buffer_reference = self.agent_location_map.borrow_mut();
-            // }
+            let mut read_buffer_reference = self.agent_location_map.borrow();
+            let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
+
+            if simulation_hour % 2 == 0 {
+                read_buffer_reference = self.write_agent_location_map.borrow();
+                write_buffer_reference = self.agent_location_map.borrow_mut();
+            }
 
             let population_before_travel = read_buffer_reference.current_population();
 
@@ -241,13 +242,13 @@ impl Epidemiology {
                 panic!("No citizens!");
             }
 
-            Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference,
+            Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                    &self.grid, listeners, rng, &self.disease, percent_outgoing,
-                                   &mut outgoing, config.enable_citizen_state_messages());
+                                   &mut outgoing, config.enable_citizen_state_messages(), parallel);
 
             listeners.counts_updated(*counts_at_hr);
             Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
-                                                rng, read_buffer_reference, config, &mut self.grid);
+                                                rng, write_buffer_reference, config, &mut self.grid);
 
             if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
@@ -267,7 +268,7 @@ impl Epidemiology {
     }
 
     pub async fn run_multi_engine(&mut self, config: &Config, run_mode: &RunMode, listeners: &mut Listeners,
-                                  counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper) {
+                                  counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper, parallel: bool) {
         let start_time = Instant::now();
         let mut producer = KafkaProducer::new();
 
@@ -303,7 +304,7 @@ impl Epidemiology {
 
             counts_at_hr.increment_hour();
 
-            let mut read_buffer_reference = self.agent_location_map.borrow_mut();
+            let mut read_buffer_reference = self.agent_location_map.borrow();
             let mut write_buffer_reference = self.write_agent_location_map.borrow_mut();
 
             if simulation_hour % 2 == 0 {
@@ -324,9 +325,9 @@ impl Epidemiology {
             let percent_outgoing = engine_travel_plan.percent_outgoing();
             let recv_travellers = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan);
             let sim = async {
-                Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference,
+                Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                        grid, listeners, rng, disease, percent_outgoing,
-                                       &mut outgoing, config.enable_citizen_state_messages());
+                                       &mut outgoing, config.enable_citizen_state_messages(), parallel);
                 let outgoing_travellers_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
                 if simulation_hour % 24 == 0 {
                     listeners.outgoing_travellers_added(simulation_hour, &outgoing_travellers_by_region);
@@ -466,62 +467,77 @@ impl Epidemiology {
         }
     }
 
-    fn simulate(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &mut AgentLocationMap,
+    fn simulate(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap, write_buffer: &mut AgentLocationMap,
                grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
-                outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
-        // write_buffer.clear();
+                outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool, parallel: bool) {
         csv_record.clear();
-        let updates : Vec<((Point, Point), Citizen)> = read_buffer.iter().map(|(cell, agent)| {
-            let mut rng = RandomWrapper::new();
-            let mut current_agent = *agent;
-            let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng, disease);
-            ((*cell, point), current_agent)
-        }).collect();
-        read_buffer.clear();
-        updates.iter().for_each(|pair| {
-            let old_cell = pair.0.0;
-            let new_cell = pair.0.1;
-            let agent = pair.1;
-            let agent_at_new_cell = read_buffer.entry(new_cell).or_insert(agent);
-            if agent_at_new_cell.id!=agent.id {
-                read_buffer.insert(old_cell, agent);
-            }
-            Epidemiology::update_counts(csv_record, &agent);
-        });
+        write_buffer.clear();
 
+        if parallel {
+            let updates: Vec<((Point, Point), Citizen, bool)> = read_buffer.par_iter().map(|(cell, agent)| {
+                let mut rng = RandomWrapper::new();
+                let mut current_agent = *agent;
+                let infection_status = current_agent.state_machine.is_infected();
+                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng, disease);
+                ((*cell, point), current_agent, infection_status)
+            }).collect();
+            updates.iter().for_each(|pair| {
+                let old_cell = pair.0.0;
+                let new_cell = pair.0.1;
+                let agent = pair.1;
+                let infection_status = pair.2;
+                let mut new_location = &new_cell;
+                let agent_at_new_cell = write_buffer.entry(new_cell).or_insert(agent);
+                if agent_at_new_cell.id != agent.id {
+                    write_buffer.insert(old_cell, agent);
+                    new_location = &old_cell;
+                }
+                Epidemiology::update_counts(csv_record, &agent);
+                if infection_status == false && agent.state_machine.is_infected() == true {
+                    listeners.citizen_got_infected(&old_cell);
+                }
+                if simulation_hour % 24 == 0 && agent.can_move()
+                    && rng.get().gen_bool(percent_outgoing) {
+                    let traveller = Traveller::from(&agent);
+                    outgoing.push((*new_location, traveller));
+                }
+                if publish_citizen_state {
+                    listeners.citizen_state_updated(simulation_hour, &agent, new_location);
+                }
+            });
+        }
+        else {
+            let rng = &mut RandomWrapper::new();
+            for (cell, agent) in read_buffer.iter() {
+                let mut current_agent = *agent;
+                let infection_status = current_agent.state_machine.is_infected();
+                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease);
+                Epidemiology::update_counts(csv_record, &current_agent);
 
-        /*
-        for (cell, agent) in read_buffer.iter() {
-            let mut current_agent = *agent;
-            let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease);
-            Epidemiology::update_counts(csv_record, &current_agent);
+                if infection_status == false && current_agent.state_machine.is_infected() == true {
+                    listeners.citizen_got_infected(&cell);
+                }
 
-            if infection_status == false && current_agent.state_machine.is_infected() == true {
-                listeners.citizen_got_infected(&cell);
-            }
+                let agent_option = write_buffer.get(&point);
+                let new_location = match agent_option {
+                    Some(mut _agent) => cell, //occupied
+                    _ => &point
+                };
 
-            let agent_option = write_buffer.get(&point);
-            let new_location = match agent_option {
-                Some(mut _agent) => cell, //occupied
-                _ => &point
-            };
+                if simulation_hour % 24 == 0 && current_agent.can_move()
+                    && rng.get().gen_bool(percent_outgoing) {
+                    let traveller = Traveller::from(&current_agent);
+                    outgoing.push((*new_location, traveller));
+                }
 
-            if simulation_hour % 24 == 0 && current_agent.can_move()
-                && rng.get().gen_bool(percent_outgoing) {
-                let traveller = Traveller::from(&current_agent);
-                outgoing.push((*new_location, traveller));
-            }
-
-            write_buffer.insert(*new_location, current_agent);
-            if publish_citizen_state {
-                listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
+                write_buffer.insert(*new_location, current_agent);
+                if publish_citizen_state {
+                    listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
+                }
             }
         }
-         */
-        assert_eq!(csv_record.total(), read_buffer.current_population());
+        assert_eq!(csv_record.total(), write_buffer.current_population());
     }
 
     fn update_counts(counts_at_hr: &mut Counts, citizen: &Citizen) {

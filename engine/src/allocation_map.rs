@@ -129,7 +129,7 @@ impl AgentLocationMap {
                 house
             };
             let transport_location = house.get_random_point(rng); // Fixme
-            new_citizens.push(Citizen::from_traveller(traveller, house, office, transport_location, grid.housing_area));
+            new_citizens.push(Citizen::from_traveller(traveller, house, office, transport_location, grid.housing_area, rng));
             grid.add_house_occupant(&house);
             if traveller.working {
                 grid.add_office_occupant(&office)

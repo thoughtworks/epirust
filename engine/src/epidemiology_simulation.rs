@@ -255,6 +255,9 @@ impl Epidemiology {
             }
 
             if simulation_hour % 100 == 0 {
+                debug!("agents wearing mask = {}", write_buffer_reference.iter().filter(|(_cell, agent)| {
+                    agent.mask_behavior.is_wearing_mask()
+                }).count());
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
                       simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
                       simulation_hour, config.get_hours());
@@ -471,6 +474,7 @@ impl Epidemiology {
                grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool, parallel: bool) {
+        let current_counts = *csv_record;
         csv_record.clear();
         write_buffer.clear();
 
@@ -479,7 +483,7 @@ impl Epidemiology {
                 let mut rng = RandomWrapper::new();
                 let mut current_agent = *agent;
                 let infection_status = current_agent.state_machine.is_infected();
-                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng, disease);
+                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng, disease, &current_counts);
                 ((*cell, point), current_agent, infection_status)
             }).collect();
             updates.iter().for_each(|pair| {
@@ -512,7 +516,7 @@ impl Epidemiology {
             for (cell, agent) in read_buffer.iter() {
                 let mut current_agent = *agent;
                 let infection_status = current_agent.state_machine.is_infected();
-                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease);
+                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease, &current_counts);
                 Epidemiology::update_counts(csv_record, &current_agent);
 
                 if infection_status == false && current_agent.state_machine.is_infected() == true {

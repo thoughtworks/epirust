@@ -46,3 +46,5 @@ pub const OFFICE_SIZE: i32 = 10;
 //TODO: Quick fix, move these field to input parameters
 pub const ASYMPTOMATIC_LAST_DAY: i32 = 9;
 pub const MILD_INFECTED_LAST_DAY: i32 = 12;
+pub const MIN_MASK_EFFICIENCY: i32 = 60;
+pub const MAX_MASK_EFFICIENCY: i32 = 70;

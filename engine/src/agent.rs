@@ -32,6 +32,8 @@ use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::{Area, Grid, Point};
 use crate::random_wrapper::RandomWrapper;
 use crate::travel_plan::Traveller;
+use crate::masking::MaskingBehavior;
+use crate::listeners::events::counts::Counts;
 
 #[derive(Deserialize)]
 pub struct PopulationRecord {
@@ -83,6 +85,7 @@ pub struct Citizen {
     current_area: Area,
     work_status: WorkStatus,
     work_quarantined: bool,
+    pub mask_behavior: MaskingBehavior
 }
 
 impl Citizen {
@@ -95,6 +98,7 @@ impl Citizen {
     pub fn new_with_id(id: Uuid, home_location: Area, work_location: Area, transport_location: Point,
                        uses_public_transport: bool, working: bool, work_status: WorkStatus, rng: &mut RandomWrapper) -> Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor(rng);
+        let mask_behavior = MaskingBehavior::new(rng);
 
         Citizen {
             id,
@@ -111,11 +115,14 @@ impl Citizen {
             current_area: home_location,
             work_status,
             work_quarantined: false,
+            mask_behavior,
         }
     }
 
     pub fn from_traveller(traveller: &Traveller, home_location: Area, work_location: Area,
-                          transport_location: Point, current_area: Area) -> Citizen {
+                          transport_location: Point, current_area: Area, rng: &mut RandomWrapper) -> Citizen {
+        let mask_behavior = MaskingBehavior::new(rng);
+
         Citizen {
             id: traveller.id,
             immunity: traveller.immunity,
@@ -131,6 +138,7 @@ impl Citizen {
             current_area,
             work_status: WorkStatus::NA {},
             work_quarantined: false,
+            mask_behavior
         }
     }
 
@@ -138,6 +146,7 @@ impl Citizen {
                        transport_location: Point, rng: &mut RandomWrapper) -> Citizen {
         let disease_randomness_factor = Citizen::generate_disease_randomness_factor(rng);
         let work_status = Citizen::derive_work_status(record.working, rng);
+        let mask_behavior = MaskingBehavior::new(rng);
 
         Citizen {
             id: Uuid::new_v4(),
@@ -154,11 +163,12 @@ impl Citizen {
             current_area: home_location,
             work_status,
             work_quarantined: false,
+            mask_behavior
         }
     }
 
     pub fn get_infection_transmission_rate(&self, disease: &Disease) -> f64 {
-        disease.get_current_transmission_rate(self.state_machine.get_infection_day() + self.immunity)
+        disease.get_current_transmission_rate(self.state_machine.get_infection_day() + self.immunity) * (1.0 - self.mask_behavior.reduction_in_transmission_rate())
     }
 
     pub fn set_vaccination(&mut self, vaccinated: bool) {
@@ -198,12 +208,15 @@ impl Citizen {
     }
 
     pub fn perform_operation(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap,
-                             rng: &mut RandomWrapper, disease: &Disease) -> Point {
-        self.routine(cell, simulation_hour, grid, map, rng, disease)
+                             rng: &mut RandomWrapper, disease: &Disease, current_counts: &Counts) -> Point {
+        self.routine(cell, simulation_hour, grid, map, rng, disease, current_counts)
     }
 
     fn routine(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap,
-               rng: &mut RandomWrapper, disease: &Disease) -> Point {
+               rng: &mut RandomWrapper, disease: &Disease, current_counts: &Counts) -> Point {
+
+        self.mask_behavior.update_mask_status(current_counts);
+
         let mut new_cell = cell;
 
         let current_hour = simulation_hour % constants::NUMBER_OF_HOURS;
@@ -375,7 +388,9 @@ impl Citizen {
                 .filter(|p| map.is_point_in_grid(p))
                 .filter_map(|cell| { map.get_agent_for(&cell) })
                 .filter(|agent| agent.state_machine.is_infected() && !agent.hospitalized)
-                .find(|neighbor| rng.get().gen_bool(neighbor.get_infection_transmission_rate(disease)));
+                .find(|neighbor| rng.get().gen_bool(
+                    neighbor.get_infection_transmission_rate(disease)*(1.0 - self.mask_behavior.reduction_in_exposure_rate())
+                ));
 
             if neighbor_that_spreads_infection.is_some() {
                 self.state_machine.expose(sim_hr);

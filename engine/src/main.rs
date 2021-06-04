@@ -30,6 +30,7 @@ use crate::kafka_consumer::KafkaConsumer;
 mod constants;
 
 mod agent;
+mod masking;
 mod epidemiology_simulation;
 mod allocation_map;
 mod geography;

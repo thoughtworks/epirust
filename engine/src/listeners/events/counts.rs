@@ -119,7 +119,40 @@ impl Counts {
     }
 }
 
+pub struct CumulativeAverage {
+    // cumulative sum of daily new cases.
+    infected: Vec<i32>,
+    prev_day_counts: Counts,
+}
 
+impl CumulativeAverage {
+    pub fn new(total_hours: i32, init_counts: &Counts) -> Self {
+        let mut infected = Vec::with_capacity((total_hours+1) as usize);
+        infected.push(init_counts.infected);
+        debug!("initialized cumulative counts {:?}", infected);
+        Self { infected, prev_day_counts: *init_counts}
+    }
+
+    pub fn update_values(&mut self, counts: &Counts) -> i32{
+        let new_cases = counts.infected - self.prev_day_counts.infected + counts.deceased - self.prev_day_counts.deceased + counts.recovered - self.prev_day_counts.recovered + counts.hospitalized - self.prev_day_counts.hospitalized;
+        self.infected.push(self.infected.last().unwrap() + new_cases);
+        debug!("daily new cases = {}", new_cases);
+        self.prev_day_counts = *counts;
+        new_cases
+    }
+
+    fn get_cumulative_sum(&self, hour:i32) -> i32 {
+        *self.infected.get(hour as usize).unwrap_or(&0)
+    }
+
+    // start and end hours are inclusive
+    pub fn get_infected_moving_average(&self, start_hour: i32, end_hour: i32) -> f64 {
+        if start_hour==0 {
+            return (self.get_cumulative_sum(end_hour) as f64) / (end_hour as f64)
+        }
+        ((self.get_cumulative_sum(end_hour) - self.get_cumulative_sum(start_hour)) as f64)/((end_hour-start_hour) as f64)
+    }
+}
 #[cfg(test)]
 mod tests {
     use crate::listeners::events::counts::Counts;

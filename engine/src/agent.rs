@@ -33,7 +33,7 @@ use crate::geography::{Area, Grid, Point};
 use crate::random_wrapper::RandomWrapper;
 use crate::travel_plan::Traveller;
 use crate::masking::MaskingBehavior;
-use crate::listeners::events::counts::Counts;
+use crate::listeners::events::counts::{Counts, CumulativeAverage};
 
 #[derive(Deserialize)]
 pub struct PopulationRecord {
@@ -208,14 +208,15 @@ impl Citizen {
     }
 
     pub fn perform_operation(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap,
-                             rng: &mut RandomWrapper, disease: &Disease, current_counts: &Counts) -> Point {
-        self.routine(cell, simulation_hour, grid, map, rng, disease, current_counts)
+                             rng: &mut RandomWrapper, disease: &Disease, current_counts: &Counts, cumulative_counts: &CumulativeAverage) -> Point {
+        self.routine(cell, simulation_hour, grid, map, rng, disease, current_counts, cumulative_counts)
     }
 
     fn routine(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap,
-               rng: &mut RandomWrapper, disease: &Disease, current_counts: &Counts) -> Point {
+               rng: &mut RandomWrapper, disease: &Disease, current_counts: &Counts, cumulative_counts: &CumulativeAverage) -> Point {
 
-        self.mask_behavior.update_mask_status(current_counts);
+        let current_day = simulation_hour/constants::NUMBER_OF_HOURS;
+        self.mask_behavior.update_mask_status(current_counts, cumulative_counts, current_day);
 
         let mut new_cell = cell;
 

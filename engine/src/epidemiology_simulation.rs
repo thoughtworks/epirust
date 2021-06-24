@@ -35,9 +35,9 @@ use crate::interventions::hospital::BuildNewHospital;
 use crate::interventions::lockdown::LockdownIntervention;
 use crate::interventions::vaccination::VaccinateIntervention;
 use crate::kafka_producer::{KafkaProducer, TickAck};
-use crate::listeners::csv_service::CsvListener;
+use crate::listeners::csv_service::{CsvListener, write};
 use crate::listeners::disease_tracker::Hotspot;
-use crate::listeners::events::counts::Counts;
+use crate::listeners::events::counts::{Counts, CumulativeAverage};
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
 use crate::listeners::listener::{Listeners, Listener};
 use crate::random_wrapper::RandomWrapper;
@@ -52,6 +52,8 @@ use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
 use crate::agent::Citizen;
 use crate::disease_state_machine::State;
 use rayon::prelude::*;
+use crate::constants;
+use crate::environment;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -198,6 +200,7 @@ impl Epidemiology {
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
         let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
+        let mut cumulative_counts = CumulativeAverage::new(config.get_hours(), &counts_at_hr);
         let mut rng = RandomWrapper::new();
 
         self.write_agent_location_map.init_with_capacity(population as usize);
@@ -209,22 +212,30 @@ impl Epidemiology {
         match run_mode {
             RunMode::MultiEngine { .. } => {
                 self.run_multi_engine(config, run_mode, &mut listeners, &mut counts_at_hr,
-                                      &mut interventions, &mut rng, parallel).await
+                                      &mut cumulative_counts, &mut interventions, &mut rng, parallel).await
             }
             _ => {
                 self.run_single_engine(config, run_mode, &mut listeners, &mut counts_at_hr,
-                                       &mut interventions, &mut rng, parallel).await
+                                       &mut cumulative_counts, &mut interventions, &mut rng, parallel).await
             }
         }
     }
 
     pub async fn run_single_engine(&mut self, config: &Config, run_mode: &RunMode, listeners: &mut Listeners,
-                                   counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper, parallel: bool) {
+                                   counts_at_hr: &mut Counts, cumulative_counts: &mut CumulativeAverage, interventions: &mut Interventions, rng: &mut RandomWrapper, parallel: bool) {
         let start_time = Instant::now();
         let mut outgoing = Vec::new();
         let percent_outgoing = 0.0;
 
         counts_at_hr.log();
+        let mut daily_new_cases = Vec::with_capacity(config.get_hours() as usize);
+        let mut daily_new_cases_filename = environment::output_dir();
+        daily_new_cases_filename.push("./daily_cases.csv");
+
+        let mut masked = Vec::with_capacity(config.get_hours() as usize);
+        let mut masked_file_name = environment::output_dir();
+        masked_file_name.push("./masked.csv");
+
         for simulation_hour in 1..config.get_hours() {
             counts_at_hr.increment_hour();
 
@@ -242,7 +253,7 @@ impl Epidemiology {
                 panic!("No citizens!");
             }
 
-            Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
+            Epidemiology::simulate(counts_at_hr, cumulative_counts, simulation_hour, read_buffer_reference, write_buffer_reference,
                                    &self.grid, listeners, rng, &self.disease, percent_outgoing,
                                    &mut outgoing, config.enable_citizen_state_messages(), parallel);
 
@@ -254,8 +265,25 @@ impl Epidemiology {
                 break;
             }
 
+            if (simulation_hour+1)%constants::NUMBER_OF_HOURS == 0 {
+                // daily at the last hour
+                let current_day = simulation_hour/constants::NUMBER_OF_HOURS;
+                daily_new_cases.push(cumulative_counts.update_values(counts_at_hr));
+                debug!("moving avg: {}", cumulative_counts.get_infected_moving_average(current_day - 7, current_day));
+
+                masked.push(write_buffer_reference.iter().filter(|(_cell, agent)| {
+                    agent.mask_behavior.is_wearing_mask()
+                }).count());
+
+                // if current_day>=7 {
+                //     println!("\n\n");
+                //     println!("hour: {}, dayid: {}", simulation_hour, current_day);
+                    // println!("moving avg: {:?}", cumulative_counts.get_infected_moving_average(current_day - 1, current_day));
+                    // println!("\n\n")
+                // }
+            }
             if simulation_hour % 100 == 0 {
-                debug!("agents wearing mask = {}", write_buffer_reference.iter().filter(|(_cell, agent)| {
+                debug!("agents wearing mask at time {} = {}", simulation_hour, write_buffer_reference.iter().filter(|(_cell, agent)| {
                     agent.mask_behavior.is_wearing_mask()
                 }).count());
                 info!("Throughput: {} iterations/sec; simulation hour {} of {}",
@@ -268,10 +296,12 @@ impl Epidemiology {
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         listeners.simulation_ended();
+        write(&daily_new_cases_filename, &daily_new_cases).expect("Failed to write to file");
+        write(&masked_file_name, &masked).expect("Failed to write to file");
     }
 
     pub async fn run_multi_engine(&mut self, config: &Config, run_mode: &RunMode, listeners: &mut Listeners,
-                                  counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper, parallel: bool) {
+                                  counts_at_hr: &mut Counts, cumulative_counts: &mut CumulativeAverage, interventions: &mut Interventions, rng: &mut RandomWrapper, parallel: bool) {
         let start_time = Instant::now();
         let mut producer = KafkaProducer::new();
 
@@ -328,7 +358,7 @@ impl Epidemiology {
             let percent_outgoing = engine_travel_plan.percent_outgoing();
             let recv_travellers = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan);
             let sim = async {
-                Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
+                Epidemiology::simulate(counts_at_hr, cumulative_counts, simulation_hour, read_buffer_reference, write_buffer_reference,
                                        grid, listeners, rng, disease, percent_outgoing,
                                        &mut outgoing, config.enable_citizen_state_messages(), parallel);
                 let outgoing_travellers_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
@@ -470,7 +500,7 @@ impl Epidemiology {
         }
     }
 
-    fn simulate(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap, write_buffer: &mut AgentLocationMap,
+    fn simulate(csv_record: &mut Counts, cumulative_counts: &mut CumulativeAverage, simulation_hour: i32, read_buffer: &AgentLocationMap, write_buffer: &mut AgentLocationMap,
                grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
                 outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool, parallel: bool) {
@@ -483,7 +513,7 @@ impl Epidemiology {
                 let mut rng = RandomWrapper::new();
                 let mut current_agent = *agent;
                 let infection_status = current_agent.state_machine.is_infected();
-                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng, disease, &current_counts);
+                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, &mut rng, disease, &current_counts, &cumulative_counts);
                 ((*cell, point), current_agent, infection_status)
             }).collect();
             updates.iter().for_each(|pair| {
@@ -516,7 +546,7 @@ impl Epidemiology {
             for (cell, agent) in read_buffer.iter() {
                 let mut current_agent = *agent;
                 let infection_status = current_agent.state_machine.is_infected();
-                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease, &current_counts);
+                let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease, &current_counts, &cumulative_counts);
                 Epidemiology::update_counts(csv_record, &current_agent);
 
                 if infection_status == false && current_agent.state_machine.is_infected() == true {

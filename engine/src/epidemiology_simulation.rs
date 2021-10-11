@@ -196,6 +196,8 @@ impl Epidemiology {
     }
 
     pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
+        let number_of_threads = config.get_number_of_threads();
+        rayon::ThreadPoolBuilder::new().num_threads(number_of_threads as usize).build_global().unwrap();
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
         let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
@@ -565,7 +567,7 @@ mod tests {
             percent: 0.2,
         };
         let geography_parameters = GeographyParameters::new(100, 0.003);
-        let config = Config::new(Population::Auto(pop), disease, geography_parameters, vec![], 100, vec![InterventionConfig::Vaccinate(vac)], None);
+        let config = Config::new(Population::Auto(pop), disease, geography_parameters, vec![], 100, vec![InterventionConfig::Vaccinate(vac)], None, 8);
         let epidemiology: Epidemiology = Epidemiology::new(&config, "id".to_string());
         let expected_housing_area = Area::new(Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);

@@ -37,6 +37,7 @@ pub struct Config {
     enable_citizen_state_messages: bool,
     #[serde(default)]
     starting_infections: StartingInfections,
+    number_of_threads: u8,
 }
 
 impl Config {
@@ -64,6 +65,8 @@ impl Config {
         self.hours
     }
 
+    pub fn get_number_of_threads(&self) -> u8 { self.number_of_threads }
+
     pub fn get_interventions(&self) -> Vec<InterventionConfig> {
         self.interventions.clone()
     }
@@ -82,7 +85,7 @@ impl Config {
 
     #[cfg(test)]
     pub fn new(population: Population, disease: Disease, geography_parameters: GeographyParameters, disease_overrides: Vec<DiseaseOverride>,
-               hours: i32, interventions: Vec<InterventionConfig>, output_file: Option<String>)
+               hours: i32, interventions: Vec<InterventionConfig>, output_file: Option<String>, number_of_threads: u8)
                -> Config {
         Config {
             population,
@@ -94,6 +97,7 @@ impl Config {
             output_file,
             enable_citizen_state_messages: true,
             starting_infections: StartingInfections::default(),
+            number_of_threads
         }
     }
 }
@@ -224,6 +228,7 @@ mod tests {
             output_file: None,
             enable_citizen_state_messages: false,
             starting_infections: StartingInfections::default(),
+            number_of_threads: 32,
         };
 
         assert_eq!(expected_config, read_config);
@@ -251,6 +256,7 @@ mod tests {
             output_file: Some("simulation_default_config".to_string()),
             enable_citizen_state_messages: false,
             starting_infections: StartingInfections::new(2, 3, 4, 5),
+            number_of_threads: 32,
         };
 
         assert_eq!(expected_config, read_config);

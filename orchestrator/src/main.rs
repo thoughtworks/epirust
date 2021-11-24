@@ -26,9 +26,6 @@ extern crate serde_derive;
 use std::ops::Range;
 
 use clap::{App, Arg};
-use rdkafka::ClientConfig;
-use rdkafka::admin::{AdminClient, AdminOptions};
-use rdkafka::client::DefaultClientContext;
 
 use crate::kafka_producer::KafkaProducer;
 use crate::travel_plan::TravelPlan;
@@ -64,21 +61,19 @@ async fn main() {
 
     let hours = 1..10000;
 
-    cleanup().await;
+    // cleanup().await;
     start(&travel_plan, hours, &sim_conf).await;
 }
 
-async fn cleanup() {
-    let kafka_url = environment::kafka_url();
-    let kafka_admin: AdminClient<DefaultClientContext> = ClientConfig::new()
-        .set("bootstrap.servers", kafka_url.as_str())
-        .create()
-        .expect("Admin client creation failed");
-    match kafka_admin.delete_topics(&["ticks", "ticks_ack", "travels"], &AdminOptions::new()).await {
-        Ok(_) => {}
-        Err(_) => { error!("Warning: Failed to cleanup ticks and ticks_ack topics") }
-    }
-}
+// the delay between deletion and creation of topic making the process flaky. Deleting the topic using kafka client manually as of now
+// async fn cleanup() -> KafkaResult<Vec<TopicResult>> {
+//     let kafka_url = environment::kafka_url();
+//     let kafka_admin: AdminClient<DefaultClientContext> = ClientConfig::new()
+//         .set("bootstrap.servers", kafka_url.as_str())
+//         .create()
+//         .expect("Admin client creation failed");
+//     kafka_admin.delete_topics(&["ticks", "ticks_ack", "travels"], &AdminOptions::new()).await
+// }
 
 async fn start(travel_plan: &TravelPlan, hours: Range<i32>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();

@@ -13,3 +13,4 @@ grid.svg
 grid.png
 simulation_*.csv
 simulation_*.json
+output/

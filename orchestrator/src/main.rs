@@ -29,7 +29,7 @@ use clap::{App, Arg};
 
 use crate::kafka_producer::KafkaProducer;
 use crate::travel_plan::TravelPlan;
-use crate::config::Config;
+use crate::config::{Config, get_hours};
 
 mod kafka_producer;
 mod kafka_consumer;
@@ -59,7 +59,7 @@ async fn main() {
     let sim_conf = config::read_simulation_conf(config_path);
     let travel_plan = config.get_travel_plan();
 
-    let hours = 1..10000;
+    let hours = 1..get_hours(config_path);
 
     // cleanup().await;
     start(&travel_plan, hours, &sim_conf).await;
@@ -75,7 +75,7 @@ async fn main() {
 //     kafka_admin.delete_topics(&["ticks", "ticks_ack", "travels"], &AdminOptions::new()).await
 // }
 
-async fn start(travel_plan: &TravelPlan, hours: Range<i32>, sim_conf: &String) {
+async fn start(travel_plan: &TravelPlan, hours: Range<i64>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();
 
     match producer.start_request(sim_conf).await.unwrap() {

@@ -31,6 +31,15 @@ pub fn read_simulation_conf(filename: &str) -> String {
     serde_json::to_string(sim).unwrap()
 }
 
+pub fn get_hours(filename: &str) -> i64 {
+    let reader = File::open(filename).unwrap();
+    let config: Value = serde_json::from_reader(reader).unwrap();
+    let sim = config.get("simulation").unwrap().as_array().unwrap();
+    let hours = sim[0].get("config").unwrap().get("hours");
+    error!("{:?}", hours);
+    hours.unwrap().as_i64().unwrap()
+}
+
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -89,6 +98,12 @@ mod tests {
     fn should_read_config_for_engines() {
         let config_for_engines = read_simulation_conf("config/test/travel_plan.json");
         assert!(config_for_engines.len() > 0)
+    }
+
+    #[test]
+    fn should_read_hours() {
+        let hours = get_hours("config/test/travel_plan.json");
+        assert_eq!(hours, 10000);
     }
 
 }

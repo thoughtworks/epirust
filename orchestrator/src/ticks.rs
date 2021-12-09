@@ -30,7 +30,7 @@ use std::borrow::Borrow;
 
 //Note: these ticks are safe, they don't cause Lyme disease
 
-pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i32>) {
+pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
     let mut acks: TickAcks = TickAcks::new(travel_plan.get_regions());
     let mut producer = KafkaProducer::new();
     let consumer = KafkaConsumer::new();
@@ -74,14 +74,14 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i32>) {
 
 #[derive(Debug, Serialize)]
 pub struct Tick<'a> {
-    hour: i32,
+    hour: i64,
     #[serde(skip_serializing_if = "Option::is_none")]
     travel_plan: Option<&'a TravelPlan>,
     terminate: bool,
 }
 
 impl Tick<'_> {
-    pub fn new(hour: i32, travel_plan: Option<&TravelPlan>, terminate: bool) -> Tick {
+    pub fn new(hour: i64, travel_plan: Option<&TravelPlan>, terminate: bool) -> Tick {
         return Tick {
             hour,
             travel_plan,
@@ -93,7 +93,7 @@ impl Tick<'_> {
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct TickAck {
     engine_id: String,
-    hour: i32,
+    hour: i64,
     counts: Counts,
     locked_down: bool
 }
@@ -136,7 +136,7 @@ impl Counts {
 /// stores a record of all the acks received for a tick
 pub struct TickAcks {
     acks: HashMap<String, TickAck>,
-    current_hour: i32,
+    current_hour: i64,
     engines: Vec<String>,
     lockdown_status_by_engine: HashMap<String, bool>,
 }
@@ -151,7 +151,7 @@ impl TickAcks {
         }
     }
 
-    pub fn reset(&mut self, h: i32) {
+    pub fn reset(&mut self, h: i64) {
         self.current_hour = h;
         self.acks.clear();
     }

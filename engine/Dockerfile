@@ -13,7 +13,6 @@ RUN curl https://sh.rustup.rs -sSf | \
     sh -s -- --default-toolchain stable -y
 
 ENV PATH=/root/.cargo/bin:$PATH
-ENV RUST_LOG=info
 
 RUN cargo install cargo-chef
 WORKDIR app
@@ -29,6 +28,7 @@ COPY . .
 RUN cargo build --release
 
 FROM debian:stable-slim
+ENV RUST_LOG=info
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     libfreetype6-dev libfontconfig1-dev jq

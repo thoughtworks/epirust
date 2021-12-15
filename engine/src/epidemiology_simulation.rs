@@ -97,9 +97,9 @@ impl Epidemiology {
         let now: DateTime<Local> = SystemTime::now().into();
         let mut output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
         if let RunMode::MultiEngine { engine_id } = run_mode {
-            output_file_prefix = format!("output/{}_{}", output_file_prefix, engine_id);
+            output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
         }
-        format!("{}_{}", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"))
+        format!("output/{}_{}", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"))
     }
 
     fn create_listeners(&self, config: &Config, run_mode: &RunMode) -> Listeners {

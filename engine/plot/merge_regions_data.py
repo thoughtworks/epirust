@@ -20,10 +20,10 @@ def merge_regions(data_frames):
 
 if __name__ == '__main__':
 	args = arg_parser()
-	
+
 	regions = list(filter(
-		lambda x: ('interventions' not in x) and ('outgoing_travels' not in x), 
-		glob.glob(f'{args.data_dir}/[A-Za-z]*_[0-9]_updated.csv')
+		lambda x: ('interventions' not in x) and ('outgoing_travels' not in x),
+		glob.glob(f'{args.data_dir}/[A-Za-z]*:[0-9]_updated.csv')
 	))
 
 	merge_regions(open_data_frames(regions)).to_csv(f'{args.data_dir}/integrated_regions.csv')

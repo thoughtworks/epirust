@@ -11,7 +11,7 @@ services:
     environment:
       RUST_LOG: INFO
       EPI_KAFKA_URL: "kafka:29092"
-    command: cargo run --release -- --daemon
+    command: ./epirust -d
 
   server:
     image: epi-web:latest
@@ -34,6 +34,6 @@ services:
       KAFKA_URL: "kafka:29092"
     build:
       context: ../web
-    working_dir: /web/server  
+    working_dir: /web/server
     command: npm run start-consumers
 

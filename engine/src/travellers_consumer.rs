@@ -17,14 +17,14 @@
  *
  */
 
-use rdkafka::consumer::{StreamConsumer, Consumer};
 use rdkafka::{ClientConfig, Message};
-
+use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
+
 use crate::environment;
-use crate::travel_plan::TravellersByRegion;
 use crate::kafka_producer::TRAVELS_TOPIC;
+use crate::travel_plan::TravellersByRegion;
 
 pub fn start(engine_id: &str) -> StreamConsumer {
     let kafka_url = environment::kafka_url();
@@ -43,12 +43,22 @@ pub fn start(engine_id: &str) -> StreamConsumer {
 }
 
 pub fn read(message: Option<KafkaResult<BorrowedMessage>>) -> Option<TravellersByRegion> {
-    message.map(|msg| {
-        let borrowed_message = msg.unwrap();
-        let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-        debug!("Reading Travel Data: {}", str_message);
-        parse_travellers(str_message)
-    })
+    match message {
+        None => { None }
+        Some(msg) => {
+            match msg {
+                Err(e) => {
+                    debug!("error occured: {}", e);
+                    None
+                }
+                Ok(borrowed_message) => {
+                    let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
+                    debug!("Reading Travel Data: {}", str_message);
+                    Some(parse_travellers(str_message))
+                }
+            }
+        }
+    }
 }
 
 fn parse_travellers(message: &str) -> TravellersByRegion {

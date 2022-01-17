@@ -17,11 +17,11 @@
  *
  */
 
-use rdkafka::consumer::{StreamConsumer, Consumer};
 use rdkafka::{ClientConfig, Message};
-
+use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
+
 use crate::environment;
 use crate::travel_plan::TravelPlan;
 
@@ -49,10 +49,17 @@ pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Option<Tick> {
             None
         }
         Some(m) => {
-            let borrowed_message = m.unwrap();
-            let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-            debug!("Tick Data: {}", str_message);
-            Some(parse_tick(str_message))
+            match m {
+                Err(e) => {
+                    debug!("error occured: {}", e);
+                    None
+                }
+                Ok(borrowed_message) => {
+                    let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
+                    debug!("Tick Data: {}", str_message);
+                    Some(parse_tick(str_message))
+                }
+            }
         }
     }
 }
@@ -71,7 +78,7 @@ pub struct Tick {
 impl Tick {
     #[cfg(test)]
     pub fn new(hour: i32, travel_plan: Option<TravelPlan>, terminate: bool) -> Tick {
-        return Tick { hour, travel_plan, terminate }
+        return Tick { hour, travel_plan, terminate };
     }
 
     pub fn hour(&self) -> i32 {
@@ -108,7 +115,7 @@ mod tests {
             vec!["engine1".to_string(), "engine2".to_string()],
             vec![
                 vec![0, 156],
-                vec![108, 0]
+                vec![108, 0],
             ],
         );
         let expected = Tick { hour: 0, travel_plan: Some(travel_plan), terminate: false };

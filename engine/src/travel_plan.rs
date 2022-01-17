@@ -124,9 +124,9 @@ impl EngineTravelPlan {
         };
 
         //assign remaining citizens (if any) to last region
-        for remaining in travellers {
-            outgoing_by_region.last_mut().unwrap().alloc_citizen(remaining);
-        }
+        // for remaining in travellers {
+        //     outgoing_by_region.last_mut().unwrap().alloc_citizen(remaining);
+        // }
 
         outgoing_by_region
     }

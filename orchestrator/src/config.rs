@@ -36,7 +36,6 @@ pub fn get_hours(filename: &str) -> i64 {
     let config: Value = serde_json::from_reader(reader).unwrap();
     let sim = config.get("simulation").unwrap().as_array().unwrap();
     let hours = sim[0].get("config").unwrap().get("hours");
-    error!("{:?}", hours);
     hours.unwrap().as_i64().unwrap()
 }
 

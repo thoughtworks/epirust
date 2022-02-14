@@ -28,7 +28,6 @@ COPY . .
 RUN cargo build --release
 
 FROM debian:stable-slim
-ENV RUST_LOG=info
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     libfreetype6-dev libfontconfig1-dev jq

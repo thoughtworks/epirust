@@ -365,24 +365,27 @@ impl Epidemiology {
         listeners.simulation_ended();
     }
 
+    async fn extract_tick(message_stream: &mut MessageStream<'_, DefaultConsumerContext>) -> Tick {
+        let msg = message_stream.next().await;
+        let mut tick = ticks_consumer::read(msg);
+        while  tick == None  {
+            let next_msg = message_stream.next().await;
+            tick = ticks_consumer::read(next_msg);
+        }
+        tick.unwrap()
+    }
+
     async fn receive_tick(run_mode: &RunMode, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                           simulation_hour: i32) -> Option<Tick> {
         if simulation_hour > 1 && simulation_hour % 24 != 0 {
             return None;
         }
         if let RunMode::MultiEngine { engine_id: _e } = run_mode {
-            let msg = message_stream.next().await;
-            let clock_tick = ticks_consumer::read(msg);
-            match clock_tick {
-                None => { None }
-                Some(t) => {
-                    debug!("tick {}", t.hour());
-                    if t.hour() != simulation_hour {
-                        panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
-                    }
-                    Some(t)
-                }
+            let t = Epidemiology::extract_tick(message_stream).await;
+            if t.hour() != simulation_hour {
+                panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
             }
+            Some(t)
         } else {
             None
         }

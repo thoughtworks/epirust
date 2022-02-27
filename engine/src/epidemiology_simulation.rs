@@ -319,14 +319,19 @@ impl Epidemiology {
 
             let grid = &self.grid;
             let disease = &self.disease;
+            let mut percent_outgoing = 0.0;
 
-            let percent_outgoing = engine_travel_plan.percent_outgoing();
+            if simulation_hour % 24 == 0 {
+                percent_outgoing = engine_travel_plan.percent_outgoing();
+            }
+            let mut actual_outgoing: Vec<(Point, Traveller)> = Vec::new();
             let recv_travellers = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan);
             let sim = async {
                 Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                        grid, listeners, rng, disease, percent_outgoing,
                                        &mut outgoing, config.enable_citizen_state_messages());
-                let outgoing_travellers_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
+                let (outgoing_travellers_by_region, actual_total_outgoing) = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
+                actual_outgoing = actual_total_outgoing;
                 if simulation_hour % 24 == 0 {
                     listeners.outgoing_travellers_added(simulation_hour, &outgoing_travellers_by_region);
                 }
@@ -335,7 +340,7 @@ impl Epidemiology {
             let (mut incoming, ()) = join!(recv_travellers, sim);
             n_incoming += incoming.len();
             n_outgoing += outgoing.len();
-            write_buffer_reference.remove_citizens(&outgoing, counts_at_hr, &mut self.grid);
+            write_buffer_reference.remove_citizens(&actual_outgoing, counts_at_hr, &mut self.grid);
             write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, counts_at_hr, rng);
 
             listeners.counts_updated(*counts_at_hr);

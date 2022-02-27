@@ -89,6 +89,9 @@ impl AgentLocationMap {
     }
 
     pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Traveller)>, counts: &mut Counts, grid: &mut Grid) {
+        if outgoing.is_empty() {
+            return;
+        }
         debug!("Removing {} outgoing travellers", outgoing.len());
         for (point, traveller) in outgoing {
             match traveller.state_machine.state {

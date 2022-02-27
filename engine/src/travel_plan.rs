@@ -17,6 +17,7 @@
  *
  */
 
+use std::iter::FromIterator;
 use crate::ticks_consumer::Tick;
 use crate::agent::Citizen;
 use crate::geography::Point;
@@ -85,6 +86,7 @@ impl EngineTravelPlan {
         }
     }
 
+    /// can be renamed to update travel plan
     pub fn receive_tick(&mut self, tick: Option<Tick>) {
         match tick {
             None => {}
@@ -106,7 +108,7 @@ impl EngineTravelPlan {
         }
     }
 
-    pub fn alloc_outgoing_to_regions(&self, outgoing: &Vec<(Point, Traveller)>) -> Vec<TravellersByRegion> {
+    pub fn alloc_outgoing_to_regions(&self, outgoing: &Vec<(Point, Traveller)>) -> (Vec<TravellersByRegion>, Vec<(Point, Traveller)>)  {
         let mut travellers: Vec<Traveller> = outgoing.iter().map(|x| x.1).collect();
         let total_outgoing = travellers.len();
         let mut outgoing_by_region = match &self.travel_plan {
@@ -122,13 +124,14 @@ impl EngineTravelPlan {
                     }).collect()
             }
         };
+        let actual_outgoing_travellers: Vec<(Point, Traveller)> = outgoing.iter().filter(|x|  !travellers.contains(&x.1)).map( |y| (y.0, y.1)).collect();
 
         //assign remaining citizens (if any) to last region
         // for remaining in travellers {
         //     outgoing_by_region.last_mut().unwrap().alloc_citizen(remaining);
         // }
 
-        outgoing_by_region
+        (outgoing_by_region, actual_outgoing_travellers)
     }
 
     pub fn incoming_regions_count(&self) -> i32 {
@@ -150,17 +153,17 @@ impl EngineTravelPlan {
 #[derive(Serialize, Deserialize)]
 pub struct TravellersByRegion {
     to_engine_id: String,
-    travellers: Vec<Traveller>,
+    pub travellers: Vec<Traveller>,
 }
 
 impl TravellersByRegion {
     /// Since the actual outgoing count doesn't exactly match the travel plan, we pick a proportion
     /// of the actual outgoing count
-    fn actual_outgoing_count(&self, travel_plan: &TravelPlan, actual_total_outgoing: i32, engine_id: &String) -> i32 {
+    fn actual_outgoing_count(&self, travel_plan: &TravelPlan, total_outgoing: i32, engine_id: &String) -> i32 {
         let planned_outgoing_for_region = travel_plan.get_outgoing(engine_id, &self.to_engine_id);
         let planned_total_outgoing = travel_plan.get_total_outgoing(engine_id);
         let percent_outgoing = planned_outgoing_for_region as f64 / planned_total_outgoing as f64;
-        (percent_outgoing * (actual_total_outgoing as f64)) as i32
+        (percent_outgoing * (total_outgoing as f64)) as i32
     }
 
     /// Note that this function mutates (drains) the total list of outgoing citizens
@@ -232,6 +235,12 @@ impl From<&Citizen> for Traveller {
             working: citizen.is_working(),
             state_machine: citizen.state_machine
         }
+    }
+}
+
+impl PartialEq for Traveller {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
     }
 }
 

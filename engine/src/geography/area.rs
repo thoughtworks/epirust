@@ -50,8 +50,8 @@ impl Area {
         let mut points_collision_checker: HashSet<Point> = HashSet::with_capacity(number_of_points as usize);
         let rng = rng.get();
         while points.len() != (number_of_points as usize) {
-            let rand_x = rng.gen_range(self.start_offset.x, self.end_offset.x + 1);
-            let rand_y = rng.gen_range(self.start_offset.y, self.end_offset.y + 1);
+            let rand_x = rng.gen_range(self.start_offset.x..self.end_offset.x + 1);
+            let rand_y = rng.gen_range(self.start_offset.y..self.end_offset.y + 1);
             let new_point = Point::new(rand_x, rand_y);
             if !points_collision_checker.contains(&new_point) {
                 points.push(new_point);
@@ -62,8 +62,8 @@ impl Area {
     }
 
     pub fn get_random_point(&self, rng: &mut RandomWrapper) -> Point {
-        let rand_x = rng.get().gen_range(self.start_offset.x, self.end_offset.x + 1);
-        let rand_y = rng.get().gen_range(self.start_offset.y, self.end_offset.y + 1);
+        let rand_x = rng.get().gen_range(self.start_offset.x..self.end_offset.x + 1);
+        let rand_y = rng.get().gen_range(self.start_offset.y..self.end_offset.y + 1);
 
         Point::new(rand_x, rand_y)
     }

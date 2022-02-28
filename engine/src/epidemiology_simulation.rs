@@ -242,7 +242,7 @@ impl Epidemiology {
 
             Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                    &self.grid, listeners, rng, &self.disease, percent_outgoing,
-                                   &mut outgoing, config.enable_citizen_state_messages());
+                                   &mut outgoing, config.enable_citizen_state_messages(), 0, 0.0);
 
             listeners.counts_updated(*counts_at_hr);
             Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
@@ -269,6 +269,8 @@ impl Epidemiology {
                                   counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper) {
         let start_time = Instant::now();
         let mut producer = KafkaProducer::new();
+        let end_of_migration_hour = config.get_end_of_migration_hour();
+        let reduced_travel_percentage = config.get_reduced_travel_percentage();
 
         //todo stream should be started only in case of multi-sim mode
         let standalone_engine_id = "standalone".to_string();
@@ -329,7 +331,7 @@ impl Epidemiology {
             let sim = async {
                 Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                        grid, listeners, rng, disease, percent_outgoing,
-                                       &mut outgoing, config.enable_citizen_state_messages());
+                                       &mut outgoing, config.enable_citizen_state_messages(), end_of_migration_hour, reduced_travel_percentage);
                 let (outgoing_travellers_by_region, actual_total_outgoing) = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
                 actual_outgoing = actual_total_outgoing;
                 if simulation_hour % 24 == 0 {
@@ -476,7 +478,8 @@ impl Epidemiology {
     fn simulate(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
-                outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool) {
+                outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool, end_of_migration_hour: i32,
+                reduced_travel_percentage: f32) {
         write_buffer.clear();
         csv_record.clear();
         for (cell, agent) in read_buffer.iter() {
@@ -495,10 +498,14 @@ impl Epidemiology {
                 _ => &point
             };
 
-            if simulation_hour % 24 == 0 && current_agent.can_move()
-                && rng.get().gen_bool(percent_outgoing) {
-                let traveller = Traveller::from(&current_agent);
-                outgoing.push((*new_location, traveller));
+            if simulation_hour % 24 == 0 && current_agent.can_move() {
+                if simulation_hour < end_of_migration_hour && rng.get().gen_bool(percent_outgoing) {
+                    let traveller = Traveller::from(&current_agent);
+                    outgoing.push((*new_location, traveller));
+                } else if rng.get().gen_bool(reduced_travel_percentage as f64){
+                    let traveller = Traveller::from(&current_agent);
+                    outgoing.push((*new_location, traveller));
+                }
             }
 
             write_buffer.insert(*new_location, current_agent);
@@ -567,7 +574,7 @@ mod tests {
             percent: 0.2,
         };
         let geography_parameters = GeographyParameters::new(100, 0.003);
-        let config = Config::new(Population::Auto(pop), disease, geography_parameters, vec![], 100, vec![InterventionConfig::Vaccinate(vac)], None);
+        let config = Config::new(Population::Auto(pop), disease, geography_parameters, vec![], 336, 0.0005,100, vec![InterventionConfig::Vaccinate(vac)], None);
         let epidemiology: Epidemiology = Epidemiology::new(&config, "id".to_string());
         let expected_housing_area = Area::new(Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);

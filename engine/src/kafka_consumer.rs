@@ -23,6 +23,7 @@ impl KafkaConsumer<'_> {
         let consumer: StreamConsumer = ClientConfig::new()
             .set("bootstrap.servers", kafka_url.as_str())
             .set("group.id", engine_id)
+            .set("auto.offset.reset", "earliest")
             .create()
             .expect("Consumer creation failed");
 

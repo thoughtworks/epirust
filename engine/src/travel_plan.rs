@@ -17,7 +17,6 @@
  *
  */
 
-use std::iter::FromIterator;
 use crate::ticks_consumer::Tick;
 use crate::agent::Citizen;
 use crate::geography::Point;
@@ -111,7 +110,7 @@ impl EngineTravelPlan {
     pub fn alloc_outgoing_to_regions(&self, outgoing: &Vec<(Point, Traveller)>) -> (Vec<TravellersByRegion>, Vec<(Point, Traveller)>)  {
         let mut travellers: Vec<Traveller> = outgoing.iter().map(|x| x.1).collect();
         let total_outgoing = travellers.len();
-        let mut outgoing_by_region = match &self.travel_plan {
+        let outgoing_by_region = match &self.travel_plan {
             None => { Vec::new() }
             Some(tp) => {
                 tp.regions.iter()
@@ -311,7 +310,7 @@ mod tests {
             outgoing.push((Point::new(1, 1), create_traveller()));
         }
 
-        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
+        let (outgoing_by_region, _) = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
 
         assert_eq!(2, outgoing_by_region.len());
         assert_eq!(156, outgoing_by_region.get(0).unwrap().travellers.len());
@@ -327,7 +326,7 @@ mod tests {
             outgoing.push((Point::new(1, 1), create_traveller()));
         }
 
-        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
+        let (outgoing_by_region, _) = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
 
         assert_eq!(2, outgoing_by_region.len());
         assert_eq!(127, outgoing_by_region.get(0).unwrap().travellers.len());
@@ -343,7 +342,7 @@ mod tests {
             outgoing.push((Point::new(1, 1), create_traveller()));
         }
 
-        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
+        let (outgoing_by_region, _) = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
 
         assert_eq!(2, outgoing_by_region.len());
         assert_eq!(175, outgoing_by_region.get(0).unwrap().travellers.len());
@@ -369,7 +368,7 @@ mod tests {
         for _i in 0..24 {
             outgoing.push((Point::new(1, 1), create_traveller()));
         }
-        let outgoing_by_region = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
+        let (outgoing_by_region, _) = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
 
         assert_eq!(1, outgoing_by_region.len());
         assert_eq!(24, outgoing_by_region.get(0).unwrap().travellers.len());

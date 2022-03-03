@@ -30,6 +30,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -76,6 +78,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -122,6 +126,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -168,6 +174,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -214,6 +222,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -260,6 +270,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -306,6 +318,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -352,6 +366,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -398,6 +414,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -444,6 +462,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -490,6 +510,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -536,6 +558,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -582,6 +606,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -628,6 +654,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {
@@ -674,6 +702,8 @@
           "hospital_beds_percentage": 0.003
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "interventions": [
           {
             "Lockdown": {

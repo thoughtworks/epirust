@@ -680,6 +680,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 27,
           "infected_mild_asymptomatic": 0,
@@ -723,6 +725,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 29,
           "infected_mild_asymptomatic": 0,
@@ -766,6 +770,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 11,
           "infected_mild_asymptomatic": 0,
@@ -809,6 +815,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 107,
           "infected_mild_asymptomatic": 0,
@@ -852,6 +860,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 125,
           "infected_mild_asymptomatic": 0,
@@ -895,6 +905,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 54,
           "infected_mild_asymptomatic": 0,
@@ -938,6 +950,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 41,
           "infected_mild_asymptomatic": 0,
@@ -981,6 +995,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 83,
           "infected_mild_asymptomatic": 0,
@@ -1024,6 +1040,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 308,
           "infected_mild_asymptomatic": 0,
@@ -1067,6 +1085,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 85,
           "infected_mild_asymptomatic": 0,
@@ -1110,6 +1130,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 34,
           "infected_mild_asymptomatic": 0,
@@ -1153,6 +1175,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 83,
           "infected_mild_asymptomatic": 0,
@@ -1196,6 +1220,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 80,
           "infected_mild_asymptomatic": 0,
@@ -1239,6 +1265,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 81,
           "infected_mild_asymptomatic": 0,
@@ -1282,6 +1310,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 86,
           "infected_mild_asymptomatic": 0,
@@ -1325,6 +1355,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 55,
           "infected_mild_asymptomatic": 0,
@@ -1368,6 +1400,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 36,
           "infected_mild_asymptomatic": 0,
@@ -1411,6 +1445,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 55,
           "infected_mild_asymptomatic": 0,
@@ -1454,6 +1490,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 33,
           "infected_mild_asymptomatic": 0,
@@ -1497,6 +1535,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 26,
           "infected_mild_asymptomatic": 0,
@@ -1540,6 +1580,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 13,
           "infected_mild_asymptomatic": 0,
@@ -1583,6 +1625,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 36,
           "infected_mild_asymptomatic": 0,
@@ -1626,6 +1670,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 52,
           "infected_mild_asymptomatic": 0,
@@ -1669,6 +1715,8 @@
           "regular_transmission_start_day": 5
         },
         "hours": 10000,
+        "end_of_migration": 336,
+        "reduced_travel_percentage": 0.0005,
         "starting_infections": {
           "exposed": 9,
           "infected_mild_asymptomatic": 0,

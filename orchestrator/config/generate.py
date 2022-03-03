@@ -49,6 +49,8 @@ sample = """
           "grid_size": 250,
           "hospital_beds_percentage": 0.003
       },
+      "end_of_migration": 336,
+      "reduced_travel_percentage": 0.0005,
       "hours": 10000,
       "interventions": [
         {

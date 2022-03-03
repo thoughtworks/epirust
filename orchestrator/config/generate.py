@@ -103,7 +103,7 @@ if __name__ == "__main__":
     travel_percent = 0.001
     travel_count = travel_percent * population
     json_sample["config"]["population"]["Auto"]["number_of_agents"] = population
-    json_sample["config"]["grid_size"] = grid_size
+    json_sample["config"]["geography_parameters"]["grid_size"] = grid_size
     simulation_config = []
     for i in range(engines):
         json_sample["engine_id"] = "engine" + str(i + 1)

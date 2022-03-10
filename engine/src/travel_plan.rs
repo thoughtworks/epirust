@@ -176,9 +176,9 @@ impl TravellersByRegion {
         self.travellers = citizens.drain(0..count).collect();
     }
 
-    // pub fn alloc_citizen(&mut self, traveller: Traveller) {
-    //     self.travellers.push(traveller);
-    // }
+    pub fn alloc_citizen(&mut self, traveller: Traveller) {
+        self.travellers.push(traveller);
+    }
 
     pub fn create(to_engine_id: &String) -> TravellersByRegion {
         TravellersByRegion {

@@ -48,6 +48,7 @@ mod environment;
 mod disease_state_machine;
 mod travel_plan;
 mod travellers_consumer;
+mod custom_types;
 
 const STANDALONE_SIM_ID: &str = "0";
 

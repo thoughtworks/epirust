@@ -18,27 +18,30 @@
  */
 
 use std::collections::HashMap;
+use validator::Validate;
 
 use crate::config::Config;
 use crate::interventions::InterventionConfig;
 use crate::listeners::events::counts::Counts;
 use crate::interventions::intervention_type::InterventionType;
+use crate::custom_types::{Hour, Percentage, validate_percentage};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
 pub struct VaccinateConfig {
-    pub at_hour: i32,
-    pub percent: f64,
+    pub at_hour: Hour,
+    #[validate(custom = "validate_percentage")]
+    pub percent: Percentage,
 }
 
 impl VaccinateConfig {
     #[cfg(test)]
-    pub fn new(at_hour: i32, percent: f64) -> VaccinateConfig {
+    pub fn new(at_hour: Hour, percent: Percentage) -> VaccinateConfig {
         VaccinateConfig { at_hour, percent }
     }
 }
 
 pub struct VaccinateIntervention {
-    intervention: HashMap<i32, f64>,
+    intervention: HashMap<Hour, Percentage>,
 }
 
 impl VaccinateIntervention {
@@ -48,8 +51,8 @@ impl VaccinateIntervention {
         }
     }
 
-    fn prepare_vaccinations(config: &Config) -> HashMap<i32, f64> {
-        let mut vaccinations: HashMap<i32, f64> = HashMap::new();
+    fn prepare_vaccinations(config: &Config) -> HashMap<Hour, Percentage> {
+        let mut vaccinations: HashMap<Hour, f64> = HashMap::new();
         config.get_interventions().iter().filter_map(|i| {
             match i {
                 InterventionConfig::Vaccinate(v) => Some(v),
@@ -61,7 +64,7 @@ impl VaccinateIntervention {
         vaccinations
     }
 
-    pub fn get_vaccination_percentage(&self, counts: &Counts) -> Option<&f64> {
+    pub fn get_vaccination_percentage(&self, counts: &Counts) -> Option<&Percentage> {
         self.intervention.get(&counts.get_hour())
     }
 }
@@ -92,7 +95,7 @@ mod tests {
         let config = config::read("config/test/auto_pop.json".to_string()).unwrap();
         let vaccinate_intervention = VaccinateIntervention::init(&config);
 
-        let mut expected: HashMap<i32, f64> = HashMap::new();
+        let mut expected: HashMap<Hour, f64> = HashMap::new();
         expected.insert(5000, 0.2);
 
         assert_eq!(expected, vaccinate_intervention.intervention);

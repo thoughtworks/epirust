@@ -21,6 +21,7 @@ use crate::agent::Citizen;
 use crate::geography::Point;
 use crate::disease_state_machine::State;
 use uuid::Uuid;
+use crate::custom_types::Hour;
 
 #[derive(Serialize)]
 pub struct CitizenState {
@@ -43,7 +44,7 @@ impl CitizenState {
 
 #[derive(Serialize)]
 pub struct CitizenStatesAtHr {
-    pub hr: i32,
+    pub hr: Hour,
     pub citizen_states: Vec<CitizenState>,
 }
 

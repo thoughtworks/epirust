@@ -22,17 +22,20 @@ use crate::constants;
 use crate::interventions::InterventionConfig::Lockdown;
 use crate::listeners::events::counts::Counts;
 use crate::interventions::intervention_type::InterventionType;
+use validator::{Validate};
+use crate::custom_types::{Count, Hour, Percentage, validate_percentage};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
 pub struct LockdownConfig {
-    pub at_number_of_infections: i32,
-    pub essential_workers_population: f64,
+    pub at_number_of_infections: Count,
+    #[validate(custom = "validate_percentage")]
+    pub essential_workers_population: Percentage,
 }
 
 pub struct LockdownIntervention {
     is_locked_down: bool,
     intervention: Option<LockdownConfig>,
-    pub zero_infection_hour: i32,
+    pub zero_infection_hour: Hour,
 }
 
 impl LockdownIntervention {
@@ -66,7 +69,7 @@ impl LockdownIntervention {
         }
     }
 
-    pub fn set_zero_infection_hour(&mut self, zero_infection_hour: i32){
+    pub fn set_zero_infection_hour(&mut self, zero_infection_hour: Hour){
         if self.zero_infection_hour == 0 {
             self.zero_infection_hour = zero_infection_hour;
         }
@@ -74,7 +77,7 @@ impl LockdownIntervention {
 
     pub fn should_unlock(&self, counts: &Counts) -> bool {
         if counts.get_hour() == self.zero_infection_hour +
-            (constants::QUARANTINE_DAYS as f64 * 1.5).round() as i32 * constants::HOURS_IN_A_DAY {
+            (constants::QUARANTINE_DAYS as f64 * 1.5).round() as Hour * constants::HOURS_IN_A_DAY {
             return self.is_locked_down
         }
         false

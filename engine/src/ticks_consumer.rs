@@ -21,6 +21,7 @@ use rdkafka::{ClientConfig, Message};
 use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
+use crate::custom_types::Hour;
 
 use crate::environment;
 use crate::travel_plan::TravelPlan;
@@ -70,18 +71,18 @@ fn parse_tick(message: &str) -> Tick {
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct Tick {
-    hour: i32,
+    hour: Hour,
     travel_plan: Option<TravelPlan>,
     terminate: bool,
 }
 
 impl Tick {
     #[cfg(test)]
-    pub fn new(hour: i32, travel_plan: Option<TravelPlan>, terminate: bool) -> Tick {
+    pub fn new(hour: Hour, travel_plan: Option<TravelPlan>, terminate: bool) -> Tick {
         return Tick { hour, travel_plan, terminate };
     }
 
-    pub fn hour(&self) -> i32 {
+    pub fn hour(&self) -> Hour {
         self.hour
     }
 

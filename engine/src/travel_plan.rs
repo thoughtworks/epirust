@@ -21,6 +21,7 @@ use crate::ticks_consumer::Tick;
 use crate::agent::Citizen;
 use crate::geography::Point;
 use uuid::Uuid;
+use crate::custom_types::Count;
 use crate::disease_state_machine::DiseaseStateMachine;
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
@@ -73,11 +74,11 @@ impl TravelPlan {
 pub struct EngineTravelPlan {
     engine_id: String,
     travel_plan: Option<TravelPlan>,
-    current_total_population: i32,
+    current_total_population: Count,
 }
 
 impl EngineTravelPlan {
-    pub fn new(engine_id: &String, current_population: i32) -> EngineTravelPlan {
+    pub fn new(engine_id: &String, current_population: Count) -> EngineTravelPlan {
         EngineTravelPlan {
             engine_id: engine_id.clone(),
             travel_plan: None,
@@ -144,7 +145,7 @@ impl EngineTravelPlan {
         &self.engine_id
     }
 
-    pub fn set_current_population(&mut self, val: i32) {
+    pub fn set_current_population(&mut self, val: Count) {
         self.current_total_population = val;
     }
 }

@@ -28,10 +28,11 @@ use crate::listeners::events::counts::Counts;
 use crate::travel_plan::Traveller;
 use std::collections::hash_map::{IterMut, Iter};
 use fnv::FnvHashMap;
+use crate::custom_types::{CoOrdinate, Count, Size};
 
 #[derive(Clone)]
 pub struct AgentLocationMap {
-    grid_size: i32,
+    grid_size: Size,
     agent_cell: FnvHashMap<Point, agent::Citizen>,
 }
 
@@ -40,7 +41,7 @@ impl AgentLocationMap {
         self.agent_cell = FnvHashMap::with_capacity_and_hasher(size, Default::default());
     }
 
-    pub fn new(grid_size: i32, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
+    pub fn new(grid_size: Size, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
         let mut map: FnvHashMap<Point, agent::Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
         for i in 0..agent_list.len() {
@@ -81,7 +82,8 @@ impl AgentLocationMap {
     }
 
     pub fn is_point_in_grid(&self, point: &Point) -> bool {
-        point.x >= 0 && point.y >= 0 && point.x < self.grid_size && point.y < self.grid_size
+        let end_coordinate_of_grid = self.grid_size as CoOrdinate;
+        point.x >= 0 && point.y >= 0 && point.x < end_coordinate_of_grid && point.y < end_coordinate_of_grid
     }
 
     pub fn is_cell_vacant(&self, cell: &Point) -> bool {
@@ -95,10 +97,10 @@ impl AgentLocationMap {
         debug!("Removing {} outgoing travellers", outgoing.len());
         for (point, traveller) in outgoing {
             match traveller.state_machine.state {
-                State::Susceptible { .. } => { counts.update_susceptible(-1) },
-                State::Exposed { .. } => { counts.update_exposed(-1) }
-                State::Infected { .. } => { counts.update_infected(-1) },
-                State::Recovered { .. } => { counts.update_recovered(-1) },
+                State::Susceptible { .. } => { counts.remove_susceptible(1) },
+                State::Exposed { .. } => { counts.remove_exposed(1) }
+                State::Infected { .. } => { counts.remove_infected(1) },
+                State::Recovered { .. } => { counts.remove_recovered(1) },
                 State::Deceased { .. } => { panic!("Deceased agent should not travel!") },
             }
             match self.agent_cell.remove(point) {
@@ -160,8 +162,8 @@ impl AgentLocationMap {
         }
     }
 
-    pub fn current_population(&self) -> i32 {
-        self.agent_cell.len() as i32
+    pub fn current_population(&self) -> Count {
+        self.agent_cell.len() as Count
     }
 
     pub fn iter(&self) -> Iter<'_, Point, Citizen> {

@@ -22,6 +22,7 @@ use rand::Rng;
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
 use std::collections::HashSet;
+use crate::custom_types::{Count};
 
 #[derive(Copy, Clone, Hash, Eq, Debug, Serialize, Deserialize)]
 pub struct Area {
@@ -73,8 +74,8 @@ impl Area {
             && self.start_offset.y <= point.y && self.end_offset.y >= point.y
     }
 
-    pub fn get_number_of_cells(&self) -> i32 {
-        (self.end_offset.x - self.start_offset.x) * (self.end_offset.y - self.start_offset.y)
+    pub fn get_number_of_cells(&self) -> Count {
+        ((self.end_offset.x - self.start_offset.x) * (self.end_offset.y - self.start_offset.y)) as Count
     }
 }
 
@@ -85,24 +86,24 @@ impl PartialEq for Area {
     }
 }
 
-pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area> {
-    let feasible_houses_in_x_dim = (end_point.x - start_point.x + 1) / size;
-    let feasible_houses_in_y_dim = (end_point.y - start_point.y + 1) / size;
+pub fn area_factory(start_point: Point, end_point: Point, size: u32) -> Vec<Area> {
+    let feasible_houses_in_x_dim = (end_point.x - start_point.x + 1) / size as i32;
+    let feasible_houses_in_y_dim = (end_point.y - start_point.y + 1) / size as i32;
 
     let mut areas = Vec::with_capacity((feasible_houses_in_y_dim * feasible_houses_in_x_dim) as usize);
     let mut current_start_point = start_point;
 
     for _i in 0..feasible_houses_in_y_dim {
         for _j in 0..feasible_houses_in_x_dim {
-            let current_end_point: Point = Point::new(current_start_point.x + size - 1, current_start_point.y + size - 1);
+            let current_end_point: Point = Point::new(current_start_point.x + size as i32 - 1, current_start_point.y + size as i32 - 1);
 
             areas.push(Area::new(current_start_point, current_end_point));
 
-            current_start_point.x = current_start_point.x + size;
+            current_start_point.x = current_start_point.x + size as i32;
         }
 
         current_start_point.x = start_point.x;
-        current_start_point.y = current_start_point.y + size;
+        current_start_point.y = current_start_point.y + size as i32;
     }
 
     areas

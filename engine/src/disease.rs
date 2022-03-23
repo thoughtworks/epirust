@@ -19,23 +19,30 @@
 
 use rand::Rng;
 use serde::Deserialize;
+use crate::custom_types::{Day, Hour, Percentage, validate_percentage};
+use validator::Validate;
 
 use crate::random_wrapper::RandomWrapper;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Validate)]
 pub struct Disease {
-    regular_transmission_start_day: i32,
-    high_transmission_start_day: i32,
-    last_day: i32,
-    asymptomatic_last_day: i32,
-    mild_infected_last_day: i32,
-    regular_transmission_rate: f64,
-    high_transmission_rate: f64,
-    death_rate: f64,
-    percentage_asymptomatic_population: f64,
-    percentage_severe_infected_population: f64,
-    exposed_duration: i32,
-    pre_symptomatic_duration: i32,
+    regular_transmission_start_day: Day,
+    high_transmission_start_day: Day,
+    last_day: Day,
+    asymptomatic_last_day: Day,
+    mild_infected_last_day: Day,
+    #[validate(custom = "validate_percentage")]
+    regular_transmission_rate: Percentage,
+    #[validate(custom = "validate_percentage")]
+    high_transmission_rate: Percentage,
+    #[validate(custom = "validate_percentage")]
+    death_rate: Percentage,
+    #[validate(custom = "validate_percentage")]
+    percentage_asymptomatic_population: Percentage,
+    #[validate(custom = "validate_percentage")]
+    percentage_severe_infected_population: Percentage,
+    exposed_duration: Hour,
+    pre_symptomatic_duration: Hour,
 }
 
 impl Disease {
@@ -51,8 +58,8 @@ impl Disease {
     }
 
     #[cfg(test)]
-    pub fn new(regular_transmission_start_day: i32, high_transmission_start_day: i32, last_day: i32, asymptomatic_last_day: i32,
-               mild_infected_last_day: i32, regular_transmission_rate: f64, high_transmission_rate: f64, death_rate: f64, percentage_asymptomatic_population: f64, percentage_severe_infected_population: f64, exposed_duration: i32, pre_symptomatic_duration: i32) -> Disease {
+    pub fn new(regular_transmission_start_day: Day, high_transmission_start_day: Day, last_day: Day, asymptomatic_last_day: Day,
+               mild_infected_last_day: Day, regular_transmission_rate: Percentage, high_transmission_rate: Percentage, death_rate: Percentage, percentage_asymptomatic_population: Percentage, percentage_severe_infected_population: Percentage, exposed_duration: Hour, pre_symptomatic_duration: Hour) -> Disease {
         Disease {
             regular_transmission_start_day,
             high_transmission_start_day,
@@ -69,7 +76,7 @@ impl Disease {
         }
     }
 
-    pub fn get_current_transmission_rate(&self, infection_day: i32) -> f64 {
+    pub fn get_current_transmission_rate(&self, infection_day: Day) -> Percentage {
         if self.regular_transmission_start_day < infection_day && infection_day <= self.high_transmission_start_day {
             return self.regular_transmission_rate;
         } else if self.high_transmission_start_day < infection_day && infection_day <= self.last_day {
@@ -78,7 +85,7 @@ impl Disease {
         0.0
     }
 
-    pub fn to_be_hospitalized(&self, infection_day: i32) -> bool {
+    pub fn to_be_hospitalized(&self, infection_day: Day) -> bool {
         let transmission_rate = self.get_current_transmission_rate(infection_day);
         if transmission_rate >= self.high_transmission_rate {
             return true;
@@ -86,7 +93,7 @@ impl Disease {
         false
     }
 
-    pub fn get_disease_last_day(&self) -> i32 {
+    pub fn get_disease_last_day(&self) -> Day {
         self.last_day
     }
 
@@ -97,19 +104,19 @@ impl Disease {
         false
     }
 
-    pub fn get_percentage_asymptomatic_population(&self) -> f64 {
+    pub fn get_percentage_asymptomatic_population(&self) -> Percentage {
         self.percentage_asymptomatic_population
     }
 
-    pub fn get_percentage_severe_infected_population(&self) -> f64 {
+    pub fn get_percentage_severe_infected_population(&self) -> Percentage {
         self.percentage_severe_infected_population
     }
 
-    pub fn get_exposed_duration(&self) -> i32 {
+    pub fn get_exposed_duration(&self) -> Hour {
         self.exposed_duration
     }
 
-    pub fn get_pre_symptomatic_duration(&self) -> i32 {
+    pub fn get_pre_symptomatic_duration(&self) -> Hour {
         self.pre_symptomatic_duration
     }
 }

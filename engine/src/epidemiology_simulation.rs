@@ -50,6 +50,7 @@ use crate::listeners::intervention_reporter::InterventionReporter;
 use crate::interventions::Interventions;
 use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
 use crate::agent::Citizen;
+use crate::custom_types::{Count, Hour, Percentage};
 use crate::disease_state_machine::State;
 
 pub struct Epidemiology {
@@ -136,7 +137,7 @@ impl Epidemiology {
         Listeners::from(listeners_vec)
     }
 
-    fn counts_at_start(population: i32, start_infections: &StartingInfections) -> Counts {
+    fn counts_at_start(population: Count, start_infections: &StartingInfections) -> Counts {
         let s = population - start_infections.total();
         let e = start_infections.get_exposed();
         let i = start_infections.total_infected();
@@ -383,7 +384,7 @@ impl Epidemiology {
     }
 
     async fn receive_tick(run_mode: &RunMode, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
-                          simulation_hour: i32) -> Option<Tick> {
+                          simulation_hour: Hour) -> Option<Tick> {
         if simulation_hour > 1 && simulation_hour % 24 != 0 {
             return None;
         }
@@ -398,7 +399,7 @@ impl Epidemiology {
         }
     }
 
-    async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, counts: Counts, simulation_hour: i32,
+    async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, counts: Counts, simulation_hour: Hour,
                       lockdown: &LockdownIntervention) {
         if simulation_hour > 1 && simulation_hour % 24 != 0 {
             return;
@@ -475,11 +476,11 @@ impl Epidemiology {
         }
     }
 
-    fn simulate(csv_record: &mut Counts, simulation_hour: i32, read_buffer: &AgentLocationMap,
+    fn simulate(csv_record: &mut Counts, simulation_hour: Hour, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
-                outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool, end_of_migration_hour: i32,
-                reduced_travel_percentage: f32) {
+                outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool, end_of_migration_hour: Hour,
+                reduced_travel_percentage: Percentage) {
         write_buffer.clear();
         csv_record.clear();
         for (cell, agent) in read_buffer.iter() {
@@ -498,11 +499,12 @@ impl Epidemiology {
                 _ => &point
             };
 
+            // this code get executed only in multi-engine simulations mode
             if simulation_hour % 24 == 0 && current_agent.can_move() {
                 if simulation_hour < end_of_migration_hour && rng.get().gen_bool(percent_outgoing) {
                     let traveller = Traveller::from(&current_agent);
                     outgoing.push((*new_location, traveller));
-                } else if rng.get().gen_bool(reduced_travel_percentage as f64){
+                } else if rng.get().gen_bool(reduced_travel_percentage){
                     let traveller = Traveller::from(&current_agent);
                     outgoing.push((*new_location, traveller));
                 }
@@ -532,7 +534,7 @@ impl Epidemiology {
         }
     }
 
-    fn lock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
+    fn lock_city(hr: Hour, write_buffer_reference: &mut AgentLocationMap) {
         info!("Locking the city. Hour: {}", hr);
         for (_v, agent) in write_buffer_reference.iter_mut() {
             if !agent.is_essential_worker() {
@@ -541,7 +543,7 @@ impl Epidemiology {
         }
     }
 
-    fn unlock_city(hr: i32, write_buffer_reference: &mut AgentLocationMap) {
+    fn unlock_city(hr: Hour, write_buffer_reference: &mut AgentLocationMap) {
         info!("Unlocking city. Hour: {}", hr);
         for (_v, agent) in write_buffer_reference.iter_mut() {
             if agent.is_isolated() {

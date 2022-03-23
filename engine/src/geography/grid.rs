@@ -26,10 +26,11 @@ use crate::geography::{Area, Point};
 use crate::random_wrapper::RandomWrapper;
 use std::fs::File;
 use std::collections::HashMap;
+use crate::custom_types::{CoOrdinate, Count, Size};
 
 #[derive(Serialize)]
 pub struct Grid {
-    pub grid_size: i32,
+    pub grid_size: Size,
     pub housing_area: Area,
     pub work_area: Area,
     pub transport_area: Area,
@@ -38,10 +39,11 @@ pub struct Grid {
     pub offices: Vec<Area>,
 
     //Occupancy based on home and work locations - updated when travellers arrive/depart
+    // what is the i32 here??
     #[serde(skip_serializing)]
-    pub houses_occupancy: HashMap<Area, i32>,
+    pub houses_occupancy: HashMap<Area, u32>,
     #[serde(skip_serializing)]
-    pub offices_occupancy: HashMap<Area, i32>,
+    pub offices_occupancy: HashMap<Area, u32>,
 }
 
 impl Grid {
@@ -79,13 +81,13 @@ impl Grid {
             trace!("home: {:?} {:?}", home.start_offset, home.end_offset);
             trace!("agents in home: {:?}", agents.len());
 
-            if agents.len() as i32 > house_capacity {
+            if agents.len() as Count > house_capacity {
                 panic!("There are {} agents assigned to a house, but house capacity is {}",
                        agents.len(), house_capacity)
             }
 
             let mut random_points_within_home = home.random_points(agents.len() as i32, rng);
-            self.houses_occupancy.insert(*home, agents.len() as i32);
+            self.houses_occupancy.insert(*home, agents.len() as u32);
 
             for agent in agents {
                 agents_in_order.push(*agent);
@@ -127,13 +129,13 @@ impl Grid {
             Grid::draw_rect(&mut draw_backend, office, &plotters::style::RGBColor(51, 153, 255));
         }
         for home in home_locations {
-            draw_backend.draw_pixel((home.x, home.y), &plotters::style::BLACK.to_rgba()).unwrap();
+            draw_backend.draw_pixel((home.x as i32, home.y as i32), &plotters::style::BLACK.to_rgba()).unwrap();
         }
     }
 
     fn draw_rect(svg: &mut impl DrawingBackend, area: &Area, style: &RGBColor) {
-        svg.draw_rect((area.start_offset.x, area.start_offset.y),
-                      (area.end_offset.x, area.end_offset.y),
+        svg.draw_rect((area.start_offset.x as i32, area.start_offset.y as i32),
+                      (area.end_offset.x as i32, area.end_offset.y as i32),
                       style, true).unwrap();
     }
 
@@ -167,19 +169,19 @@ impl Grid {
         (home_loc, agents_in_order)
     }
 
-    pub fn increase_hospital_size(&mut self, grid_size: i32) {
+    pub fn increase_hospital_size(&mut self, grid_size: Size) {
         let start_offset = self.hospital_area.start_offset;
-        let end_offset = Point::new(grid_size, grid_size);
+        let end_offset = Point::new(grid_size as CoOrdinate , grid_size as CoOrdinate);
 
         self.hospital_area = Area::new(start_offset, end_offset)
     }
 
     pub fn resize_hospital(&mut self, number_of_agents: i32, hospital_staff_percentage: f64, hospital_beds_percentage: f64) {
         let hospital_bed_count = (number_of_agents as f64 * hospital_beds_percentage +
-            number_of_agents as f64 * hospital_staff_percentage).ceil() as i32;
+            number_of_agents as f64 * hospital_staff_percentage).ceil() as Count;
 
         if !(hospital_bed_count > self.hospital_area.get_number_of_cells()) {
-            let hospital_end_y: i32 = hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x);
+            let hospital_end_y: CoOrdinate = (hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x) as u32) as CoOrdinate;
             self.hospital_area = Area::new(self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
             info!("Hospital capacity {}: ", hospital_bed_count);
         }
@@ -197,7 +199,7 @@ impl Grid {
     //     occupancy
     // }
 
-    pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen]) -> HashMap<Area, i32> {
+    pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen]) -> HashMap<Area, u32> {
         let mut occupancy = HashMap::new();
         self.offices.iter().for_each(|house| {
             occupancy.insert(*house, 0);
@@ -218,7 +220,7 @@ impl Grid {
 
     pub fn choose_office_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
-        *self.offices_occupancy.iter().find(|(_house, occupants)| **occupants < office_capacity)
+        *self.offices_occupancy.iter().find(|(_office, occupants)| **occupants < office_capacity)
             .expect("Couldn't find any offices with free space!").0
     }
 

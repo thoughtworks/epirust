@@ -19,13 +19,14 @@
 
 use crate::listeners::listener::Listener;
 use std::any::Any;
+use crate::custom_types::Hour;
 use crate::disease_state_machine::State;
 use crate::environment;
 use crate::travel_plan::TravellersByRegion;
 
 #[derive(Serialize, Debug, PartialEq)]
 struct CountsByRegion {
-    hr: i32,
+    hr: Hour,
     destination: String,
     susceptible: i32,
     exposed: i32,
@@ -34,7 +35,7 @@ struct CountsByRegion {
 }
 
 impl CountsByRegion {
-    fn create_from(hr: i32, travellers_by_region: &TravellersByRegion) -> CountsByRegion {
+    fn create_from(hr: Hour, travellers_by_region: &TravellersByRegion) -> CountsByRegion {
         let mut susceptible = 0;
         let mut exposed = 0;
         let mut infected = 0;
@@ -59,7 +60,7 @@ impl CountsByRegion {
     }
 
     #[cfg(test)]
-    fn new(hr: i32, destination: String, s: i32, e: i32, i: i32, r: i32) -> CountsByRegion {
+    fn new(hr: Hour, destination: String, s: i32, e: i32, i: i32, r: i32) -> CountsByRegion {
         CountsByRegion {
             hr,
             destination,
@@ -95,7 +96,7 @@ impl Listener for TravelCounter {
         }
     }
 
-    fn outgoing_travellers_added(&mut self, hr: i32, travellers: &Vec<TravellersByRegion>) {
+    fn outgoing_travellers_added(&mut self, hr: Hour, travellers: &Vec<TravellersByRegion>) {
         let counts_by_region: Vec<CountsByRegion> = travellers.iter().map(|t| {
             CountsByRegion::create_from(hr, t)
         }).collect();

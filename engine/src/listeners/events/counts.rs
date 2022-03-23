@@ -17,77 +17,96 @@
  *
  */
 
+use crate::custom_types::{Count, Hour};
+
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq)]
 pub struct Counts {
-    hour: i32,
-    susceptible: i32,
-    exposed: i32,
-    infected: i32,
-    hospitalized: i32,
-    recovered: i32,
-    deceased: i32,
+    hour: Hour,
+    susceptible: Count,
+    exposed: Count,
+    infected: Count,
+    hospitalized: Count,
+    recovered: Count,
+    deceased: Count,
 }
 
 impl Counts {
     #[cfg(test)]
-    pub fn new_test(hour: i32, susceptible: i32, exposed: i32, infected: i32, hospitalized: i32, recovered: i32, deceased: i32) -> Counts {
+    pub fn new_test(hour: Hour, susceptible: Count, exposed: Count, infected: Count, hospitalized: Count, recovered: Count, deceased: Count) -> Counts {
         Counts { hour, susceptible, exposed, infected, hospitalized, recovered, deceased }
     }
 
-    pub fn new(susceptible: i32, exposed: i32, infected: i32) -> Counts {
+    pub fn new(susceptible: Count, exposed: Count, infected: Count) -> Counts {
         Counts { hour: 0, susceptible, exposed, infected, hospitalized: 0, recovered: 0, deceased: 0 }
     }
 
-    pub fn get_susceptible(&self) -> i32 {
+    pub fn get_susceptible(&self) -> Count {
         self.susceptible
     }
 
-    pub fn get_exposed(&self) -> i32 {
+    pub fn get_exposed(&self) -> Count {
         self.exposed
     }
 
-    pub fn get_infected(&self) -> i32 {
+    pub fn get_infected(&self) -> Count {
         self.infected
     }
 
-    pub fn get_hospitalized(&self) -> i32 {
+    pub fn get_hospitalized(&self) -> Count {
         self.hospitalized
     }
 
-    pub fn get_recovered(&self) -> i32 {
+    pub fn get_recovered(&self) -> Count {
         self.recovered
     }
 
-    pub fn get_deceased(&self) -> i32 {
+    pub fn get_deceased(&self) -> Count {
         self.deceased
     }
 
-    pub fn get_hour(&self) -> i32 {
+    pub fn get_hour(&self) -> Hour {
         self.hour
     }
 
-    pub fn update_susceptible(&mut self, count: i32) {
-        self.susceptible += count;
-    }
+    pub fn update_susceptible(&mut self, count: Count) { self.susceptible += count; }
 
-    pub fn update_exposed(&mut self, count: i32) {
+    pub fn update_exposed(&mut self, count: Count) {
         self.exposed += count;
     }
 
-    pub fn update_infected(&mut self, count: i32) {
+    pub fn update_infected(&mut self, count: Count) {
         self.infected += count;
     }
 
-    pub fn update_recovered(&mut self, count: i32) {
+    pub fn update_recovered(&mut self, count: Count) {
         self.recovered += count;
     }
 
-    pub fn update_deceased(&mut self, count: i32) {
+    pub fn update_deceased(&mut self, count: Count) {
         self.deceased += count;
     }
 
-    pub fn update_hospitalized(&mut self, count: i32) {
+    pub fn update_hospitalized(&mut self, count: Count) {
         self.hospitalized += count;
+    }
+
+    pub fn remove_susceptible(&mut self, count: Count) { self.susceptible -= count; }
+
+    pub fn remove_exposed(&mut self, count: Count) {
+        self.exposed -= count;
+    }
+
+    pub fn remove_infected(&mut self, count: Count) {
+        self.infected -= count;
+    }
+
+    pub fn remove_recovered(&mut self, count: Count) {
+        self.recovered -= count;
+    }
+
+    // why we never remove hospitalized
+    pub fn remove_hospitalized(&mut self, count: Count) {
+        self.hospitalized -= count;
     }
 
     pub fn increment_hour(&mut self) {
@@ -103,7 +122,7 @@ impl Counts {
         self.deceased = 0;
     }
 
-    pub fn total(&self) -> i32 {
+    pub fn total(&self) -> Count {
         self.susceptible +
         self.exposed +
         self.infected +

@@ -27,6 +27,7 @@ use uuid::Uuid;
 use crate::allocation_map::AgentLocationMap;
 use crate::config::StartingInfections;
 use crate::constants;
+use crate::custom_types::{Count, Day, Hour, Percentage};
 use crate::disease::Disease;
 use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::{Area, Grid, Point};
@@ -36,7 +37,7 @@ use crate::travel_plan::Traveller;
 #[derive(Deserialize)]
 pub struct PopulationRecord {
     //TODO move to a better place
-    pub ind: i32,
+    pub ind: u32,
     pub age: String,
     #[serde(deserialize_with = "bool_from_string")]
     pub working: bool,
@@ -63,7 +64,7 @@ fn bool_from_string<'de, D>(deserializer: D) -> Result<bool, D::Error>
 pub enum WorkStatus {
     Normal,
     Essential,
-    HospitalStaff { work_start_at: i32 },
+    HospitalStaff { work_start_at: Hour },
     NA,
 }
 
@@ -157,8 +158,9 @@ impl Citizen {
         }
     }
 
-    pub fn get_infection_transmission_rate(&self, disease: &Disease) -> f64 {
-        disease.get_current_transmission_rate(self.state_machine.get_infection_day() + self.immunity)
+    pub fn get_infection_transmission_rate(&self, disease: &Disease) -> Percentage {
+        // why is there addition of infection day and immunity
+        disease.get_current_transmission_rate((self.state_machine.get_infection_day() as i32 + self.immunity) as Day)
     }
 
     pub fn set_vaccination(&mut self, vaccinated: bool) {
@@ -197,15 +199,16 @@ impl Citizen {
         *option.unwrap()
     }
 
-    pub fn perform_operation(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap,
+    pub fn perform_operation(&mut self, cell: Point, simulation_hour: Hour, grid: &Grid, map: &AgentLocationMap,
                              rng: &mut RandomWrapper, disease: &Disease) -> Point {
         self.routine(cell, simulation_hour, grid, map, rng, disease)
     }
 
-    fn routine(&mut self, cell: Point, simulation_hour: i32, grid: &Grid, map: &AgentLocationMap,
+    fn routine(&mut self, cell: Point, simulation_hour: Hour, grid: &Grid, map: &AgentLocationMap,
                rng: &mut RandomWrapper, disease: &Disease) -> Point {
         let mut new_cell = cell;
 
+        // why we are taking remainder as current hour
         let current_hour = simulation_hour % constants::NUMBER_OF_HOURS;
         match current_hour {
             constants::ROUTINE_START_TIME => {
@@ -241,7 +244,7 @@ impl Citizen {
         };
     }
 
-    fn perform_movements(&mut self, cell: Point, hour_of_day: i32, simulation_hr: i32, grid: &Grid,
+    fn perform_movements(&mut self, cell: Point, hour_of_day: Hour, simulation_hr: Hour, grid: &Grid,
                          map: &AgentLocationMap, rng: &mut RandomWrapper, disease: &Disease) -> Point {
         let mut new_cell = cell;
         match self.work_status {
@@ -271,12 +274,14 @@ impl Citizen {
             }
 
             WorkStatus::HospitalStaff { work_start_at } => {
-                if simulation_hr - work_start_at == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) {
+                info!("simulation_hr : {}, works_starts_at: {}", simulation_hr, work_start_at);
+                // why we are substracting work start hour
+                if simulation_hr.checked_sub(work_start_at).unwrap_or(0) == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) {
                     self.work_quarantined = true;
                     return new_cell;
                 }
 
-                if simulation_hr - work_start_at == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS * 2) {
+                if simulation_hr.checked_sub(work_start_at).unwrap_or(0)  == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS * 2) {
                     new_cell = self.goto_area(self.home_location, map, cell, rng);
                     self.current_area = self.home_location;
                     self.work_status = WorkStatus::HospitalStaff { work_start_at: (simulation_hr + constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) };
@@ -326,7 +331,7 @@ impl Citizen {
     }
 
     fn update_infection_dynamics(&mut self, cell: Point, map: &AgentLocationMap,
-                                 sim_hr: i32, rng: &mut RandomWrapper, disease: &Disease) {
+                                 sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
         self.update_exposure(cell, map, sim_hr, rng, disease);
         self.update_infection(sim_hr, rng, &disease);
         self.update_infection_severity(sim_hr, rng, disease);
@@ -354,19 +359,19 @@ impl Citizen {
         new_cell
     }
 
-    fn update_infection_severity(&mut self, sim_hr: i32, rng: &mut RandomWrapper, disease: &Disease) {
+    fn update_infection_severity(&mut self, sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
         if self.state_machine.is_pre_symptomatic() {
             self.state_machine.change_infection_severity(sim_hr, rng, disease);
         }
     }
 
-    fn update_infection(&mut self, sim_hr: i32, rng: &mut RandomWrapper, disease: &Disease) {
+    fn update_infection(&mut self, sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
         if self.state_machine.is_exposed() {
             self.state_machine.infect(rng, sim_hr, &disease);
         }
     }
 
-    fn update_exposure(&mut self, cell: Point, map: &AgentLocationMap, sim_hr: i32, rng: &mut RandomWrapper,
+    fn update_exposure(&mut self, cell: Point, map: &AgentLocationMap, sim_hr: Hour, rng: &mut RandomWrapper,
                        disease: &Disease) {
         if self.state_machine.is_susceptible() && !self.work_quarantined && !self.vaccinated {
             let neighbours = self.current_area.get_neighbors_of(cell);
@@ -490,8 +495,8 @@ impl Citizen {
     }
 }
 
-pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_locations: &Vec<Area>, public_transport_locations: &Vec<Point>,
-                       percentage_public_transport: f64, working_percentage: f64, rng: &mut RandomWrapper,
+pub fn citizen_factory(number_of_agents: Count, home_locations: &Vec<Area>, work_locations: &Vec<Area>, public_transport_locations: &Vec<Point>,
+                       percentage_public_transport: Percentage, working_percentage: Percentage, rng: &mut RandomWrapper,
                        starting_infections: &StartingInfections) -> Vec<Citizen> {
     let mut agent_list = Vec::with_capacity(home_locations.len());
 

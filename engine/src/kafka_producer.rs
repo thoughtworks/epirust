@@ -19,6 +19,7 @@
 
 use rdkafka::producer::{FutureProducer, FutureRecord, DeliveryFuture};
 use rdkafka::ClientConfig;
+use crate::custom_types::Hour;
 use crate::environment;
 use crate::travel_plan::TravellersByRegion;
 use crate::listeners::events::counts::Counts;
@@ -62,7 +63,7 @@ impl KafkaProducer {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TickAck {
     pub engine_id: String,
-    pub hour: i32,
+    pub hour: Hour,
     pub counts: Counts,
     pub locked_down: bool,
 }

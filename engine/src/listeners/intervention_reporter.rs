@@ -24,16 +24,17 @@ use crate::interventions::intervention_type::InterventionType;
 use serde_json::Value;
 use crate::environment;
 use std::fs::File;
+use crate::custom_types::Hour;
 
 #[derive(Serialize)]
 struct InterventionReport {
-    hour: i32,
+    hour: Hour,
     intervention: String,
     data: Value,
 }
 
 impl InterventionReport {
-    pub fn new(hour: i32, intervention: String, data: String) -> InterventionReport {
+    pub fn new(hour: Hour, intervention: String, data: String) -> InterventionReport {
         InterventionReport {
             hour,
             intervention,
@@ -64,7 +65,7 @@ impl Listener for InterventionReporter {
         serde_json::to_writer(file, &self.interventions).expect("Failed to serialize intervention report");
     }
 
-    fn intervention_applied(&mut self, at_hour: i32, intervention: &dyn InterventionType) {
+    fn intervention_applied(&mut self, at_hour: Hour, intervention: &dyn InterventionType) {
         let report = InterventionReport::new(at_hour, intervention.name(), intervention.json_data());
         self.interventions.push(report);
     }

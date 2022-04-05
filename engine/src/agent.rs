@@ -32,7 +32,7 @@ use crate::disease::Disease;
 use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::{Area, Grid, Point};
 use crate::random_wrapper::RandomWrapper;
-use crate::travel_plan::Traveller;
+use crate::travel_plan::Migrator;
 
 #[derive(Deserialize)]
 pub struct PopulationRecord {
@@ -115,7 +115,7 @@ impl Citizen {
         }
     }
 
-    pub fn from_traveller(traveller: &Traveller, home_location: Area, work_location: Area,
+    pub fn from_traveller(traveller: &Migrator, home_location: Area, work_location: Area,
                           transport_location: Point, current_area: Area) -> Citizen {
         Citizen {
             id: traveller.id,

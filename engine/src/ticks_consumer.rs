@@ -24,7 +24,6 @@ use rdkafka::message::BorrowedMessage;
 use crate::custom_types::Hour;
 
 use crate::environment;
-use crate::travel_plan::TravelPlan;
 
 const TICKS_TOPIC: &str = "ticks";
 
@@ -72,22 +71,12 @@ fn parse_tick(message: &str) -> Tick {
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct Tick {
     hour: Hour,
-    travel_plan: Option<TravelPlan>,
     terminate: bool,
 }
 
 impl Tick {
-    #[cfg(test)]
-    pub fn new(hour: Hour, travel_plan: Option<TravelPlan>, terminate: bool) -> Tick {
-        return Tick { hour, travel_plan, terminate };
-    }
-
     pub fn hour(&self) -> Hour {
         self.hour
-    }
-
-    pub fn travel_plan(self) -> Option<TravelPlan> {
-        self.travel_plan
     }
 
     pub fn terminate(&self) -> bool {
@@ -106,20 +95,7 @@ mod tests {
             "hour": 1,
             "terminate": false
         }"#;
-        let expected = Tick { hour: 1, travel_plan: None, terminate: false };
-        assert_eq!(expected, parse_tick(json));
-
-        let json = r#"
-        {"hour":0,"terminate":false,"travel_plan":{"regions":["engine1","engine2"],"matrix":[[0,156],[108,0]]}}
-        "#;
-        let travel_plan = TravelPlan::new(
-            vec!["engine1".to_string(), "engine2".to_string()],
-            vec![
-                vec![0, 156],
-                vec![108, 0],
-            ],
-        );
-        let expected = Tick { hour: 0, travel_plan: Some(travel_plan), terminate: false };
+        let expected = Tick { hour: 1, terminate: false };
         assert_eq!(expected, parse_tick(json));
     }
 }

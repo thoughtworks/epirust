@@ -105,9 +105,9 @@ impl Counts {
     }
 
     // why we never remove hospitalized
-    pub fn remove_hospitalized(&mut self, count: Count) {
-        self.hospitalized -= count;
-    }
+    // pub fn remove_hospitalized(&mut self, count: Count) {
+    //     self.hospitalized -= count;
+    // }
 
     pub fn increment_hour(&mut self) {
         self.hour += 1;

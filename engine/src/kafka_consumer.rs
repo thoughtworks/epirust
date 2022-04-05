@@ -56,16 +56,17 @@ impl KafkaConsumer<'_> {
         match request {
             Request::SimulationRequest(req) => {
                 let mut epidemiology = Epidemiology::new(&req.config, req.sim_id);
-                epidemiology.run(&req.config, run_mode).await;
+                epidemiology.run(&req.config, None, run_mode).await;
             }
             Request::MultiSimRequest(req) => {
-                let sim_req = req.iter().find(|c| c.engine_id == self.engine_id);
+                let travel_plan_config = req.travel_plan;
+                let sim_req = req.engine_configs.iter().find(|c| c.engine_id == self.engine_id);
                 match sim_req {
                     None => { error!("Couldn't find any work for engine_id: {}", self.engine_id) }
                     Some(req) => {
                         let sim_id = req.config.sim_id.clone();
                         let mut epidemiology = Epidemiology::new(&req.config.config, sim_id);
-                        epidemiology.run(&req.config.config, run_mode).await;
+                        epidemiology.run(&req.config.config, Some(travel_plan_config), run_mode).await;
                     }
                 }
             }
@@ -94,8 +95,45 @@ struct SimRequestByEngine {
 }
 
 #[derive(Debug, Deserialize)]
+struct Migration {
+    matrix: Vec<Vec<u32>>,
+    start_migration_hour: u32,
+    end_migration_hour: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TravelPlanConfig {
+    regions: Vec<String>,
+    migration: Migration
+}
+
+impl TravelPlanConfig {
+    pub fn get_end_migration_hour(&self) -> u32 {
+        self.migration.end_migration_hour
+    }
+
+    pub fn get_start_migration_hour(&self) -> u32 {
+        self.migration.start_migration_hour
+    }
+
+    pub fn get_migration_matrix(&self) -> Vec<Vec<u32>> {
+        self.migration.matrix.clone()
+    }
+
+    pub fn get_regions(&self) -> Vec<String> {
+        self.regions.clone()
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct MultiSimRequest {
+    engine_configs: Vec<SimRequestByEngine>,
+    travel_plan: TravelPlanConfig
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum Request {
     SimulationRequest(SimulationRequest),
-    MultiSimRequest(Vec<SimRequestByEngine>),
+    MultiSimRequest(MultiSimRequest),
 }

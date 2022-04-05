@@ -33,9 +33,6 @@ pub struct Config {
     disease_overrides: Vec<DiseaseOverride>,
     geography_parameters: GeographyParameters,
     hours: Hour,
-    end_of_migration: Hour,
-    #[validate(custom = "validate_percentage")]
-    reduced_travel_percentage: Percentage,
     interventions: Vec<InterventionConfig>,
     output_file: Option<String>,
     #[serde(default)]
@@ -69,14 +66,6 @@ impl Config {
         self.hours
     }
 
-    pub fn get_end_of_migration_hour(&self) -> Hour {
-        self.end_of_migration
-    }
-
-    pub fn get_reduced_travel_percentage(&self) -> Percentage {
-        self.reduced_travel_percentage.clone()
-    }
-
     pub fn get_interventions(&self) -> Vec<InterventionConfig> {
         self.interventions.clone()
     }
@@ -95,15 +84,13 @@ impl Config {
 
     #[cfg(test)]
     pub fn new(population: Population, disease: Disease, geography_parameters: GeographyParameters, disease_overrides: Vec<DiseaseOverride>,
-               end_of_migration: Hour, reduced_travel_percentage: Percentage, hours: Hour, interventions: Vec<InterventionConfig>, output_file: Option<String>)
+               hours: Hour, interventions: Vec<InterventionConfig>, output_file: Option<String>)
                -> Config {
         Config {
             population,
             disease,
             disease_overrides,
             geography_parameters,
-            end_of_migration,
-            reduced_travel_percentage,
             hours,
             interventions,
             output_file,
@@ -237,8 +224,6 @@ mod tests {
             disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
             disease_overrides: vec![disease_override],
             geography_parameters: GeographyParameters::new(5660, 0.003),
-            end_of_migration: 336,
-            reduced_travel_percentage: 0.0005,
             hours: 10000,
             interventions: vec![InterventionConfig::Vaccinate(vaccinate)],
             output_file: None,
@@ -266,8 +251,6 @@ mod tests {
             disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
             disease_overrides: vec![],
             geography_parameters: GeographyParameters::new(250, 0.003),
-            end_of_migration: 336,
-            reduced_travel_percentage: 0.0005,
             hours: 10000,
             interventions: vec![InterventionConfig::Vaccinate(vaccinate)],
             output_file: Some("simulation_default_config".to_string()),

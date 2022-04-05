@@ -25,7 +25,7 @@ use crate::random_wrapper::RandomWrapper;
 use crate::agent::Citizen;
 use crate::disease_state_machine::State;
 use crate::listeners::events::counts::Counts;
-use crate::travel_plan::Traveller;
+use crate::travel_plan::Migrator;
 use std::collections::hash_map::{IterMut, Iter};
 use fnv::FnvHashMap;
 use crate::custom_types::{CoOrdinate, Count, Size};
@@ -90,7 +90,7 @@ impl AgentLocationMap {
         !self.agent_cell.contains_key(cell)
     }
 
-    pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Traveller)>, counts: &mut Counts, grid: &mut Grid) {
+    pub fn remove_citizens(&mut self, outgoing: &Vec<(Point, Migrator)>, counts: &mut Counts, grid: &mut Grid) {
         if outgoing.is_empty() {
             return;
         }
@@ -118,7 +118,7 @@ impl AgentLocationMap {
         }
     }
 
-    pub fn assimilate_citizens(&mut self, incoming: &mut Vec<Traveller>, grid: &mut Grid, counts: &mut Counts,
+    pub fn assimilate_citizens(&mut self, incoming: &mut Vec<Migrator>, grid: &mut Grid, counts: &mut Counts,
                                rng: &mut RandomWrapper) {
         if incoming.is_empty() {
             return;

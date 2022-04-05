@@ -27,22 +27,22 @@ use serde_json::Value;
 pub fn read_simulation_conf(filename: &str) -> String {
     let reader = File::open(filename).unwrap();
     let config: Value = serde_json::from_reader(reader).unwrap();
-    let sim = config.get("simulation").unwrap().as_array().unwrap();
+    let sim = config.as_object().unwrap();
     serde_json::to_string(sim).unwrap()
 }
 
 pub fn get_hours(filename: &str) -> i64 {
     let reader = File::open(filename).unwrap();
     let config: Value = serde_json::from_reader(reader).unwrap();
-    let sim = config.get("simulation").unwrap().as_array().unwrap();
+    let sim = config.get("engine_configs").unwrap().as_array().unwrap();
     let hours = sim[0].get("config").unwrap().get("hours");
     hours.unwrap().as_i64().unwrap()
 }
 
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Config {
-    simulation: Vec<EngineId>,
+    engine_configs: Vec<EngineConfig>,
     travel_plan: TravelPlan,
 }
 
@@ -52,7 +52,7 @@ impl Config {
     }
 
     pub fn get_engine_ids(&self) -> Vec<String> {
-        self.simulation.iter().map(|s| s.engine_id.clone()).collect()
+        self.engine_configs.iter().map(|s| s.engine_id.clone()).collect()
     }
 
     pub fn read(filename: &str) -> Result<Config, Box<dyn Error>> {
@@ -66,9 +66,10 @@ impl Config {
 }
 
 // just a struct for easier parsing
-#[derive(Deserialize)]
-struct EngineId {
+#[derive(Deserialize, Serialize)]
+struct EngineConfig {
     engine_id: String,
+    // config: String
 }
 
 #[cfg(test)]
@@ -82,13 +83,6 @@ mod tests {
 
         assert_eq!(travel_plan.get_regions(), &vec!["engine1".to_string(), "engine2".to_string(),
                                              "engine3".to_string()]);
-        let matrix = travel_plan.get_matrix().clone();
-        assert_eq!(matrix, vec![
-            vec![0, 156, 10],
-            vec![108, 0, 290],
-            vec![90, 75, 0]
-        ]);
-
         assert_eq!(config.get_engine_ids(), vec!["engine1".to_string(), "engine2".to_string(),
                                                  "engine3".to_string()])
     }

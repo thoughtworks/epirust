@@ -25,7 +25,7 @@ use chrono::{DateTime, Local};
 use futures::StreamExt;
 use rand::Rng;
 
-use crate::{allocation_map, RunMode, ticks_consumer, travellers_consumer};
+use crate::{allocation_map, RunMode, ticks_consumer, migrators_consumer};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population, StartingInfections};
 use crate::disease::Disease;
@@ -43,15 +43,16 @@ use crate::listeners::listener::{Listeners, Listener};
 use crate::random_wrapper::RandomWrapper;
 use rdkafka::consumer::{MessageStream, DefaultConsumerContext};
 use crate::ticks_consumer::Tick;
-use crate::travel_plan::{EngineTravelPlan, TravellersByRegion, Traveller};
+use crate::travel_plan::{EngineMigrationPlan, MigratorsByRegion, Migrator, MigrationPlan};
 use futures::join;
 use crate::listeners::travel_counter::TravelCounter;
 use crate::listeners::intervention_reporter::InterventionReporter;
 use crate::interventions::Interventions;
 use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
 use crate::agent::Citizen;
-use crate::custom_types::{Count, Hour, Percentage};
+use crate::custom_types::{Count, Hour};
 use crate::disease_state_machine::State;
+use crate::kafka_consumer::TravelPlanConfig;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -194,7 +195,7 @@ impl Epidemiology {
         }
     }
 
-    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
+    pub async fn run(&mut self, config: &Config, travel_plan_config: Option<TravelPlanConfig>, run_mode: &RunMode) {
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
         let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
@@ -207,7 +208,7 @@ impl Epidemiology {
         listeners.grid_updated(&self.grid);
         match run_mode {
             RunMode::MultiEngine { .. } => {
-                self.run_multi_engine(config, run_mode, &mut listeners, &mut counts_at_hr,
+                self.run_multi_engine(config, travel_plan_config.unwrap(), run_mode,  &mut listeners, &mut counts_at_hr,
                                       &mut interventions, &mut rng).await
             }
             _ => {
@@ -243,7 +244,7 @@ impl Epidemiology {
 
             Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                    &self.grid, listeners, rng, &self.disease, percent_outgoing,
-                                   &mut outgoing, config.enable_citizen_state_messages(), 0, 0.0);
+                                   &mut outgoing, config.enable_citizen_state_messages(), 0, 0);
 
             listeners.counts_updated(*counts_at_hr);
             Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
@@ -266,12 +267,13 @@ impl Epidemiology {
         listeners.simulation_ended();
     }
 
-    pub async fn run_multi_engine(&mut self, config: &Config, run_mode: &RunMode, listeners: &mut Listeners,
+    pub async fn run_multi_engine(&mut self, config: &Config, travel_plan_config: TravelPlanConfig, run_mode: &RunMode, listeners: &mut Listeners,
                                   counts_at_hr: &mut Counts, interventions: &mut Interventions, rng: &mut RandomWrapper) {
         let start_time = Instant::now();
         let mut producer = KafkaProducer::new();
-        let end_of_migration_hour = config.get_end_of_migration_hour();
-        let reduced_travel_percentage = config.get_reduced_travel_percentage();
+        let end_migration_hour = travel_plan_config.get_end_migration_hour();
+        let start_migration_hour = travel_plan_config.get_start_migration_hour();
+        let migration_plan = MigrationPlan::new(travel_plan_config.get_regions(), travel_plan_config.get_migration_matrix());
 
         //todo stream should be started only in case of multi-sim mode
         let standalone_engine_id = "standalone".to_string();
@@ -280,12 +282,13 @@ impl Epidemiology {
         } else {
             &standalone_engine_id
         };
-        let mut engine_travel_plan = EngineTravelPlan::new(engine_id, self.agent_location_map.current_population());
+
+        let mut engine_migration_plan = EngineMigrationPlan::new(engine_id, Some(migration_plan),self.agent_location_map.current_population());
         let ticks_consumer = ticks_consumer::start(engine_id);
         let mut ticks_stream = ticks_consumer.start_with(Duration::from_millis(1), false);
-        let travellers_consumer = travellers_consumer::start(engine_id);
-        let mut travel_stream = travellers_consumer.start_with(Duration::from_millis(1), false);
-        let mut outgoing: Vec<(Point, Traveller)> = Vec::new();
+        let migrators_consumer = migrators_consumer::start(engine_id);
+        let mut migration_stream = migrators_consumer.start_with(Duration::from_millis(1), false);
+        let mut outgoing: Vec<(Point, Migrator)> = Vec::new();
         let mut n_incoming = 0;
         let mut n_outgoing = 0;
 
@@ -300,7 +303,6 @@ impl Epidemiology {
                     }
                 }
             }
-            engine_travel_plan.receive_tick(tick.clone());
             outgoing.clear();
 
             counts_at_hr.increment_hour();
@@ -318,27 +320,27 @@ impl Epidemiology {
             if population_before_travel == 0 {
                 panic!("No citizens!");
             }
-            engine_travel_plan.set_current_population(read_buffer_reference.current_population());
+            engine_migration_plan.set_current_population(read_buffer_reference.current_population());
 
             let grid = &self.grid;
             let disease = &self.disease;
             let mut percent_outgoing = 0.0;
 
             if simulation_hour % 24 == 0 {
-                percent_outgoing = engine_travel_plan.percent_outgoing();
+                percent_outgoing = engine_migration_plan.percent_outgoing();
             }
-            let mut actual_outgoing: Vec<(Point, Traveller)> = Vec::new();
-            let recv_travellers = Epidemiology::receive_travellers(tick.clone(), &mut travel_stream, &engine_travel_plan);
+            let mut actual_outgoing: Vec<(Point, Migrator)> = Vec::new();
+            let recv_travellers = Epidemiology::receive_migrators(tick.clone(), &mut migration_stream, &engine_migration_plan);
             let sim = async {
                 Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                        grid, listeners, rng, disease, percent_outgoing,
-                                       &mut outgoing, config.enable_citizen_state_messages(), end_of_migration_hour, reduced_travel_percentage);
-                let (outgoing_travellers_by_region, actual_total_outgoing) = engine_travel_plan.alloc_outgoing_to_regions(&outgoing);
+                                       &mut outgoing, config.enable_citizen_state_messages(), end_migration_hour, start_migration_hour);
+                let (outgoing_migrators_by_region, actual_total_outgoing) = engine_migration_plan.alloc_outgoing_to_regions(&outgoing);
                 actual_outgoing = actual_total_outgoing;
                 if simulation_hour % 24 == 0 {
-                    listeners.outgoing_travellers_added(simulation_hour, &outgoing_travellers_by_region);
+                    listeners.outgoing_migrators_added(simulation_hour, &outgoing_migrators_by_region);
                 }
-                Epidemiology::send_travellers(tick.clone(), &mut producer, outgoing_travellers_by_region);
+                Epidemiology::send_migrators(tick.clone(), &mut producer, outgoing_migrators_by_region);
             };
             let (mut incoming, ()) = join!(recv_travellers, sim);
             n_incoming += incoming.len();
@@ -418,25 +420,25 @@ impl Epidemiology {
         }
     }
 
-    fn send_travellers(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<TravellersByRegion>) {
+    fn send_migrators(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<MigratorsByRegion>) {
         if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
-            producer.send_travellers(outgoing);
+            producer.send_migrators(outgoing);
         }
     }
 
-    async fn receive_travellers(tick: Option<Tick>, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
-                                engine_travel_plan: &EngineTravelPlan) -> Vec<Traveller> {
+    async fn receive_migrators(tick: Option<Tick>, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+                               engine_migration_plan: &EngineMigrationPlan) -> Vec<Migrator> {
         if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
-            let expected_incoming_regions = engine_travel_plan.incoming_regions_count();
+            let expected_incoming_regions = engine_migration_plan.incoming_regions_count();
             let mut received_incoming_regions = 0;
-            debug!("Receiving travellers from {} regions", expected_incoming_regions);
-            let mut incoming: Vec<Traveller> = Vec::new();
+            debug!("Receiving migrators from {} regions", expected_incoming_regions);
+            let mut incoming: Vec<Migrator> = Vec::new();
             while expected_incoming_regions != received_incoming_regions {
-                let maybe_msg = Epidemiology::receive_travellers_from_region(message_stream, engine_travel_plan).await;
+                let maybe_msg = Epidemiology::receive_migrators_from_region(message_stream, engine_migration_plan).await;
                 match maybe_msg {
                     None => {}
                     Some(region_incoming) => {
-                        incoming.extend(region_incoming.get_travellers());
+                        incoming.extend(region_incoming.get_migrators());
                         received_incoming_regions += 1;
                     }
                 }
@@ -447,11 +449,11 @@ impl Epidemiology {
         }
     }
 
-    async fn receive_travellers_from_region(message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
-                                            engine_travel_plan: &EngineTravelPlan) -> Option<TravellersByRegion> {
+    async fn receive_migrators_from_region(message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+                                           engine_migration_plan: &EngineMigrationPlan) -> Option<MigratorsByRegion> {
         let msg = message_stream.next().await;
-        travellers_consumer::read(msg).filter(|incoming| {
-            incoming.to_engine_id() == engine_travel_plan.engine_id()
+        migrators_consumer::read(msg).filter(|incoming| {
+            incoming.to_engine_id() == engine_migration_plan.engine_id()
         })
     }
 
@@ -479,8 +481,7 @@ impl Epidemiology {
     fn simulate(csv_record: &mut Counts, simulation_hour: Hour, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
-                outgoing: &mut Vec<(Point, Traveller)>, publish_citizen_state: bool, end_of_migration_hour: Hour,
-                reduced_travel_percentage: Percentage) {
+                outgoing: &mut Vec<(Point, Migrator)>, publish_citizen_state: bool, end_of_migration_hour: Hour, start_migration_hour: Hour) {
         write_buffer.clear();
         csv_record.clear();
         for (cell, agent) in read_buffer.iter() {
@@ -500,14 +501,12 @@ impl Epidemiology {
             };
 
             // this code get executed only in multi-engine simulations mode
-            if simulation_hour % 24 == 0 && current_agent.can_move() {
-                if simulation_hour < end_of_migration_hour && rng.get().gen_bool(percent_outgoing) {
-                    let traveller = Traveller::from(&current_agent);
+            if simulation_hour % 24 == 0 && current_agent.can_move() &&
+                simulation_hour > start_migration_hour && simulation_hour < end_of_migration_hour &&
+                rng.get().gen_bool(percent_outgoing) {
+                    let traveller = Migrator::from(&current_agent);
                     outgoing.push((*new_location, traveller));
-                } else if rng.get().gen_bool(reduced_travel_percentage){
-                    let traveller = Traveller::from(&current_agent);
-                    outgoing.push((*new_location, traveller));
-                }
+
             }
 
             write_buffer.insert(*new_location, current_agent);
@@ -576,7 +575,7 @@ mod tests {
             percent: 0.2,
         };
         let geography_parameters = GeographyParameters::new(100, 0.003);
-        let config = Config::new(Population::Auto(pop), disease, geography_parameters, vec![], 336, 0.0005,100, vec![InterventionConfig::Vaccinate(vac)], None);
+        let config = Config::new(Population::Auto(pop), disease, geography_parameters, vec![], 100, vec![InterventionConfig::Vaccinate(vac)], None);
         let epidemiology: Epidemiology = Epidemiology::new(&config, "id".to_string());
         let expected_housing_area = Area::new(Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);

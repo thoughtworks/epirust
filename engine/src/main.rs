@@ -47,7 +47,7 @@ mod ticks_consumer;
 mod environment;
 mod disease_state_machine;
 mod travel_plan;
-mod travellers_consumer;
+mod migrators_consumer;
 mod custom_types;
 
 const STANDALONE_SIM_ID: &str = "0";
@@ -110,7 +110,7 @@ async fn main() {
         let config = config::read(config_file.to_string()).expect("Failed to read config file");
 
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, STANDALONE_SIM_ID.to_string());
-        epidemiology.run(&config, &run_mode).await;
+        epidemiology.run(&config, None,&run_mode).await;
         info!("Done");
     }
 }

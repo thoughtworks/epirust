@@ -1,5 +1,5 @@
 {
-  "simulation": [
+  "engine_configs": [
     {
       "engine_id": "engine1",
       "config": {
@@ -129,10 +129,21 @@
   ],
   "travel_plan": {
     "regions": ["engine1", "engine2", "engine3"],
-    "matrix": [
-      [0, 156, 10],
-      [108, 0, 290],
-      [90, 75, 0]
-    ]
+    "migration": {
+      "matrix": [
+        [0, 156, 10],
+        [108, 0, 290],
+        [90, 75, 0]
+      ],
+      "start_migration_hour": 48,
+      "end_migration_hour": 336
+    },
+    "commute": {
+      "matrix": [
+        [0, 15, 2],
+        [10, 0, 29],
+        [9, 7, 0]
+      ]
+    }
   }
 }

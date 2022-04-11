@@ -31,7 +31,7 @@ pub const SLEEP_END_TIME: Hour = 6;
 pub const ROUTINE_TRAVEL_START_TIME: Hour = 7;
 pub const ROUTINE_WORK_TIME: Hour = 8;
 pub const ROUTINE_TRAVEL_END_TIME: Hour = 17;
-pub const ROUTINE_WORK_END_TIME: Hour = 18;
+pub const ROUTINE_WORK_END_TIME: Hour = 16;
 pub const ROUTINE_END_TIME: Hour = 23;
 pub const NON_WORKING_TRAVEL_END_TIME: Hour = 12;
 

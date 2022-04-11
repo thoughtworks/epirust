@@ -20,6 +20,7 @@
 use crate::agent::Citizen;
 use crate::geography::Point;
 use uuid::Uuid;
+use crate::commute::Commuter;
 use crate::custom_types::Count;
 use crate::disease_state_machine::DiseaseStateMachine;
 
@@ -83,19 +84,6 @@ impl EngineMigrationPlan {
             current_total_population: current_population,
         }
     }
-
-    /// can be renamed to update travel plan
-    // pub fn receive_tick(&mut self, tick: Option<Tick>) {
-    //     match tick {
-    //         None => {}
-    //         Some(t) => {
-    //             match t.travel_plan() {
-    //                 None => {}
-    //                 Some(tp) => { self.migration_plan = Some(tp) }
-    //             }
-    //         }
-    //     }
-    // }
 
     pub fn percent_outgoing(&self) -> f64 {
         match &self.migration_plan {
@@ -228,6 +216,21 @@ impl From<&Citizen> for Migrator {
         Migrator {
             id: citizen.id,
             immunity: citizen.get_immunity(),
+            vaccinated: citizen.is_vaccinated(),
+            uses_public_transport: citizen.uses_public_transport,
+            working: citizen.is_working(),
+            state_machine: citizen.state_machine
+        }
+    }
+}
+
+impl From<&Citizen> for Commuter {
+    fn from(citizen: &Citizen) -> Self {
+        Commuter {
+            id: citizen.id,
+            immunity: citizen.get_immunity(),
+            home_location: citizen.home_location.clone(),
+            work_location: citizen.work_location.clone(),
             vaccinated: citizen.is_vaccinated(),
             uses_public_transport: citizen.uses_public_transport,
             working: citizen.is_working(),

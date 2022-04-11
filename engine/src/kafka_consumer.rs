@@ -11,6 +11,7 @@ use rdkafka::message::Message;
 use crate::config::Config;
 use crate::epidemiology_simulation::Epidemiology;
 use crate::{RunMode, environment};
+use crate::commute::{Commute, CommutePlan};
 
 pub struct KafkaConsumer<'a> {
     engine_id: &'a str,
@@ -55,7 +56,7 @@ impl KafkaConsumer<'_> {
     async fn run_sim(&self, request: Request, run_mode: &RunMode) {
         match request {
             Request::SimulationRequest(req) => {
-                let mut epidemiology = Epidemiology::new(&req.config, req.sim_id);
+                let mut epidemiology = Epidemiology::new(&req.config, None, req.sim_id);
                 epidemiology.run(&req.config, None, run_mode).await;
             }
             Request::MultiSimRequest(req) => {
@@ -64,9 +65,8 @@ impl KafkaConsumer<'_> {
                 match sim_req {
                     None => { error!("Couldn't find any work for engine_id: {}", self.engine_id) }
                     Some(req) => {
-                        let sim_id = req.config.sim_id.clone();
-                        let mut epidemiology = Epidemiology::new(&req.config.config, sim_id);
-                        epidemiology.run(&req.config.config, Some(travel_plan_config), run_mode).await;
+                        let mut epidemiology = Epidemiology::new(&req.config.config, Some(travel_plan_config.clone()), req.engine_id.to_string());
+                        epidemiology.run(&req.config.config, Some(travel_plan_config.clone()), run_mode).await;
                     }
                 }
             }
@@ -94,17 +94,18 @@ struct SimRequestByEngine {
     config: SimulationRequest,
 }
 
-#[derive(Debug, Deserialize)]
-struct Migration {
+#[derive(Clone ,Debug, Deserialize)]
+pub struct Migration {
     matrix: Vec<Vec<u32>>,
     start_migration_hour: u32,
     end_migration_hour: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct TravelPlanConfig {
-    regions: Vec<String>,
-    migration: Migration
+    pub regions: Vec<String>,
+    pub migration: Migration,
+    pub commute: Commute
 }
 
 impl TravelPlanConfig {
@@ -123,6 +124,11 @@ impl TravelPlanConfig {
     pub fn get_regions(&self) -> Vec<String> {
         self.regions.clone()
     }
+
+    pub fn commute_plan(&self) -> CommutePlan {
+        CommutePlan {regions: self.regions.clone(), matrix: self.commute.matrix.clone()}
+    }
+
 }
 
 #[derive(Debug, Deserialize)]

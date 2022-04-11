@@ -81,17 +81,17 @@
     ],
     "migration": {
       "matrix": [
-        [
-          0,
-          10
-        ],
-        [
-          10,
-          0
-        ]
+        [0, 10],
+        [10, 0]
       ],
       "start_migration_hour": 48,
       "end_migration_hour": 336
+    },
+    "commute": {
+      "matrix": [
+        [0, 5],
+        [5, 0]
+      ]
     }
   }
 }

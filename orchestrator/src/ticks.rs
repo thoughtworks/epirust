@@ -27,6 +27,9 @@ use rdkafka::Message;
 use futures::StreamExt;
 use crate::travel_plan::TravelPlan;
 
+const ROUTINE_TRAVEL_START_TIME: i64 = 7;
+const ROUTINE_TRAVEL_END_TIME: i64 = 17;
+
 //Note: these ticks are safe, they don't cause Lyme disease
 
 pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
@@ -36,7 +39,7 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
     let mut message_stream = consumer.start_message_stream();
     let mut should_terminate = false;
     for h in hours {
-        if h > 1 && h % 24 != 0 {
+        if h > 1 && h % 24 != 0 && h % 24 != ROUTINE_TRAVEL_START_TIME && h % 24 != ROUTINE_TRAVEL_END_TIME {
             continue;
         }
         acks.reset(h);

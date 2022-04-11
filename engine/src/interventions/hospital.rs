@@ -75,7 +75,7 @@ impl BuildNewHospital {
 
     pub fn counts_updated(&mut self, counts: &Counts) {
         if counts.get_hour() % 24 == 0 {
-            info!("counts infected: {}, new infeactions: {}",counts.get_infected(), self.new_infections_in_a_day);
+            // info!("counts infected: {}, new infeactions: {}",counts.get_infected(), self.new_infections_in_a_day);
             // ??
             self.new_infections_in_a_day = counts.get_infected().checked_sub(self.new_infections_in_a_day).unwrap_or(0);
         }

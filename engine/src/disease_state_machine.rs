@@ -78,7 +78,7 @@ impl DiseaseStateMachine {
         match self.state {
             State::Exposed { at_hour } => {
                 let option = constants::RANGE_FOR_EXPOSED.choose(rng.get());
-                info!("option: {:?}", option);
+                // info!("option: {:?}", option);
                 let random_factor = *option.unwrap();
                 if sim_hr - at_hour >= (disease.get_exposed_duration() as i32 + random_factor) as Hour {
                     let symptoms = rng.get().gen_bool(1.0 - disease.get_percentage_asymptomatic_population());

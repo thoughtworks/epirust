@@ -24,15 +24,16 @@ use crate::random_wrapper::RandomWrapper;
 use std::collections::HashSet;
 use crate::custom_types::{Count};
 
-#[derive(Copy, Clone, Hash, Eq, Debug, Serialize, Deserialize)]
+#[derive(Clone, Hash, Eq, Debug, Serialize, Deserialize)]
 pub struct Area {
+    pub location_id: String,
     pub start_offset: Point,
     pub end_offset: Point,
 }
 
 impl Area {
-    pub fn new(start_offset: Point, end_offset: Point) -> Area {
-        Area { start_offset, end_offset }
+    pub fn new(location_id: String, start_offset: Point, end_offset: Point) -> Area {
+        Area {location_id, start_offset, end_offset }
     }
 
     pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item=Point> + '_ {
@@ -42,7 +43,7 @@ impl Area {
     }
 
     pub fn iter(&self) -> AreaIterator {
-        AreaIterator::new(*self)
+        AreaIterator::new(self.clone())
     }
 
     //TODO improve randomness
@@ -86,7 +87,7 @@ impl PartialEq for Area {
     }
 }
 
-pub fn area_factory(start_point: Point, end_point: Point, size: u32) -> Vec<Area> {
+pub fn area_factory(start_point: Point, end_point: Point, size: u32, sim_id: String) -> Vec<Area> {
     let feasible_houses_in_x_dim = (end_point.x - start_point.x + 1) / size as i32;
     let feasible_houses_in_y_dim = (end_point.y - start_point.y + 1) / size as i32;
 
@@ -97,7 +98,7 @@ pub fn area_factory(start_point: Point, end_point: Point, size: u32) -> Vec<Area
         for _j in 0..feasible_houses_in_x_dim {
             let current_end_point: Point = Point::new(current_start_point.x + size as i32 - 1, current_start_point.y + size as i32 - 1);
 
-            areas.push(Area::new(current_start_point, current_end_point));
+            areas.push(Area::new(sim_id.to_string(), current_start_point, current_end_point));
 
             current_start_point.x = current_start_point.x + size as i32;
         }
@@ -117,8 +118,8 @@ pub struct AreaIterator {
 impl AreaIterator {
     pub fn new(area: Area) -> AreaIterator {
         AreaIterator {
-            area,
-            iter_index: Point::new(area.start_offset.x - 1, area.start_offset.y)
+            area: area.clone(),
+            iter_index: Point::new(area.start_offset.x.clone() - 1, area.start_offset.y.clone())
         }
     }
 }
@@ -146,7 +147,7 @@ mod tests {
     use super::*;
 
     fn get_area() -> Area {
-        Area::new(Point { x: 0, y: 0 }, Point { x: 5, y: 5 })
+        Area::new("engine1".to_string(), Point { x: 0, y: 0 }, Point { x: 5, y: 5 })
     }
 
     #[test]
@@ -159,13 +160,13 @@ mod tests {
 
     #[test]
     fn should_iterate_over_points_in_area() {
-        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1".to_string(),Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(0, 0), Point::new(1, 0), Point::new(2, 0),
                            Point::new(0, 1), Point::new(1, 1), Point::new(2, 1),
                            Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)]);
 
-        let area = Area::new(Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1".to_string(),Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1),
                            Point::new(1, 2), Point::new(2, 2)])
@@ -173,7 +174,7 @@ mod tests {
 
     #[test]
     fn iterator_should_work_multiple_times() {
-        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1".to_string(),Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
         let x: Option<Point> = area.iter().find(|p| *p == Point::new(1,1));
         assert!(x.is_some());
 
@@ -183,7 +184,7 @@ mod tests {
 
     #[test]
     fn should_create_areas() {
-        let buildings = area_factory(Point::new(10, 0), Point::new(21, 10), 3);
+        let buildings = area_factory(Point::new(10, 0), Point::new(21, 10), 3, "engine1".to_string());
 
         buildings.iter().for_each(|b| println!("start {:?}, end {:?}", b.start_offset, b.end_offset));
 

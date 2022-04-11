@@ -26,9 +26,15 @@ pub struct Migration {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct Commute {
+    matrix: Vec<Vec<u32>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct TravelPlan {
     regions: Vec<String>,
     migration: Migration,
+    commute: Commute
     // matrix: Vec<Vec<i32>>,
     // #[serde(default)]
     // lockdown_travellers: i32,

@@ -33,6 +33,8 @@ use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::{Area, Grid, Point};
 use crate::random_wrapper::RandomWrapper;
 use crate::travel_plan::Migrator;
+use crate::commute::{CommutePlan, Commuter};
+use crate::kafka_consumer::TravelPlanConfig;
 
 #[derive(Deserialize)]
 pub struct PopulationRecord {
@@ -68,7 +70,7 @@ pub enum WorkStatus {
     NA,
 }
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Citizen {
     pub id: Uuid,
     immunity: i32,
@@ -100,8 +102,8 @@ impl Citizen {
         Citizen {
             id,
             immunity: disease_randomness_factor,
-            home_location,
-            work_location,
+            home_location: home_location.clone(),
+            work_location: work_location.clone(),
             transport_location,
             vaccinated: false,
             uses_public_transport,
@@ -109,28 +111,47 @@ impl Citizen {
             hospitalized: false,
             state_machine: DiseaseStateMachine::new(),
             isolated: false,
-            current_area: home_location,
+            current_area: home_location.clone(),
             work_status,
             work_quarantined: false,
         }
     }
 
-    pub fn from_traveller(traveller: &Migrator, home_location: Area, work_location: Area,
-                          transport_location: Point, current_area: Area) -> Citizen {
+    pub fn from_migrator(migrator: &Migrator, home_location: Area, work_location: Area,
+                         transport_location: Point, current_area: Area) -> Citizen {
         Citizen {
-            id: traveller.id,
-            immunity: traveller.immunity,
-            home_location,
-            work_location,
-            vaccinated: traveller.vaccinated,
-            uses_public_transport: traveller.uses_public_transport,
+            id: migrator.id,
+            immunity: migrator.immunity,
+            home_location: home_location.clone(),
+            work_location: work_location.clone(),
+            vaccinated: migrator.vaccinated,
+            uses_public_transport: migrator.uses_public_transport,
             working: false,
             hospitalized: false,
             transport_location,
-            state_machine: traveller.state_machine,
+            state_machine: migrator.state_machine,
             isolated: false,
             current_area,
             work_status: WorkStatus::NA {},
+            work_quarantined: false,
+        }
+    }
+
+    pub fn from_commuter(commuter: &Commuter, transport_location: Point, current_area: Area) -> Citizen {
+        Citizen {
+            id: commuter.id,
+            immunity: commuter.immunity,
+            home_location: commuter.home_location.clone(),
+            work_location: commuter.work_location.clone(),
+            vaccinated: commuter.vaccinated,
+            uses_public_transport: commuter.uses_public_transport,
+            working: true,
+            hospitalized: false,
+            transport_location,
+            state_machine: commuter.state_machine,
+            isolated: false,
+            current_area,
+            work_status: WorkStatus::Normal {},
             work_quarantined: false,
         }
     }
@@ -143,8 +164,8 @@ impl Citizen {
         Citizen {
             id: Uuid::new_v4(),
             immunity: disease_randomness_factor,
-            home_location,
-            work_location,
+            home_location: home_location.clone(),
+            work_location: work_location.clone(),
             transport_location,
             vaccinated: false,
             uses_public_transport: record.pub_transport,
@@ -152,7 +173,7 @@ impl Citizen {
             hospitalized: false,
             state_machine: DiseaseStateMachine::new(),
             isolated: false,
-            current_area: home_location,
+            current_area: home_location.clone(),
             work_status,
             work_quarantined: false,
         }
@@ -217,7 +238,7 @@ impl Citizen {
             }
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {
                 if !self.is_hospital_staff() {
-                    self.current_area = self.home_location;
+                    self.current_area = self.home_location.clone();
                 }
             }
             constants::ROUTINE_END_TIME => {
@@ -252,19 +273,19 @@ impl Citizen {
                 match hour_of_day {
                     constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
                         if self.uses_public_transport {
-                            new_cell = self.goto_area(grid.transport_area, map, cell, rng);
-                            self.current_area = grid.transport_area;
+                            new_cell = self.goto_area(grid.transport_area.clone(), map, cell, rng);
+                            self.current_area = grid.transport_area.clone();
                         } else {
                             new_cell = self.move_agent_from(map, cell, rng);
                         }
                     }
                     constants::ROUTINE_WORK_TIME => {
-                        new_cell = self.goto_area(self.work_location, map, cell, rng);
-                        self.current_area = self.work_location;
+                        new_cell = self.goto_area(self.work_location.clone(), map, cell, rng);
+                        self.current_area = self.work_location.clone();
                     }
                     constants::ROUTINE_WORK_END_TIME => {
-                        new_cell = self.goto_area(self.home_location, map, cell, rng);
-                        self.current_area = self.home_location;
+                        new_cell = self.goto_area(self.home_location.clone(), map, cell, rng);
+                        self.current_area = self.home_location.clone();
                     }
                     _ => {
                         new_cell = self.move_agent_from(map, cell, rng);
@@ -274,7 +295,7 @@ impl Citizen {
             }
 
             WorkStatus::HospitalStaff { work_start_at } => {
-                info!("simulation_hr : {}, works_starts_at: {}", simulation_hr, work_start_at);
+                // info!("simulation_hr : {}, works_starts_at: {}", simulation_hr, work_start_at);
                 // why we are substracting work start hour
                 if simulation_hr.checked_sub(work_start_at).unwrap_or(0) == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) {
                     self.work_quarantined = true;
@@ -282,8 +303,8 @@ impl Citizen {
                 }
 
                 if simulation_hr.checked_sub(work_start_at).unwrap_or(0)  == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS * 2) {
-                    new_cell = self.goto_area(self.home_location, map, cell, rng);
-                    self.current_area = self.home_location;
+                    new_cell = self.goto_area(self.home_location.clone(), map, cell, rng);
+                    self.current_area = self.home_location.clone();
                     self.work_status = WorkStatus::HospitalStaff { work_start_at: (simulation_hr + constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) };
                     return new_cell;
                 }
@@ -291,8 +312,8 @@ impl Citizen {
                 match hour_of_day {
                     constants::ROUTINE_WORK_TIME => {
                         if self.current_area != grid.hospital_area && work_start_at <= simulation_hr {
-                            new_cell = self.goto_area(grid.hospital_area, map, cell, rng);
-                            self.current_area = grid.hospital_area;
+                            new_cell = self.goto_area(grid.hospital_area.clone(), map, cell, rng);
+                            self.current_area = grid.hospital_area.clone();
                             self.work_status = WorkStatus::HospitalStaff { work_start_at: simulation_hr };
                         }
                         self.work_quarantined = false;
@@ -312,12 +333,12 @@ impl Citizen {
             WorkStatus::NA {} => {
                 match hour_of_day {
                     constants::ROUTINE_WORK_TIME => {
-                        new_cell = self.goto_area(grid.housing_area, map, cell, rng);
-                        self.current_area = grid.housing_area;
+                        new_cell = self.goto_area(grid.housing_area.clone(), map, cell, rng);
+                        self.current_area = grid.housing_area.clone();
                     }
                     constants::NON_WORKING_TRAVEL_END_TIME => {
-                        new_cell = self.goto_area(self.home_location, map, cell, rng);
-                        self.current_area = self.home_location;
+                        new_cell = self.goto_area(self.home_location.clone(), map, cell, rng);
+                        self.current_area = self.home_location.clone();
                     }
 
                     _ => {
@@ -497,17 +518,17 @@ impl Citizen {
 
 pub fn citizen_factory(number_of_agents: Count, home_locations: &Vec<Area>, work_locations: &Vec<Area>, public_transport_locations: &Vec<Point>,
                        percentage_public_transport: Percentage, working_percentage: Percentage, rng: &mut RandomWrapper,
-                       starting_infections: &StartingInfections) -> Vec<Citizen> {
+                       starting_infections: &StartingInfections, travel_plan_config: Option<TravelPlanConfig>, region: String) -> Vec<Citizen> {
     let mut agent_list = Vec::with_capacity(home_locations.len());
-
+    let commute_plan: Option<CommutePlan> = if travel_plan_config.is_some() { Some(travel_plan_config.unwrap().commute_plan())} else { None };
     for i in 0..number_of_agents as usize {
         let is_a_working_citizen = rng.get().gen_bool(working_percentage);
 
         let total_home_locations = home_locations.len();
         let total_work_locations = work_locations.len();
 
-        let home_location = home_locations[(i % total_home_locations)];
-        let work_location = work_locations[(i % total_work_locations)];
+        let home_location = home_locations[(i % total_home_locations)].clone();
+        let work_location = work_locations[(i % total_work_locations)].clone();
 
         let uses_public_transport = rng.get().gen_bool(percentage_public_transport)
             && is_a_working_citizen
@@ -518,19 +539,32 @@ pub fn citizen_factory(number_of_agents: Count, home_locations: &Vec<Area>, work
         };
 
         let work_location = if is_a_working_citizen { work_location } else {
-            home_location
+            home_location.clone()
         };
         let work_status = Citizen::derive_work_status(is_a_working_citizen, rng);
 
-        let agent = Citizen::new(home_location, work_location, public_transport_location,
+        let agent = Citizen::new(home_location.clone(), work_location.clone(), public_transport_location,
                                  uses_public_transport, is_a_working_citizen, work_status, rng);
 
         agent_list.push(agent);
     }
 
     set_starting_infections(&mut agent_list, starting_infections, rng);
+    if commute_plan.is_some() {
+        update_commuters(&mut agent_list, commute_plan.unwrap(), region.to_string());
+    }
 
     agent_list
+}
+
+pub fn update_commuters(agent_list: &mut Vec<Citizen>, commute_plan: CommutePlan, region_name: String) {
+    let total_commuters_by_region : Vec<(String, u32)> = commute_plan.get_total_commuters_by_region(region_name.clone());
+    for (region, commuters) in total_commuters_by_region {
+        for _i in 0..commuters {
+            let working_agent = agent_list.iter_mut().find(| agent| agent.working && agent.work_location.location_id == region_name.clone());
+            working_agent.unwrap().work_location.location_id = region.to_string();
+        }
+    }
 }
 
 pub fn set_starting_infections(agent_list: &mut Vec<Citizen>, start_infections: &StartingInfections,
@@ -565,20 +599,22 @@ mod tests {
 
     fn before_each() -> Vec<Citizen> {
         let mut rng = RandomWrapper::new();
-        let home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
+        let engine_id = "engine1".to_string();
+        let home_locations = vec![Area::new(engine_id.clone(), Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(),Point::new(3, 0), Point::new(4, 2))];
 
-        let work_locations = vec![Area::new(Point::new(5, 0), Point::new(6, 2)), Area::new(Point::new(7, 0), Point::new(8, 2))];
+        let work_locations = vec![Area::new(engine_id.clone(),Point::new(5, 0), Point::new(6, 2)), Area::new(engine_id.clone(),Point::new(7, 0), Point::new(8, 2))];
 
         let public_transport_location = vec![Point::new(5, 0), Point::new(5, 1), Point::new(5, 2), Point::new(5, 3)];
         let start_infections = StartingInfections::new(0, 0, 0, 1);
         citizen_factory(4, &home_locations, &work_locations, &public_transport_location, 0.5, 0.5,
-                        &mut rng, &start_infections)
+                        &mut rng, &start_infections, None, "engine1".to_string())
     }
 
     #[test]
     fn generate_citizen() {
         let citizen_list = before_each();
-        let expected_home_locations = vec![Area::new(Point::new(0, 0), Point::new(2, 2)), Area::new(Point::new(3, 0), Point::new(4, 2))];
+        let engine_id = "engine1".to_string();
+        let expected_home_locations = vec![Area::new(engine_id.clone(),Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(),Point::new(3, 0), Point::new(4, 2))];
 
         assert_eq!(citizen_list.len(), 4);
         assert_eq!(citizen_list.iter().filter(|c| c.is_exposed()).count(), 1);
@@ -590,12 +626,13 @@ mod tests {
 
     #[test]
     fn should_set_starting_infections() {
-        let home_location = Area::new(Point::new(0, 0), Point::new(10, 10));
-        let work_location = Area::new(Point::new(11, 0), Point::new(20, 20));
+        let engine_id = "engine1".to_string();
+        let home_location = Area::new(engine_id.clone(),Point::new(0, 0), Point::new(10, 10));
+        let work_location = Area::new(engine_id.clone(),Point::new(11, 0), Point::new(20, 20));
         let mut citizens = Vec::new();
         let mut rng = RandomWrapper::new();
         for _i in 0..20 {
-            let citizen = Citizen::new(home_location, work_location, Point::new(2, 2), false,
+            let citizen = Citizen::new(home_location.clone(), work_location.clone(), Point::new(2, 2), false,
                                        true, WorkStatus::Normal, &mut rng);
             citizens.push(citizen);
         }

@@ -95,7 +95,7 @@ mod tests {
     }
 
     fn citizen() -> Citizen {
-        let area = Area::new(Point::new(0, 0), Point::new(1, 1));
-        Citizen::new(area, area, Point::new(2, 2), true, true, WorkStatus::Normal {}, &mut RandomWrapper::new())
+        let area = Area::new("sim_id".to_string(),Point::new(0, 0), Point::new(1, 1));
+        Citizen::new(area.clone(), area.clone(), Point::new(2, 2), true, true, WorkStatus::Normal {}, &mut RandomWrapper::new())
     }
 }

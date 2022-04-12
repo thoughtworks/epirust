@@ -94,7 +94,7 @@ impl CommutePlan {
     pub fn get_total_commuters_by_region(&self, from_region: String) -> Vec<(String, u32)> {
         let mut commuters_by_region: Vec<(String, u32)>  = vec![];
         for region in &self.regions {
-            commuters_by_region.push((region.to_string(), self.get_outgoing(&from_region,&region )))
+            commuters_by_region.push((region.to_string(), self.get_outgoing(&from_region,region )))
         }
         commuters_by_region
     }

@@ -44,7 +44,7 @@ pub fn define_geography(grid_size: Size, sim_id: String) -> Grid {
     let hospital_area = Area::new(sim_id.to_string(),Point::new(hospital_start, 0), Point::new(hospital_end - 1, grid_size as CoOrdinate));
 
     let houses = area::area_factory(housing_area.start_offset, housing_area.end_offset, constants::HOME_SIZE, sim_id.clone());
-    let offices = area::area_factory(work_area.start_offset, work_area.end_offset, constants::OFFICE_SIZE, sim_id.clone());
+    let offices = area::area_factory(work_area.start_offset, work_area.end_offset, constants::OFFICE_SIZE, sim_id);
 
     Grid {
         grid_size,

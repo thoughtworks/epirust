@@ -100,11 +100,11 @@ pub fn area_factory(start_point: Point, end_point: Point, size: u32, sim_id: Str
 
             areas.push(Area::new(sim_id.to_string(), current_start_point, current_end_point));
 
-            current_start_point.x = current_start_point.x + size as i32;
+            current_start_point.x += size as i32;
         }
 
         current_start_point.x = start_point.x;
-        current_start_point.y = current_start_point.y + size as i32;
+        current_start_point.y += size as i32;
     }
 
     areas
@@ -119,7 +119,7 @@ impl AreaIterator {
     pub fn new(area: Area) -> AreaIterator {
         AreaIterator {
             area: area.clone(),
-            iter_index: Point::new(area.start_offset.x.clone() - 1, area.start_offset.y.clone())
+            iter_index: Point::new(area.start_offset.x - 1, area.start_offset.y)
         }
     }
 }

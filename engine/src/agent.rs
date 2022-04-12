@@ -103,7 +103,7 @@ impl Citizen {
             id,
             immunity: disease_randomness_factor,
             home_location: home_location.clone(),
-            work_location: work_location.clone(),
+            work_location: work_location,
             transport_location,
             vaccinated: false,
             uses_public_transport,
@@ -111,7 +111,7 @@ impl Citizen {
             hospitalized: false,
             state_machine: DiseaseStateMachine::new(),
             isolated: false,
-            current_area: home_location.clone(),
+            current_area: home_location,
             work_status,
             work_quarantined: false,
         }
@@ -122,8 +122,8 @@ impl Citizen {
         Citizen {
             id: migrator.id,
             immunity: migrator.immunity,
-            home_location: home_location.clone(),
-            work_location: work_location.clone(),
+            home_location: home_location,
+            work_location: work_location,
             vaccinated: migrator.vaccinated,
             uses_public_transport: migrator.uses_public_transport,
             working: false,
@@ -165,7 +165,7 @@ impl Citizen {
             id: Uuid::new_v4(),
             immunity: disease_randomness_factor,
             home_location: home_location.clone(),
-            work_location: work_location.clone(),
+            work_location: work_location,
             transport_location,
             vaccinated: false,
             uses_public_transport: record.pub_transport,
@@ -173,7 +173,7 @@ impl Citizen {
             hospitalized: false,
             state_machine: DiseaseStateMachine::new(),
             isolated: false,
-            current_area: home_location.clone(),
+            current_area: home_location,
             work_status,
             work_quarantined: false,
         }
@@ -252,17 +252,17 @@ impl Citizen {
     }
 
     fn is_hospital_staff(&self) -> bool {
-        return match self.work_status {
+        match self.work_status {
             WorkStatus::HospitalStaff { .. } => true,
             _ => false
-        };
+        }
     }
 
     pub fn is_essential_worker(&self) -> bool {
-        return match self.work_status {
+        match self.work_status {
             WorkStatus::Essential {} => true,
             _ => false
-        };
+        }
     }
 
     fn perform_movements(&mut self, cell: Point, hour_of_day: Hour, simulation_hr: Hour, grid: &Grid,
@@ -291,18 +291,18 @@ impl Citizen {
                         new_cell = self.move_agent_from(map, cell, rng);
                     }
                 }
-                self.update_infection_dynamics(new_cell, &map, simulation_hr, rng, &disease);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
             }
 
             WorkStatus::HospitalStaff { work_start_at } => {
                 // info!("simulation_hr : {}, works_starts_at: {}", simulation_hr, work_start_at);
                 // why we are substracting work start hour
-                if simulation_hr.checked_sub(work_start_at).unwrap_or(0) == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) {
+                if simulation_hr.saturating_sub(work_start_at) == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) {
                     self.work_quarantined = true;
                     return new_cell;
                 }
 
-                if simulation_hr.checked_sub(work_start_at).unwrap_or(0)  == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS * 2) {
+                if simulation_hr.saturating_sub(work_start_at)  == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS * 2) {
                     new_cell = self.goto_area(self.home_location.clone(), map, cell, rng);
                     self.current_area = self.home_location.clone();
                     self.work_status = WorkStatus::HospitalStaff { work_start_at: (simulation_hr + constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) };
@@ -327,7 +327,7 @@ impl Citizen {
                         }
                     }
                 }
-                self.update_infection_dynamics(new_cell, &map, simulation_hr, rng, &disease);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
             }
 
             WorkStatus::NA {} => {
@@ -345,7 +345,7 @@ impl Citizen {
                         new_cell = self.move_agent_from(map, cell, rng);
                     }
                 }
-                self.update_infection_dynamics(new_cell, &map, simulation_hr, rng, &disease);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
             }
         }
         new_cell
@@ -354,7 +354,7 @@ impl Citizen {
     fn update_infection_dynamics(&mut self, cell: Point, map: &AgentLocationMap,
                                  sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
         self.update_exposure(cell, map, sim_hr, rng, disease);
-        self.update_infection(sim_hr, rng, &disease);
+        self.update_infection(sim_hr, rng, disease);
         self.update_infection_severity(sim_hr, rng, disease);
     }
 
@@ -388,7 +388,7 @@ impl Citizen {
 
     fn update_infection(&mut self, sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
         if self.state_machine.is_exposed() {
-            self.state_machine.infect(rng, sim_hr, &disease);
+            self.state_machine.infect(rng, sim_hr, disease);
         }
     }
 
@@ -444,10 +444,8 @@ impl Citizen {
             if result.1 == 1 {
                 new_cell = map.move_agent(cell, self.home_location.get_random_point(rng));
             }
-            if result != (0, 0) {
-                if self.hospitalized{
-                    self.hospitalized = false;
-                }
+            if result != (0, 0) && self.hospitalized{
+                self.hospitalized = false;
             }
         }
         new_cell
@@ -488,7 +486,7 @@ impl Citizen {
             }
             return WorkStatus::Normal {};
         }
-        return WorkStatus::NA {};
+        WorkStatus::NA {}
     }
 
     pub fn is_hospitalized(&self) -> bool {
@@ -551,7 +549,7 @@ pub fn citizen_factory(number_of_agents: Count, home_locations: &Vec<Area>, work
 
     set_starting_infections(&mut agent_list, starting_infections, rng);
     if commute_plan.is_some() {
-        update_commuters(&mut agent_list, commute_plan.unwrap(), region.to_string());
+        update_commuters(&mut agent_list, commute_plan.unwrap(), region);
     }
 
     agent_list

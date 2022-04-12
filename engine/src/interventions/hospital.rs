@@ -77,18 +77,18 @@ impl BuildNewHospital {
         if counts.get_hour() % 24 == 0 {
             // info!("counts infected: {}, new infeactions: {}",counts.get_infected(), self.new_infections_in_a_day);
             // ??
-            self.new_infections_in_a_day = counts.get_infected().checked_sub(self.new_infections_in_a_day).unwrap_or(0);
+            self.new_infections_in_a_day = counts.get_infected().saturating_sub(self.new_infections_in_a_day);
         }
     }
 }
 
 impl InterventionType for BuildNewHospital {
     fn name(&self) -> String {
-        return "build_new_hospital".to_string();
+        "build_new_hospital".to_string()
     }
 
     fn json_data(&self) -> String {
-        return r#"{}"#.to_string();
+        r#"{}"#.to_string()
     }
 }
 

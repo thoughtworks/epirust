@@ -21,7 +21,7 @@ impl KafkaConsumer {
         consumer.subscribe(&topics)
             .expect("Can't subscribe to specified topics");
 
-        return KafkaConsumer { consumer };
+        KafkaConsumer { consumer }
     }
 
     pub fn start_message_stream(&self) -> MessageStream<DefaultConsumerContext> {

@@ -73,7 +73,7 @@ impl Grid {
 
     fn set_start_locations_and_occupancies(&mut self, rng: &mut RandomWrapper, agent_list: &Vec<Citizen>, region_name: &String) -> (Vec<Point>, Vec<Citizen>) {
         let mut home_loc: Vec<Point> = Vec::new();
-        let agents_by_home_locations = Grid::group_agents_by_home_locations(&agent_list);
+        let agents_by_home_locations = Grid::group_agents_by_home_locations(agent_list);
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
         debug!("Finished grouping agents by home locations");
         let mut agents_in_order: Vec<Citizen> = Vec::with_capacity(agent_list.len());
@@ -95,7 +95,7 @@ impl Grid {
             home_loc.append(&mut random_points_within_home);
         }
         debug!("Assigned starting location to agents");
-        self.offices_occupancy = self.group_office_locations_by_occupancy(agents_in_order.as_slice(), &region_name);
+        self.offices_occupancy = self.group_office_locations_by_occupancy(agents_in_order.as_slice(), region_name);
         (home_loc, agents_in_order)
     }
 
@@ -104,11 +104,11 @@ impl Grid {
         agent_list.iter().for_each(|agent| {
             match agents_by_home_locations.get(&agent.home_location) {
                 None => {
-                    agents_by_home_locations.insert(&agent.home_location, vec![&agent]);
+                    agents_by_home_locations.insert(&agent.home_location, vec![agent]);
                 }
                 Some(citizens) => {
                     let mut updated_citizens = citizens.clone();
-                    updated_citizens.push(&agent);
+                    updated_citizens.push(agent);
                     agents_by_home_locations.insert(&agent.home_location, updated_citizens);
                 }
             }
@@ -162,7 +162,7 @@ impl Grid {
                    citizens.len(), house_capacity * self.houses.len());
         }
 
-        let (home_loc, mut agents_in_order) = self.set_start_locations_and_occupancies(rng, &citizens, &region_name);
+        let (home_loc, mut agents_in_order) = self.set_start_locations_and_occupancies(rng, &citizens, region_name);
         agent::set_starting_infections(&mut agents_in_order, starting_infections, rng);
 
         self.draw(&home_loc, &self.houses, &self.offices);
@@ -173,16 +173,16 @@ impl Grid {
         let start_offset = self.hospital_area.start_offset;
         let end_offset = Point::new(grid_size as CoOrdinate , grid_size as CoOrdinate);
 
-        self.hospital_area = Area::new(sim_id.to_string(), start_offset, end_offset)
+        self.hospital_area = Area::new(sim_id, start_offset, end_offset)
     }
 
     pub fn resize_hospital(&mut self, number_of_agents: i32, hospital_staff_percentage: f64, hospital_beds_percentage: f64, sim_id: String) {
         let hospital_bed_count = (number_of_agents as f64 * hospital_beds_percentage +
             number_of_agents as f64 * hospital_staff_percentage).ceil() as Count;
 
-        if !(hospital_bed_count > self.hospital_area.get_number_of_cells()) {
+        if hospital_bed_count <= self.hospital_area.get_number_of_cells() {
             let hospital_end_y: CoOrdinate = (hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x) as u32) as CoOrdinate;
-            self.hospital_area = Area::new(sim_id.to_string(), self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
+            self.hospital_area = Area::new(sim_id, self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
             info!("Hospital capacity {}: ", hospital_bed_count);
         }
     }

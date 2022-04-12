@@ -80,10 +80,10 @@ pub struct Tick {
 
 impl Tick {
     pub fn new(hour: i64, terminate: bool) -> Tick {
-        return Tick {
+        Tick {
             hour,
             terminate
-        };
+        }
     }
 }
 
@@ -137,11 +137,11 @@ pub struct TickAcks {
 }
 
 impl TickAcks {
-    pub fn new(engines: &Vec<String>) -> TickAcks {
+    pub fn new(engines: &[String]) -> TickAcks {
         TickAcks {
             acks: HashMap::new(),
             current_hour: 0,
-            engines: engines.clone(),
+            engines: engines.to_owned(),
         }
     }
 

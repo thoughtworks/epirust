@@ -89,7 +89,7 @@ impl DiseaseStateMachine {
                     self.state = State::Infected { symptoms, severity };
                     return true;
                 }
-                return false;
+                false
             }
             _ => {
                 panic!("Invalid state transition!")
@@ -124,7 +124,7 @@ impl DiseaseStateMachine {
         match self.state {
             State::Infected { symptoms: true, severity: InfectionSeverity::Severe} =>
             // why we are adding immunity in infection day
-                return disease.to_be_hospitalized((self.infection_day as i32 + immunity) as Day),
+                disease.to_be_hospitalized((self.infection_day as i32 + immunity) as Day),
             State::Infected { .. } => { false }
             _ => {
                 panic!("Invalid state transition!")

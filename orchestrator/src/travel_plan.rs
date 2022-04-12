@@ -46,10 +46,10 @@ impl TravelPlan {
         &self.regions
     }
 
-    pub fn validate_regions(&self, regions: &Vec<String>) -> bool {
+    pub fn validate_regions(&self, regions: &[String]) -> bool {
         regions.len() == self.regions.len() &&
             regions.iter().map(|region| self.regions.contains(region))
-                .fold(true, |acc, x| acc && x)
+                .all(|x| x)
     }
 
     // pub fn update_with_lockdowns(&self, lockdown_status: &HashMap<String, bool>) -> TravelPlan {

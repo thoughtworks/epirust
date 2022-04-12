@@ -26,21 +26,21 @@ pub fn ipfn(margins: &Array1<Array1<f64>>) -> Matrix {
     let column_count = margins[1].len();
     let seed_matrix: Matrix = Array2::ones((row_count, column_count));
     //TODO: repeat the adjustment until difference between resultant matrices is within acceptable threshold - Jayanta
-    let m1 = adjustment(&seed_matrix, &margins);
-    adjustment(&m1, &margins)
+    let m1 = adjustment(&seed_matrix, margins);
+    adjustment(&m1, margins)
 }
 
 fn adjustment(current_matrix: &Matrix, margins: &Array1<Array1<f64>>) -> Matrix {
-    let totals = compute_totals(&current_matrix);
+    let totals = compute_totals(current_matrix);
     let row_adjusted_matrix =
-        adjust(&current_matrix, &margins, &totals, true);
+        adjust(current_matrix, margins, &totals, true);
     let new_totals = compute_totals(&row_adjusted_matrix);
-    adjust(&row_adjusted_matrix, &margins, &new_totals, false)
+    adjust(&row_adjusted_matrix, margins, &new_totals, false)
 
 }
 
 fn adjust(current_matrix: &Matrix, margins: &Array1<Array1<f64>>, totals: &(Array1<f64>, Array1<f64>), is_row_adjustment: bool) -> Matrix {
-    if is_row_adjustment == true {
+    if is_row_adjustment {
         let mut row_adjusted_matrix: Matrix = Matrix::zeros(current_matrix.dim());
         for ((x, y), value) in current_matrix.indexed_iter() {
             let row_total = &totals.0;

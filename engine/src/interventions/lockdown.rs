@@ -98,7 +98,7 @@ impl LockdownIntervention {
     }
 
     pub fn get_essential_workers_percentage(&self) -> f64 {
-        return match self.intervention{
+        match self.intervention{
             Some(x) => x.essential_workers_population,
             _ => 0.0
         }

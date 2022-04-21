@@ -69,9 +69,9 @@ impl Grid {
         (home_loc, agents_in_order)
     }
 
-    fn set_start_locations_and_occupancies(&mut self, rng: &mut RandomWrapper, agent_list: &Vec<Citizen>) -> (Vec<Point>, Vec<Citizen>) {
+    fn set_start_locations_and_occupancies(&mut self, rng: &mut RandomWrapper, agent_list: &[Citizen]) -> (Vec<Point>, Vec<Citizen>) {
         let mut home_loc: Vec<Point> = Vec::new();
-        let agents_by_home_locations = Grid::group_agents_by_home_locations(&agent_list);
+        let agents_by_home_locations = Grid::group_agents_by_home_locations(agent_list);
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
         debug!("Finished grouping agents by home locations");
         let mut agents_in_order: Vec<Citizen> = Vec::with_capacity(agent_list.len());
@@ -97,16 +97,16 @@ impl Grid {
         (home_loc, agents_in_order)
     }
 
-    pub fn group_agents_by_home_locations(agent_list: &Vec<Citizen>) -> HashMap<&Area, Vec<&Citizen>> {
+    pub fn group_agents_by_home_locations(agent_list: &[Citizen]) -> HashMap<&Area, Vec<&Citizen>> {
         let mut agents_by_home_locations: HashMap<&Area, Vec<&Citizen>> = HashMap::new();
         agent_list.iter().for_each(|agent| {
             match agents_by_home_locations.get(&agent.home_location) {
                 None => {
-                    agents_by_home_locations.insert(&agent.home_location, vec![&agent]);
+                    agents_by_home_locations.insert(&agent.home_location, vec![agent]);
                 }
                 Some(citizens) => {
                     let mut updated_citizens = citizens.clone();
-                    updated_citizens.push(&agent);
+                    updated_citizens.push(agent);
                     agents_by_home_locations.insert(&agent.home_location, updated_citizens);
                 }
             }
@@ -178,7 +178,7 @@ impl Grid {
         let hospital_bed_count = (number_of_agents as f64 * hospital_beds_percentage +
             number_of_agents as f64 * hospital_staff_percentage).ceil() as i32;
 
-        if !(hospital_bed_count > self.hospital_area.get_number_of_cells()) {
+        if hospital_bed_count <= self.hospital_area.get_number_of_cells() {
             let hospital_end_y: i32 = hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x);
             self.hospital_area = Area::new(self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
             info!("Hospital capacity {}: ", hospital_bed_count);

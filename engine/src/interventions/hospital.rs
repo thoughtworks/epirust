@@ -81,11 +81,11 @@ impl BuildNewHospital {
 
 impl InterventionType for BuildNewHospital {
     fn name(&self) -> String {
-        return "build_new_hospital".to_string();
+        "build_new_hospital".to_string()
     }
 
     fn json_data(&self) -> String {
-        return r#"{}"#.to_string();
+        r#"{}"#.to_string()
     }
 }
 
@@ -95,7 +95,7 @@ mod tests {
 
     fn get_test_hospital_intervention() -> BuildNewHospital {
         let config = BuildNewHospitalConfig { spread_rate_threshold: 10 };
-        return BuildNewHospital { has_applied: false, new_infections_in_a_day: 0, intervention: Some(config) };
+        BuildNewHospital { has_applied: false, new_infections_in_a_day: 0, intervention: Some(config) }
     }
 
     #[test]
@@ -150,7 +150,7 @@ mod tests {
 
         hospital_intervention.apply();
 
-        assert_eq!(hospital_intervention.has_applied(), true)
+        assert!(hospital_intervention.has_applied())
     }
 
     #[test]
@@ -159,6 +159,6 @@ mod tests {
         let counts = Counts::new_test(0, 99, 1, 0,0, 0, 0);
         hospital_intervention.apply();
         hospital_intervention.counts_updated(&Counts::new_test(24, 80, 0, 20, 0, 0, 0));
-        assert_eq!(hospital_intervention.should_apply(&counts), false);
+        assert!(!hospital_intervention.should_apply(&counts));
     }
 }

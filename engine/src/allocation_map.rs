@@ -226,7 +226,7 @@ mod tests {
         let hospital = Area::new(Point::new(2, 2), Point::new(4, 4));
         let result = map.goto_hospital(&hospital, points[0], &mut citizen1);
 
-        assert_eq!(result.0, true);
+        assert!(result.0);
         assert_eq!(result.1, Point::new(2, 2));
     }
 
@@ -248,8 +248,8 @@ mod tests {
 
         let result = map.goto_hospital(&hospital, points[0], &mut citizen1);
 
-        assert_eq!(result.0, false);
-        assert_eq!(citizen1.clone().home_location.contains(&result.1), true);
+        assert!(!result.0);
+        assert!(citizen1.home_location.contains(&result.1));
     }
 
     #[test]

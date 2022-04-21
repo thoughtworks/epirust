@@ -96,7 +96,7 @@ mod tests {
     #[test]
     fn should_read_config_for_engines() {
         let config_for_engines = read_simulation_conf("config/test/travel_plan.json");
-        assert!(config_for_engines.len() > 0)
+        assert!(!config_for_engines.is_empty())
     }
 
     #[test]

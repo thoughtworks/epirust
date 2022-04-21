@@ -29,10 +29,10 @@ pub struct TravelPlan {
 }
 
 impl TravelPlan {
-    pub fn validate_regions(&self, regions: &Vec<String>) -> bool {
+    pub fn validate_regions(&self, regions: &[String]) -> bool {
         regions.len() == self.regions.len() &&
             regions.iter().map(|region| self.regions.contains(region))
-                .fold(true, |acc, x| acc && x)
+                .all(|x| x)
     }
 
     pub fn get_regions(&self) -> &Vec<String> {
@@ -78,12 +78,12 @@ mod tests {
     fn should_validate_regions() {
         let config = Config::read("config/test/travel_plan.json").unwrap();
         let travel_plan = config.get_travel_plan();
-        assert!(travel_plan.validate_regions(&vec!["engine1".to_string(), "engine2".to_string(),
+        assert!(travel_plan.validate_regions(&["engine1".to_string(), "engine2".to_string(),
                                                    "engine3".to_string()]));
-        assert!(travel_plan.validate_regions(&vec!["engine3".to_string(), "engine2".to_string(),
+        assert!(travel_plan.validate_regions(&["engine3".to_string(), "engine2".to_string(),
                                                    "engine1".to_string()]));
-        assert!(!travel_plan.validate_regions(&vec!["engine3".to_string()]));
-        assert!(!travel_plan.validate_regions(&vec!["engine1".to_string(), "engine2".to_string(),
+        assert!(!travel_plan.validate_regions(&["engine3".to_string()]));
+        assert!(!travel_plan.validate_regions(&["engine1".to_string(), "engine2".to_string(),
                                                     "engine3".to_string(), "engine4".to_string()]));
     }
 

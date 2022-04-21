@@ -84,7 +84,7 @@ mod tests {
 
     fn get_test_vaccination_intervention() -> VaccinateIntervention {
         let config = config::read("config/test/auto_pop.json".to_string()).unwrap();
-        return VaccinateIntervention::init(&config);
+        VaccinateIntervention::init(&config)
     }
 
     #[test]

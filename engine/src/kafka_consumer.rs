@@ -30,7 +30,7 @@ impl KafkaConsumer<'_> {
         consumer.subscribe(topics)
             .expect("Can't subscribe to specified topics");
 
-        return KafkaConsumer { engine_id, consumer };
+        KafkaConsumer { engine_id, consumer }
     }
 
     pub async fn listen_loop(&self, run_mode: &RunMode) {

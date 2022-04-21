@@ -77,9 +77,9 @@ pub struct EngineTravelPlan {
 }
 
 impl EngineTravelPlan {
-    pub fn new(engine_id: &String, current_population: i32) -> EngineTravelPlan {
+    pub fn new(engine_id: &str, current_population: i32) -> EngineTravelPlan {
         EngineTravelPlan {
-            engine_id: engine_id.clone(),
+            engine_id: engine_id.to_owned(),
             travel_plan: None,
             current_total_population: current_population,
         }
@@ -107,7 +107,7 @@ impl EngineTravelPlan {
         }
     }
 
-    pub fn alloc_outgoing_to_regions(&self, outgoing: &Vec<(Point, Traveller)>) -> (Vec<TravellersByRegion>, Vec<(Point, Traveller)>)  {
+    pub fn alloc_outgoing_to_regions(&self, outgoing: &[(Point, Traveller)]) -> (Vec<TravellersByRegion>, Vec<(Point, Traveller)>)  {
         let mut travellers: Vec<Traveller> = outgoing.iter().map(|x| x.1).collect();
         let total_outgoing = travellers.len();
         let outgoing_by_region = match &self.travel_plan {
@@ -180,9 +180,9 @@ impl TravellersByRegion {
         self.travellers.push(traveller);
     }
 
-    pub fn create(to_engine_id: &String) -> TravellersByRegion {
+    pub fn create(to_engine_id: &str) -> TravellersByRegion {
         TravellersByRegion {
-            to_engine_id: to_engine_id.clone(),
+            to_engine_id: to_engine_id.to_owned(),
             travellers: Vec::new(),
         }
     }
@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn should_set_current_population() {
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
+        let mut engine_travel_plan = EngineTravelPlan::new("engine1", 10000);
         engine_travel_plan.set_current_population(9000);
         assert_eq!(9000, engine_travel_plan.current_total_population);
     }
@@ -360,7 +360,7 @@ mod tests {
                 vec![97, 0, 0],
             ],
         };
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
+        let mut engine_travel_plan = EngineTravelPlan::new("engine1", 10000);
         let tick = Tick::new(1, Some(travel_plan), false);
         engine_travel_plan.receive_tick(Some(tick));
 
@@ -391,7 +391,7 @@ mod tests {
     }
 
     fn create_engine_with_travel_plan() -> EngineTravelPlan {
-        let mut engine_travel_plan = EngineTravelPlan::new(&"engine1".to_string(), 10000);
+        let mut engine_travel_plan = EngineTravelPlan::new("engine1", 10000);
         let travel_plan = create_travel_plan();
         let tick = Tick::new(0, Some(travel_plan), false);
         engine_travel_plan.receive_tick(Some(tick));

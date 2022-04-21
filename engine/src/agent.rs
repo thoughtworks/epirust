@@ -228,17 +228,11 @@ impl Citizen {
     }
 
     fn is_hospital_staff(&self) -> bool {
-        return match self.work_status {
-            WorkStatus::HospitalStaff { .. } => true,
-            _ => false
-        };
+        matches!(self.work_status, WorkStatus::HospitalStaff { .. })
     }
 
     pub fn is_essential_worker(&self) -> bool {
-        return match self.work_status {
-            WorkStatus::Essential {} => true,
-            _ => false
-        };
+        matches!(self.work_status, WorkStatus::Essential {})
     }
 
     fn perform_movements(&mut self, cell: Point, hour_of_day: i32, simulation_hr: i32, grid: &Grid,
@@ -267,7 +261,7 @@ impl Citizen {
                         new_cell = self.move_agent_from(map, cell, rng);
                     }
                 }
-                self.update_infection_dynamics(new_cell, &map, simulation_hr, rng, &disease);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
             }
 
             WorkStatus::HospitalStaff { work_start_at } => {
@@ -301,7 +295,7 @@ impl Citizen {
                         }
                     }
                 }
-                self.update_infection_dynamics(new_cell, &map, simulation_hr, rng, &disease);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
             }
 
             WorkStatus::NA {} => {
@@ -319,7 +313,7 @@ impl Citizen {
                         new_cell = self.move_agent_from(map, cell, rng);
                     }
                 }
-                self.update_infection_dynamics(new_cell, &map, simulation_hr, rng, &disease);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
             }
         }
         new_cell
@@ -328,7 +322,7 @@ impl Citizen {
     fn update_infection_dynamics(&mut self, cell: Point, map: &AgentLocationMap,
                                  sim_hr: i32, rng: &mut RandomWrapper, disease: &Disease) {
         self.update_exposure(cell, map, sim_hr, rng, disease);
-        self.update_infection(sim_hr, rng, &disease);
+        self.update_infection(sim_hr, rng, disease);
         self.update_infection_severity(sim_hr, rng, disease);
     }
 
@@ -362,7 +356,7 @@ impl Citizen {
 
     fn update_infection(&mut self, sim_hr: i32, rng: &mut RandomWrapper, disease: &Disease) {
         if self.state_machine.is_exposed() {
-            self.state_machine.infect(rng, sim_hr, &disease);
+            self.state_machine.infect(rng, sim_hr, disease);
         }
     }
 
@@ -418,10 +412,8 @@ impl Citizen {
             if result.1 == 1 {
                 new_cell = map.move_agent(cell, self.home_location.get_random_point(rng));
             }
-            if result != (0, 0) {
-                if self.hospitalized{
-                    self.hospitalized = false;
-                }
+            if result != (0, 0) && self.hospitalized{
+                self.hospitalized = false;
             }
         }
         new_cell
@@ -445,13 +437,10 @@ impl Citizen {
     }
 
     pub fn assign_essential_worker(&mut self, essential_workers_percentage: f64, rng: &mut RandomWrapper) {
-        match self.work_status {
-            WorkStatus::Normal {} => {
-                if rng.get().gen_bool(essential_workers_percentage) {
-                    self.work_status = WorkStatus::Essential {};
-                }
+        if let WorkStatus::Normal {} = self.work_status {
+            if rng.get().gen_bool(essential_workers_percentage) {
+                self.work_status = WorkStatus::Essential {};
             }
-            _ => {}
         }
     }
 
@@ -462,7 +451,7 @@ impl Citizen {
             }
             return WorkStatus::Normal {};
         }
-        return WorkStatus::NA {};
+        WorkStatus::NA {}
     }
 
     pub fn is_hospitalized(&self) -> bool {
@@ -490,7 +479,7 @@ impl Citizen {
     }
 }
 
-pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_locations: &Vec<Area>, public_transport_locations: &Vec<Point>,
+pub fn citizen_factory(number_of_agents: i32, home_locations: &[Area], work_locations: &[Area], public_transport_locations: &[Point],
                        percentage_public_transport: f64, working_percentage: f64, rng: &mut RandomWrapper,
                        starting_infections: &StartingInfections) -> Vec<Citizen> {
     let mut agent_list = Vec::with_capacity(home_locations.len());
@@ -528,7 +517,7 @@ pub fn citizen_factory(number_of_agents: i32, home_locations: &Vec<Area>, work_l
     agent_list
 }
 
-pub fn set_starting_infections(agent_list: &mut Vec<Citizen>, start_infections: &StartingInfections,
+pub fn set_starting_infections(agent_list: &mut [Citizen], start_infections: &StartingInfections,
                                rng: &mut RandomWrapper) {
     if start_infections.total() as usize > agent_list.len() {
         panic!("There are {} people set to infect, but only {} agents available",

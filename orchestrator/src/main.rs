@@ -62,7 +62,7 @@ async fn main() {
     let hours = 1..get_hours(config_path);
 
     // cleanup().await;
-    start(&travel_plan, hours, &sim_conf).await;
+    start(travel_plan, hours, &sim_conf).await;
 }
 
 // the delay between deletion and creation of topic making the process flaky. Deleting the topic using kafka client manually as of now

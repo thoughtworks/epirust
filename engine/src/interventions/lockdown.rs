@@ -95,7 +95,7 @@ impl LockdownIntervention {
     }
 
     pub fn get_essential_workers_percentage(&self) -> f64 {
-        return match self.intervention{
+        match self.intervention{
             Some(x) => x.essential_workers_population,
             _ => 0.0
         }
@@ -129,11 +129,11 @@ mod tests {
             at_number_of_infections: 20,
             essential_workers_population: 0.1,
         };
-        return LockdownIntervention {
+        LockdownIntervention {
             is_locked_down,
             intervention: Some(config),
             zero_infection_hour: 0,
-        };
+        }
     }
 
     #[test]
@@ -154,7 +154,7 @@ mod tests {
         assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0)));
 
         lockdown.apply();
-        assert_eq!(lockdown.is_locked_down, true);
+        assert!(lockdown.is_locked_down);
     }
 
     #[test]
@@ -265,6 +265,6 @@ mod tests {
 
         intervention.unapply();
 
-        assert_eq!(intervention.is_locked_down, false);
+        assert!(!intervention.is_locked_down);
     }
 }

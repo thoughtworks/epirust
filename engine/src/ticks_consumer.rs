@@ -78,7 +78,7 @@ pub struct Tick {
 impl Tick {
     #[cfg(test)]
     pub fn new(hour: i32, travel_plan: Option<TravelPlan>, terminate: bool) -> Tick {
-        return Tick { hour, travel_plan, terminate };
+        Tick { hour, travel_plan, terminate }
     }
 
     pub fn hour(&self) -> i32 {

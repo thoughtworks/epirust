@@ -95,7 +95,7 @@ impl Listener for TravelCounter {
         }
     }
 
-    fn outgoing_travellers_added(&mut self, hr: i32, travellers: &Vec<TravellersByRegion>) {
+    fn outgoing_travellers_added(&mut self, hr: i32, travellers: &[TravellersByRegion]) {
         let counts_by_region: Vec<CountsByRegion> = travellers.iter().map(|t| {
             CountsByRegion::create_from(hr, t)
         }).collect();
@@ -123,7 +123,7 @@ mod tests {
 
         let travellers_by_region = vec![create_travellers("engine2"), create_travellers("engine3")];
         counter.outgoing_travellers_added(24, &travellers_by_region);
-        counter.outgoing_travellers_added(48, &vec![create_travellers("engine2")]);
+        counter.outgoing_travellers_added(48, &[create_travellers("engine2")]);
         counter.simulation_ended();
 
         assert_eq!(3, counter.counts.len());
@@ -141,7 +141,7 @@ mod tests {
     }
 
     fn create_travellers(region: &str) -> TravellersByRegion {
-        let mut travellers = TravellersByRegion::create(&region.to_string());
+        let mut travellers = TravellersByRegion::create(region);
         for _i in 0..2 {
             let mut s = Traveller::new();
             s.state_machine.state = State::Susceptible {};

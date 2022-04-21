@@ -98,11 +98,11 @@ pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area
 
             areas.push(Area::new(current_start_point, current_end_point));
 
-            current_start_point.x = current_start_point.x + size;
+            current_start_point.x += size;
         }
 
         current_start_point.x = start_point.x;
-        current_start_point.y = current_start_point.y + size;
+        current_start_point.y += size;
     }
 
     areas
@@ -214,8 +214,8 @@ mod tests {
         let area = get_area();
         let neighbors: Vec<Point> = area.get_neighbors_of(Point::new(4,5)).collect();
         assert_eq!(neighbors.len(), 5);
-        assert_eq!(neighbors.contains(&Point::new(4, 4)), true);
-        assert_eq!(neighbors.contains(&Point::new(4, 6)), false);
+        assert!(neighbors.contains(&Point::new(4, 4)));
+        assert!(!neighbors.contains(&Point::new(4, 6)));
     }
 
     #[test]
@@ -223,7 +223,7 @@ mod tests {
         let area = get_area();
 
         let is_inside_area = area.contains(&Point::new(2, 3));
-        assert_eq!(is_inside_area, true);
+        assert!(is_inside_area);
     }
 
     #[test]
@@ -231,7 +231,7 @@ mod tests {
         let area = get_area();
 
         let is_inside_area = area.contains(&Point::new(20, 3));
-        assert_eq!(is_inside_area, false);
+        assert!(!is_inside_area);
     }
 
     #[test]
@@ -239,7 +239,7 @@ mod tests {
         let area = get_area();
 
         let random_point = area.get_random_point(&mut RandomWrapper::new());
-        assert_eq!(area.contains(&random_point), true);
+        assert!(area.contains(&random_point));
     }
 
     #[test]

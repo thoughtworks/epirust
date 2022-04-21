@@ -149,10 +149,10 @@ mod tests {
     fn to_be_quarantined() {
         let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
         let actual = disease.to_be_hospitalized(12);
-        assert_eq!(actual, false);
+        assert!(!actual);
 
         let actual = disease.to_be_hospitalized(22);
-        assert_eq!(actual, true);
+        assert!(actual);
     }
 
     #[test]

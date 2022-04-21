@@ -82,11 +82,11 @@ pub struct Tick<'a> {
 
 impl Tick<'_> {
     pub fn new(hour: i64, travel_plan: Option<&TravelPlan>, terminate: bool) -> Tick {
-        return Tick {
+        Tick {
             hour,
             travel_plan,
             terminate
-        };
+        }
     }
 }
 
@@ -142,11 +142,11 @@ pub struct TickAcks {
 }
 
 impl TickAcks {
-    pub fn new(engines: &Vec<String>) -> TickAcks {
+    pub fn new(engines: &[String]) -> TickAcks {
         TickAcks {
             acks: HashMap::new(),
             current_hour: 0,
-            engines: engines.clone(),
+            engines: engines.to_owned(),
             lockdown_status_by_engine: HashMap::new()
         }
     }
@@ -200,7 +200,7 @@ mod tests {
         acks.push(ack.clone());
 
         assert_eq!(*acks.acks.get("engine1").unwrap(), ack);
-        assert_eq!(*acks.lockdown_status_by_engine.get("engine1").unwrap(), true);
+        assert!(*acks.lockdown_status_by_engine.get("engine1").unwrap());
     }
 
     #[test]
@@ -214,7 +214,7 @@ mod tests {
 
     #[test]
     fn should_terminate_when_exposed_and_infected_and_hospitalized_are_zero() {
-        let mut acks = TickAcks::new(&vec!["engine1".to_string(), "engine2".to_string()]);
+        let mut acks = TickAcks::new(&["engine1".to_string(), "engine2".to_string()]);
         acks.reset(1);
         acks.push(TickAck {
             engine_id: "engine1".to_string(),

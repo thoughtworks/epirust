@@ -95,7 +95,7 @@ impl Epidemiology {
 
     fn output_file_format(config: &Config, run_mode: &RunMode) -> String {
         let now: DateTime<Local> = SystemTime::now().into();
-        let mut output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
+        let mut output_file_prefix = config.get_output_file().unwrap_or_else(|| "simulation".to_string());
         if let RunMode::MultiEngine { engine_id } = run_mode {
             output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
         }
@@ -171,18 +171,18 @@ impl Epidemiology {
             listeners,
         );
 
-        if interventions.lockdown.should_apply(&counts_at_hr) {
+        if interventions.lockdown.should_apply(counts_at_hr) {
             interventions.lockdown.apply();
             Epidemiology::lock_city(counts_at_hr.get_hour(), write_buffer);
             listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
         }
-        if interventions.lockdown.should_unlock(&counts_at_hr) {
+        if interventions.lockdown.should_unlock(counts_at_hr) {
             Epidemiology::unlock_city(counts_at_hr.get_hour(), write_buffer);
             interventions.lockdown.unapply();
             listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
         }
 
-        interventions.build_new_hospital.counts_updated(&counts_at_hr);
+        interventions.build_new_hospital.counts_updated(counts_at_hr);
         if interventions.build_new_hospital.should_apply(counts_at_hr) {
             info!("Increasing the hospital size");
             grid.increase_hospital_size(config.get_grid_size());
@@ -245,10 +245,10 @@ impl Epidemiology {
                                    &mut outgoing, config.enable_citizen_state_messages(), 0, 0.0);
 
             listeners.counts_updated(*counts_at_hr);
-            Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
+            Epidemiology::process_interventions(interventions, counts_at_hr, listeners,
                                                 rng, write_buffer_reference, config, &mut self.grid);
 
-            if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
+            if Epidemiology::stop_simulation(&mut interventions.lockdown, run_mode, *counts_at_hr) {
                 break;
             }
 
@@ -346,10 +346,10 @@ impl Epidemiology {
             write_buffer_reference.assimilate_citizens(&mut incoming, &mut self.grid, counts_at_hr, rng);
 
             listeners.counts_updated(*counts_at_hr);
-            Epidemiology::process_interventions(interventions, &counts_at_hr, listeners,
+            Epidemiology::process_interventions(interventions, counts_at_hr, listeners,
                                                 rng, write_buffer_reference, config, &mut self.grid);
 
-            if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
+            if Epidemiology::stop_simulation(&mut interventions.lockdown, run_mode, *counts_at_hr) {
                 break;
             }
 
@@ -457,13 +457,10 @@ impl Epidemiology {
     fn apply_vaccination_intervention(vaccinations: &VaccinateIntervention, counts: &Counts,
                                       write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper,
                                       listeners: &mut Listeners) {
-        match vaccinations.get_vaccination_percentage(counts) {
-            Some(vac_percent) => {
-                info!("Vaccination");
-                Epidemiology::vaccinate(*vac_percent, write_buffer_reference, rng);
-                listeners.intervention_applied(counts.get_hour(), vaccinations)
-            }
-            _ => {}
+        if let Some(vac_percent) = vaccinations.get_vaccination_percentage(counts) {
+            info!("Vaccination");
+            Epidemiology::vaccinate(*vac_percent, write_buffer_reference, rng);
+            listeners.intervention_applied(counts.get_hour(), vaccinations)
         };
     }
 
@@ -485,11 +482,11 @@ impl Epidemiology {
         for (cell, agent) in read_buffer.iter() {
             let mut current_agent = *agent;
             let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &grid, read_buffer, rng, disease);
+            let point = current_agent.perform_operation(*cell, simulation_hour, grid, read_buffer, rng, disease);
             Epidemiology::update_counts(csv_record, &current_agent);
 
-            if infection_status == false && current_agent.state_machine.is_infected() == true {
-                listeners.citizen_got_infected(&cell);
+            if !infection_status && current_agent.state_machine.is_infected() {
+                listeners.citizen_got_infected(cell);
             }
 
             let agent_option = write_buffer.get(&point);

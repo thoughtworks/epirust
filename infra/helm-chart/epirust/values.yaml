@@ -1,0 +1,100 @@
+# Default values for epirust.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+config: "100k_100.json"
+
+multiengineSim: true
+
+engine:
+  fullname: "engine-100k-100-1"
+  spec:
+    completions: 100
+    parallelism: 100
+  image:
+    repository: "sapanakale/epirust-engine"
+    tag: "master"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "50m"
+#      memory: "256Mi"
+    limits:
+      cpu: "50m"
+#      memory: "2048Mi"
+  env:
+    EPI_KAFKA_URL: "kafka-cp-kafka:9092"
+    RUST_LOG: info
+    RUST_BACKTRACE: full
+  volumes:
+      name: "epirust-storage"
+      claimName: "epirust-claim"
+  volumeMounts:
+    output:
+      subPath: "epirust/output"
+    config:
+      subPath: "epirust/config"
+
+orchestrator:
+  fullname: "orchestrator-100k-100-1"
+  image:
+    repository: "sapanakale/epirust-orchestrator"
+    pullPolicy: IfNotPresent
+    tag: "master"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "100m"
+      memory: "512Mi"
+  env:
+    EPI_KAFKA_URL: "kafka-cp-kafka:9092"
+    RUST_LOG: info
+    RUST_BACKTRACE: full
+  volumes:
+    name: "epirust-storage"
+    claimName: "epirust-claim"
+  volumeMounts:
+    config:
+      mountPath: "config"
+      subPath: "epirust/config"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: NotIn
+              values:
+                - k8s-node2.e4r.thoughtworks.net
+}
+
+

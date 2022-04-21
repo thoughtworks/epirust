@@ -1,0 +1,36 @@
+{{ if .Values.multiengineSim }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.orchestrator.fullname }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /metrics
+    prometheus.io/port: "8080"
+spec:
+  template:
+    spec:
+      containers:
+        - name: {{ .Values.orchestrator.fullname }}
+          image: {{ .Values.orchestrator.image.repository }}:{{ .Values.orchestrator.image.tag }}
+          imagePullPolicy: IfNotPresent
+          command: ["./orchestrator", "-c", "{{ .Values.orchestrator.volumeMounts.config.mountPath }}/{{ .Values.config }}"]
+          resources:
+            requests:
+              cpu: {{ .Values.orchestrator.resources.requests.cpu }}
+              memory: {{ .Values.orchestrator.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.orchestrator.resources.limits.cpu }}
+              memory: {{ .Values.orchestrator.resources.limits.memory }}
+          volumeMounts:
+            - mountPath: {{ .Values.orchestrator.volumeMounts.config.mountPath }}
+              name: {{ .Values.orchestrator.volumes.name }}
+              subPath: {{ .Values.orchestrator.volumeMounts.config.subPath }}
+          env:
+          {{- include "helpers.list-orchestrator-env-variables" . | indent 8 }}
+      restartPolicy: Never
+      volumes:
+        - name: {{ .Values.orchestrator.volumes.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.orchestrator.volumes.claimName }}
+{{end}}

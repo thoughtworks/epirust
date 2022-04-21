@@ -23,23 +23,13 @@ spec:
           kafka-topics --delete --bootstrap-server kafka-cp-kafka:9092 --topic ticks_ack --if-exists &&
           kafka-topics --delete --bootstrap-server kafka-cp-kafka:9092 --topic commute --if-exists &&
           kafka-topics --delete --bootstrap-server kafka-cp-kafka:9092 --topic migration --if-exists &&
+          kafka-topics --delete --bootstrap-server kafka-cp-kafka:9092 --topic travels --if-exists &&
           kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic simulation_requests --if-not-exists &&
           kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic counts_updated  --if-not-exists &&
           kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic ticks --if-not-exists &&
           kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic ticks_ack --if-not-exists &&
           kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic commute --if-not-exists &&
           kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic migration --if-not-exists &&
+          kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic travels --if-not-exists &&
           kafka-topics --list --bootstrap-server kafka-cp-kafka:9092"]
-#          command: [ "/bin/bash","-c", "
-#                    kafka-topics --delete --bootstrap-server kafka-cp-kafka:9092 --topic simulation_requests --if-exists &&
-#                    kafka-topics --delete --bootstrap-server kafka-cp-kafka:9092 --topic counts_updated --if-exists &&
-#                    kafka-topics --delete --bootstrap-server kafka-cp-kafka:9092 --topic ticks --if-exists &&
-#                    kafka-topics --delete --bootstrap-server kafka-cp-kafka:9092 --topic ticks_ack --if-exists &&
-#                    kafka-topics --delete --bootstrap-server kafka-cp-kafka:9092 --topic travels --if-exists &&
-#                    kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic simulation_requests --if-not-exists &&
-#                    kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic counts_updated  --if-not-exists &&
-#                    kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic ticks --if-not-exists &&
-#                    kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic ticks_ack --if-not-exists &&
-#                    kafka-topics --create --bootstrap-server  kafka-cp-kafka:9092  --topic travels --if-not-exists &&
-#                    kafka-topics --list --bootstrap-server kafka-cp-kafka:9092" ]
 {{ end }}

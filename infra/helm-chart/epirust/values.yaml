@@ -86,15 +86,15 @@ nodeSelector: {}
 
 tolerations: []
 
-affinity: {
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: NotIn
-              values:
-                - k8s-node2.e4r.thoughtworks.net
-}
+affinity: {}
+#  nodeAffinity:
+#    requiredDuringSchedulingIgnoredDuringExecution:
+#      nodeSelectorTerms:
+#        - matchExpressions:
+#            - key: kubernetes.io/hostname
+#              operator: NotIn
+#              values:
+#                - k8s-node2.e4r.thoughtworks.net
+
 
 

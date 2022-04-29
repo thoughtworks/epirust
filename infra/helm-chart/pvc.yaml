@@ -1,0 +1,14 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: epirust-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+#  storageClassName: gp2
+  volumeName: nfs-volume
+#  volumeName: epirust-local-pv
+  resources:
+    requests:
+      storage: 10Gi
+

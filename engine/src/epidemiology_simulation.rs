@@ -297,6 +297,7 @@ impl Epidemiology {
 
         counts_at_hr.log();
         for simulation_hour in 1..config.get_hours() {
+            let hour_start = Instant::now();
             let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour).await;
             match &tick {
                 None => {}
@@ -307,6 +308,7 @@ impl Epidemiology {
                     }
                 }
             }
+
             outgoing.clear();
 
             counts_at_hr.increment_hour();
@@ -385,19 +387,31 @@ impl Epidemiology {
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
+        info!("Total commuter parsing time: {}", commuter_parsing_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         listeners.simulation_ended();
     }
 
     async fn extract_tick(message_stream: &mut MessageStream<'_, DefaultConsumerContext>) -> Tick {
         let msg = message_stream.next().await;
-        let mut tick = ticks_consumer::read(msg);
-        while  tick == None  {
+        let mut maybe_tick = ticks_consumer::read(msg);
+        while  maybe_tick == None  {
             let next_msg = message_stream.next().await;
-            tick = ticks_consumer::read(next_msg);
+            maybe_tick = ticks_consumer::read(next_msg);
         }
-        tick.unwrap()
+        maybe_tick.unwrap()
     }
+
+    async fn get_tick(message_stream: &mut MessageStream<'_, DefaultConsumerContext>, simulation_hour: Hour) -> Tick {
+        let mut tick = Epidemiology::extract_tick(message_stream).await;
+        let mut tick_hour = tick.hour();
+            while tick_hour < simulation_hour {
+                tick = Epidemiology::extract_tick(message_stream).await;
+                tick_hour = tick.hour();
+            }
+        tick
+    }
+
 
     async fn receive_tick(run_mode: &RunMode, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                           simulation_hour: Hour) -> Option<Tick> {
@@ -405,7 +419,7 @@ impl Epidemiology {
             return None;
         }
         if let RunMode::MultiEngine { engine_id: _e } = run_mode {
-            let t = Epidemiology::extract_tick(message_stream).await;
+            let t = Epidemiology::get_tick(message_stream, simulation_hour).await;
             if t.hour() != simulation_hour {
                 panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
             }
@@ -441,7 +455,7 @@ impl Epidemiology {
     }
 
     fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
-        if tick.is_some(){
+        if tick.is_some() {
             let hour = tick.unwrap().hour() % 24;
             if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
                 producer.send_commuters(outgoing);
@@ -475,18 +489,23 @@ impl Epidemiology {
 
     async fn receive_commuters(tick: Option<Tick>, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                                commute_plan: &CommutePlan, engine_id: &String) -> Vec<Commuter> {
-        if tick.is_some() && tick.unwrap().hour() % 24 == constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME {
-            let expected_incoming_regions = commute_plan.incoming_regions_count(engine_id);
-            let mut received_incoming_regions = 0;
-            debug!("Receiving migrators from {} regions", expected_incoming_regions);
+
+        if tick.is_some() {
             let mut incoming: Vec<Commuter> = Vec::new();
-            while expected_incoming_regions != received_incoming_regions {
-                let maybe_msg = Epidemiology::receive_commuters_from_region(message_stream, engine_id).await;
-                match maybe_msg {
-                    None => {}
-                    Some(region_incoming) => {
-                        incoming.extend( region_incoming.get_commuters());
-                        received_incoming_regions += 1;
+            let hour = tick.unwrap().hour() % 24;
+            if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
+                info!("inside if of receive commuters");
+                let expected_incoming_regions = commute_plan.incoming_regions_count(engine_id);
+                let mut received_incoming_regions = 0;
+                debug!("Receiving migrators from {} regions", expected_incoming_regions);
+                while expected_incoming_regions != received_incoming_regions {
+                    let maybe_msg = Epidemiology::receive_commuters_from_region(message_stream, engine_id).await;
+                    match maybe_msg {
+                        None => {}
+                        Some(region_incoming) => {
+                            incoming.extend(region_incoming.get_commuters());
+                            received_incoming_regions += 1;
+                        }
                     }
                 }
             }

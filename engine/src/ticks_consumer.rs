@@ -33,6 +33,7 @@ pub fn start(engine_id: &str) -> StreamConsumer {
         .set("bootstrap.servers", kafka_url.as_str())
         .set("group.id", engine_id)
         .set("auto.offset.reset", "earliest")
+        .set("enable.auto.commit", "true")//to avoid consuming duplicate message
         .create()
         .expect("Consumer creation failed");
 
@@ -68,7 +69,7 @@ fn parse_tick(message: &str) -> Tick {
     serde_json::from_str(message).expect("Could not parse tick")
 }
 
-#[derive(Debug, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Copy, Deserialize, PartialEq, Clone)]
 pub struct Tick {
     hour: Hour,
     terminate: bool,

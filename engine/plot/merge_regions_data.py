@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
 	regions = list(filter(
 		lambda x: ('interventions' not in x) and ('outgoing_travels' not in x),
-		glob.glob(f'{args.data_dir}/[A-Za-z]*:[0-9]_updated.csv')
+		glob.glob(f'{args.data_dir}/*_updated.csv')
 	))
 
 	merge_regions(open_data_frames(regions)).to_csv(f'{args.data_dir}/integrated_regions.csv')

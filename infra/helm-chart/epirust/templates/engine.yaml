@@ -26,10 +26,10 @@ spec:
           resources:
             requests:
               cpu: {{ .Values.engine.resources.requests.cpu }}
-#              memory: {{ .Values.engine.resources.requests.memory }}
+              memory: {{ .Values.engine.resources.requests.memory }}
             limits:
               cpu: {{ .Values.engine.resources.limits.cpu }}
-#              memory: {{ .Values.engine.resources.limits.memory }}
+              memory: {{ .Values.engine.resources.limits.memory }}
           volumeMounts:
             - mountPath: output
               name: {{ .Values.engine.volumes.name }}

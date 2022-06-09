@@ -2,26 +2,26 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-config: "100k_100.json"
+config: "mumbai_ward.json"
 
 multiengineSim: true
 
 engine:
-  fullname: "100k-100-engine-2"
+  fullname: "mumbai-ward-engine-1"
   spec:
-    completions: 100
-    parallelism: 100
+    completions: 24
+    parallelism: 24
   image:
     repository: "sapanakale/epirust-engine"
     tag: "commute"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   resources:
     requests:
       cpu: "1000m"
-      memory: "2Gi"
+      memory: "4Gi"
     limits:
       cpu: "1000m"
-      memory: "8Gi"
+      memory: "4Gi"
   env:
     EPI_KAFKA_URL: "kafka-cp-kafka:9092"
     RUST_LOG: info
@@ -31,25 +31,24 @@ engine:
     claimName: "epirust-claim"
   volumeMounts:
     output:
-      subPath: "epirust/output/100k_100/run_2"
+      subPath: "epirust/output/mumbai_multi_engine/run_1"
     config:
       subPath: "epirust/config"
 
 orchestrator:
-  fullname: "100k-100-orchestrator-2"
+  fullname: "mumbai-ward-orchestrator-4"
   image:
     repository: "sapanakale/epirust-orchestrator"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     tag: "commute"
   resources:
     requests:
       cpu: "1000m"
-      memory: "2Gi"
+      memory: "4Gi"
     limits:
       cpu: "1000m"
       memory: "4Gi"
   env:
-#    EPI_KAFKA_URL: "kafka.default.svc.cluster.local:9092"
     EPI_KAFKA_URL: "kafka-cp-kafka:9092"
     RUST_LOG: info
     RUST_BACKTRACE: full
@@ -78,7 +77,7 @@ podSecurityContext: {}
 securityContext: {}
   # capabilities:
   #   drop:
-#   - ALL
+  #   - ALL
 # readOnlyRootFilesystem: true
 # runAsNonRoot: true
 # runAsUser: 1000

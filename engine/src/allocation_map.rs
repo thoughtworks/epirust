@@ -124,7 +124,7 @@ impl AgentLocationMap {
         if incoming.is_empty() {
             return;
         }
-        debug!("Assimilating {} incoming travellers", incoming.len());
+        debug!("Assimilating {} incoming migrators", incoming.len());
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
         for migrator in incoming {
             let house = grid.choose_house_with_free_space(rng);
@@ -159,7 +159,7 @@ impl AgentLocationMap {
         if incoming.is_empty() {
             return;
         }
-        info!("Assimilating {} incoming commuters", incoming.len());
+        debug!("Assimilating {} incoming commuters", incoming.len());
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
         for commuter in incoming {
             let house = grid.choose_house_with_free_space(rng);

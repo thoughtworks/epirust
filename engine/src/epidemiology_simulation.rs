@@ -387,7 +387,6 @@ impl Epidemiology {
         }
         let elapsed_time = start_time.elapsed().as_secs_f32();
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
-        info!("Total commuter parsing time: {}", commuter_parsing_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         listeners.simulation_ended();
     }
@@ -494,10 +493,9 @@ impl Epidemiology {
             let mut incoming: Vec<Commuter> = Vec::new();
             let hour = tick.unwrap().hour() % 24;
             if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
-                info!("inside if of receive commuters");
                 let expected_incoming_regions = commute_plan.incoming_regions_count(engine_id);
                 let mut received_incoming_regions = 0;
-                debug!("Receiving migrators from {} regions", expected_incoming_regions);
+                debug!("Receiving commuters from {} regions", expected_incoming_regions);
                 while expected_incoming_regions != received_incoming_regions {
                     let maybe_msg = Epidemiology::receive_commuters_from_region(message_stream, engine_id).await;
                     match maybe_msg {

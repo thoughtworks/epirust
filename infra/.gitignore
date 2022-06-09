@@ -1,0 +1,14 @@
+/target
+**/*.rs.bk
+.vscode/
+
+# intellij
+.idea/
+!.idea/copyright/
+!.idea/codeStyleSettings.xml
+bin/
+*.iml
+
+kafka/
+mongo-data/
+zookeeper/

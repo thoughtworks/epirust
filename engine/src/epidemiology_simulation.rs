@@ -297,7 +297,6 @@ impl Epidemiology {
 
         counts_at_hr.log();
         for simulation_hour in 1..config.get_hours() {
-            let hour_start = Instant::now();
             let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour).await;
             match &tick {
                 None => {}
@@ -362,7 +361,7 @@ impl Epidemiology {
             write_buffer_reference.remove_migrators(&actual_outgoing, counts_at_hr, &mut self.grid);
             write_buffer_reference.assimilate_migrators(&mut incoming, &mut self.grid, counts_at_hr, rng);
 
-            write_buffer_reference.assimilate_commuters( &mut incoming_commuters, &mut self.grid, counts_at_hr, rng);
+            write_buffer_reference.assimilate_commuters( &mut incoming_commuters, &mut self.grid, counts_at_hr, rng, simulation_hour);
 
             listeners.counts_updated(*counts_at_hr);
             Epidemiology::process_interventions(interventions, counts_at_hr, listeners,
@@ -578,7 +577,7 @@ impl Epidemiology {
             let end_migration_hour = if travel_plan_config.is_some() {travel_plan_config.unwrap().get_end_migration_hour()} else {0};
 
             // this code get executed only in multi-engine simulations mode
-            if simulation_hour % 24 == 0 && current_agent.can_move() && current_agent.work_location.location_id == *region_name &&
+            if simulation_hour % 24 == 0 && current_agent.can_move() && current_agent.work_location.location_id == *region_name && current_agent.home_location.location_id == *region_name &&
                 simulation_hour > start_migration_hour && simulation_hour < end_migration_hour &&
                 rng.get().gen_bool(percent_outgoing) {
                     let migrator = Migrator::from(&current_agent);

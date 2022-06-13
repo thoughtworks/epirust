@@ -18,7 +18,7 @@
  */
 
 
-use crate::agent;
+use crate::{agent, constants};
 use crate::geography::{Area, Grid};
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
@@ -29,7 +29,7 @@ use crate::travel_plan::Migrator;
 use std::collections::hash_map::{IterMut, Iter};
 use fnv::FnvHashMap;
 use crate::commute::Commuter;
-use crate::custom_types::{CoOrdinate, Count, Size};
+use crate::custom_types::{CoOrdinate, Count, Hour, Size};
 
 #[derive(Clone)]
 pub struct AgentLocationMap {
@@ -155,18 +155,21 @@ impl AgentLocationMap {
     }
 
     pub fn assimilate_commuters(&mut self, incoming: &mut Vec<Commuter>, grid: &mut Grid, counts: &mut Counts,
-                                rng: &mut RandomWrapper) {
+                                rng: &mut RandomWrapper, simulation_hour: Hour) {
         if incoming.is_empty() {
             return;
         }
         debug!("Assimilating {} incoming commuters", incoming.len());
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
+        let transport_location = grid.transport_area.get_random_point(rng);
         for commuter in incoming {
-            let house = grid.choose_house_with_free_space(rng);
-            let office = grid.choose_office_with_free_space(rng);
-            let transport_location = house.get_random_point(rng);
-            new_citizens.push(Citizen::from_commuter(commuter,  transport_location, grid.housing_area.clone()));
-            grid.add_office_occupant(&office.clone())
+            if simulation_hour == constants::ROUTINE_TRAVEL_START_TIME {
+                let office = grid.choose_office_with_free_space(rng);
+                new_citizens.push(Citizen::from_commuter(commuter,  transport_location, grid.housing_area.clone(), Some(office.clone()))); //use current area as transport area
+                grid.add_office_occupant(&office.clone())
+            } else {
+                new_citizens.push(Citizen::from_commuter(commuter,  transport_location, grid.housing_area.clone(), None));
+            }
         }
         for c in new_citizens {
             match c.state_machine.state {
@@ -176,6 +179,9 @@ impl AgentLocationMap {
                 State::Recovered { .. } => { counts.update_recovered(1) }
                 State::Deceased { .. } => { panic!("Should not receive deceased agent!") }
             }
+            let p = self.random_starting_point(&grid.transport_area, rng);
+            let result = self.agent_cell.insert(p, c);
+            assert!(result.is_none());
         }
     }
 

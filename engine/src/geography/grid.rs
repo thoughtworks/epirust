@@ -63,6 +63,7 @@ impl Grid {
         let agent_list = agent::citizen_factory(number_of_agents, &self.houses, &self.offices,
                                                 &transport_locations, public_transport_percentage, working_percentage,
                                                 rng, start_infections, travel_plan_config, region.clone());
+        // info!("agent list - {:?} ", agent_list);
         debug!("Finished creating agent list");
 
         let (home_loc, agents_in_order) = self.set_start_locations_and_occupancies(rng, &agent_list, &region);
@@ -96,6 +97,7 @@ impl Grid {
         }
         debug!("Assigned starting location to agents");
         self.offices_occupancy = self.group_office_locations_by_occupancy(agents_in_order.as_slice(), region_name);
+        // info!("offices occupancy - {:?}", self.offices_occupancy);
         (home_loc, agents_in_order)
     }
 
@@ -201,8 +203,8 @@ impl Grid {
 
     pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen], region_name: &String) -> HashMap<Area, u32> {
         let mut occupancy = HashMap::new();
-        self.offices.iter().for_each(|house| {
-            occupancy.insert(house.clone(), 0);
+        self.offices.iter().for_each(|office| {
+            occupancy.insert(office.clone(), 0);
         });
         citizens.iter().filter(|citizen| citizen.is_working() && citizen.work_location.location_id == *region_name)
             .for_each(|worker| {

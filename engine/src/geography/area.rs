@@ -87,7 +87,7 @@ impl PartialEq for Area {
     }
 }
 
-pub fn area_factory(start_point: Point, end_point: Point, size: u32, sim_id: String) -> Vec<Area> {
+pub fn area_factory(start_point: Point, end_point: Point, size: u32, engine_id: String) -> Vec<Area> {
     let feasible_houses_in_x_dim = (end_point.x - start_point.x + 1) / size as i32;
     let feasible_houses_in_y_dim = (end_point.y - start_point.y + 1) / size as i32;
 
@@ -98,7 +98,7 @@ pub fn area_factory(start_point: Point, end_point: Point, size: u32, sim_id: Str
         for _j in 0..feasible_houses_in_x_dim {
             let current_end_point: Point = Point::new(current_start_point.x + size as i32 - 1, current_start_point.y + size as i32 - 1);
 
-            areas.push(Area::new(sim_id.to_string(), current_start_point, current_end_point));
+            areas.push(Area::new(engine_id.to_string(), current_start_point, current_end_point));
 
             current_start_point.x += size as i32;
         }

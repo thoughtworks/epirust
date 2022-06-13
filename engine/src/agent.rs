@@ -137,12 +137,12 @@ impl Citizen {
         }
     }
 
-    pub fn from_commuter(commuter: &Commuter, transport_location: Point, current_area: Area) -> Citizen {
+    pub fn from_commuter(commuter: &Commuter, transport_location: Point, current_area: Area, work_area: Option<Area>) -> Citizen {
         Citizen {
             id: commuter.id,
             immunity: commuter.immunity,
             home_location: commuter.home_location.clone(),
-            work_location: commuter.work_location.clone(),
+            work_location: if work_area == None { commuter.work_location.clone() } else { work_area.unwrap() },
             vaccinated: commuter.vaccinated,
             uses_public_transport: commuter.uses_public_transport,
             working: true,
@@ -229,7 +229,6 @@ impl Citizen {
                rng: &mut RandomWrapper, disease: &Disease) -> Point {
         let mut new_cell = cell;
 
-        // why we are taking remainder as current hour
         let current_hour = simulation_hour % constants::NUMBER_OF_HOURS;
         match current_hour {
             constants::ROUTINE_START_TIME => {

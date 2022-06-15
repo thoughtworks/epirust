@@ -119,6 +119,31 @@ impl AgentLocationMap {
         }
     }
 
+    pub fn remove_commuters(&mut self, outgoing: &Vec<(Point, Commuter)>, counts: &mut Counts) {
+        if outgoing.is_empty() {
+            return;
+        }
+        debug!("Removing {} outgoing commuters", outgoing.len());
+        for (point, commuter) in outgoing {
+            match commuter.state_machine.state {
+                State::Susceptible { .. } => { counts.remove_susceptible(1) },
+                State::Exposed { .. } => { counts.remove_exposed(1) }
+                State::Infected { .. } => { counts.remove_infected(1) },
+                State::Recovered { .. } => { counts.remove_recovered(1) },
+                State::Deceased { .. } => { panic!("Deceased agent should not travel!") },
+            }
+            match self.agent_cell.remove(point) {
+                None => {
+                    panic!("Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
+                           commuter.id, point)
+                }
+                Some(citizen) => {
+                    debug!("removed the commuter successfully {:?}", citizen);
+                }
+            }
+        }
+    }
+
     pub fn assimilate_migrators(&mut self, incoming: &mut Vec<Migrator>, grid: &mut Grid, counts: &mut Counts,
                                 rng: &mut RandomWrapper) {
         if incoming.is_empty() {
@@ -180,7 +205,7 @@ impl AgentLocationMap {
                 State::Deceased { .. } => { panic!("Should not receive deceased agent!") }
             }
             let p = self.random_starting_point(&grid.transport_area, rng);
-            let result = self.agent_cell.insert(p, c);
+            let result = self.insert(p, c);
             assert!(result.is_none());
         }
     }
@@ -216,6 +241,10 @@ impl AgentLocationMap {
 
     pub fn insert(&mut self, point: Point, citizen: Citizen) -> Option<Citizen> {
         self.agent_cell.insert(point, citizen)
+    }
+
+    pub fn remove(&mut self, point: Point) -> Option<Citizen> {
+        self.agent_cell.remove(&point)
     }
 }
 

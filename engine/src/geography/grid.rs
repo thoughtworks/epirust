@@ -39,7 +39,6 @@ pub struct Grid {
     pub houses: Vec<Area>,
     pub offices: Vec<Area>,
     //Occupancy based on home and work locations - updated when travellers arrive/depart
-    // what is the i32 here??
     #[serde(skip_serializing)]
     pub houses_occupancy: HashMap<Area, u32>,
     #[serde(skip_serializing)]

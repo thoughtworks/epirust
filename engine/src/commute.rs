@@ -18,8 +18,10 @@
  */
 
 use uuid::Uuid;
+use crate::constants;
+use crate::custom_types::Hour;
 use crate::disease_state_machine::DiseaseStateMachine;
-use crate::geography::Area;
+use crate::geography::{Area, Point};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Commuter {
@@ -40,7 +42,7 @@ impl PartialEq for Commuter {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct CommutersByRegion {
     to_engine_id: String,
     pub commuters: Vec<Commuter>,
@@ -99,12 +101,17 @@ impl CommutePlan {
         commuters_by_region
     }
 
-    pub fn get_commuters_by_region(&self, commuters: Vec<Commuter>) -> Vec<CommutersByRegion> {
+    pub fn get_commuters_by_region(&self, commuters: &Vec<(Point, Commuter)>, simulation_hour: Hour) -> Vec<CommutersByRegion> {
         let mut commuters_by_region : Vec<CommutersByRegion> = Vec::new();
         for region in &self.regions {
             let mut commuters_for_region : Vec<Commuter> = Vec::new();
-            for commuter in &commuters {
-                if commuter.work_location.location_id == *region {commuters_for_region.push(commuter.clone())}
+            for (_point, commuter) in commuters {
+                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME {
+                    if commuter.work_location.location_id == *region {commuters_for_region.push(commuter.clone())}
+                }
+                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME {
+                    if commuter.home_location.location_id == *region {commuters_for_region.push(commuter.clone())}
+                }
             }
             commuters_by_region.push(CommutersByRegion{to_engine_id: region.clone(), commuters: commuters_for_region })
         }

@@ -336,7 +336,7 @@ impl Epidemiology {
             }
             let mut actual_outgoing: Vec<(Point, Migrator)> = Vec::new();
             let received_migrators = Epidemiology::receive_migrators(tick.clone(), &mut migration_stream, &engine_migration_plan);
-            let mut outgoing_commuters : Vec<Commuter> = Vec::new();
+            let mut outgoing_commuters : Vec<(Point, Commuter)> = Vec::new();
             let sim = async {
                 Epidemiology::simulate(counts_at_hr, simulation_hour, read_buffer_reference, write_buffer_reference,
                                        grid, listeners, rng, disease, percent_outgoing,
@@ -347,18 +347,21 @@ impl Epidemiology {
                     listeners.outgoing_migrators_added(simulation_hour, &outgoing_migrators_by_region);
                 }
 
-                let outgoing_commuters_by_region = commute_plan.get_commuters_by_region(outgoing_commuters);
+                let outgoing_commuters_by_region = commute_plan.get_commuters_by_region(&outgoing_commuters, simulation_hour);
 
                 Epidemiology::send_migrators(tick.clone(), &mut producer, outgoing_migrators_by_region);
                 Epidemiology::send_commuters(tick.clone(), &mut producer, outgoing_commuters_by_region);
             };
 
+            let ((),) = join!(sim);
+
             let received_commuters = Epidemiology::receive_commuters(tick.clone(), &mut commute_stream, &commute_plan, engine_id);
 
-            let (mut incoming, mut incoming_commuters, ()) = join!(received_migrators, received_commuters, sim);
+            let (mut incoming, mut incoming_commuters) = join!(received_migrators, received_commuters);
             n_incoming += incoming.len();
             n_outgoing += outgoing.len();
             write_buffer_reference.remove_migrators(&actual_outgoing, counts_at_hr, &mut self.grid);
+            write_buffer_reference.remove_commuters(&outgoing_commuters, counts_at_hr);
             write_buffer_reference.assimilate_migrators(&mut incoming, &mut self.grid, counts_at_hr, rng);
 
             write_buffer_reference.assimilate_commuters( &mut incoming_commuters, &mut self.grid, counts_at_hr, rng, simulation_hour);
@@ -515,7 +518,12 @@ impl Epidemiology {
     async fn receive_commuters_from_region(message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                                            engine_id: &String) -> Option<CommutersByRegion> {
         let msg = message_stream.next().await;
-        commute_consumer::read(msg).filter(|incoming| {
+        let mut maybe_commuters = commute_consumer::read(msg);
+        while maybe_commuters == None || (maybe_commuters.as_ref().unwrap().commuters.len() == 0 && maybe_commuters.as_ref().unwrap().to_engine_id() == engine_id ) {
+            let next_msg = message_stream.next().await;
+            maybe_commuters = commute_consumer::read(next_msg);
+        }
+        maybe_commuters.filter(|incoming| {
             incoming.to_engine_id() == engine_id
         })
     }
@@ -552,7 +560,7 @@ impl Epidemiology {
     fn simulate(csv_record: &mut Counts, simulation_hour: Hour, read_buffer: &AgentLocationMap,
                 write_buffer: &mut AgentLocationMap, grid: &Grid, listeners: &mut Listeners,
                 rng: &mut RandomWrapper, disease: &Disease, percent_outgoing: f64,
-                outgoing: &mut Vec<(Point, Migrator)>, outgoing_commuters: &mut Vec<Commuter>,
+                outgoing: &mut Vec<(Point, Migrator)>, outgoing_commuters: &mut Vec<(Point, Commuter)>,
                 publish_citizen_state: bool, travel_plan_config: Option<&TravelPlanConfig>,
                 region_name: &String) {
         write_buffer.clear();
@@ -585,9 +593,14 @@ impl Epidemiology {
 
             }
 
-            if (simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME || simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME) && current_agent.can_move() && current_agent.work_location.location_id != *region_name {
+            if simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME && current_agent.can_move() && current_agent.work_location.location_id != *region_name {
                 let commuter = Commuter::from(&current_agent);
-                outgoing_commuters.push(commuter);
+                outgoing_commuters.push((*new_location,commuter));
+            }
+
+            if simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME && current_agent.can_move() && current_agent.home_location.location_id != *region_name {
+                let commuter = Commuter::from(&current_agent);
+                outgoing_commuters.push((*new_location, commuter));
             }
 
             write_buffer.insert(*new_location, current_agent.clone());

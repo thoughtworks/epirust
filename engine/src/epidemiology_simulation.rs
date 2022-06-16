@@ -358,8 +358,8 @@ impl Epidemiology {
             let received_commuters = Epidemiology::receive_commuters(tick.clone(), &mut commute_stream, &commute_plan, engine_id);
 
             let (mut incoming, mut incoming_commuters) = join!(received_migrators, received_commuters);
-            n_incoming += incoming.len();
-            n_outgoing += outgoing.len();
+            n_incoming = n_incoming + incoming.len() + incoming_commuters.len();
+            n_outgoing = n_outgoing + outgoing.len() + outgoing_commuters.len();
             write_buffer_reference.remove_migrators(&actual_outgoing, counts_at_hr, &mut self.grid);
             write_buffer_reference.remove_commuters(&outgoing_commuters, counts_at_hr);
             write_buffer_reference.assimilate_migrators(&mut incoming, &mut self.grid, counts_at_hr, rng);

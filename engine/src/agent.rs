@@ -103,7 +103,7 @@ impl Citizen {
             id,
             immunity: disease_randomness_factor,
             home_location: home_location.clone(),
-            work_location: work_location,
+            work_location,
             transport_location,
             vaccinated: false,
             uses_public_transport,
@@ -122,8 +122,8 @@ impl Citizen {
         Citizen {
             id: migrator.id,
             immunity: migrator.immunity,
-            home_location: home_location,
-            work_location: work_location,
+            home_location,
+            work_location,
             vaccinated: migrator.vaccinated,
             uses_public_transport: migrator.uses_public_transport,
             working: false,
@@ -165,7 +165,7 @@ impl Citizen {
             id: Uuid::new_v4(),
             immunity: disease_randomness_factor,
             home_location: home_location.clone(),
-            work_location: work_location,
+            work_location,
             transport_location,
             vaccinated: false,
             uses_public_transport: record.pub_transport,
@@ -517,7 +517,9 @@ pub fn citizen_factory(number_of_agents: Count, home_locations: &Vec<Area>, work
                        percentage_public_transport: Percentage, working_percentage: Percentage, rng: &mut RandomWrapper,
                        starting_infections: &StartingInfections, travel_plan_config: Option<TravelPlanConfig>, region: String) -> Vec<Citizen> {
     let mut agent_list = Vec::with_capacity(home_locations.len());
-    let commute_plan: Option<CommutePlan> = if travel_plan_config.is_some() { Some(travel_plan_config.unwrap().commute_plan())} else { None };
+    let commute_plan: Option<CommutePlan> = if travel_plan_config.is_some() && travel_plan_config.as_ref().unwrap().commute.enabled {
+        Some(travel_plan_config.unwrap().commute_plan())
+    } else { None };
     for i in 0..number_of_agents as usize {
         let is_a_working_citizen = rng.get().gen_bool(working_percentage);
 

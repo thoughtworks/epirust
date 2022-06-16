@@ -80,6 +80,7 @@
       "engine2"
     ],
     "migration": {
+      "enabled": true,
       "matrix": [
         [0, 10],
         [10, 0]
@@ -88,6 +89,7 @@
       "end_migration_hour": 336
     },
     "commute": {
+      "enabled": true,
       "matrix": [
         [0, 5],
         [5, 0]

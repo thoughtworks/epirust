@@ -20,21 +20,23 @@
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Migration {
-    matrix: Vec<Vec<i32>>,
-    start_migration_hour: u32,
-    end_migration_hour: u32,
+    pub enabled: bool,
+    matrix: Option<Vec<Vec<i32>>>,
+    start_migration_hour: Option<u32>,
+    end_migration_hour: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Commute {
+    pub enabled: bool,
     matrix: Vec<Vec<u32>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct TravelPlan {
     regions: Vec<String>,
-    migration: Migration,
-    commute: Commute
+    pub migration: Migration,
+    pub commute: Commute
     // matrix: Vec<Vec<i32>>,
     // #[serde(default)]
     // lockdown_travellers: i32,

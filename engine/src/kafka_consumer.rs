@@ -97,7 +97,8 @@ struct SimRequestByEngine {
 
 #[derive(Clone ,Debug, Deserialize)]
 pub struct Migration {
-    matrix: Vec<Vec<u32>>,
+    pub enabled: bool,
+    matrix: Option<Vec<Vec<u32>>>,
     start_migration_hour: u32,
     end_migration_hour: u32,
 }
@@ -118,7 +119,7 @@ impl TravelPlanConfig {
         self.migration.start_migration_hour
     }
 
-    pub fn get_migration_matrix(&self) -> Vec<Vec<u32>> {
+    pub fn get_migration_matrix(&self) -> Option<Vec<Vec<u32>>> {
         self.migration.matrix.clone()
     }
 
@@ -127,7 +128,7 @@ impl TravelPlanConfig {
     }
 
     pub fn commute_plan(&self) -> CommutePlan {
-        CommutePlan {regions: self.regions.clone(), matrix: self.commute.matrix.clone()}
+        CommutePlan {regions: self.regions.clone(), matrix: self.commute.matrix.as_ref().unwrap().clone()}
     }
 
 }

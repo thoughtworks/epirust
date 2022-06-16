@@ -38,7 +38,17 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
     let consumer = KafkaConsumer::new();
     let mut message_stream = consumer.start_message_stream();
     let mut should_terminate = false;
+    let is_commute_enabled = travel_plan.commute.enabled;
+    let is_migration_enabled = travel_plan.migration.enabled;
     for h in hours {
+        if !is_commute_enabled {
+            if h % 24 == ROUTINE_TRAVEL_END_TIME || h % 24 == ROUTINE_TRAVEL_START_TIME {
+                continue;
+            }
+        }
+        if !is_migration_enabled && h % 24 == 0 {
+            continue;
+        }
         if h > 1 && h % 24 != 0 && h % 24 != ROUTINE_TRAVEL_START_TIME && h % 24 != ROUTINE_TRAVEL_END_TIME {
             continue;
         }

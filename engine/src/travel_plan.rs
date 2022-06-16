@@ -70,6 +70,7 @@ impl MigrationPlan {
 }
 
 /// Travel plan in the context of the current engine
+#[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct EngineMigrationPlan {
     engine_id: String,
     migration_plan: Option<MigrationPlan>,

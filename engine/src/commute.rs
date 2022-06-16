@@ -61,7 +61,8 @@ impl CommutersByRegion {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Commute {
-    pub matrix: Vec<Vec<u32>>
+    pub enabled: bool,
+    pub matrix: Option<Vec<Vec<u32>>>
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -106,12 +107,8 @@ impl CommutePlan {
         for region in &self.regions {
             let mut commuters_for_region : Vec<Commuter> = Vec::new();
             for (_point, commuter) in commuters {
-                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME {
-                    if commuter.work_location.location_id == *region {commuters_for_region.push(commuter.clone())}
-                }
-                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME {
-                    if commuter.home_location.location_id == *region {commuters_for_region.push(commuter.clone())}
-                }
+                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME && commuter.work_location.location_id == *region {commuters_for_region.push(commuter.clone())}
+                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME && commuter.home_location.location_id == *region {commuters_for_region.push(commuter.clone())}
             }
             commuters_by_region.push(CommutersByRegion{to_engine_id: region.clone(), commuters: commuters_for_region })
         }

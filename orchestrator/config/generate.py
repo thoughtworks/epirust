@@ -102,10 +102,10 @@ if __name__ == "__main__":
         json_sample["engine_id"] = "engine" + str(i + 1)
         simulation_config.append(copy.deepcopy(json_sample))
 
-    migration = {"matrix": generate_travel_matrix(engines, migration_count), "start_migration_hour": 48, "end_migration_hour": 336 }
-    commute = {"matrix": generate_travel_matrix(engines, commute_count) }
+    migration = {"enabled": "true", "matrix": generate_travel_matrix(engines, migration_count), "start_migration_hour": 48, "end_migration_hour": 336 }
+    commute = {"enabled": "true", "matrix": generate_travel_matrix(engines, commute_count) }
 
-    travel_plan = { "regions": engine_names(engines), "migration": migration, "commute": commute}
+    travel_plan = {"regions": engine_names(engines), "migration": migration, "commute": commute}
     final = { "engine_configs": simulation_config, "travel_plan": travel_plan }
 
     with open("generated.json", "w") as outfile:

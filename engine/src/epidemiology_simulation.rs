@@ -310,11 +310,20 @@ impl Epidemiology {
 
         counts_at_hr.log();
 
+        let mut total_tick_sync_time = 0;
+        let mut total_commute_sync_time = 0;
+
         for simulation_hour in 1..config.get_hours() {
+            let start_time = Instant::now();
             let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour, is_commute_enabled, is_migration_enabled).await;
             match &tick {
-                None => {}
+                None => {
+                    total_tick_sync_time += start_time.elapsed().as_millis();
+                    info!("total tick sync time as hour {} - is {}", simulation_hour, total_tick_sync_time);
+                }
                 Some(t) => {
+                    total_tick_sync_time += start_time.elapsed().as_millis();
+                    info!("total tick sync time as hour {} - is {}", simulation_hour, total_tick_sync_time);
                     if t.terminate() {
                         info!("received tick {:?}", t);
                         break;
@@ -389,8 +398,11 @@ impl Epidemiology {
             let ((),) = join!(sim);
 
             if is_commute_enabled {
+                let commute_start_time = Instant::now();
                 let received_commuters = Epidemiology::receive_commuters(tick, &mut commute_stream, &commute_plan, engine_id);
                 let (mut incoming_commuters,) = join!(received_commuters);
+                total_commute_sync_time += commute_start_time.elapsed().as_millis();
+                info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
                 write_buffer_reference.remove_commuters(&outgoing_commuters, counts_at_hr);
@@ -431,6 +443,8 @@ impl Epidemiology {
         let elapsed_time = start_time.elapsed().as_secs_f32();
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
+        info!("total tick sync time: {}", total_tick_sync_time);
+        info!("total commute sync time: {}", total_commute_sync_time);
         listeners.simulation_ended();
     }
 

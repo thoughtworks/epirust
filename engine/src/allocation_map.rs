@@ -243,9 +243,9 @@ impl AgentLocationMap {
         self.agent_cell.insert(point, citizen)
     }
 
-    pub fn remove(&mut self, point: Point) -> Option<Citizen> {
-        self.agent_cell.remove(&point)
-    }
+    // pub fn remove(&mut self, point: Point) -> Option<Citizen> {
+    //     self.agent_cell.remove(&point)
+    // }
 }
 
 #[cfg(test)]

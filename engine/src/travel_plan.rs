@@ -164,6 +164,7 @@ impl MigratorsByRegion {
         self.migrators = citizens.drain(0..count).collect();
     }
 
+    #[cfg(test)]
     pub fn alloc_citizen(&mut self, traveller: Migrator) {
         self.migrators.push(traveller);
     }

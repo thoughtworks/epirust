@@ -130,6 +130,7 @@
   "travel_plan": {
     "regions": ["engine1", "engine2", "engine3"],
     "migration": {
+      "enabled": true,
       "matrix": [
         [0, 156, 10],
         [108, 0, 290],
@@ -139,6 +140,7 @@
       "end_migration_hour": 336
     },
     "commute": {
+      "enabled": true,
       "matrix": [
         [0, 15, 2],
         [10, 0, 29],

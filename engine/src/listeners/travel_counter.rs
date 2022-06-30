@@ -19,13 +19,14 @@
 
 use crate::listeners::listener::Listener;
 use std::any::Any;
+use crate::custom_types::Hour;
 use crate::disease_state_machine::State;
 use crate::environment;
-use crate::travel_plan::TravellersByRegion;
+use crate::travel_plan::MigratorsByRegion;
 
 #[derive(Serialize, Debug, PartialEq)]
 struct CountsByRegion {
-    hr: i32,
+    hr: Hour,
     destination: String,
     susceptible: i32,
     exposed: i32,
@@ -34,12 +35,12 @@ struct CountsByRegion {
 }
 
 impl CountsByRegion {
-    fn create_from(hr: i32, travellers_by_region: &TravellersByRegion) -> CountsByRegion {
+    fn create_from(hr: Hour, travellers_by_region: &MigratorsByRegion) -> CountsByRegion {
         let mut susceptible = 0;
         let mut exposed = 0;
         let mut infected = 0;
         let mut recovered = 0;
-        travellers_by_region.get_travellers_slice().iter().for_each(|traveller| {
+        travellers_by_region.get_migrators_slice().iter().for_each(|traveller| {
             match traveller.state_machine.state {
                 State::Susceptible { .. } => { susceptible += 1 }
                 State::Exposed { .. } => { exposed += 1 }
@@ -59,7 +60,7 @@ impl CountsByRegion {
     }
 
     #[cfg(test)]
-    fn new(hr: i32, destination: String, s: i32, e: i32, i: i32, r: i32) -> CountsByRegion {
+    fn new(hr: Hour, destination: String, s: i32, e: i32, i: i32, r: i32) -> CountsByRegion {
         CountsByRegion {
             hr,
             destination,
@@ -95,7 +96,7 @@ impl Listener for TravelCounter {
         }
     }
 
-    fn outgoing_travellers_added(&mut self, hr: i32, travellers: &[TravellersByRegion]) {
+    fn outgoing_migrators_added(&mut self, hr: Hour, travellers: &Vec<MigratorsByRegion>) {
         let counts_by_region: Vec<CountsByRegion> = travellers.iter().map(|t| {
             CountsByRegion::create_from(hr, t)
         }).collect();
@@ -113,7 +114,7 @@ mod tests {
     use super::*;
     use crate::disease_state_machine::InfectionSeverity;
     use std::env;
-    use crate::travel_plan::Traveller;
+    use crate::travel_plan::Migrator;
 
     #[test]
     fn should_add_outgoing_travellers() {
@@ -122,8 +123,8 @@ mod tests {
         let mut counter = TravelCounter::new("test_travel.csv".to_string());
 
         let travellers_by_region = vec![create_travellers("engine2"), create_travellers("engine3")];
-        counter.outgoing_travellers_added(24, &travellers_by_region);
-        counter.outgoing_travellers_added(48, &[create_travellers("engine2")]);
+        counter.outgoing_migrators_added(24, &travellers_by_region);
+        counter.outgoing_migrators_added(48, &vec![create_travellers("engine2")]);
         counter.simulation_ended();
 
         assert_eq!(3, counter.counts.len());
@@ -140,22 +141,22 @@ mod tests {
         env::remove_var(environment::EPI_OUTPUT_DIR);
     }
 
-    fn create_travellers(region: &str) -> TravellersByRegion {
-        let mut travellers = TravellersByRegion::create(region);
+    fn create_travellers(region: &str) -> MigratorsByRegion {
+        let mut travellers = MigratorsByRegion::create(&region.to_string());
         for _i in 0..2 {
-            let mut s = Traveller::new();
+            let mut s = Migrator::new();
             s.state_machine.state = State::Susceptible {};
             travellers.alloc_citizen(s);
 
-            let mut e = Traveller::new();
+            let mut e = Migrator::new();
             e.state_machine.state = State::Exposed { at_hour: 10 };
             travellers.alloc_citizen(e);
 
-            let mut i = Traveller::new();
+            let mut i = Migrator::new();
             i.state_machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Mild {} };
             travellers.alloc_citizen(i);
 
-            let mut r = Traveller::new();
+            let mut r = Migrator::new();
             r.state_machine.state = State::Recovered {};
             travellers.alloc_citizen(r);
         }

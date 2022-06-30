@@ -24,6 +24,7 @@ use rdkafka::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
 
 use crate::agent::Citizen;
+use crate::custom_types::Hour;
 use crate::geography::{Grid, Point};
 use crate::listeners::events::citizen_state::CitizenStatesAtHr;
 use crate::listeners::events::counts::Counts;
@@ -94,7 +95,7 @@ impl Listener for EventsKafkaProducer {
         }
     }
 
-    fn citizen_state_updated(&mut self, hr: i32, citizen: &Citizen, location: &Point) {
+    fn citizen_state_updated(&mut self, hr: Hour, citizen: &Citizen, location: &Point) {
         if !self.enable_citizen_state_messages {
             return;
         }
@@ -122,7 +123,7 @@ impl Listener for EventsKafkaProducer {
     }
 
     fn intervention_applied(&mut self,
-                            _at_hour: i32,
+                            _at_hour: Hour,
                             _intervention: &dyn InterventionType,
     ) {
         let formatted_message = format!(r#"{{"hour": {}, "intervention": "{}", "data": {}}}"#,

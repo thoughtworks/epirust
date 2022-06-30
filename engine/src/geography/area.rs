@@ -22,16 +22,18 @@ use rand::Rng;
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
 use std::collections::HashSet;
+use crate::custom_types::{Count};
 
-#[derive(Copy, Clone, Hash, Eq, Debug, Serialize, Deserialize)]
+#[derive(Clone, Hash, Eq, Debug, Serialize, Deserialize)]
 pub struct Area {
+    pub location_id: String,
     pub start_offset: Point,
     pub end_offset: Point,
 }
 
 impl Area {
-    pub fn new(start_offset: Point, end_offset: Point) -> Area {
-        Area { start_offset, end_offset }
+    pub fn new(location_id: String, start_offset: Point, end_offset: Point) -> Area {
+        Area {location_id, start_offset, end_offset }
     }
 
     pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item=Point> + '_ {
@@ -41,7 +43,7 @@ impl Area {
     }
 
     pub fn iter(&self) -> AreaIterator {
-        AreaIterator::new(*self)
+        AreaIterator::new(self.clone())
     }
 
     //TODO improve randomness
@@ -73,8 +75,8 @@ impl Area {
             && self.start_offset.y <= point.y && self.end_offset.y >= point.y
     }
 
-    pub fn get_number_of_cells(&self) -> i32 {
-        (self.end_offset.x - self.start_offset.x) * (self.end_offset.y - self.start_offset.y)
+    pub fn get_number_of_cells(&self) -> Count {
+        ((self.end_offset.x - self.start_offset.x) * (self.end_offset.y - self.start_offset.y)) as Count
     }
 }
 
@@ -85,24 +87,24 @@ impl PartialEq for Area {
     }
 }
 
-pub fn area_factory(start_point: Point, end_point: Point, size: i32) -> Vec<Area> {
-    let feasible_houses_in_x_dim = (end_point.x - start_point.x + 1) / size;
-    let feasible_houses_in_y_dim = (end_point.y - start_point.y + 1) / size;
+pub fn area_factory(start_point: Point, end_point: Point, size: u32, engine_id: String) -> Vec<Area> {
+    let feasible_houses_in_x_dim = (end_point.x - start_point.x + 1) / size as i32;
+    let feasible_houses_in_y_dim = (end_point.y - start_point.y + 1) / size as i32;
 
     let mut areas = Vec::with_capacity((feasible_houses_in_y_dim * feasible_houses_in_x_dim) as usize);
     let mut current_start_point = start_point;
 
     for _i in 0..feasible_houses_in_y_dim {
         for _j in 0..feasible_houses_in_x_dim {
-            let current_end_point: Point = Point::new(current_start_point.x + size - 1, current_start_point.y + size - 1);
+            let current_end_point: Point = Point::new(current_start_point.x + size as i32 - 1, current_start_point.y + size as i32 - 1);
 
-            areas.push(Area::new(current_start_point, current_end_point));
+            areas.push(Area::new(engine_id.to_string(), current_start_point, current_end_point));
 
-            current_start_point.x += size;
+            current_start_point.x += size as i32;
         }
 
         current_start_point.x = start_point.x;
-        current_start_point.y += size;
+        current_start_point.y += size as i32;
     }
 
     areas
@@ -116,7 +118,7 @@ pub struct AreaIterator {
 impl AreaIterator {
     pub fn new(area: Area) -> AreaIterator {
         AreaIterator {
-            area,
+            area: area.clone(),
             iter_index: Point::new(area.start_offset.x - 1, area.start_offset.y)
         }
     }
@@ -145,7 +147,7 @@ mod tests {
     use super::*;
 
     fn get_area() -> Area {
-        Area::new(Point { x: 0, y: 0 }, Point { x: 5, y: 5 })
+        Area::new("engine1".to_string(), Point { x: 0, y: 0 }, Point { x: 5, y: 5 })
     }
 
     #[test]
@@ -158,13 +160,13 @@ mod tests {
 
     #[test]
     fn should_iterate_over_points_in_area() {
-        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1".to_string(),Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(0, 0), Point::new(1, 0), Point::new(2, 0),
                            Point::new(0, 1), Point::new(1, 1), Point::new(2, 1),
                            Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)]);
 
-        let area = Area::new(Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1".to_string(),Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1),
                            Point::new(1, 2), Point::new(2, 2)])
@@ -172,7 +174,7 @@ mod tests {
 
     #[test]
     fn iterator_should_work_multiple_times() {
-        let area = Area::new(Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1".to_string(),Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
         let x: Option<Point> = area.iter().find(|p| *p == Point::new(1,1));
         assert!(x.is_some());
 
@@ -182,7 +184,7 @@ mod tests {
 
     #[test]
     fn should_create_areas() {
-        let buildings = area_factory(Point::new(10, 0), Point::new(21, 10), 3);
+        let buildings = area_factory(Point::new(10, 0), Point::new(21, 10), 3, "engine1".to_string());
 
         buildings.iter().for_each(|b| println!("start {:?}, end {:?}", b.start_offset, b.end_offset));
 
@@ -214,8 +216,8 @@ mod tests {
         let area = get_area();
         let neighbors: Vec<Point> = area.get_neighbors_of(Point::new(4,5)).collect();
         assert_eq!(neighbors.len(), 5);
-        assert!(neighbors.contains(&Point::new(4, 4)));
-        assert!(!neighbors.contains(&Point::new(4, 6)));
+        assert_eq!(neighbors.contains(&Point::new(4, 4)), true);
+        assert_eq!(neighbors.contains(&Point::new(4, 6)), false);
     }
 
     #[test]
@@ -223,7 +225,7 @@ mod tests {
         let area = get_area();
 
         let is_inside_area = area.contains(&Point::new(2, 3));
-        assert!(is_inside_area);
+        assert_eq!(is_inside_area, true);
     }
 
     #[test]
@@ -231,7 +233,7 @@ mod tests {
         let area = get_area();
 
         let is_inside_area = area.contains(&Point::new(20, 3));
-        assert!(!is_inside_area);
+        assert_eq!(is_inside_area, false);
     }
 
     #[test]
@@ -239,7 +241,7 @@ mod tests {
         let area = get_area();
 
         let random_point = area.get_random_point(&mut RandomWrapper::new());
-        assert!(area.contains(&random_point));
+        assert_eq!(area.contains(&random_point), true);
     }
 
     #[test]

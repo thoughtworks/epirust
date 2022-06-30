@@ -22,11 +22,12 @@ use crate::random_wrapper::RandomWrapper;
 use rand::Rng;
 use crate::constants;
 use rand::seq::SliceRandom;
+use crate::custom_types::{Day, Hour};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum State {
     Susceptible {},
-    Exposed { at_hour: i32 },
+    Exposed { at_hour: Hour },
     Infected { symptoms: bool, severity: InfectionSeverity },
     Recovered {},
     Deceased {},
@@ -34,7 +35,7 @@ pub enum State {
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum InfectionSeverity {
-    Pre { at_hour: i32 },
+    Pre { at_hour: Hour },
     Mild,
     Severe,
 }
@@ -42,7 +43,7 @@ pub enum InfectionSeverity {
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct DiseaseStateMachine {
     pub state: State,
-    infection_day: i32,
+    infection_day: Day,
 }
 
 impl DiseaseStateMachine {
@@ -53,7 +54,7 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn get_infection_day(self) -> i32 {
+    pub fn get_infection_day(self) -> Day {
         match self.state {
             State::Infected { .. } => {
                 self.infection_day
@@ -62,7 +63,7 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn expose(&mut self, current_hour: i32) {
+    pub fn expose(&mut self, current_hour: Hour) {
         match self.state {
             State::Susceptible {} => {
                 self.state = State::Exposed { at_hour: current_hour }
@@ -73,12 +74,13 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn infect(&mut self, rng: &mut RandomWrapper, sim_hr: i32, disease: &Disease) -> bool {
+    pub fn infect(&mut self, rng: &mut RandomWrapper, sim_hr: Hour, disease: &Disease) -> bool {
         match self.state {
             State::Exposed { at_hour } => {
                 let option = constants::RANGE_FOR_EXPOSED.choose(rng.get());
+                // info!("option: {:?}", option);
                 let random_factor = *option.unwrap();
-                if sim_hr - at_hour >= disease.get_exposed_duration() + random_factor {
+                if sim_hr - at_hour >= (disease.get_exposed_duration() as i32 + random_factor) as Hour {
                     let symptoms = rng.get().gen_bool(1.0 - disease.get_percentage_asymptomatic_population());
                     let mut severity = InfectionSeverity::Pre { at_hour: sim_hr };
                     if !symptoms {
@@ -95,7 +97,7 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn change_infection_severity(&mut self, current_hour: i32, rng: &mut RandomWrapper, disease: &Disease) {
+    pub fn change_infection_severity(&mut self, current_hour: Hour, rng: &mut RandomWrapper, disease: &Disease) {
         match self.state {
             State::Infected { symptoms: true, severity } => {
                 match severity {
@@ -121,7 +123,8 @@ impl DiseaseStateMachine {
     pub fn hospitalize(&mut self, disease: &Disease, immunity: i32) -> bool {
         match self.state {
             State::Infected { symptoms: true, severity: InfectionSeverity::Severe} =>
-                disease.to_be_hospitalized(self.infection_day + immunity),
+            // why we are adding immunity in infection day
+                disease.to_be_hospitalized((self.infection_day as i32 + immunity) as Day),
             State::Infected { .. } => { false }
             _ => {
                 panic!("Invalid state transition!")
@@ -275,8 +278,11 @@ mod tests {
     fn should_initialize() {
         let machine = DiseaseStateMachine::new();
 
-        let result = matches!(machine.state, State::Susceptible {});
-        assert!(result);
+        let result = match machine.state {
+            State::Susceptible {} => true,
+            _ => false
+        };
+        assert_eq!(result, true);
         assert_eq!(machine.get_infection_day(), 0);
     }
 
@@ -287,12 +293,13 @@ mod tests {
         machine.expose(100);
         machine.infect(&mut RandomWrapper::new(), 140, &disease);
 
-        let result = matches!(
-            machine.state, State::Infected { symptoms: false, severity: InfectionSeverity::Mild {} } |
-            State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 140 } }
-        );
+        let result = match machine.state {
+            State::Infected { symptoms: false, severity: InfectionSeverity::Mild {} } => true,
+            State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 140 } } => true,
+            _ => false
+        };
 
-        assert!(result);
+        assert_eq!(result, true);
     }
 
     #[test]
@@ -303,9 +310,12 @@ mod tests {
         machine.expose(100);
         machine.infect(&mut RandomWrapper::new(), 110, &disease);
 
-        let result = matches!(machine.state, State::Exposed { .. });
+        let result = match machine.state {
+            State::Exposed { .. } => true,
+            _ => false
+        };
 
-        assert!(result);
+        assert_eq!(result, true);
     }
 
     #[test]
@@ -338,7 +348,7 @@ mod tests {
             _ => false
         };
 
-        assert!(result);
+        assert_eq!(result, true);
     }
 
     #[test]
@@ -351,9 +361,19 @@ mod tests {
 
         machine.change_infection_severity(120, &mut rng, &disease);
 
-        let result = matches!(machine.state, State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 100 }});
+        let result = match machine.state {
+            State::Infected { symptoms: true, severity } => {
+                match severity {
+                    InfectionSeverity::Pre { at_hour: 100 } => {
+                        true
+                    }
+                    _ => false
+                }
+            }
+            _ => false
+        };
 
-        assert!(result);
+        assert_eq!(result, true);
     }
 
     #[test]
@@ -361,10 +381,10 @@ mod tests {
         let mut machine = DiseaseStateMachine::new();
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 100 } };
-        assert!(machine.is_pre_symptomatic());
+        assert_eq!(machine.is_pre_symptomatic(), true);
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Mild {} };
-        assert!(!machine.is_pre_symptomatic());
+        assert_eq!(machine.is_pre_symptomatic(), false);
     }
 
     #[test]
@@ -396,15 +416,15 @@ mod tests {
         let mut machine = DiseaseStateMachine::new();
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Mild };
-        assert!(machine.is_symptomatic());
+        assert_eq!(machine.is_symptomatic(), true);
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Severe };
-        assert!(machine.is_symptomatic());
+        assert_eq!(machine.is_symptomatic(), true);
 
         machine.state = State::Infected { symptoms: false, severity: InfectionSeverity::Mild};
-        assert!(!machine.is_symptomatic());
+        assert_eq!(machine.is_symptomatic(), false);
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 100 } };
-        assert!(!machine.is_symptomatic());
+        assert_eq!(machine.is_symptomatic(), false);
     }
 }

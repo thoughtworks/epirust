@@ -23,8 +23,8 @@ use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
 
 use crate::environment;
-use crate::kafka_producer::TRAVELS_TOPIC;
-use crate::travel_plan::TravellersByRegion;
+use crate::kafka_producer::MIGRATION_TOPIC;
+use crate::travel_plan::MigratorsByRegion;
 
 pub fn start(engine_id: &str) -> StreamConsumer {
     let kafka_url = environment::kafka_url();
@@ -36,13 +36,13 @@ pub fn start(engine_id: &str) -> StreamConsumer {
         .create()
         .expect("Consumer creation failed");
 
-    consumer.subscribe(&[TRAVELS_TOPIC])
+    consumer.subscribe(&[MIGRATION_TOPIC])
         .expect("Couldn't subscribe to specified topics");
 
     consumer
 }
 
-pub fn read(message: Option<KafkaResult<BorrowedMessage>>) -> Option<TravellersByRegion> {
+pub fn read(message: Option<KafkaResult<BorrowedMessage>>) -> Option<MigratorsByRegion> {
     match message {
         None => { None }
         Some(msg) => {
@@ -53,14 +53,14 @@ pub fn read(message: Option<KafkaResult<BorrowedMessage>>) -> Option<TravellersB
                 }
                 Ok(borrowed_message) => {
                     let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-                    debug!("Reading Travel Data: {}", str_message);
-                    Some(parse_travellers(str_message))
+                    debug!("Reading Migration Data: {}", str_message);
+                    Some(parse_migrators(str_message))
                 }
             }
         }
     }
 }
 
-fn parse_travellers(message: &str) -> TravellersByRegion {
-    serde_json::from_str(message).expect("Could not parse travellers")
+fn parse_migrators(message: &str) -> MigratorsByRegion {
+    serde_json::from_str(message).expect("Could not parse migrators")
 }

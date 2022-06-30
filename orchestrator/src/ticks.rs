@@ -26,7 +26,9 @@ use std::error::Error;
 use rdkafka::Message;
 use futures::StreamExt;
 use crate::travel_plan::TravelPlan;
-use std::borrow::Borrow;
+
+const ROUTINE_TRAVEL_START_TIME: i64 = 7;
+const ROUTINE_TRAVEL_END_TIME: i64 = 17;
 
 //Note: these ticks are safe, they don't cause Lyme disease
 
@@ -36,14 +38,22 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
     let consumer = KafkaConsumer::new();
     let mut message_stream = consumer.start_message_stream();
     let mut should_terminate = false;
+    let is_commute_enabled = travel_plan.commute.enabled;
+    let is_migration_enabled = travel_plan.migration.enabled;
     for h in hours {
-        if h > 1 && h % 24 != 0 {
+        if !is_commute_enabled {
+            if h % 24 == ROUTINE_TRAVEL_END_TIME || h % 24 == ROUTINE_TRAVEL_START_TIME {
+                continue;
+            }
+        }
+        if !is_migration_enabled && h % 24 == 0 {
+            continue;
+        }
+        if h > 1 && h % 24 != 0 && h % 24 != ROUTINE_TRAVEL_START_TIME && h % 24 != ROUTINE_TRAVEL_END_TIME {
             continue;
         }
         acks.reset(h);
-        let current_travel_plan = travel_plan.borrow().update_with_lockdowns(&acks.lockdown_status_by_engine);
-
-        let tick = Tick::new(h, Some(&current_travel_plan), should_terminate);
+        let tick = Tick::new(h,  should_terminate);
 
         match producer.send_tick(&tick).await.unwrap() {
             Ok(_) => {
@@ -73,18 +83,15 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
 }
 
 #[derive(Debug, Serialize)]
-pub struct Tick<'a> {
+pub struct Tick {
     hour: i64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    travel_plan: Option<&'a TravelPlan>,
     terminate: bool,
 }
 
-impl Tick<'_> {
-    pub fn new(hour: i64, travel_plan: Option<&TravelPlan>, terminate: bool) -> Tick {
+impl Tick {
+    pub fn new(hour: i64, terminate: bool) -> Tick {
         Tick {
             hour,
-            travel_plan,
             terminate
         }
     }
@@ -95,7 +102,6 @@ pub struct TickAck {
     engine_id: String,
     hour: i64,
     counts: Counts,
-    locked_down: bool
 }
 
 impl TickAck {
@@ -138,7 +144,6 @@ pub struct TickAcks {
     acks: HashMap<String, TickAck>,
     current_hour: i64,
     engines: Vec<String>,
-    lockdown_status_by_engine: HashMap<String, bool>,
 }
 
 impl TickAcks {
@@ -147,7 +152,6 @@ impl TickAcks {
             acks: HashMap::new(),
             current_hour: 0,
             engines: engines.to_owned(),
-            lockdown_status_by_engine: HashMap::new()
         }
     }
 
@@ -170,7 +174,6 @@ impl TickAcks {
             return;
         }
         let cloned = ack.clone();
-        self.lockdown_status_by_engine.insert(ack.engine_id.clone(), ack.locked_down);
         self.acks.insert(ack.engine_id, cloned);
     }
 
@@ -195,12 +198,10 @@ mod tests {
         let engines = vec!["engine1".to_string(), "engine2".to_string()];
         let mut acks = TickAcks::new(&engines);
         acks.reset(22);
-        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, counts: Counts::new(1, 100, 0, 0, 0, 0, 0),
-            locked_down: true };
+        let ack = TickAck { engine_id: "engine1".to_string(), hour: 22, counts: Counts::new(1, 100, 0, 0, 0, 0, 0), };
         acks.push(ack.clone());
 
         assert_eq!(*acks.acks.get("engine1").unwrap(), ack);
-        assert!(*acks.lockdown_status_by_engine.get("engine1").unwrap());
     }
 
     #[test]
@@ -214,19 +215,17 @@ mod tests {
 
     #[test]
     fn should_terminate_when_exposed_and_infected_and_hospitalized_are_zero() {
-        let mut acks = TickAcks::new(&["engine1".to_string(), "engine2".to_string()]);
+        let mut acks = TickAcks::new(&vec!["engine1".to_string(), "engine2".to_string()]);
         acks.reset(1);
         acks.push(TickAck {
             engine_id: "engine1".to_string(),
             hour: 1,
             counts: Counts::new(1, 99, 0, 1, 0, 0, 0),
-            locked_down: false,
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 1,
             counts: Counts::new(1, 99, 0, 1, 0, 0, 0),
-            locked_down: false,
         });
         assert!(!acks.should_terminate());
 
@@ -235,13 +234,11 @@ mod tests {
             engine_id: "engine1".to_string(),
             hour: 2,
             counts: Counts::new(2, 99, 0, 0, 1, 0, 0),
-            locked_down: false,
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 2,
             counts: Counts::new(2, 100, 0, 0, 0, 0, 0),
-            locked_down: false,
         });
         assert!(!acks.should_terminate());
 
@@ -250,13 +247,11 @@ mod tests {
             engine_id: "engine1".to_string(),
             hour: 3,
             counts: Counts::new(2, 99, 1, 0, 0, 0, 0),
-            locked_down: false,
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 3,
             counts: Counts::new(2, 100, 0, 0, 0, 0, 0),
-            locked_down: false,
         });
         assert!(!acks.should_terminate());
 
@@ -265,13 +260,11 @@ mod tests {
             engine_id: "engine1".to_string(),
             hour: 4,
             counts: Counts::new(3, 100, 0, 0, 0, 0, 0),
-            locked_down: false,
         });
         acks.push(TickAck {
             engine_id: "engine2".to_string(),
             hour: 4,
             counts: Counts::new(3, 100, 0, 0, 0, 0, 0),
-            locked_down: false,
         });
         assert!(acks.should_terminate());
     }

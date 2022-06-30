@@ -21,14 +21,15 @@ use crate::listeners::events::counts::Counts;
 use crate::interventions::InterventionConfig;
 use crate::interventions::intervention_type::InterventionType;
 use crate::config::Config;
+use crate::custom_types::Count;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct BuildNewHospitalConfig {
-    pub spread_rate_threshold: i32
+    pub spread_rate_threshold: u32
 }
 
 pub struct BuildNewHospital {
-    new_infections_in_a_day: i32,
+    new_infections_in_a_day: Count,
     intervention: Option<BuildNewHospitalConfig>,
     has_applied: bool,
 }
@@ -74,7 +75,9 @@ impl BuildNewHospital {
 
     pub fn counts_updated(&mut self, counts: &Counts) {
         if counts.get_hour() % 24 == 0 {
-            self.new_infections_in_a_day = counts.get_infected() - self.new_infections_in_a_day;
+            // info!("counts infected: {}, new infeactions: {}",counts.get_infected(), self.new_infections_in_a_day);
+            // ??
+            self.new_infections_in_a_day = counts.get_infected().saturating_sub(self.new_infections_in_a_day);
         }
     }
 }

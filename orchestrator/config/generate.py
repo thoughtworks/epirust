@@ -49,24 +49,15 @@ sample = """
           "grid_size": 250,
           "hospital_beds_percentage": 0.003
       },
-      "end_of_migration": 336,
-      "reduced_travel_percentage": 0.0005,
-      "hours": 10000,
-      "interventions": [
-        {
-          "Lockdown": {
-            "at_number_of_infections": 100,
-            "essential_workers_population": 0.1
-          }
-        }
-      ]
+      "hours": 1080,
+      "interventions": []
     }
   }
 """
 
-def generate_travel_matrix(region_count, travel_count):
+def generate_travel_matrix(region_count, count):
     rows, cols = (region_count, region_count)
-    arr = [[int(travel_count) for i in range(cols)] for j in range(rows)]
+    arr = [[int(count) for i in range(cols)] for j in range(rows)]
     for (i,row) in enumerate(arr):
         for (j,value) in enumerate(row):
             if i == j:
@@ -100,8 +91,10 @@ if __name__ == "__main__":
     else:
         print("Unsupported population size")
         sys.exit(1)
-    travel_percent = 0.001
-    travel_count = travel_percent * population
+    migration_percent = 0.001
+    commute_percent = 0.0005
+    migration_count = migration_percent * population
+    commute_count = commute_percent * population
     json_sample["config"]["population"]["Auto"]["number_of_agents"] = population
     json_sample["config"]["geography_parameters"]["grid_size"] = grid_size
     simulation_config = []
@@ -109,9 +102,11 @@ if __name__ == "__main__":
         json_sample["engine_id"] = "engine" + str(i + 1)
         simulation_config.append(copy.deepcopy(json_sample))
 
-    travel_plan = { "regions": engine_names(engines), "matrix": generate_travel_matrix(engines, travel_count) }
+    migration = {"enabled": "true", "matrix": generate_travel_matrix(engines, migration_count), "start_migration_hour": 48, "end_migration_hour": 336 }
+    commute = {"enabled": "true", "matrix": generate_travel_matrix(engines, commute_count) }
 
-    final = { "simulation": simulation_config, "travel_plan": travel_plan }
+    travel_plan = {"regions": engine_names(engines), "migration": migration, "commute": commute}
+    final = { "engine_configs": simulation_config, "travel_plan": travel_plan }
 
     with open("generated.json", "w") as outfile:
         outfile.write(json.dumps(final))

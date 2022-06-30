@@ -17,32 +17,34 @@
  *
  */
 
-pub const HOUSE_AREA_RELATIVE_SIZE: f32 = 0.4;
-pub const TRANSPORT_AREA_RELATIVE_SIZE: f32 = 0.1;
-pub const WORK_AREA_RELATIVE_SIZE: f32 = 0.2;
-pub const INITIAL_HOSPITAL_RELATIVE_SIZE: f32 = 0.1;
+use crate::custom_types::{Day, Hour, Percentage, Size};
 
-pub const NUMBER_OF_HOURS: i32 = 24;
-pub const ROUTINE_START_TIME: i32 = 0;
-pub const SLEEP_START_TIME: i32 = 1;
-pub const SLEEP_END_TIME: i32 = 6;
-pub const ROUTINE_TRAVEL_START_TIME: i32 = 7;
-pub const ROUTINE_WORK_TIME: i32 = 8;
-pub const ROUTINE_TRAVEL_END_TIME: i32 = 17;
-pub const ROUTINE_WORK_END_TIME: i32 = 18;
-pub const ROUTINE_END_TIME: i32 = 23;
-pub const NON_WORKING_TRAVEL_END_TIME: i32 = 12;
+pub const HOUSE_AREA_RELATIVE_SIZE: Percentage = 0.4;
+pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.1;
+pub const WORK_AREA_RELATIVE_SIZE: Percentage = 0.2;
+pub const INITIAL_HOSPITAL_RELATIVE_SIZE: Percentage = 0.1;
 
-pub const HOURS_IN_A_DAY: i32 = 24;
-pub const QUARANTINE_DAYS: i32 = 14;
+pub const NUMBER_OF_HOURS: Hour = 24;
+pub const ROUTINE_START_TIME: Hour = 0;
+pub const SLEEP_START_TIME: Hour = 1;
+pub const SLEEP_END_TIME: Hour = 6;
+pub const ROUTINE_TRAVEL_START_TIME: Hour = 7;
+pub const ROUTINE_WORK_TIME: Hour = 8;
+pub const ROUTINE_TRAVEL_END_TIME: Hour = 17;
+pub const ROUTINE_WORK_END_TIME: Hour = 16;
+pub const ROUTINE_END_TIME: Hour = 23;
+pub const NON_WORKING_TRAVEL_END_TIME: Hour = 12;
+
+pub const HOURS_IN_A_DAY: Hour = 24;
+pub const QUARANTINE_DAYS: Day = 14;
 pub const IMMUNITY_RANGE: [i32; 5] = [-2, -1, 0, 1, 2];
 pub const RANGE_FOR_EXPOSED: [i32; 3] = [-1, 0, 1];
 
-pub const HOSPITAL_STAFF_PERCENTAGE:f64 = 0.002;
+pub const HOSPITAL_STAFF_PERCENTAGE: Percentage = 0.002;
 
-pub const HOME_SIZE: i32 = 2;
-pub const OFFICE_SIZE: i32 = 10;
+pub const HOME_SIZE: Size = 2;
+pub const OFFICE_SIZE: Size = 10;
 
 //TODO: Quick fix, move these field to input parameters
-pub const ASYMPTOMATIC_LAST_DAY: i32 = 9;
-pub const MILD_INFECTED_LAST_DAY: i32 = 12;
+pub const ASYMPTOMATIC_LAST_DAY: Day = 9;
+pub const MILD_INFECTED_LAST_DAY: Day = 12;

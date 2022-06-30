@@ -22,17 +22,17 @@ use std::fs::File;
 
 use crate::disease::{Disease, DiseaseOverride};
 use crate::interventions::{InterventionConfig};
+use crate::custom_types::{Count, Hour, Size, Percentage, validate_percentage};
+use validator::Validate;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Validate)]
 pub struct Config {
     population: Population,
     disease: Disease,
     #[serde(default)]
     disease_overrides: Vec<DiseaseOverride>,
     geography_parameters: GeographyParameters,
-    hours: i32,
-    end_of_migration: i32,
-    reduced_travel_percentage: f32,
+    hours: Hour,
     interventions: Vec<InterventionConfig>,
     output_file: Option<String>,
     #[serde(default)]
@@ -58,20 +58,12 @@ impl Config {
     //     self.disease_overrides.clone()
     // }
 
-    pub fn get_grid_size(&self) -> i32 {
+    pub fn get_grid_size(&self) -> Size {
         self.geography_parameters.grid_size
     }
 
-    pub fn get_hours(&self) -> i32 {
+    pub fn get_hours(&self) -> Hour {
         self.hours
-    }
-
-    pub fn get_end_of_migration_hour(&self) -> i32 {
-        self.end_of_migration
-    }
-
-    pub fn get_reduced_travel_percentage(&self) -> f32 {
-        self.reduced_travel_percentage
     }
 
     pub fn get_interventions(&self) -> Vec<InterventionConfig> {
@@ -92,15 +84,13 @@ impl Config {
 
     #[cfg(test)]
     pub fn new(population: Population, disease: Disease, geography_parameters: GeographyParameters, disease_overrides: Vec<DiseaseOverride>,
-               end_of_migration:i32, reduced_travel_percentage:f32, hours: i32, interventions: Vec<InterventionConfig>, output_file: Option<String>)
+               hours: Hour, interventions: Vec<InterventionConfig>, output_file: Option<String>)
                -> Config {
         Config {
             population,
             disease,
             disease_overrides,
             geography_parameters,
-            end_of_migration,
-            reduced_travel_percentage,
             hours,
             interventions,
             output_file,
@@ -110,15 +100,16 @@ impl Config {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Validate)]
 pub struct GeographyParameters {
-    pub grid_size: i32,
-    pub hospital_beds_percentage: f64,
+    pub grid_size: Size,
+    #[validate(custom = "validate_percentage")]
+    pub hospital_beds_percentage: Percentage,
 }
 
 impl GeographyParameters{
     #[cfg(test)]
-    pub fn new(grid_size: i32, hospital_beds_percentage: f64) -> GeographyParameters {
+    pub fn new(grid_size: Size, hospital_beds_percentage: f64) -> GeographyParameters {
         GeographyParameters{
             grid_size, hospital_beds_percentage
         }
@@ -137,11 +128,13 @@ pub struct CsvPopulation {
     pub cols: Vec<String>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
 pub struct AutoPopulation {
-    pub number_of_agents: i32,
-    pub public_transport_percentage: f64,
-    pub working_percentage: f64,
+    pub number_of_agents: Count,
+    #[validate(custom = "validate_percentage")]
+    pub public_transport_percentage: Percentage,
+    #[validate(custom = "validate_percentage")]
+    pub working_percentage: Percentage,
 }
 
 pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {
@@ -152,15 +145,15 @@ pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct StartingInfections {
-    infected_mild_asymptomatic: i32,
-    infected_mild_symptomatic: i32,
-    infected_severe: i32,
-    exposed: i32,
+    infected_mild_asymptomatic: Count,
+    infected_mild_symptomatic: Count,
+    infected_severe: Count,
+    exposed: Count,
 }
 
 impl StartingInfections {
     #[cfg(test)]
-    pub fn new(mild_asymp: i32, mild_symp: i32, severe: i32, exposed: i32) -> StartingInfections {
+    pub fn new(mild_asymp: Count, mild_symp: Count, severe: Count, exposed: Count) -> StartingInfections {
         StartingInfections {
             infected_mild_asymptomatic: mild_asymp,
             infected_mild_symptomatic: mild_symp,
@@ -169,27 +162,27 @@ impl StartingInfections {
         }
     }
 
-    pub fn total(&self) -> i32 {
+    pub fn total(&self) -> Count {
         self.total_infected() + self.exposed
     }
 
-    pub fn total_infected(&self) -> i32 {
+    pub fn total_infected(&self) -> Count {
         self.infected_mild_asymptomatic + self.infected_mild_symptomatic + self.infected_severe
     }
 
-    pub fn get_infected_mild_asymptomatic(&self) -> i32 {
+    pub fn get_infected_mild_asymptomatic(&self) -> Count {
         self.infected_mild_asymptomatic
     }
 
-    pub fn get_infected_mild_symptomatic(&self) -> i32 {
+    pub fn get_infected_mild_symptomatic(&self) -> Count {
         self.infected_mild_symptomatic
     }
 
-    pub fn get_infected_severe(&self) -> i32 {
+    pub fn get_infected_severe(&self) -> Count {
         self.infected_severe
     }
 
-    pub fn get_exposed(&self) -> i32 {
+    pub fn get_exposed(&self) -> Count {
         self.exposed
     }
 }
@@ -231,8 +224,6 @@ mod tests {
             disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
             disease_overrides: vec![disease_override],
             geography_parameters: GeographyParameters::new(5660, 0.003),
-            end_of_migration: 336,
-            reduced_travel_percentage: 0.0005,
             hours: 10000,
             interventions: vec![InterventionConfig::Vaccinate(vaccinate)],
             output_file: None,
@@ -260,8 +251,6 @@ mod tests {
             disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
             disease_overrides: vec![],
             geography_parameters: GeographyParameters::new(250, 0.003),
-            end_of_migration: 336,
-            reduced_travel_percentage: 0.0005,
             hours: 10000,
             interventions: vec![InterventionConfig::Vaccinate(vaccinate)],
             output_file: Some("simulation_default_config".to_string()),

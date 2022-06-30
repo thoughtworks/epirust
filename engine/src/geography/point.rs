@@ -18,16 +18,17 @@
  */
 
 use std::ops::Add;
+use crate::custom_types::{CoOrdinate};
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Point {
-    pub x: i32,
-    pub y: i32,
+    pub x: CoOrdinate,
+    pub y: CoOrdinate,
     //    TODO: remove pub usages
 }
 
 impl Point {
-    pub fn new(x: i32, y: i32) -> Point {
+    pub fn new(x: CoOrdinate, y: CoOrdinate) -> Point {
         Point { x, y }
     }
 
@@ -71,7 +72,7 @@ impl Iterator for NeighborIterator {
     fn next(&mut self) -> Option<Self::Item> {
         self.index += 1;
         self.offsets.get(self.index as usize).map(|offset| {
-            self.point + Point::new(offset.0, offset.1)
+            Point::new(offset.0 + self.point.x, offset.1 + self.point.y)
         })
     }
 }

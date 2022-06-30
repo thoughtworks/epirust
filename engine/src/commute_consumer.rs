@@ -21,11 +21,10 @@ use rdkafka::{ClientConfig, Message};
 use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
-use crate::custom_types::Hour;
 
 use crate::environment;
-
-const TICKS_TOPIC: &str = "ticks";
+use crate::kafka_producer::COMMUTE_TOPIC;
+use crate::commute::CommutersByRegion;
 
 pub fn start(engine_id: &str) -> StreamConsumer {
     let kafka_url = environment::kafka_url();
@@ -33,71 +32,35 @@ pub fn start(engine_id: &str) -> StreamConsumer {
         .set("bootstrap.servers", kafka_url.as_str())
         .set("group.id", engine_id)
         .set("auto.offset.reset", "earliest")
-        .set("enable.auto.commit", "true") //to avoid consuming duplicate message
         .set("max.poll.interval.ms", "86400000") //max allowed
         .create()
         .expect("Consumer creation failed");
 
-    consumer.subscribe(&[TICKS_TOPIC])
+    consumer.subscribe(&[COMMUTE_TOPIC])
         .expect("Couldn't subscribe to specified topics");
 
     consumer
 }
 
-pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Option<Tick> {
-    match msg {
-        None => {
-            debug!("End of tick stream");
-            None
-        }
-        Some(m) => {
-            match m {
+pub fn read(message: Option<KafkaResult<BorrowedMessage>>) -> Option<CommutersByRegion> {
+    match message {
+        None => { None }
+        Some(msg) => {
+            match msg {
                 Err(e) => {
                     debug!("error occured: {}", e);
                     None
                 }
                 Ok(borrowed_message) => {
                     let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-                    debug!("Tick Data: {}", str_message);
-                    Some(parse_tick(str_message))
+                    debug!("Reading Commute Data: {}", str_message);
+                    Some(parse_commuters(str_message))
                 }
             }
         }
     }
 }
 
-fn parse_tick(message: &str) -> Tick {
-    serde_json::from_str(message).expect("Could not parse tick")
-}
-
-#[derive(Debug, Copy, Deserialize, PartialEq, Clone)]
-pub struct Tick {
-    hour: Hour,
-    terminate: bool,
-}
-
-impl Tick {
-    pub fn hour(&self) -> Hour {
-        self.hour
-    }
-
-    pub fn terminate(&self) -> bool {
-        self.terminate
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn should_parse_tick() {
-        let json = r#"
-        {
-            "hour": 1,
-            "terminate": false
-        }"#;
-        let expected = Tick { hour: 1, terminate: false };
-        assert_eq!(expected, parse_tick(json));
-    }
+fn parse_commuters(message: &str) -> CommutersByRegion {
+    serde_json::from_str(message).expect("Could not parse commuters")
 }

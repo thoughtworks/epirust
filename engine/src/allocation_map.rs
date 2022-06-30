@@ -261,10 +261,11 @@ mod tests {
         let home_locations = vec![Area::new(engine_id.clone(),Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(),Point::new(3, 0), Point::new(4, 2))];
 
         let work_locations = vec![Area::new(engine_id.clone(),Point::new(5, 0), Point::new(6, 2)), Area::new(engine_id.clone(),Point::new(7, 0), Point::new(8, 2))];
-        let work_status = WorkStatus::NA {};
+        let working = WorkStatus::NA {};
+        let non_working = WorkStatus::Normal {};
 
-        let agents = vec![agent::Citizen::new(home_locations[0].clone(), work_locations[0].clone(), points[0], false, false, work_status, &mut rng),
-                          agent::Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, true, work_status, &mut rng)];
+        let agents = vec![agent::Citizen::new(home_locations[0].clone(), work_locations[0].clone(), points[0], false, non_working, &mut rng),
+                          agent::Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, working, &mut rng)];
         AgentLocationMap::new(5, &agents, &points)
     }
 
@@ -279,13 +280,14 @@ mod tests {
     fn should_goto_hospital() {
         let mut rng = RandomWrapper::new();
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
-        let work_status = WorkStatus::Normal {};
+        let working = WorkStatus::NA {};
+        let non_working = WorkStatus::Normal {};
         let engine_id = "engine1".to_string();
         let home_locations = vec![Area::new(engine_id.clone(),Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(),Point::new(3, 0), Point::new(4, 2))];
 
         let work_locations = vec![Area::new(engine_id.clone(),Point::new(5, 0), Point::new(6, 2)), Area::new(engine_id.clone(),Point::new(7, 0), Point::new(8, 2))];
-        let citizen1 = agent::Citizen::new(home_locations[0].clone(), work_locations[1].clone(), points[0], false, false, work_status, &mut rng);
-        let citizen2 = agent::Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, true, work_status, &mut rng);
+        let citizen1 = agent::Citizen::new(home_locations[0].clone(), work_locations[1].clone(), points[0], false, non_working, &mut rng);
+        let citizen2 = agent::Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, working, &mut rng);
         let agents = vec![citizen1.clone(), citizen2.clone()];
         let map = AgentLocationMap::new(5, &agents, &points);
         let hospital = Area::new(engine_id.clone(),Point::new(2, 2), Point::new(4, 4));
@@ -304,10 +306,10 @@ mod tests {
         let work_status = WorkStatus::NA {};
 
         let work = Area::new(engine_id.clone(),Point::new(5, 0), Point::new(6, 2));
-        let citizen1 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, false, work_status, &mut rng);
-        let citizen2 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, false, work_status, &mut rng);
-        let citizen3 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, false, work_status, &mut rng);
-        let citizen4 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, false, work_status, &mut rng);
+        let citizen1 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
+        let citizen2 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
+        let citizen3 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
+        let citizen4 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
         let agents = vec![citizen1.clone(), citizen2.clone(), citizen3.clone(), citizen4.clone()];
         let map = AgentLocationMap::new(5, &agents, &points);
         let hospital = Area::new(engine_id.clone(),Point::new(0, 0), Point::new(1, 1));

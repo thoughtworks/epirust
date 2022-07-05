@@ -25,7 +25,7 @@ use chrono::{DateTime, Local};
 use futures::StreamExt;
 use rand::Rng;
 
-use crate::{allocation_map, RunMode, ticks_consumer, migrators_consumer, constants, commute_consumer};
+use crate::{allocation_map, constants, RunMode, ticks_consumer, travel_consumer};
 use crate::allocation_map::AgentLocationMap;
 use crate::config::{Config, Population, StartingInfections};
 use crate::disease::Disease;
@@ -34,16 +34,16 @@ use crate::geography::{Grid, Point};
 use crate::interventions::hospital::BuildNewHospital;
 use crate::interventions::lockdown::LockdownIntervention;
 use crate::interventions::vaccination::VaccinateIntervention;
-use crate::kafka_producer::{KafkaProducer, TickAck};
+use crate::kafka_producer::{COMMUTE_TOPIC, KafkaProducer, MIGRATION_TOPIC, TickAck};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
-use crate::listeners::listener::{Listeners, Listener};
+use crate::listeners::listener::{Listener, Listeners};
 use crate::random_wrapper::RandomWrapper;
-use rdkafka::consumer::{MessageStream, DefaultConsumerContext};
+use rdkafka::consumer::{DefaultConsumerContext, MessageStream};
 use crate::ticks_consumer::Tick;
-use crate::travel_plan::{EngineMigrationPlan, MigratorsByRegion, Migrator, MigrationPlan};
+use crate::travel_plan::{EngineMigrationPlan, MigrationPlan, Migrator, MigratorsByRegion};
 use futures::join;
 use crate::listeners::travel_counter::TravelCounter;
 use crate::listeners::intervention_reporter::InterventionReporter;
@@ -295,11 +295,11 @@ impl Epidemiology {
                 EngineMigrationPlan::new(engine_id, None, self.agent_location_map.current_population())
             };
 
-        let migrators_consumer = migrators_consumer::start(engine_id);
+        let migrators_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", MIGRATION_TOPIC, engine_id)] );
         let mut migration_stream = migrators_consumer.start_with(Duration::from_millis(1), false);
 
         let commute_plan = if is_commute_enabled { travel_plan_config.commute_plan()} else { CommutePlan {regions: Vec::new(), matrix: Vec::new()} };
-        let commute_consumer = commute_consumer::start(engine_id);
+        let commute_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", COMMUTE_TOPIC, engine_id)] );
         let mut commute_stream = commute_consumer.start_with(Duration::from_millis(1), false);
 
         let ticks_consumer = ticks_consumer::start(engine_id);
@@ -586,10 +586,10 @@ impl Epidemiology {
     async fn receive_commuters_from_region(message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                                            engine_id: &String) -> Option<CommutersByRegion> {
         let msg = message_stream.next().await;
-        let mut maybe_commuters = commute_consumer::read(msg);
+        let mut maybe_commuters = travel_consumer::read_commuters(msg);
         while maybe_commuters == None || (maybe_commuters.as_ref().unwrap().commuters.is_empty() && maybe_commuters.as_ref().unwrap().to_engine_id() == engine_id ) {
             let next_msg = message_stream.next().await;
-            maybe_commuters = commute_consumer::read(next_msg);
+            maybe_commuters = travel_consumer::read_commuters(next_msg);
         }
         maybe_commuters.filter(|incoming| {
             incoming.to_engine_id() == engine_id
@@ -599,7 +599,7 @@ impl Epidemiology {
     async fn receive_migrators_from_region(message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                                            engine_migration_plan: &EngineMigrationPlan) -> Option<MigratorsByRegion> {
         let msg = message_stream.next().await;
-        migrators_consumer::read(msg).filter(|incoming| {
+        travel_consumer::read_migrators(msg).filter(|incoming| {
             incoming.to_engine_id() == engine_migration_plan.engine_id()
         })
     }

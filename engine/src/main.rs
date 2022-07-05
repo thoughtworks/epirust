@@ -47,10 +47,9 @@ mod ticks_consumer;
 mod environment;
 mod disease_state_machine;
 mod travel_plan;
-mod migrators_consumer;
 mod custom_types;
 mod commute;
-mod commute_consumer;
+mod travel_consumer;
 
 const STANDALONE_SIM_ID: &str = "0";
 

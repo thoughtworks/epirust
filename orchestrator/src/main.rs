@@ -69,7 +69,6 @@ async fn main() {
     start(travel_plan, hours, &sim_conf).await;
 }
 
-// the delay between deletion and creation of topic making the process flaky. Deleting the topic using kafka client manually as of now
 async fn cleanup(regions: &Vec<String>) {
     let kafka_url = environment::kafka_url();
     let kafka_admin: AdminClient<DefaultClientContext> = ClientConfig::new()

@@ -26,8 +26,8 @@ use crate::travel_plan::MigratorsByRegion;
 use crate::listeners::events::counts::Counts;
 
 const TICK_ACKS_TOPIC: &str = "ticks_ack";
-pub const MIGRATION_TOPIC: &str = "migration";
-pub const COMMUTE_TOPIC: &str = "commute";
+pub const MIGRATION_TOPIC: &str = "migration_";
+pub const COMMUTE_TOPIC: &str = "commute_";
 
 pub struct KafkaProducer {
     producer: FutureProducer,
@@ -55,7 +55,8 @@ impl KafkaProducer {
         outgoing.iter().for_each(|out_region| {
             let payload = serde_json::to_string(out_region).unwrap();
             debug!("Sending migrators: {} to region: {}", payload, out_region.to_engine_id());
-            let record: FutureRecord<String, String> = FutureRecord::to(MIGRATION_TOPIC)
+            let topic = &*format!("{}{}", MIGRATION_TOPIC, out_region.to_engine_id());
+            let record: FutureRecord<String, String> = FutureRecord::to(topic)
                 .payload(&payload);
             self.producer.send(record, 0);
         });
@@ -65,7 +66,8 @@ impl KafkaProducer {
         outgoing.iter().for_each(|out_region| {
             let payload = serde_json::to_string(out_region).unwrap();
             debug!("Sending commuters: {} to region: {}", payload, out_region.to_engine_id());
-            let record: FutureRecord<String, String> = FutureRecord::to(COMMUTE_TOPIC)
+            let topic = &*format!("{}{}", COMMUTE_TOPIC, out_region.to_engine_id());
+            let record: FutureRecord<String, String> = FutureRecord::to(topic)
                 .payload(&payload);
             self.producer.send(record, 0);
         });

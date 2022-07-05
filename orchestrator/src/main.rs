@@ -24,12 +24,16 @@ extern crate log;
 extern crate serde_derive;
 
 use std::ops::Range;
+use std::string::String;
 
 use clap::{App, Arg};
+use rdkafka::admin::{AdminClient, AdminOptions, NewTopic, TopicReplication};
+use rdkafka::client::DefaultClientContext;
+use rdkafka::ClientConfig;
 
+use crate::config::{Config, get_hours};
 use crate::kafka_producer::KafkaProducer;
 use crate::travel_plan::TravelPlan;
-use crate::config::{Config, get_hours};
 
 mod kafka_producer;
 mod kafka_consumer;
@@ -61,19 +65,51 @@ async fn main() {
 
     let hours = 1..get_hours(config_path);
 
-    // cleanup().await;
+    cleanup(travel_plan.get_regions()).await;
     start(travel_plan, hours, &sim_conf).await;
 }
 
 // the delay between deletion and creation of topic making the process flaky. Deleting the topic using kafka client manually as of now
-// async fn cleanup() -> KafkaResult<Vec<TopicResult>> {
-//     let kafka_url = environment::kafka_url();
-//     let kafka_admin: AdminClient<DefaultClientContext> = ClientConfig::new()
-//         .set("bootstrap.servers", kafka_url.as_str())
-//         .create()
-//         .expect("Admin client creation failed");
-//     kafka_admin.delete_topics(&["ticks", "ticks_ack", "travels"], &AdminOptions::new()).await
-// }
+async fn cleanup(regions: &Vec<String>) {
+    let kafka_url = environment::kafka_url();
+    let kafka_admin: AdminClient<DefaultClientContext> = ClientConfig::new()
+        .set("bootstrap.servers", kafka_url.as_str())
+        .create()
+        .expect("Admin client creation failed");
+    match kafka_admin.delete_topics(&["simulation_requests", "counts_updated", "ticks", "ticks_ack"], &AdminOptions::new()).await {
+        Ok(t) => { debug!("Deleted topics {:?}", t) }
+        Err(e) => { debug!("Error while deleting topics {:?}", e) }
+    }
+    for region in regions {
+        match kafka_admin.delete_topics(&[&*format!("{}{}", "commute_", region)], &AdminOptions::new()).await {
+            Ok(t) => { debug!("Deleted topic {:?}", t) }
+            Err(e) => { debug!("Error while deleting topic {:?}", e) }
+        }
+        match kafka_admin.delete_topics(&[&*format!("{}{}", "migration_", region)], &AdminOptions::new()).await {
+            Ok(t) => { debug!("Deleted topic {:?}", t) }
+            Err(e) => { debug!("Error while deleting topic {:?}", e) }
+        }
+    }
+    for region in regions {
+        match kafka_admin.create_topics(&[NewTopic::new(&*format!("{}{}", "commute_", region), 1, TopicReplication::Fixed(1))], &AdminOptions::new()).await {
+            Ok(t) => { debug!("Created topic {:?}", t) }
+            Err(e) => { debug!("Error while creating topics {:?}", e) }
+        }
+        match kafka_admin.create_topics(&[NewTopic::new(&*format!("{}{}", "migration_", region), 1, TopicReplication::Fixed(1))], &AdminOptions::new()).await {
+            Ok(t) => { debug!("Created topic {:?}", t) }
+            Err(e) => { debug!("Error while creating topics {:?}", e) }
+        }
+    }
+    match kafka_admin.create_topics(&[
+        NewTopic::new("simulation_requests", 1, TopicReplication::Fixed(1)),
+        NewTopic::new("counts_updated", 1, TopicReplication::Fixed(1)),
+        NewTopic::new("ticks", 1, TopicReplication::Fixed(1)),
+        NewTopic::new("ticks_ack", 1, TopicReplication::Fixed(1)),
+    ], &AdminOptions::new()).await {
+        Ok(t) => { debug!("Created topics {:?}", t) }
+        Err(e) => { debug!("Error while creating topics {:?}", e) }
+    }
+}
 
 async fn start(travel_plan: &TravelPlan, hours: Range<i64>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();

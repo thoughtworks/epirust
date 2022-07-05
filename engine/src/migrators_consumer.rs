@@ -36,7 +36,7 @@ pub fn start(engine_id: &str) -> StreamConsumer {
         .create()
         .expect("Consumer creation failed");
 
-    consumer.subscribe(&[MIGRATION_TOPIC])
+    consumer.subscribe(&[&*format!("{}{}", MIGRATION_TOPIC, engine_id)])
         .expect("Couldn't subscribe to specified topics");
 
     consumer

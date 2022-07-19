@@ -199,10 +199,7 @@ impl Citizen {
     }
 
     pub fn is_working(&self) -> bool {
-        return match self.work_status {
-            WorkStatus::NA => false,
-            _ => true
-        }
+        !matches!(self.work_status, WorkStatus::NA)
     }
 
     pub fn get_immunity(&self) -> i32 {

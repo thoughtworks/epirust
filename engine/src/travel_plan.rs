@@ -35,13 +35,13 @@ impl MigrationPlan {
         MigrationPlan { regions, matrix }
     }
 
-    pub fn get_total_outgoing(&self, engine_id: &String) -> u32 {
+    pub fn get_total_outgoing(&self, engine_id: &str) -> u32 {
         let index = self.get_position(engine_id);
         let row = self.matrix.get(index).unwrap();
         row.iter().sum()
     }
 
-    pub fn incoming_regions_count(&self, engine_id: &String) -> u32 {
+    pub fn incoming_regions_count(&self, engine_id: &str) -> u32 {
         let index = self.get_position(engine_id);
         self.column(index).filter(|val| *val > 0).count() as u32
     }
@@ -51,7 +51,7 @@ impl MigrationPlan {
     //     self.matrix.iter().fold(0, |total, row| total + *row.get(index).unwrap())
     // }
 
-    pub fn get_outgoing(&self, from_region: &String, to_region: &String) -> u32 {
+    pub fn get_outgoing(&self, from_region: &str, to_region: &str) -> u32 {
         let from_index = self.get_position(from_region);
         let to_index = self.get_position(to_region);
 
@@ -59,7 +59,7 @@ impl MigrationPlan {
         *row.get(to_index).unwrap()
     }
 
-    fn get_position(&self, engine_id: &String) -> usize {
+    fn get_position(&self, engine_id: &str) -> usize {
         self.regions.iter().position(|i| i.eq(engine_id))
             .expect("Could not find region with specified name")
     }
@@ -78,9 +78,9 @@ pub struct EngineMigrationPlan {
 }
 
 impl EngineMigrationPlan {
-    pub fn new(engine_id: &String, migration_plan: Option<MigrationPlan>, current_population: Count) -> EngineMigrationPlan {
+    pub fn new(engine_id: String, migration_plan: Option<MigrationPlan>, current_population: Count) -> EngineMigrationPlan {
         EngineMigrationPlan {
-            engine_id: engine_id.clone(),
+            engine_id,
             migration_plan,
             current_total_population: current_population,
         }
@@ -254,9 +254,9 @@ mod tests {
     #[test]
     fn should_get_total_outgoing() {
         let travel_plan = create_travel_plan();
-        assert_eq!(156 + 24, travel_plan.get_total_outgoing(&"engine1".to_string()));
-        assert_eq!(108 + 221, travel_plan.get_total_outgoing(&"engine2".to_string()));
-        assert_eq!(97 + 12, travel_plan.get_total_outgoing(&"engine3".to_string()));
+        assert_eq!(156 + 24, travel_plan.get_total_outgoing("engine1"));
+        assert_eq!(108 + 221, travel_plan.get_total_outgoing("engine2"));
+        assert_eq!(97 + 12, travel_plan.get_total_outgoing("engine3"));
     }
 
     // #[test]
@@ -278,9 +278,9 @@ mod tests {
             ],
         };
 
-        assert_eq!(2, migration_plan.incoming_regions_count(&"engine1".to_string()));
-        assert_eq!(1, migration_plan.incoming_regions_count(&"engine2".to_string()));
-        assert_eq!(0, migration_plan.incoming_regions_count(&"engine3".to_string()));
+        assert_eq!(2, migration_plan.incoming_regions_count( "engine1"));
+        assert_eq!(1, migration_plan.incoming_regions_count("engine2"));
+        assert_eq!(0, migration_plan.incoming_regions_count("engine3"));
     }
 
     #[test]
@@ -291,7 +291,7 @@ mod tests {
 
     #[test]
     fn should_set_current_population() {
-        let mut engine_migration_plan = EngineMigrationPlan::new(&"engine1".to_string(), Some(MigrationPlan::new(vec!["engine1".to_string(), "engine2".to_string()], vec![vec![0, 1], vec![1, 0]])), 10000);
+        let mut engine_migration_plan = EngineMigrationPlan::new("engine1".into(), Some(MigrationPlan::new(vec!["engine1".into(), "engine2".into()], vec![vec![0, 1], vec![1, 0]])), 10000);
         engine_migration_plan.set_current_population(9000);
         assert_eq!(9000, engine_migration_plan.current_total_population);
     }
@@ -362,6 +362,6 @@ mod tests {
 
     fn create_engine_with_travel_plan() -> EngineMigrationPlan {
         let migration_plan = create_travel_plan();
-        EngineMigrationPlan::new(&"engine1".to_string(), Some(migration_plan), 10000)
+        EngineMigrationPlan::new("engine1".into(), Some(migration_plan), 10000)
     }
 }

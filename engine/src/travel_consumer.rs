@@ -33,6 +33,7 @@ pub fn start(engine_id: &str, topics: &[&str]) -> StreamConsumer {
         .set("group.id", engine_id)
         .set("auto.offset.reset", "earliest")
         .set("max.poll.interval.ms", "86400000") //max allowed
+        .set("fetch.message.max.bytes", "104857600")
         .create()
         .expect("Consumer creation failed");
 
@@ -48,12 +49,12 @@ pub fn read_commuters(message: Option<KafkaResult<BorrowedMessage>>) -> Option<C
         Some(msg) => {
             match msg {
                 Err(e) => {
-                    debug!("error occured: {}", e);
+                    error!("error occurred: {}", e);
                     None
                 }
                 Ok(borrowed_message) => {
                     let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-                    debug!("Reading Commute Data: {}", str_message);
+                    trace!("Reading Commute Data: {}", str_message);
                     Some(parse_commuters(str_message))
                 }
             }

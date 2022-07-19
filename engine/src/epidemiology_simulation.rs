@@ -22,38 +22,38 @@ use core::borrow::BorrowMut;
 use std::time::{Duration, Instant, SystemTime};
 
 use chrono::{DateTime, Local};
+use futures::join;
 use futures::StreamExt;
 use rand::Rng;
+use rdkafka::consumer::{DefaultConsumerContext, MessageStream};
 
 use crate::{allocation_map, constants, RunMode, ticks_consumer, travel_consumer};
+use crate::agent::Citizen;
 use crate::allocation_map::AgentLocationMap;
+use crate::commute::{CommutePlan, Commuter, CommutersByRegion};
 use crate::config::{Config, Population, StartingInfections};
+use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
+use crate::custom_types::{Count, Hour};
 use crate::disease::Disease;
+use crate::disease_state_machine::State;
 use crate::geography;
 use crate::geography::{Grid, Point};
 use crate::interventions::hospital::BuildNewHospital;
+use crate::interventions::Interventions;
 use crate::interventions::lockdown::LockdownIntervention;
 use crate::interventions::vaccination::VaccinateIntervention;
+use crate::kafka_consumer::TravelPlanConfig;
 use crate::kafka_producer::{COMMUTE_TOPIC, KafkaProducer, MIGRATION_TOPIC, TickAck};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
+use crate::listeners::intervention_reporter::InterventionReporter;
 use crate::listeners::listener::{Listener, Listeners};
+use crate::listeners::travel_counter::TravelCounter;
 use crate::random_wrapper::RandomWrapper;
-use rdkafka::consumer::{DefaultConsumerContext, MessageStream};
 use crate::ticks_consumer::Tick;
 use crate::travel_plan::{EngineMigrationPlan, MigrationPlan, Migrator, MigratorsByRegion};
-use futures::join;
-use crate::listeners::travel_counter::TravelCounter;
-use crate::listeners::intervention_reporter::InterventionReporter;
-use crate::interventions::Interventions;
-use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
-use crate::agent::Citizen;
-use crate::commute::{CommutePlan, Commuter, CommutersByRegion};
-use crate::custom_types::{Count, Hour};
-use crate::disease_state_machine::State;
-use crate::kafka_consumer::TravelPlanConfig;
 
 pub struct Epidemiology {
     pub agent_location_map: allocation_map::AgentLocationMap,
@@ -290,9 +290,9 @@ impl Epidemiology {
         };
 
         let mut engine_migration_plan = if is_migration_enabled {
-                EngineMigrationPlan::new(engine_id, migration_plan, self.agent_location_map.current_population())
+                EngineMigrationPlan::new(engine_id.clone(), migration_plan, self.agent_location_map.current_population())
             } else {
-                EngineMigrationPlan::new(engine_id, None, self.agent_location_map.current_population())
+                EngineMigrationPlan::new(engine_id.clone(), None, self.agent_location_map.current_population())
             };
 
         let migrators_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", MIGRATION_TOPIC, engine_id)] );
@@ -319,11 +319,11 @@ impl Epidemiology {
             match &tick {
                 None => {
                     total_tick_sync_time += start_time.elapsed().as_millis();
-                    info!("total tick sync time as hour {} - is {}", simulation_hour, total_tick_sync_time);
+                    // info!("total tick sync time as hour {} - is {}", simulation_hour, total_tick_sync_time);
                 }
                 Some(t) => {
                     total_tick_sync_time += start_time.elapsed().as_millis();
-                    info!("total tick sync time as hour {} - is {}", simulation_hour, total_tick_sync_time);
+                    // info!("total tick sync time as hour {} - is {}", simulation_hour, total_tick_sync_time);
                     if t.terminate() {
                         info!("received tick {:?}", t);
                         break;
@@ -391,7 +391,7 @@ impl Epidemiology {
                     Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
                 }
                 if is_commute_enabled {
-                    Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
+                    Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region).await;
                 }
             };
 
@@ -402,7 +402,7 @@ impl Epidemiology {
                 let received_commuters = Epidemiology::receive_commuters(tick, &mut commute_stream, &commute_plan, engine_id);
                 let (mut incoming_commuters,) = join!(received_commuters);
                 total_commute_sync_time += commute_start_time.elapsed().as_millis();
-                info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
+                // info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
                 write_buffer_reference.remove_commuters(&outgoing_commuters, counts_at_hr);
@@ -471,16 +471,12 @@ impl Epidemiology {
 
     async fn receive_tick(run_mode: &RunMode, message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
                           simulation_hour: Hour, is_commute_enabled: bool, is_migration_enabled: bool) -> Option<Tick> {
-        if is_commute_enabled && (simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME || simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME) {
-            if let RunMode::MultiEngine { engine_id: _e } = run_mode {
-                let t = Epidemiology::get_tick(message_stream, simulation_hour).await;
-                if t.hour() != simulation_hour {
-                    panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
-                }
-                return Some(t);
-            }
-        }
-        if is_migration_enabled && simulation_hour % 24 == 0 {
+        let day_hour = simulation_hour % 24;
+        let is_commute_hour = day_hour == constants::ROUTINE_TRAVEL_END_TIME || day_hour == constants::ROUTINE_TRAVEL_START_TIME;
+        let is_migration_hour = day_hour == 0;
+        let receive_tick_for_commute : bool = is_commute_enabled && is_commute_hour;
+        let receive_tick_for_migration : bool = is_migration_enabled && is_migration_hour;
+        if  receive_tick_for_commute || receive_tick_for_migration {
             if let RunMode::MultiEngine { engine_id: _e } = run_mode {
                 let t = Epidemiology::get_tick(message_stream, simulation_hour).await;
                 if t.hour() != simulation_hour {
@@ -494,25 +490,24 @@ impl Epidemiology {
 
     async fn send_ack(run_mode: &RunMode, producer: &mut KafkaProducer, counts: Counts, simulation_hour: Hour,
                       lockdown: &LockdownIntervention, is_commute_enabled: bool, is_migration_enabled: bool) {
-        if simulation_hour > 1 && simulation_hour % 24 != 0 && simulation_hour % 24!= constants::ROUTINE_TRAVEL_START_TIME && simulation_hour % 24 != constants::ROUTINE_TRAVEL_END_TIME {
-            return;
-        }
-        if !is_commute_enabled && (simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME || simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME) {
-            return;
-        }
-        if !is_migration_enabled && simulation_hour % 24 == 0 {
-            return;
-        }
-        if let RunMode::MultiEngine { engine_id } = run_mode {
-            let ack = TickAck {
-                engine_id: engine_id.to_string(),
-                hour: simulation_hour,
-                counts,
-                locked_down: lockdown.is_locked_down(),
-            };
-            match producer.send_ack(&ack).await.unwrap() {
-                Ok(_) => {}
-                Err(e) => panic!("Failed while sending acknowledgement: {:?}", e.0)
+        let day_hour = simulation_hour % 24;
+        let is_commute_hour = day_hour == constants::ROUTINE_TRAVEL_END_TIME || day_hour == constants::ROUTINE_TRAVEL_START_TIME;
+        let is_migration_hour = day_hour == 0;
+        let received_tick_for_commute : bool = is_commute_enabled && is_commute_hour;
+        let received_tick_for_migration : bool = is_migration_enabled && is_migration_hour;
+
+        if simulation_hour == 1 || received_tick_for_commute || received_tick_for_migration {
+            if let RunMode::MultiEngine { engine_id } = run_mode {
+                let ack = TickAck {
+                    engine_id: engine_id.to_string(),
+                    hour: simulation_hour,
+                    counts,
+                    locked_down: lockdown.is_locked_down(),
+                };
+                match producer.send_ack(&ack).await.unwrap() {
+                    Ok(_) => {}
+                    Err(e) => panic!("Failed while sending acknowledgement: {:?}", e.0)
+                }
             }
         }
     }
@@ -523,11 +518,11 @@ impl Epidemiology {
         }
     }
 
-    fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
+    async fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
         if tick.is_some() {
             let hour = tick.unwrap().hour() % 24;
             if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
-                producer.send_commuters(outgoing);
+                producer.send_commuters(outgoing).await;
             }
         }
     }
@@ -607,13 +602,10 @@ impl Epidemiology {
     fn apply_vaccination_intervention(vaccinations: &VaccinateIntervention, counts: &Counts,
                                       write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper,
                                       listeners: &mut Listeners) {
-        match vaccinations.get_vaccination_percentage(counts) {
-            Some(vac_percent) => {
-                info!("Vaccination");
-                Epidemiology::vaccinate(*vac_percent, write_buffer_reference, rng);
-                listeners.intervention_applied(counts.get_hour(), vaccinations)
-            }
-            _ => {}
+        if let Some(vac_percent) = vaccinations.get_vaccination_percentage(counts) {
+            info!("Vaccination");
+            Epidemiology::vaccinate(*vac_percent, write_buffer_reference, rng);
+            listeners.intervention_applied(counts.get_hour(), vaccinations)
         };
     }
 
@@ -649,12 +641,12 @@ impl Epidemiology {
                 _ => &point
             };
 
-            if travel_plan_config.is_some() {
-                let is_migration_enabled = travel_plan_config.unwrap().migration.enabled;
-                let is_commute_enabled = travel_plan_config.unwrap().commute.enabled;
+            if let Some(travel_plan) = travel_plan_config {
+                let is_migration_enabled = travel_plan.migration.enabled;
+                let is_commute_enabled = travel_plan.commute.enabled;
 
-                let start_migration_hour= if is_migration_enabled {travel_plan_config.unwrap().get_start_migration_hour()} else {0};
-                let end_migration_hour = if is_migration_enabled {travel_plan_config.unwrap().get_end_migration_hour()} else {0};
+                let start_migration_hour= if is_migration_enabled {travel_plan.get_start_migration_hour()} else {0};
+                let end_migration_hour = if is_migration_enabled {travel_plan.get_end_migration_hour()} else {0};
 
                 if is_migration_enabled && simulation_hour % 24 == 0 && current_agent.can_move() &&
                     current_agent.work_location.location_id == *region_name && current_agent.home_location.location_id == *region_name &&

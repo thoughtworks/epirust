@@ -39,6 +39,7 @@ impl KafkaProducer {
         KafkaProducer {
             producer: ClientConfig::new()
                 .set("bootstrap.servers", kafka_url.as_str())
+                .set("message.max.bytes", "104857600") //in order to allow message greater than 1MB
                 .create()
                 .expect("Could not create Kafka Producer")
         }
@@ -62,15 +63,31 @@ impl KafkaProducer {
         });
     }
 
-    pub fn send_commuters(&mut self, outgoing: Vec<CommutersByRegion>) {
-        outgoing.iter().for_each(|out_region| {
+    pub async fn send_commuters(&mut self, outgoing: Vec<CommutersByRegion>) {
+        for out_region  in outgoing.iter() {
             let payload = serde_json::to_string(out_region).unwrap();
-            debug!("Sending commuters: {} to region: {}", payload, out_region.to_engine_id());
+            trace!("Sending commuters: {} to region: {}", payload, out_region.to_engine_id());
+            debug!("Sending commuters: {} to region: {}", out_region.commuters.len(), out_region.to_engine_id());
             let topic = &*format!("{}{}", COMMUTE_TOPIC, out_region.to_engine_id());
             let record: FutureRecord<String, String> = FutureRecord::to(topic)
                 .payload(&payload);
-            self.producer.send(record, 0);
-        });
+            let result   = self.producer.send(record, 0);
+                match result.await {
+                    Ok(d) => {
+                        match d {
+                            Ok(_) => { info!("successfully sent the commuters for region - {}", out_region.to_engine_id())}
+                            Err(e) => {
+                                error!("Error while sending commuters to region {}",out_region.to_engine_id());
+                                panic!("Error - {:?}", e);
+                            }
+                        }
+                    },
+                    Err(e ) => {
+                        error!("Error while sending commuters to region {}", out_region.to_engine_id());
+                        panic!("Error - {}", e);
+                    }
+            };
+        }
     }
 }
 

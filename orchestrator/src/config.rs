@@ -20,9 +20,12 @@
 use std::error::Error;
 use std::fs::File;
 
-use crate::travel_plan::TravelPlan;
 use serde_json::Value;
+use validator::Validate;
+use crate::config::Population::Auto;
 
+use crate::custom_types::{Count, Percentage, Size, validate_percentage};
+use crate::travel_plan::TravelPlan;
 
 pub fn read_simulation_conf(filename: &str) -> String {
     let reader = File::open(filename).unwrap();
@@ -41,12 +44,12 @@ pub fn get_hours(filename: &str) -> i64 {
 
 
 #[derive(Deserialize, Serialize)]
-pub struct Config {
+pub struct Configuration {
     engine_configs: Vec<EngineConfig>,
     travel_plan: TravelPlan,
 }
 
-impl Config {
+impl Configuration {
     pub fn get_travel_plan(&self) -> &TravelPlan {
         &self.travel_plan
     }
@@ -55,21 +58,94 @@ impl Config {
         self.engine_configs.iter().map(|s| s.engine_id.clone()).collect()
     }
 
-    pub fn read(filename: &str) -> Result<Config, Box<dyn Error>> {
+    pub fn read(filename: &str) -> Result<Configuration, Box<dyn Error>> {
         let reader = File::open(filename)?;
-        let config: Config = serde_json::from_reader(reader)?;
+        let config: Configuration = serde_json::from_reader(reader)?;
         if !config.travel_plan.validate_regions(&config.get_engine_ids()) {
             panic!("Engine names should match regions in travel plan");
         }
         Ok(config)
     }
+
+    pub fn validate(&self) {
+        self.engine_configs.iter().for_each(|eng_conf: &EngineConfig| {
+            let population = &eng_conf.config.population;
+            let grid_size = &eng_conf.config.geography_parameters.grid_size;
+            let factor = 3;
+            let travel_plan = self.get_travel_plan();
+
+            let mut total = 0;
+
+
+            if let Auto(x) = population {
+                total += &x.number_of_agents;
+            }
+
+            if travel_plan.commute.enabled {
+                let commute_plan = travel_plan.commute_plan();
+                let incoming_commuters = commute_plan.get_total_incoming(&eng_conf.engine_id);
+                let outgoing_commuters = commute_plan.get_total_outgoing(&eng_conf.engine_id);
+
+                total += incoming_commuters - outgoing_commuters;
+            }
+
+            if travel_plan.migration.enabled {
+                let migration_plan = travel_plan.migration_plan();
+                let incoming_migrators = migration_plan.get_total_incoming(&eng_conf.engine_id);
+                let outgoing_migrators = migration_plan.get_total_outgoing(&eng_conf.engine_id);
+
+                total += incoming_migrators - outgoing_migrators;
+            }
+
+            let x1 = (grid_size * grid_size) / total;
+            if x1 < factor {
+                info!("grid size {}", x1);
+                panic!("Ye to fatt gaya");
+            }
+        });
+    }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Validate)]
+struct Config {
+    population: Population,
+    geography_parameters: GeographyParameters,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Validate)]
+pub struct GeographyParameters {
+    pub grid_size: Size,
+    #[validate(custom = "validate_percentage")]
+    pub hospital_beds_percentage: Percentage,
+}
+
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub enum Population {
+    Csv(CsvPopulation),
+    Auto(AutoPopulation),
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub struct CsvPopulation {
+    pub file: String,
+    pub cols: Vec<String>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
+pub struct AutoPopulation {
+    pub number_of_agents: Count,
+    #[validate(custom = "validate_percentage")]
+    pub public_transport_percentage: Percentage,
+    #[validate(custom = "validate_percentage")]
+    pub working_percentage: Percentage,
 }
 
 // just a struct for easier parsing
 #[derive(Deserialize, Serialize)]
 struct EngineConfig {
     engine_id: String,
-    // config: String
+    config: Config,
 }
 
 #[cfg(test)]
@@ -78,11 +154,11 @@ mod tests {
 
     #[test]
     fn should_read_config() {
-        let config = Config::read("config/test/travel_plan.json").unwrap();
+        let config = Configuration::read("config/test/travel_plan.json").unwrap();
         let travel_plan = config.get_travel_plan();
 
         assert_eq!(travel_plan.get_regions(), &vec!["engine1".to_string(), "engine2".to_string(),
-                                             "engine3".to_string()]);
+                                                    "engine3".to_string()]);
         assert_eq!(config.get_engine_ids(), vec!["engine1".to_string(), "engine2".to_string(),
                                                  "engine3".to_string()])
     }
@@ -98,5 +174,4 @@ mod tests {
         let hours = get_hours("config/test/travel_plan.json");
         assert_eq!(hours, 10000);
     }
-
 }

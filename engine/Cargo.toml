@@ -19,7 +19,7 @@ rdkafka = { version = "0.23", features = ["cmake-build"] }
 clap = "2.33.0"
 ndarray = "0.13.0"
 futures = "0.3.4"
-tokio = { version = "0.2.11", features = ["full"] }
+tokio = { version = "1.8.4", features = ["full"] }
 chrono = "0.4.10"
 geo-types = "0.4.3"
 geo = "0.12.2"

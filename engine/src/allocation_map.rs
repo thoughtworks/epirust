@@ -18,48 +18,45 @@
  */
 
 
-use crate::{agent, constants};
-use crate::geography::{Area, Grid};
-use crate::geography::Point;
-use crate::random_wrapper::RandomWrapper;
-use crate::agent::Citizen;
-use crate::disease_state_machine::State;
-use crate::listeners::events::counts::Counts;
-use crate::travel_plan::Migrator;
-use std::collections::hash_map::{IterMut, Iter};
+use std::collections::hash_map::{Iter, IterMut};
+
 use fnv::FnvHashMap;
+
+use crate::constants;
+use crate::agent::Citizen;
 use crate::commute::Commuter;
 use crate::custom_types::{CoOrdinate, Count, Hour, Size};
+use crate::disease_state_machine::State;
+use crate::geography::{Area, Grid};
+use crate::geography::Point;
+use crate::listeners::events::counts::Counts;
+use crate::random_wrapper::RandomWrapper;
+use crate::travel_plan::Migrator;
 
 #[derive(Clone)]
 pub struct AgentLocationMap {
     grid_size: Size,
-    agent_cell: FnvHashMap<Point, agent::Citizen>,
+    agent_cells: FnvHashMap<Point, Citizen>,
 }
 
 impl AgentLocationMap {
     pub fn init_with_capacity(&mut self, size: usize) {
-        self.agent_cell = FnvHashMap::with_capacity_and_hasher(size, Default::default());
+        self.agent_cells = FnvHashMap::with_capacity_and_hasher(size, Default::default());
     }
 
-    pub fn new(grid_size: Size, agent_list: &[agent::Citizen], points: &[Point]) -> AgentLocationMap {
+    pub fn new(grid_size: Size, agent_list: &[Citizen], points: &[Point]) -> AgentLocationMap {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
-        let mut map: FnvHashMap<Point, agent::Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
-        for i in 0..agent_list.len() {
-            map.insert(points[i], agent_list[i].clone());
-        }
+        let mut map: FnvHashMap<Point, Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
+        agent_list.iter().enumerate().for_each(|(i, _)| { map.insert(points[i], agent_list[i].clone()); });
 
-        AgentLocationMap { grid_size, agent_cell: map }
+        AgentLocationMap { grid_size, agent_cells: map }
     }
 
     pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point {
-        if self.is_cell_vacant(&new_cell) {
-            return new_cell;
-        }
-        old_cell
+        if self.is_cell_vacant(&new_cell) { new_cell } else { old_cell }
     }
 
-    pub fn goto_hospital(&self, hospital_area: &Area, cell: Point, citizen: &mut agent::Citizen) -> (bool, Point) {
+    pub fn goto_hospital(&self, hospital_area: &Area, cell: Point, citizen: &mut Citizen) -> (bool, Point) {
         let vacant_hospital_cell = hospital_area.iter().find(|cell| {
             self.is_cell_vacant(cell)
         });
@@ -72,14 +69,8 @@ impl AgentLocationMap {
         }
     }
 
-//    pub fn print(&self){
-//        for (k,v) in self.agent_cell.iter(){
-//            println!("x:{}, y:{} - id:{} infected:{} working:{} Transport:{}", k.x, k.y, v.id, v.is_infected(), v.working, v.uses_public_transport);
-//        }
-//    }
-
-    pub fn get_agent_for(&self, cell: &Point) -> Option<&agent::Citizen> {
-        self.agent_cell.get(cell)
+    pub fn get_agent_for(&self, cell: &Point) -> Option<&Citizen> {
+        self.agent_cells.get(cell)
     }
 
     pub fn is_point_in_grid(&self, point: &Point) -> bool {
@@ -88,7 +79,7 @@ impl AgentLocationMap {
     }
 
     pub fn is_cell_vacant(&self, cell: &Point) -> bool {
-        !self.agent_cell.contains_key(cell)
+        !self.agent_cells.contains_key(cell)
     }
 
     pub fn remove_migrators(&mut self, outgoing: &Vec<(Point, Migrator)>, counts: &mut Counts, grid: &mut Grid) {
@@ -97,14 +88,8 @@ impl AgentLocationMap {
         }
         debug!("Removing {} outgoing travellers", outgoing.len());
         for (point, migrator) in outgoing {
-            match migrator.state_machine.state {
-                State::Susceptible { .. } => { counts.remove_susceptible(1) },
-                State::Exposed { .. } => { counts.remove_exposed(1) }
-                State::Infected { .. } => { counts.remove_infected(1) },
-                State::Recovered { .. } => { counts.remove_recovered(1) },
-                State::Deceased { .. } => { panic!("Deceased agent should not travel!") },
-            }
-            match self.agent_cell.remove(point) {
+            AgentLocationMap::decrement_counts(&migrator.state_machine.state, counts);
+            match self.agent_cells.remove(point) {
                 None => {
                     panic!("Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
                            migrator.id, point)
@@ -125,14 +110,8 @@ impl AgentLocationMap {
         }
         debug!("Removing {} outgoing commuters", outgoing.len());
         for (point, commuter) in outgoing {
-            match commuter.state_machine.state {
-                State::Susceptible { .. } => { counts.remove_susceptible(1) },
-                State::Exposed { .. } => { counts.remove_exposed(1) }
-                State::Infected { .. } => { counts.remove_infected(1) },
-                State::Recovered { .. } => { counts.remove_recovered(1) },
-                State::Deceased { .. } => { panic!("Deceased agent should not travel!") },
-            }
-            match self.agent_cell.remove(point) {
+            AgentLocationMap::decrement_counts(&commuter.state_machine.state, counts);
+            match self.agent_cells.remove(point) {
                 None => {
                     panic!("Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
                            commuter.id, point)
@@ -141,6 +120,16 @@ impl AgentLocationMap {
                     debug!("removed the commuter successfully {:?}", citizen);
                 }
             }
+        }
+    }
+
+    fn decrement_counts(state: &State, counts: &mut Counts) {
+        match state {
+            State::Susceptible { .. } => { counts.remove_susceptible(1) }
+            State::Exposed { .. } => { counts.remove_exposed(1) }
+            State::Infected { .. } => { counts.remove_infected(1) }
+            State::Recovered { .. } => { counts.remove_recovered(1) }
+            State::Deceased { .. } => { panic!("Deceased agent should not travel!") }
         }
     }
 
@@ -158,89 +147,106 @@ impl AgentLocationMap {
             } else {
                 house.clone()
             };
-            let transport_location = house.get_random_point(rng); // Fixme
-            new_citizens.push(Citizen::from_migrator(migrator, house.clone(), office.clone(), transport_location, grid.housing_area.clone()));
+            let transport_location = self.random_starting_point(&grid.housing_area, rng);
+            let citizen = Citizen::from_migrator(migrator, house.clone(), office.clone(), transport_location, grid.housing_area.clone());
+            new_citizens.push(citizen.clone());
             grid.add_house_occupant(&house.clone());
             if migrator.working {
                 grid.add_office_occupant(&office.clone())
             }
-        }
-        for c in new_citizens {
-            match c.state_machine.state {
-                State::Susceptible { .. } => { counts.update_susceptible(1) }
-                State::Exposed { .. } => { counts.update_exposed(1) }
-                State::Infected { .. } => { counts.update_infected(1) }
-                State::Recovered { .. } => { counts.update_recovered(1) }
-                State::Deceased { .. } => { panic!("Should not receive deceased agent!") }
-            }
-            let p = self.random_starting_point(&grid.housing_area, rng);
-            let result = self.agent_cell.insert(p, c);
+
+            AgentLocationMap::increment_counts(&citizen.state_machine.state, counts);
+            let result = self.agent_cells.insert(transport_location, citizen);
             assert!(result.is_none());
+        }
+    }
+
+    fn increment_counts(state: &State, counts: &mut Counts) {
+        match state {
+            State::Susceptible { .. } => { counts.update_susceptible(1) }
+            State::Exposed { .. } => { counts.update_exposed(1) }
+            State::Infected { .. } => { counts.update_infected(1) }
+            State::Recovered { .. } => { counts.update_recovered(1) }
+            State::Deceased { .. } => { panic!("Should not receive deceased agent!") }
         }
     }
 
     pub fn assimilate_commuters(&mut self, incoming: &mut Vec<Commuter>, grid: &mut Grid, counts: &mut Counts,
                                 rng: &mut RandomWrapper, simulation_hour: Hour) {
-        if incoming.is_empty() {
-            return;
-        }
+        if incoming.is_empty() { return; }
         debug!("Assimilating {} incoming commuters", incoming.len());
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
-        let transport_location = grid.transport_area.get_random_point(rng);
         for commuter in incoming {
-            if simulation_hour == constants::ROUTINE_TRAVEL_START_TIME {
+            let transport_location = self.random_starting_point(&grid.transport_area, rng);
+
+            let work_area: Option<Area> = if simulation_hour == constants::ROUTINE_TRAVEL_START_TIME {
+                debug!("inside if of simulation hour");
                 let office = grid.choose_office_with_free_space(rng);
-                new_citizens.push(Citizen::from_commuter(commuter,  transport_location, grid.housing_area.clone(), Some(office.clone()))); //use current area as transport area
-                grid.add_office_occupant(&office.clone())
-            } else {
-                new_citizens.push(Citizen::from_commuter(commuter,  transport_location, grid.housing_area.clone(), None));
-            }
-        }
-        for c in new_citizens {
-            match c.state_machine.state {
-                State::Susceptible { .. } => { counts.update_susceptible(1) }
-                State::Exposed { .. } => { counts.update_exposed(1) }
-                State::Infected { .. } => { counts.update_infected(1) }
-                State::Recovered { .. } => { counts.update_recovered(1) }
-                State::Deceased { .. } => { panic!("Should not receive deceased agent!") }
-            }
-            let p = self.random_starting_point(&grid.transport_area, rng);
-            let result = self.insert(p, c);
+                debug!("got the office space - {:?}", office.clone());
+                grid.add_office_occupant(&office.clone());
+                debug!("added the office occupant");
+                Some(office.clone())
+            } else { None };
+
+            let citizen = Citizen::from_commuter(commuter, transport_location, grid.housing_area.clone(), work_area);
+            new_citizens.push(citizen.clone()); //use current area as transport area
+
+            AgentLocationMap::increment_counts(&citizen.state_machine.state, counts);
+
+            let result = self.insert(citizen.transport_location, citizen);
+            debug!("citizen inserted");
             assert!(result.is_none());
+            debug!("assert passes");
         }
+
+        debug!("total new citizens: {}", new_citizens.len());
+        debug!("For loop ended");
     }
 
     fn random_starting_point(&self, area: &Area, rng: &mut RandomWrapper) -> Point {
+        let mut result = true;
+        //TODO: Remove this
+        for x in area.start_offset.x..area.end_offset.x {
+            for y in area.start_offset.y..area.end_offset.y {
+                if !self.agent_cells.contains_key(&Point { x, y }) {
+                    result = false;
+                    break;
+                }
+            }
+        }
+        if result {
+            panic!("all transport locations are used");
+        }
         loop {
             let point = area.get_random_point(rng);
-            if !self.agent_cell.contains_key(&point) {
-                return point
+            if !self.agent_cells.contains_key(&point) {
+                return point;
             }
         }
     }
 
     pub fn current_population(&self) -> Count {
-        self.agent_cell.len() as Count
+        self.agent_cells.len() as Count
     }
 
     pub fn iter(&self) -> Iter<'_, Point, Citizen> {
-        self.agent_cell.iter()
+        self.agent_cells.iter()
     }
 
     pub fn iter_mut(&mut self) -> IterMut<'_, Point, Citizen> {
-        self.agent_cell.iter_mut()
+        self.agent_cells.iter_mut()
     }
 
     pub fn clear(&mut self) {
-        self.agent_cell.clear();
+        self.agent_cells.clear();
     }
 
     pub fn get(&self, point: &Point) -> Option<&Citizen> {
-        self.agent_cell.get(point)
+        self.agent_cells.get(point)
     }
 
     pub fn insert(&mut self, point: Point, citizen: Citizen) -> Option<Citizen> {
-        self.agent_cell.insert(point, citizen)
+        self.agent_cells.insert(point, citizen)
     }
 
     // pub fn remove(&mut self, point: Point) -> Option<Citizen> {
@@ -250,22 +256,23 @@ impl AgentLocationMap {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::random_wrapper::RandomWrapper;
     use crate::agent::WorkStatus;
+    use crate::random_wrapper::RandomWrapper;
+
+    use super::*;
 
     fn before_each() -> AgentLocationMap {
         let mut rng = RandomWrapper::new();
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
         let engine_id = "engine1".to_string();
-        let home_locations = vec![Area::new(engine_id.clone(),Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(),Point::new(3, 0), Point::new(4, 2))];
+        let home_locations = vec![Area::new(engine_id.clone(), Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(), Point::new(3, 0), Point::new(4, 2))];
 
-        let work_locations = vec![Area::new(engine_id.clone(),Point::new(5, 0), Point::new(6, 2)), Area::new(engine_id,Point::new(7, 0), Point::new(8, 2))];
+        let work_locations = vec![Area::new(engine_id.clone(), Point::new(5, 0), Point::new(6, 2)), Area::new(engine_id, Point::new(7, 0), Point::new(8, 2))];
         let working = WorkStatus::NA {};
         let non_working = WorkStatus::Normal {};
 
-        let agents = vec![agent::Citizen::new(home_locations[0].clone(), work_locations[0].clone(), points[0], false, non_working, &mut rng),
-                          agent::Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, working, &mut rng)];
+        let agents = vec![Citizen::new(home_locations[0].clone(), work_locations[0].clone(), points[0], false, non_working, &mut rng),
+                          Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, working, &mut rng)];
         AgentLocationMap::new(5, &agents, &points)
     }
 
@@ -283,14 +290,14 @@ mod tests {
         let working = WorkStatus::NA {};
         let non_working = WorkStatus::Normal {};
         let engine_id = "engine1".to_string();
-        let home_locations = vec![Area::new(engine_id.clone(),Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(),Point::new(3, 0), Point::new(4, 2))];
+        let home_locations = vec![Area::new(engine_id.clone(), Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(), Point::new(3, 0), Point::new(4, 2))];
 
-        let work_locations = vec![Area::new(engine_id.clone(),Point::new(5, 0), Point::new(6, 2)), Area::new(engine_id.clone(),Point::new(7, 0), Point::new(8, 2))];
-        let mut citizen1 = agent::Citizen::new(home_locations[0].clone(), work_locations[1].clone(), points[0], false, non_working, &mut rng);
-        let citizen2 = agent::Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, working, &mut rng);
+        let work_locations = vec![Area::new(engine_id.clone(), Point::new(5, 0), Point::new(6, 2)), Area::new(engine_id.clone(), Point::new(7, 0), Point::new(8, 2))];
+        let mut citizen1 = Citizen::new(home_locations[0].clone(), work_locations[1].clone(), points[0], false, non_working, &mut rng);
+        let citizen2 = Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, working, &mut rng);
         let agents = vec![citizen1.clone(), citizen2];
         let map = AgentLocationMap::new(5, &agents, &points);
-        let hospital = Area::new(engine_id,Point::new(2, 2), Point::new(4, 4));
+        let hospital = Area::new(engine_id, Point::new(2, 2), Point::new(4, 4));
         let result = map.goto_hospital(&hospital, points[0], &mut citizen1);
 
         assert!(result.0);
@@ -302,17 +309,17 @@ mod tests {
         let mut rng = RandomWrapper::new();
         let engine_id = "engine1".to_string();
         let points = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0), Point::new(1, 1)];
-        let home = Area::new(engine_id.clone(),Point::new(0, 0), Point::new(2, 2));
+        let home = Area::new(engine_id.clone(), Point::new(0, 0), Point::new(2, 2));
         let work_status = WorkStatus::NA {};
 
-        let work = Area::new(engine_id.clone(),Point::new(5, 0), Point::new(6, 2));
-        let citizen1 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
-        let citizen2 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
-        let citizen3 = agent::Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
-        let citizen4 = agent::Citizen::new(home, work, points[0], false, work_status, &mut rng);
+        let work = Area::new(engine_id.clone(), Point::new(5, 0), Point::new(6, 2));
+        let citizen1 = Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
+        let citizen2 = Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
+        let citizen3 = Citizen::new(home.clone(), work.clone(), points[0], false, work_status, &mut rng);
+        let citizen4 = Citizen::new(home, work, points[0], false, work_status, &mut rng);
         let agents = vec![citizen1.clone(), citizen2, citizen3, citizen4];
         let map = AgentLocationMap::new(5, &agents, &points);
-        let hospital = Area::new(engine_id,Point::new(0, 0), Point::new(1, 1));
+        let hospital = Area::new(engine_id, Point::new(0, 0), Point::new(1, 1));
 
         let result = map.goto_hospital(&hospital, points[0], &mut citizen1.clone());
 

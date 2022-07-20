@@ -124,7 +124,7 @@ mod tests {
 
         let travellers_by_region = vec![create_travellers("engine2"), create_travellers("engine3")];
         counter.outgoing_migrators_added(24, &travellers_by_region);
-        counter.outgoing_migrators_added(48, &vec![create_travellers("engine2")]);
+        counter.outgoing_migrators_added(48, &[create_travellers("engine2")]);
         counter.simulation_ended();
 
         assert_eq!(3, counter.counts.len());

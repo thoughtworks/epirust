@@ -71,14 +71,14 @@ impl Configuration {
         self.engine_configs.iter().for_each(|eng_conf: &EngineConfig| {
             let population = &eng_conf.config.population;
             let grid_size = &eng_conf.config.geography_parameters.grid_size;
-            let factor = 3;
+            let min_accepted_ratio = 3;
             let travel_plan = self.get_travel_plan();
 
-            let mut total = 0;
+            let mut total_population = 0;
 
 
             if let Auto(x) = population {
-                total += &x.number_of_agents;
+                total_population += &x.number_of_agents;
             }
 
             if travel_plan.commute.enabled {
@@ -86,7 +86,9 @@ impl Configuration {
                 let incoming_commuters = commute_plan.get_total_incoming(&eng_conf.engine_id);
                 let outgoing_commuters = commute_plan.get_total_outgoing(&eng_conf.engine_id);
 
-                total += incoming_commuters - outgoing_commuters;
+                debug!("Total incoming commuters: {}, Total outgoing commuters: {}", incoming_commuters, outgoing_commuters);
+
+                total_population += incoming_commuters - outgoing_commuters;
             }
 
             if travel_plan.migration.enabled {
@@ -94,12 +96,14 @@ impl Configuration {
                 let incoming_migrators = migration_plan.get_total_incoming(&eng_conf.engine_id);
                 let outgoing_migrators = migration_plan.get_total_outgoing(&eng_conf.engine_id);
 
-                total += incoming_migrators - outgoing_migrators;
+                debug!("Total incoming migrators: {}, Total outgoing migrators: {}", incoming_migrators, outgoing_migrators);
+
+                total_population += incoming_migrators - outgoing_migrators;
             }
 
-            let x1 = (grid_size * grid_size) / total;
-            if x1 < factor {
-                info!("grid size {}", x1);
+            let actual_ratio = (grid_size * grid_size) / total_population;
+            if actual_ratio < min_accepted_ratio {
+                debug!("grid size: {}, total population: {}", actual_ratio, total_population);
                 panic!("{}: Not enough space to accumulate the migrators/commuters", eng_conf.engine_id);
             }
         });

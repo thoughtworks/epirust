@@ -246,17 +246,11 @@ impl Citizen {
     }
 
     fn is_hospital_staff(&self) -> bool {
-        match self.work_status {
-            WorkStatus::HospitalStaff { .. } => true,
-            _ => false
-        }
+        matches!(self.work_status, WorkStatus::HospitalStaff { .. })
     }
 
     pub fn is_essential_worker(&self) -> bool {
-        match self.work_status {
-            WorkStatus::Essential {} => true,
-            _ => false
-        }
+        matches!(self.work_status, WorkStatus::Essential {})
     }
 
     fn perform_movements(&mut self, cell: Point, hour_of_day: Hour, simulation_hr: Hour, grid: &Grid,
@@ -463,13 +457,10 @@ impl Citizen {
     }
 
     pub fn assign_essential_worker(&mut self, essential_workers_percentage: f64, rng: &mut RandomWrapper) {
-        match self.work_status {
-            WorkStatus::Normal {} => {
-                if rng.get().gen_bool(essential_workers_percentage) {
-                    self.work_status = WorkStatus::Essential {};
-                }
+        if let WorkStatus::Normal {} = self.work_status {
+            if rng.get().gen_bool(essential_workers_percentage) {
+                self.work_status = WorkStatus::Essential {};
             }
-            _ => {}
         }
     }
 
@@ -508,7 +499,7 @@ impl Citizen {
     }
 }
 
-pub fn citizen_factory(number_of_agents: Count, home_locations: &Vec<Area>, work_locations: &Vec<Area>, public_transport_locations: &Vec<Point>,
+pub fn citizen_factory(number_of_agents: Count, home_locations: &[Area], work_locations: &[Area], public_transport_locations: &[Point],
                        percentage_public_transport: Percentage, working_percentage: Percentage, rng: &mut RandomWrapper,
                        starting_infections: &StartingInfections, travel_plan_config: Option<TravelPlanConfig>, region: String) -> Vec<Citizen> {
     let mut agent_list = Vec::with_capacity(home_locations.len());
@@ -551,7 +542,7 @@ pub fn citizen_factory(number_of_agents: Count, home_locations: &Vec<Area>, work
     agent_list
 }
 
-pub fn update_commuters(agent_list: &mut Vec<Citizen>, commute_plan: CommutePlan, region_name: String) {
+pub fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, region_name: String) {
     let total_commuters_by_region : Vec<(String, u32)> = commute_plan.get_total_commuters_by_region(region_name.clone());
     for (region, commuters) in total_commuters_by_region {
         for _i in 0..commuters {
@@ -561,7 +552,7 @@ pub fn update_commuters(agent_list: &mut Vec<Citizen>, commute_plan: CommutePlan
     }
 }
 
-pub fn set_starting_infections(agent_list: &mut Vec<Citizen>, start_infections: &StartingInfections,
+pub fn set_starting_infections(agent_list: &mut [Citizen], start_infections: &StartingInfections,
                                rng: &mut RandomWrapper) {
     if start_infections.total() as usize > agent_list.len() {
         panic!("There are {} people set to infect, but only {} agents available",
@@ -596,7 +587,7 @@ mod tests {
         let engine_id = "engine1".to_string();
         let home_locations = vec![Area::new(engine_id.clone(), Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(),Point::new(3, 0), Point::new(4, 2))];
 
-        let work_locations = vec![Area::new(engine_id.clone(),Point::new(5, 0), Point::new(6, 2)), Area::new(engine_id.clone(),Point::new(7, 0), Point::new(8, 2))];
+        let work_locations = vec![Area::new(engine_id.clone(),Point::new(5, 0), Point::new(6, 2)), Area::new(engine_id,Point::new(7, 0), Point::new(8, 2))];
 
         let public_transport_location = vec![Point::new(5, 0), Point::new(5, 1), Point::new(5, 2), Point::new(5, 3)];
         let start_infections = StartingInfections::new(0, 0, 0, 1);
@@ -608,7 +599,7 @@ mod tests {
     fn generate_citizen() {
         let citizen_list = before_each();
         let engine_id = "engine1".to_string();
-        let expected_home_locations = vec![Area::new(engine_id.clone(),Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id.clone(),Point::new(3, 0), Point::new(4, 2))];
+        let expected_home_locations = vec![Area::new(engine_id.clone(),Point::new(0, 0), Point::new(2, 2)), Area::new(engine_id,Point::new(3, 0), Point::new(4, 2))];
 
         assert_eq!(citizen_list.len(), 4);
         assert_eq!(citizen_list.iter().filter(|c| c.is_exposed()).count(), 1);
@@ -622,7 +613,7 @@ mod tests {
     fn should_set_starting_infections() {
         let engine_id = "engine1".to_string();
         let home_location = Area::new(engine_id.clone(),Point::new(0, 0), Point::new(10, 10));
-        let work_location = Area::new(engine_id.clone(),Point::new(11, 0), Point::new(20, 20));
+        let work_location = Area::new(engine_id,Point::new(11, 0), Point::new(20, 20));
         let mut citizens = Vec::new();
         let mut rng = RandomWrapper::new();
         for _i in 0..20 {
@@ -651,7 +642,7 @@ mod tests {
         let engine_id = "engine1".to_string();
 
         let home_location = Area::new(engine_id.clone(), Point::new(0, 0), Point::new(10, 10));
-        let work_location = Area::new(engine_id.clone(), Point::new(11, 0), Point::new(20, 20));
+        let work_location = Area::new(engine_id, Point::new(11, 0), Point::new(20, 20));
         let mut rng = RandomWrapper::new();
         let working_citizen = Citizen::new(home_location.clone(), work_location.clone(), Point::new(2, 2), false,
                                    WorkStatus::Normal{}, &mut rng);

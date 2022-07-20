@@ -100,7 +100,7 @@ impl Grid {
         (home_loc, agents_in_order)
     }
 
-    pub fn group_agents_by_home_locations(agent_list: &Vec<Citizen>) -> HashMap<&Area, Vec<&Citizen>> {
+    pub fn group_agents_by_home_locations(agent_list: &[Citizen]) -> HashMap<&Area, Vec<&Citizen>> {
         let mut agents_by_home_locations: HashMap<&Area, Vec<&Citizen>> = HashMap::new();
         agent_list.iter().for_each(|agent| {
             match agents_by_home_locations.get(&agent.home_location) {

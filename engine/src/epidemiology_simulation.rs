@@ -98,7 +98,7 @@ impl Epidemiology {
 
     fn output_file_format(config: &Config, run_mode: &RunMode) -> String {
         let now: DateTime<Local> = SystemTime::now().into();
-        let mut output_file_prefix = config.get_output_file().unwrap_or("simulation".to_string());
+        let mut output_file_prefix = config.get_output_file().unwrap_or_else(|| "simulation".to_string());
         if let RunMode::MultiEngine { engine_id } = run_mode {
             output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
         }

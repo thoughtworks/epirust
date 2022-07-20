@@ -96,7 +96,7 @@ impl Listener for TravelCounter {
         }
     }
 
-    fn outgoing_migrators_added(&mut self, hr: Hour, travellers: &Vec<MigratorsByRegion>) {
+    fn outgoing_migrators_added(&mut self, hr: Hour, travellers: &[MigratorsByRegion]) {
         let counts_by_region: Vec<CountsByRegion> = travellers.iter().map(|t| {
             CountsByRegion::create_from(hr, t)
         }).collect();

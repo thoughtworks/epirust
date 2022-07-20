@@ -33,7 +33,7 @@ pub trait Listener {
     fn citizen_state_updated(&mut self, _hr: Hour, _citizen: &Citizen, _location: &Point) {}
     fn grid_updated(&self, _grid: &Grid) {}
     fn intervention_applied(&mut self, _at_hour: Hour, _intervention: &dyn InterventionType) {}
-    fn outgoing_migrators_added(&mut self, _hr: Hour, _travellers: &Vec<MigratorsByRegion>) {}
+    fn outgoing_migrators_added(&mut self, _hr: Hour, _travellers: &[MigratorsByRegion]) {}
     fn as_any(&self) -> &dyn Any;
 }
 

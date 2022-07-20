@@ -100,7 +100,7 @@ impl Configuration {
             let x1 = (grid_size * grid_size) / total;
             if x1 < factor {
                 info!("grid size {}", x1);
-                panic!("Ye to fatt gaya");
+                panic!("{}: Not enough space to accumulate the migrators/commuters", eng_conf.engine_id);
             }
         });
     }

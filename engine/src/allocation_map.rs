@@ -19,6 +19,8 @@
 
 
 use std::collections::hash_map::{Iter, IterMut};
+use std::collections::HashSet;
+use std::iter::FromIterator;
 
 use fnv::FnvHashMap;
 
@@ -204,17 +206,13 @@ impl AgentLocationMap {
     }
 
     fn random_starting_point(&self, area: &Area, rng: &mut RandomWrapper) -> Point {
-        let mut result = true;
-        //TODO: Remove this
-        for x in area.start_offset.x..area.end_offset.x {
-            for y in area.start_offset.y..area.end_offset.y {
-                if !self.agent_cells.contains_key(&Point { x, y }) {
-                    result = false;
-                    break;
-                }
-            }
-        }
-        if result {
+        let total_transport_points  = (area.end_offset.x - area.start_offset.x) * (area.end_offset.y - area.start_offset.y);
+        //TODO: Confirm if the transports location are already unique per agent
+        let transport_points_consumed = HashSet::<Point>::from_iter(
+            self.agent_cells.values().map(|c| c.transport_location)
+        ).len();
+
+        if transport_points_consumed == total_transport_points as usize {
             panic!("all transport locations are used");
         }
         loop {

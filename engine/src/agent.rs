@@ -546,7 +546,8 @@ pub fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, r
     let total_commuters_by_region : Vec<(String, u32)> = commute_plan.get_total_commuters_by_region(region_name.clone());
     for (region, commuters) in total_commuters_by_region {
         for _i in 0..commuters {
-            let working_agent = agent_list.iter_mut().find(| agent| agent.is_working() && agent.work_location.location_id == region_name.clone());
+            //TODO: Only agents with public transport will be commuting to another engine, find better way which allows private transport
+            let working_agent = agent_list.iter_mut().find(| agent| agent.is_working() && agent.work_location.location_id == region_name.clone() && agent.uses_public_transport);
             working_agent.unwrap().work_location.location_id = region.to_string();
         }
     }

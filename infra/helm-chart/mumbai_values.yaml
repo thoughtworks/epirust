@@ -2,18 +2,18 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-config: "mumbai_ward.json"
+config: "mumbai_ward_25.json"
 
 multiengineSim: true
 
 engine:
-  fullname: "mumbai-ward-engine-1"
+  fullname: "mumbai-ward-engine-25-1"
   spec:
     completions: 24
     parallelism: 24
   image:
     repository: "sapanakale/epirust-engine"
-    tag: "commute"
+    tag: "commute-latest-10"
     pullPolicy: IfNotPresent
   resources:
     requests:
@@ -24,23 +24,23 @@ engine:
       memory: "4Gi"
   env:
     EPI_KAFKA_URL: "kafka-cp-kafka:9092"
-    RUST_LOG: info
+    RUST_LOG: debug
     RUST_BACKTRACE: full
   volumes:
     name: "epirust-storage"
     claimName: "epirust-claim"
   volumeMounts:
     output:
-      subPath: "epirust/output/mumbai_multi_engine/run_1"
+      subPath: "epirust/output/mumbai_multi_engine/25/run_1"
     config:
       subPath: "epirust/config"
 
 orchestrator:
-  fullname: "mumbai-ward-orchestrator-4"
+  fullname: "mumbai-ward-orchestrator-25-1"
   image:
     repository: "sapanakale/epirust-orchestrator"
     pullPolicy: IfNotPresent
-    tag: "commute"
+    tag: "commute-latest-8"
   resources:
     requests:
       cpu: "1000m"
@@ -50,7 +50,7 @@ orchestrator:
       memory: "4Gi"
   env:
     EPI_KAFKA_URL: "kafka-cp-kafka:9092"
-    RUST_LOG: info
+    RUST_LOG: debug
     RUST_BACKTRACE: full
   volumes:
     name: "epirust-storage"

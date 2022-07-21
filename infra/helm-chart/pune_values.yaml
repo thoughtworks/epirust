@@ -7,13 +7,13 @@ config: "pune_ward.json"
 multiengineSim: true
 
 engine:
-  fullname: "pune-ward-engine-5"
+  fullname: "pune-ward-engine-1"
   spec:
     completions: 15
     parallelism: 15
   image:
     repository: "sapanakale/epirust-engine"
-    tag: "commute"
+    tag: "commute-latest-1"
     pullPolicy: IfNotPresent
   resources:
     requests:
@@ -31,16 +31,16 @@ engine:
     claimName: "epirust-claim"
   volumeMounts:
     output:
-      subPath: "epirust/output/pune_multi_engine/run_5"
+      subPath: "epirust/output/pune_multi_engine/sep-topics/run_1"
     config:
       subPath: "epirust/config"
 
 orchestrator:
-  fullname: "pune-ward-orchestrator-5"
+  fullname: "pune-ward-orchestrator-1"
   image:
     repository: "sapanakale/epirust-orchestrator"
     pullPolicy: IfNotPresent
-    tag: "commute"
+    tag: "commute-latest-1"
   resources:
     requests:
       cpu: "1000m"

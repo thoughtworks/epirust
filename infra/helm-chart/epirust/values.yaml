@@ -2,18 +2,18 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-config: "100k_100.json"
+config: "1m_100_latest.json"
 
 multiengineSim: true
 
 engine:
-  fullname: "100k-100-engine-2"
+  fullname: "1m-100-engine-sep-topics-2"
   spec:
     completions: 100
     parallelism: 100
   image:
     repository: "sapanakale/epirust-engine"
-    tag: "commute"
+    tag: "commute-latest-1"
     pullPolicy: Always
   resources:
     requests:
@@ -21,7 +21,7 @@ engine:
       memory: "2Gi"
     limits:
       cpu: "1000m"
-      memory: "8Gi"
+      memory: "2Gi"
   env:
     EPI_KAFKA_URL: "kafka-cp-kafka:9092"
     RUST_LOG: info
@@ -31,25 +31,24 @@ engine:
     claimName: "epirust-claim"
   volumeMounts:
     output:
-      subPath: "epirust/output/100k_100/run_2"
+      subPath: "epirust/output/1m_100/sep-topics/run_2"
     config:
       subPath: "epirust/config"
 
 orchestrator:
-  fullname: "100k-100-orchestrator-2"
+  fullname: "1m-100-orchestrator-sep-topics-2"
   image:
     repository: "sapanakale/epirust-orchestrator"
     pullPolicy: Always
-    tag: "commute"
+    tag: "commute-latest-1"
   resources:
     requests:
       cpu: "1000m"
       memory: "2Gi"
     limits:
       cpu: "1000m"
-      memory: "4Gi"
+      memory: "2Gi"
   env:
-#    EPI_KAFKA_URL: "kafka.default.svc.cluster.local:9092"
     EPI_KAFKA_URL: "kafka-cp-kafka:9092"
     RUST_LOG: info
     RUST_BACKTRACE: full

@@ -46,6 +46,8 @@ pub fn define_geography(grid_size: Size, engine_id: String) -> Grid {
     let houses = area::area_factory(housing_area.start_offset, housing_area.end_offset, constants::HOME_SIZE, engine_id.clone());
     let offices = area::area_factory(work_area.start_offset, work_area.end_offset, constants::OFFICE_SIZE, engine_id);
 
+    info!("total number of cells in engine - {}", (transport_area.end_offset.x - transport_area.start_offset.x) * (transport_area.end_offset.y - transport_area.start_offset.y));
+
     Grid {
         grid_size,
         housing_area,

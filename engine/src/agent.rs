@@ -62,7 +62,7 @@ fn bool_from_string<'de, D>(deserializer: D) -> Result<bool, D::Error>
     }
 }
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum WorkStatus {
     Normal,
     Essential,
@@ -506,6 +506,7 @@ pub fn citizen_factory(number_of_agents: Count, home_locations: &[Area], work_lo
     let commute_plan: Option<CommutePlan> = if travel_plan_config.is_some() && travel_plan_config.as_ref().unwrap().commute.enabled {
         Some(travel_plan_config.unwrap().commute_plan())
     } else { None };
+    let mut current_number_of_public_transport_users = 0;
     for i in 0..number_of_agents as usize {
         let is_a_working_citizen = rng.get().gen_bool(working_percentage);
 
@@ -515,11 +516,14 @@ pub fn citizen_factory(number_of_agents: Count, home_locations: &[Area], work_lo
         let home_location = home_locations[(i % total_home_locations)].clone();
         let work_location = work_locations[(i % total_work_locations)].clone();
 
+        debug!("percentage_public_transport = {}, number of agents = {}", percentage_public_transport, number_of_agents);
         let uses_public_transport = rng.get().gen_bool(percentage_public_transport)
             && is_a_working_citizen
-            && i < public_transport_locations.len();
+            && current_number_of_public_transport_users < public_transport_locations.len();
+
+        if uses_public_transport {current_number_of_public_transport_users += 1 };
         //TODO: Check the logic - Jayanta
-        let public_transport_location: Point = if uses_public_transport { public_transport_locations[i] } else {
+        let public_transport_location: Point = if uses_public_transport { public_transport_locations[current_number_of_public_transport_users] } else {
             home_location.get_random_point(rng)
         };
 
@@ -533,7 +537,9 @@ pub fn citizen_factory(number_of_agents: Count, home_locations: &[Area], work_lo
 
         agent_list.push(agent);
     }
+    debug!("all working agents: {}", agent_list.iter().filter(|a| {a.work_status != WorkStatus::NA}).count());
 
+    debug!("agents with public transport percentage: {}", agent_list.iter().filter(|a| {a.uses_public_transport}).count());
     set_starting_infections(&mut agent_list, starting_infections, rng);
     if commute_plan.is_some() {
         update_commuters(&mut agent_list, commute_plan.unwrap(), region);
@@ -542,12 +548,12 @@ pub fn citizen_factory(number_of_agents: Count, home_locations: &[Area], work_lo
     agent_list
 }
 
-pub fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, region_name: String) {
-    let total_commuters_by_region : Vec<(String, u32)> = commute_plan.get_total_commuters_by_region(region_name.clone());
+pub fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, self_region: String) {
+    let total_commuters_by_region : Vec<(String, u32)> = commute_plan.get_total_commuters_by_region(self_region.clone());
     for (region, commuters) in total_commuters_by_region {
         for _i in 0..commuters {
             //TODO: Only agents with public transport will be commuting to another engine, find better way which allows private transport
-            let working_agent = agent_list.iter_mut().find(| agent| agent.is_working() && agent.work_location.location_id == region_name.clone() && agent.uses_public_transport);
+            let working_agent = agent_list.iter_mut().find(| agent| agent.is_working() && agent.work_location.location_id == self_region.clone() && agent.uses_public_transport);
             working_agent.unwrap().work_location.location_id = region.to_string();
         }
     }

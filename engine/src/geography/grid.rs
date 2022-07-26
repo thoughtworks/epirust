@@ -55,8 +55,8 @@ impl Grid {
 
         //        TODO: fix the hack
         let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
-
         let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32, rng);
+        debug!("transport locations: {}", transport_locations.len());
         debug!("Finished generating transport locations");
 
         let agent_list = agent::citizen_factory(number_of_agents, &self.houses, &self.offices,

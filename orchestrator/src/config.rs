@@ -27,7 +27,7 @@ use crate::config::Population::Auto;
 use crate::custom_types::{Count, Percentage, Size, validate_percentage};
 use crate::travel_plan::TravelPlan;
 
-pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.1;
+pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;
 
 pub fn read_simulation_conf(filename: &str) -> String {
     let reader = File::open(filename).unwrap();

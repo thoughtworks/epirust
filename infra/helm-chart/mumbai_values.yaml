@@ -13,7 +13,7 @@ engine:
     parallelism: 24
   image:
     repository: "sapanakale/epirust-engine"
-    tag: "commute-latest-10"
+    tag: "commute-latest-16"
     pullPolicy: IfNotPresent
   resources:
     requests:
@@ -40,7 +40,7 @@ orchestrator:
   image:
     repository: "sapanakale/epirust-orchestrator"
     pullPolicy: IfNotPresent
-    tag: "commute-latest-8"
+    tag: "commute-latest-12"
   resources:
     requests:
       cpu: "1000m"

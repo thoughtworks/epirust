@@ -110,3 +110,4 @@ if __name__ == "__main__":
 
     with open("generated.json", "w") as outfile:
         outfile.write(json.dumps(final))
+

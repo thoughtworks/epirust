@@ -20,7 +20,7 @@
 use crate::custom_types::{Day, Hour, Percentage, Size};
 
 pub const HOUSE_AREA_RELATIVE_SIZE: Percentage = 0.4;
-pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.1;
+pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;
 pub const WORK_AREA_RELATIVE_SIZE: Percentage = 0.2;
 pub const INITIAL_HOSPITAL_RELATIVE_SIZE: Percentage = 0.1;
 

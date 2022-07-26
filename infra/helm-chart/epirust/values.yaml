@@ -2,18 +2,18 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-config: "1m_100_latest.json"
+config: "10k_100_latest.json"
 
 multiengineSim: true
 
 engine:
-  fullname: "1m-100-engine-sep-topics-2"
+  fullname: "10-100-engine-sep-topics-2"
   spec:
     completions: 100
     parallelism: 100
   image:
     repository: "sapanakale/epirust-engine"
-    tag: "commute-latest-1"
+    tag: "commute-latest-16"
     pullPolicy: Always
   resources:
     requests:
@@ -31,7 +31,7 @@ engine:
     claimName: "epirust-claim"
   volumeMounts:
     output:
-      subPath: "epirust/output/1m_100/sep-topics/run_2"
+      subPath: "epirust/output/10k_100"
     config:
       subPath: "epirust/config"
 
@@ -40,7 +40,7 @@ orchestrator:
   image:
     repository: "sapanakale/epirust-orchestrator"
     pullPolicy: Always
-    tag: "commute-latest-1"
+    tag: "commute-latest-12"
   resources:
     requests:
       cpu: "1000m"

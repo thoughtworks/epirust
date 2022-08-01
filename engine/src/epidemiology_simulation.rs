@@ -304,15 +304,15 @@ impl Epidemiology {
 
         counts_at_hr.log();
 
-        let total_tick_sync_time = 0;
+        let mut total_tick_sync_time = 0;
         let mut total_commute_sync_time = 0;
 
         for simulation_hour in 1..config.get_hours() {
             let start_time = Instant::now();
             let tick = Epidemiology::receive_tick(run_mode, &mut ticks_stream, simulation_hour, is_commute_enabled, is_migration_enabled).await;
             if let Some(t) = tick {
-                // total_tick_sync_time += start_time.elapsed().as_millis();
-                // info!("total tick sync time as hour {} - is {}", simulation_hour, total_tick_sync_time);
+                total_tick_sync_time += start_time.elapsed().as_millis();
+                info!("total tick sync time as hour {} - is {}", simulation_hour, total_tick_sync_time);
                 if t.terminate() {
                     info!("received tick {:?}", t);
                     break;
@@ -390,7 +390,7 @@ impl Epidemiology {
                 let received_commuters = Epidemiology::receive_commuters(tick, &mut commute_stream, &commute_plan, engine_id);
                 let (mut incoming_commuters, ) = join!(received_commuters);
                 total_commute_sync_time += commute_start_time.elapsed().as_millis();
-                // info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
+                info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
                 write_buffer_reference.remove_commuters(&outgoing_commuters, counts_at_hr);

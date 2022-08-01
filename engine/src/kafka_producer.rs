@@ -63,7 +63,7 @@ impl KafkaProducer {
         });
     }
 
-    pub async fn send_commuters(&mut self, outgoing: Vec<CommutersByRegion>) {
+    pub fn send_commuters(&mut self, outgoing: Vec<CommutersByRegion>) {
         for out_region  in outgoing.iter() {
             let payload = serde_json::to_string(out_region).unwrap();
             trace!("Sending commuters: {} to region: {}", payload, out_region.to_engine_id());
@@ -71,22 +71,22 @@ impl KafkaProducer {
             let topic = &*format!("{}{}", COMMUTE_TOPIC, out_region.to_engine_id());
             let record: FutureRecord<String, String> = FutureRecord::to(topic)
                 .payload(&payload);
-            let result   = self.producer.send(record, 0);
-                match result.await {
-                    Ok(d) => {
-                        match d {
-                            Ok(_) => { info!("successfully sent the commuters for region - {}", out_region.to_engine_id())}
-                            Err(e) => {
-                                error!("Error while sending commuters to region {}",out_region.to_engine_id());
-                                panic!("Error - {:?}", e);
-                            }
-                        }
-                    },
-                    Err(e ) => {
-                        error!("Error while sending commuters to region {}", out_region.to_engine_id());
-                        panic!("Error - {}", e);
-                    }
-            };
+            self.producer.send(record, 0);
+            //     match result.await {
+            //         Ok(d) => {
+            //             match d {
+            //                 Ok(_) => { info!("successfully sent the commuters for region - {}", out_region.to_engine_id())}
+            //                 Err(e) => {
+            //                     error!("Error while sending commuters to region {}",out_region.to_engine_id());
+            //                     panic!("Error - {:?}", e);
+            //                 }
+            //             }
+            //         },
+            //         Err(e ) => {
+            //             error!("Error while sending commuters to region {}", out_region.to_engine_id());
+            //             panic!("Error - {}", e);
+            //         }
+            // };
         }
     }
 }

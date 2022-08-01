@@ -379,7 +379,7 @@ impl Epidemiology {
                     Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
                 }
                 if is_commute_enabled {
-                    Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region).await;
+                    Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
                 }
             };
 
@@ -505,11 +505,11 @@ impl Epidemiology {
         }
     }
 
-    async fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
+    fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
         if tick.is_some() {
             let hour = tick.unwrap().hour() % 24;
             if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
-                producer.send_commuters(outgoing).await;
+                producer.send_commuters(outgoing);
             }
         }
     }

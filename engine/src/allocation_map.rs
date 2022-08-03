@@ -19,14 +19,12 @@
 
 
 use std::collections::hash_map::{Iter, IterMut};
-use std::collections::HashSet;
-use std::iter::FromIterator;
 
 use fnv::FnvHashMap;
 
-use crate::constants;
 use crate::agent::Citizen;
 use crate::commute::Commuter;
+use crate::constants;
 use crate::custom_types::{CoOrdinate, Count, Hour, Size};
 use crate::disease_state_machine::State;
 use crate::geography::{Area, Grid};
@@ -141,6 +139,10 @@ impl AgentLocationMap {
             return;
         }
         debug!("Assimilating {} incoming migrators", incoming.len());
+
+        let can_be_accommodated = self.can_be_accommodated(&grid.housing_area, incoming.len());
+        if !can_be_accommodated { panic!("Not enough housing locations are available for migrators") };
+
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
         for migrator in incoming {
             let house = grid.choose_house_with_free_space(rng);
@@ -177,6 +179,10 @@ impl AgentLocationMap {
                                 rng: &mut RandomWrapper, simulation_hour: Hour) {
         if incoming.is_empty() { return; }
         debug!("Assimilating {} incoming commuters", incoming.len());
+
+        let can_be_accommodated = self.can_be_accommodated(&grid.transport_area, incoming.len());
+        if !can_be_accommodated { panic!("Not enough transport location are available for commuters") };
+
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
         for commuter in incoming {
             let transport_location = self.random_starting_point(&grid.transport_area, rng);
@@ -205,20 +211,25 @@ impl AgentLocationMap {
         debug!("For loop ended");
     }
 
-    fn random_starting_point(&self, area: &Area, rng: &mut RandomWrapper) -> Point {
-        let mut result = true;
-        //TODO: Remove this
+
+    fn can_be_accommodated(&self, area: &Area, n: usize) -> bool {
+        let mut result = false;
+        let mut total_accommodated = 0;
         for x in area.start_offset.x..area.end_offset.x {
             for y in area.start_offset.y..area.end_offset.y {
                 if !self.agent_cells.contains_key(&Point { x, y }) {
-                    result = false;
-                    break;
+                    total_accommodated += 1;
+                    if total_accommodated == n {
+                        result = true;
+                        break;
+                    };
                 }
             }
         }
-        if result {
-            panic!("all transport locations are used");
-        }
+        result
+    }
+
+    fn random_starting_point(&self, area: &Area, rng: &mut RandomWrapper) -> Point {
         loop {
             let point = area.get_random_point(rng);
             if !self.agent_cells.contains_key(&point) {

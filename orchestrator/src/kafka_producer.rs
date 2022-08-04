@@ -13,6 +13,7 @@ impl KafkaProducer {
         KafkaProducer {
             producer: ClientConfig::new()
                 .set("bootstrap.servers", kafka_url.as_str())
+                .set("message.max.bytes", "104857600") //in order to allow message greater than 1MB
                 .create()
                 .expect("Could not create Kafka Producer")
         }

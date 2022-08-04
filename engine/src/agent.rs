@@ -564,6 +564,7 @@ pub fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, s
                 working_agent.work_location.location_id = region.to_string();
             })
     }
+    debug!("updated the commuters");
 }
 
 pub fn set_starting_infections(agent_list: &mut [Citizen], start_infections: &StartingInfections,

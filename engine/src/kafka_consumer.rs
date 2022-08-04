@@ -26,6 +26,7 @@ impl KafkaConsumer<'_> {
             .set("group.id", engine_id)
             .set("auto.offset.reset", "earliest")
             .set("max.poll.interval.ms", "86400000") //max allowed
+            .set("message.max.bytes", "104857600") //in order to allow message greater than 1MB
             .create()
             .expect("Consumer creation failed");
 

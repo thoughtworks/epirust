@@ -21,6 +21,7 @@
 use std::collections::hash_map::{Iter, IterMut};
 
 use fnv::FnvHashMap;
+use rand::seq::IteratorRandom;
 
 use crate::agent::Citizen;
 use crate::commute::Commuter;
@@ -140,19 +141,18 @@ impl AgentLocationMap {
         }
         debug!("Assimilating {} incoming migrators", incoming.len());
 
-        let can_be_accommodated = self.can_be_accommodated(&grid.housing_area, incoming.len());
-        if !can_be_accommodated { panic!("Not enough housing locations are available for migrators") };
+        let migration_locations = self.select_starting_points(&grid.housing_area, incoming.len());
+        if migration_locations.len() < incoming.len() { panic!("Not enough housing locations are available for migrators") };
 
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
-        for migrator in incoming {
+        for (migrator, migration_location) in incoming.iter().zip(migration_locations) {
             let house = grid.choose_house_with_free_space(rng);
             let office = if migrator.working {
                 grid.choose_office_with_free_space(rng)
             } else {
                 house.clone()
             };
-            let transport_location = self.random_starting_point(&grid.housing_area, rng);
-            let citizen = Citizen::from_migrator(migrator, house.clone(), office.clone(), transport_location, grid.housing_area.clone());
+            let citizen = Citizen::from_migrator(migrator, house.clone(), office.clone(), migration_location, grid.housing_area.clone());
             new_citizens.push(citizen.clone());
             grid.add_house_occupant(&house.clone());
             if migrator.working {
@@ -160,7 +160,7 @@ impl AgentLocationMap {
             }
 
             AgentLocationMap::increment_counts(&citizen.state_machine.state, counts);
-            let result = self.agent_cells.insert(transport_location, citizen);
+            let result = self.agent_cells.insert(migration_location, citizen);
             assert!(result.is_none());
         }
     }
@@ -180,13 +180,11 @@ impl AgentLocationMap {
         if incoming.is_empty() { return; }
         debug!("Assimilating {} incoming commuters", incoming.len());
 
-        let can_be_accommodated = self.can_be_accommodated(&grid.transport_area, incoming.len());
-        if !can_be_accommodated { panic!("Not enough transport location are available for commuters") };
+        let transport_locations = self.select_starting_points(&grid.transport_area, incoming.len());
+        if transport_locations.len() < incoming.len() { panic!("Not enough transport location are available for commuters") };
 
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
-        for commuter in incoming {
-            let transport_location = self.random_starting_point(&grid.transport_area, rng);
-
+        for (commuter, transport_location) in incoming.iter().zip(transport_locations) {
             let work_area: Option<Area> = if simulation_hour == constants::ROUTINE_TRAVEL_START_TIME {
                 debug!("inside if of simulation hour");
                 let office = grid.choose_office_with_free_space(rng);
@@ -212,30 +210,14 @@ impl AgentLocationMap {
     }
 
 
-    fn can_be_accommodated(&self, area: &Area, n: usize) -> bool {
-        let mut result = false;
-        let mut total_accommodated = 0;
-        for x in area.start_offset.x..area.end_offset.x {
-            for y in area.start_offset.y..area.end_offset.y {
-                if !self.agent_cells.contains_key(&Point { x, y }) {
-                    total_accommodated += 1;
-                    if total_accommodated == n {
-                        result = true;
-                        break;
-                    };
-                }
-            }
-        }
-        result
-    }
+    fn select_starting_points(&self, area: &Area, no_of_incoming: usize) -> Vec<Point> {
+        let empty_spaces = (area.start_offset.x..area.end_offset.x).flat_map(|x| {
+            (area.start_offset.y..area.end_offset.y).map(move |y| Point { x, y })
+                .filter(|z| !self.agent_cells.contains_key(z))
+        });
 
-    fn random_starting_point(&self, area: &Area, rng: &mut RandomWrapper) -> Point {
-        loop {
-            let point = area.get_random_point(rng);
-            if !self.agent_cells.contains_key(&point) {
-                return point;
-            }
-        }
+        let mut rng = rand::thread_rng();
+        empty_spaces.choose_multiple(&mut rng, no_of_incoming)
     }
 
     pub fn current_population(&self) -> Count {

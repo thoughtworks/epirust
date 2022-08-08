@@ -18,11 +18,11 @@
  */
 
 use rand::Rng;
+use rand::seq::IteratorRandom;
 
+use crate::custom_types::Count;
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
-use std::collections::HashSet;
-use crate::custom_types::{Count};
 
 #[derive(Clone, Hash, Eq, Debug, Serialize, Deserialize)]
 pub struct Area {
@@ -33,7 +33,7 @@ pub struct Area {
 
 impl Area {
     pub fn new(location_id: String, start_offset: Point, end_offset: Point) -> Area {
-        Area {location_id, start_offset, end_offset }
+        Area { location_id, start_offset, end_offset }
     }
 
     pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item=Point> + '_ {
@@ -46,26 +46,19 @@ impl Area {
         AreaIterator::new(self.clone())
     }
 
-    //TODO improve randomness
-    pub fn random_points(&self, number_of_points: i32, rng: &mut RandomWrapper) -> Vec<Point> {
-        let mut points: Vec<Point> = Vec::with_capacity(number_of_points as usize);
-        let mut points_collision_checker: HashSet<Point> = HashSet::with_capacity(number_of_points as usize);
-        let rng = rng.get();
-        while points.len() != (number_of_points as usize) {
-            let rand_x = rng.gen_range(self.start_offset.x..self.end_offset.x + 1);
-            let rand_y = rng.gen_range(self.start_offset.y..self.end_offset.y + 1);
-            let new_point = Point::new(rand_x, rand_y);
-            if !points_collision_checker.contains(&new_point) {
-                points.push(new_point);
-                points_collision_checker.insert(new_point);
-            }
-        }
-        points
+    pub fn random_points(&self, number_of_points: usize, rng: &mut RandomWrapper) -> Vec<Point> {
+        let nx = (number_of_points as f32).sqrt().ceil() as usize;
+        let rand_xs = (self.start_offset.x..=self.end_offset.x).into_iter().choose_multiple(rng.get(), nx);
+        let rand_ys = (self.start_offset.y..=self.end_offset.y).into_iter().choose_multiple(rng.get(), nx);
+
+        rand_xs.iter().flat_map(|coord_x| {
+            rand_ys.iter().map(move |coord_y| Point::new(*coord_x, *coord_y))
+        }).take(number_of_points).collect()
     }
 
     pub fn get_random_point(&self, rng: &mut RandomWrapper) -> Point {
-        let rand_x = rng.get().gen_range(self.start_offset.x..self.end_offset.x + 1);
-        let rand_y = rng.get().gen_range(self.start_offset.y..self.end_offset.y + 1);
+        let rand_x = rng.get().gen_range(self.start_offset.x..=self.end_offset.x);
+        let rand_y = rng.get().gen_range(self.start_offset.y..=self.end_offset.y);
 
         Point::new(rand_x, rand_y)
     }
@@ -118,8 +111,8 @@ pub struct AreaIterator {
 impl AreaIterator {
     pub fn new(area: Area) -> AreaIterator {
         AreaIterator {
-            area: area.clone(),
-            iter_index: Point::new(area.start_offset.x - 1, area.start_offset.y)
+            iter_index: Point::new(area.start_offset.x - 1, area.start_offset.y),
+            area,
         }
     }
 }
@@ -136,9 +129,9 @@ impl Iterator for AreaIterator {
         }
         self.iter_index = Point::new(new_x, new_y);
         if new_y > self.area.end_offset.y {
-            return Option::None;
+            return None;
         }
-        Option::Some(self.iter_index)
+        Some(self.iter_index)
     }
 }
 
@@ -160,13 +153,13 @@ mod tests {
 
     #[test]
     fn should_iterate_over_points_in_area() {
-        let area = Area::new("engine1".to_string(),Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1".to_string(), Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(0, 0), Point::new(1, 0), Point::new(2, 0),
                            Point::new(0, 1), Point::new(1, 1), Point::new(2, 1),
                            Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)]);
 
-        let area = Area::new("engine1".to_string(),Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1".to_string(), Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1),
                            Point::new(1, 2), Point::new(2, 2)])
@@ -174,11 +167,11 @@ mod tests {
 
     #[test]
     fn iterator_should_work_multiple_times() {
-        let area = Area::new("engine1".to_string(),Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
-        let x: Option<Point> = area.iter().find(|p| *p == Point::new(1,1));
+        let area = Area::new("engine1".to_string(), Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let x: Option<Point> = area.iter().find(|p| *p == Point::new(1, 1));
         assert!(x.is_some());
 
-        let x: Option<Point> = area.iter().find(|p| *p == Point::new(1,1));
+        let x: Option<Point> = area.iter().find(|p| *p == Point::new(1, 1));
         assert!(x.is_some());
     }
 
@@ -192,17 +185,17 @@ mod tests {
         assert_eq!(buildings.get(0).unwrap().start_offset, Point::new(10, 0));
         assert_eq!(buildings.get(0).unwrap().end_offset, Point::new(12, 2));
 
-        assert!(buildings.get(0).unwrap().contains(&Point::new(12,0)));
-        assert!(!buildings.get(1).unwrap().contains(&Point::new(12,0)));
-        assert!(buildings.get(1).unwrap().contains(&Point::new(13,0)));
+        assert!(buildings.get(0).unwrap().contains(&Point::new(12, 0)));
+        assert!(!buildings.get(1).unwrap().contains(&Point::new(12, 0)));
+        assert!(buildings.get(1).unwrap().contains(&Point::new(13, 0)));
 
-        assert!(buildings.get(0).unwrap().contains(&Point::new(12,1)));
-        assert!(!buildings.get(1).unwrap().contains(&Point::new(12,1)));
-        assert!(buildings.get(1).unwrap().contains(&Point::new(13,1)));
+        assert!(buildings.get(0).unwrap().contains(&Point::new(12, 1)));
+        assert!(!buildings.get(1).unwrap().contains(&Point::new(12, 1)));
+        assert!(buildings.get(1).unwrap().contains(&Point::new(13, 1)));
 
-        assert!(buildings.get(0).unwrap().contains(&Point::new(12,2)));
-        assert!(!buildings.get(1).unwrap().contains(&Point::new(12,2)));
-        assert!(buildings.get(1).unwrap().contains(&Point::new(13,2)));
+        assert!(buildings.get(0).unwrap().contains(&Point::new(12, 2)));
+        assert!(!buildings.get(1).unwrap().contains(&Point::new(12, 2)));
+        assert!(buildings.get(1).unwrap().contains(&Point::new(13, 2)));
 
         assert_eq!(buildings.get(5).unwrap().start_offset, Point::new(13, 3));
         assert_eq!(buildings.get(5).unwrap().end_offset, Point::new(15, 5));
@@ -212,16 +205,16 @@ mod tests {
     }
 
     #[test]
-    fn should_get_neighbor_of(){
+    fn should_get_neighbor_of() {
         let area = get_area();
-        let neighbors: Vec<Point> = area.get_neighbors_of(Point::new(4,5)).collect();
+        let neighbors: Vec<Point> = area.get_neighbors_of(Point::new(4, 5)).collect();
         assert_eq!(neighbors.len(), 5);
         assert_eq!(neighbors.contains(&Point::new(4, 4)), true);
         assert_eq!(neighbors.contains(&Point::new(4, 6)), false);
     }
 
     #[test]
-    fn should_return_true_if_area_has_point(){
+    fn should_return_true_if_area_has_point() {
         let area = get_area();
 
         let is_inside_area = area.contains(&Point::new(2, 3));
@@ -229,7 +222,7 @@ mod tests {
     }
 
     #[test]
-    fn should_return_false_if_area_does_not_contain_point(){
+    fn should_return_false_if_area_does_not_contain_point() {
         let area = get_area();
 
         let is_inside_area = area.contains(&Point::new(20, 3));
@@ -237,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn should_get_random_point(){
+    fn should_get_random_point() {
         let area = get_area();
 
         let random_point = area.get_random_point(&mut RandomWrapper::new());
@@ -245,7 +238,7 @@ mod tests {
     }
 
     #[test]
-    fn should_get_number_of_cells(){
+    fn should_get_number_of_cells() {
         let area = get_area();
 
         assert_eq!(area.get_number_of_cells(), 25);

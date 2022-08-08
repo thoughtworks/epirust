@@ -20,7 +20,7 @@
 use plotters::prelude::*;
 
 use crate::{agent, constants};
-use crate::agent::{Citizen, PopulationRecord};
+use crate::agent::{Citizen, CitizensData, PopulationRecord};
 use crate::config::{AutoPopulation, CsvPopulation, StartingInfections};
 use crate::geography::{Area, Point};
 use crate::random_wrapper::RandomWrapper;
@@ -55,13 +55,14 @@ impl Grid {
 
         //        TODO: fix the hack
         let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
-        let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as i32, rng);
+        let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as usize, rng);
         debug!("transport locations: {}", transport_locations.len());
         debug!("Finished generating transport locations");
 
-        let agent_list = agent::citizen_factory(number_of_agents, &self.houses, &self.offices,
-                                                &transport_locations, public_transport_percentage, working_percentage,
-                                                rng, start_infections, travel_plan_config, region.clone());
+        let ctz_data = CitizensData::new(region.clone(), number_of_agents, &self.houses, &self.offices,
+                                         &transport_locations, public_transport_percentage, working_percentage, start_infections);
+
+        let agent_list = agent::citizen_factory(ctz_data, travel_plan_config, rng);
         // info!("agent list - {:?} ", agent_list);
         debug!("Finished creating agent list");
 
@@ -86,7 +87,7 @@ impl Grid {
                        agents.len(), house_capacity)
             }
 
-            let mut random_points_within_home = home.random_points(agents.len() as i32, rng);
+            let mut random_points_within_home = home.random_points(agents.len(), rng);
             self.houses_occupancy.insert(home.clone(), agents.len() as u32);
 
             for agent in agents {
@@ -119,18 +120,18 @@ impl Grid {
 
     fn draw(&self, home_locations: &Vec<Point>, homes: &Vec<Area>, offices: &Vec<Area>) {
         let mut draw_backend = BitMapBackend::new("grid.png", (self.grid_size as u32, self.grid_size as u32));
-        Grid::draw_rect(&mut draw_backend, &self.housing_area, &plotters::style::YELLOW);
-        Grid::draw_rect(&mut draw_backend, &self.transport_area, &plotters::style::RGBColor(121, 121, 121));
-        Grid::draw_rect(&mut draw_backend, &self.work_area, &plotters::style::BLUE);
-        Grid::draw_rect(&mut draw_backend, &self.hospital_area, &plotters::style::RED);
+        Grid::draw_rect(&mut draw_backend, &self.housing_area, &YELLOW);
+        Grid::draw_rect(&mut draw_backend, &self.transport_area, &RGBColor(121, 121, 121));
+        Grid::draw_rect(&mut draw_backend, &self.work_area, &BLUE);
+        Grid::draw_rect(&mut draw_backend, &self.hospital_area, &RED);
         for home in homes {
-            Grid::draw_rect(&mut draw_backend, home, &plotters::style::RGBColor(204, 153, 0));
+            Grid::draw_rect(&mut draw_backend, home, &RGBColor(204, 153, 0));
         }
         for office in offices {
-            Grid::draw_rect(&mut draw_backend, office, &plotters::style::RGBColor(51, 153, 255));
+            Grid::draw_rect(&mut draw_backend, office, &RGBColor(51, 153, 255));
         }
         for home in home_locations {
-            draw_backend.draw_pixel((home.x as i32, home.y as i32), &plotters::style::BLACK.to_rgba()).unwrap();
+            draw_backend.draw_pixel((home.x as i32, home.y as i32), &BLACK.to_rgba()).unwrap();
         }
     }
 
@@ -172,7 +173,7 @@ impl Grid {
 
     pub fn increase_hospital_size(&mut self, grid_size: Size, sim_id: String) {
         let start_offset = self.hospital_area.start_offset;
-        let end_offset = Point::new(grid_size as CoOrdinate , grid_size as CoOrdinate);
+        let end_offset = Point::new(grid_size as CoOrdinate, grid_size as CoOrdinate);
 
         self.hospital_area = Area::new(sim_id, start_offset, end_offset)
     }

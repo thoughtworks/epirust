@@ -141,7 +141,7 @@ impl AgentLocationMap {
         }
         debug!("Assimilating {} incoming migrators", incoming.len());
 
-        let migration_locations = self.select_starting_points(&grid.housing_area, incoming.len());
+        let migration_locations = self.select_starting_points(&grid.housing_area, incoming.len(), rng);
         if migration_locations.len() < incoming.len() { panic!("Not enough housing locations are available for migrators") };
 
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
@@ -180,7 +180,7 @@ impl AgentLocationMap {
         if incoming.is_empty() { return; }
         debug!("Assimilating {} incoming commuters", incoming.len());
 
-        let transport_locations = self.select_starting_points(&grid.transport_area, incoming.len());
+        let transport_locations = self.select_starting_points(&grid.transport_area, incoming.len(), rng);
         if transport_locations.len() < incoming.len() { panic!("Not enough transport location are available for commuters") };
 
         let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
@@ -210,14 +210,13 @@ impl AgentLocationMap {
     }
 
 
-    fn select_starting_points(&self, area: &Area, no_of_incoming: usize) -> Vec<Point> {
+    fn select_starting_points(&self, area: &Area, no_of_incoming: usize, rng: &mut RandomWrapper) -> Vec<Point> {
         let empty_spaces = (area.start_offset.x..area.end_offset.x).flat_map(|x| {
             (area.start_offset.y..area.end_offset.y).map(move |y| Point { x, y })
                 .filter(|z| !self.agent_cells.contains_key(z))
         });
 
-        let mut rng = rand::thread_rng();
-        empty_spaces.choose_multiple(&mut rng, no_of_incoming)
+        empty_spaces.choose_multiple(rng.get(), no_of_incoming)
     }
 
     pub fn current_population(&self) -> Count {

@@ -36,6 +36,32 @@ use crate::travel_plan::Migrator;
 use crate::commute::{CommutePlan, Commuter};
 use crate::kafka_consumer::TravelPlanConfig;
 
+
+pub struct CitizensData<'a> {
+    number_of_agents: Count,
+    home_locations: &'a [Area],
+    work_locations: &'a [Area],
+    public_transport_locations: &'a [Point],
+    public_transport_percentage: Percentage,
+    working_percentage: Percentage,
+    starting_infections: &'a StartingInfections,
+    region: String,
+}
+
+impl<'a> CitizensData<'a> {
+    pub fn new(region: String,
+               number_of_agents: Count,
+               home_locations: &'a [Area],
+               work_locations: &'a [Area],
+               public_transport_locations: &'a [Point],
+               public_transport_percentage: Percentage,
+               working_percentage: Percentage,
+               starting_infections: &'a StartingInfections,
+    ) -> Self {
+        CitizensData { region, number_of_agents, home_locations, work_locations, public_transport_locations, public_transport_percentage, working_percentage, starting_infections }
+    }
+}
+
 #[derive(Deserialize)]
 pub struct PopulationRecord {
     //TODO move to a better place
@@ -499,62 +525,69 @@ impl Citizen {
     }
 }
 
-pub fn citizen_factory(number_of_agents: Count, home_locations: &[Area], work_locations: &[Area], public_transport_locations: &[Point],
-                       percentage_public_transport: Percentage, working_percentage: Percentage, rng: &mut RandomWrapper,
-                       starting_infections: &StartingInfections, travel_plan_config: Option<TravelPlanConfig>, region: String) -> Vec<Citizen> {
-    let mut agent_list = Vec::with_capacity(home_locations.len());
-    let commute_plan: Option<CommutePlan> = if travel_plan_config.is_some() && travel_plan_config.as_ref().unwrap().commute.enabled {
-        Some(travel_plan_config.unwrap().commute_plan())
-    } else { None };
+pub fn citizen_factory(ctz_data: CitizensData, travel_plan_config: Option<TravelPlanConfig>, rng: &mut RandomWrapper) -> Vec<Citizen> {
+    let total_home_locations = ctz_data.home_locations.len();
+    let mut agent_list = Vec::with_capacity(total_home_locations);
+
+    let commute_plan = travel_plan_config.filter(|t_conf| t_conf.commute.enabled).map(|t_conf| t_conf.commute_plan());
+
     let mut current_number_of_public_transport_users = 0;
-    for i in 0..number_of_agents as usize {
-        let is_a_working_citizen = rng.get().gen_bool(working_percentage);
-
-        let total_home_locations = home_locations.len();
-        let total_work_locations = work_locations.len();
-
-        let home_location = home_locations[(i % total_home_locations)].clone();
-        let work_location = work_locations[(i % total_work_locations)].clone();
-
-        debug!("percentage_public_transport = {}, number of agents = {}", percentage_public_transport, number_of_agents);
-        let uses_public_transport = rng.get().gen_bool(percentage_public_transport)
-            && is_a_working_citizen
-            && current_number_of_public_transport_users < public_transport_locations.len();
-
-        let public_transport_location: Point = if uses_public_transport { public_transport_locations[current_number_of_public_transport_users] } else {
-            home_location.get_random_point(rng)
-        };
-        if uses_public_transport { current_number_of_public_transport_users += 1 };
-
-        let work_location = if is_a_working_citizen { work_location } else {
-            home_location.clone()
-        };
-        let work_status = Citizen::derive_work_status(is_a_working_citizen, rng);
-
-        let agent = Citizen::new(home_location.clone(), work_location.clone(), public_transport_location,
-                                 uses_public_transport, work_status, rng);
-
+    for i in 0..ctz_data.number_of_agents as usize {
+        let agent = create_citizen(i, &ctz_data, rng, &mut current_number_of_public_transport_users);
         agent_list.push(agent);
     }
     debug!("all working agents: {}", agent_list.iter().filter(|a| {a.work_status != WorkStatus::NA}).count());
-
     debug!("agents with public transport percentage: {}", agent_list.iter().filter(|a| {a.uses_public_transport}).count());
-    set_starting_infections(&mut agent_list, starting_infections, rng);
+
+    set_starting_infections(&mut agent_list, ctz_data.starting_infections, rng);
+
     if commute_plan.is_some() {
-        update_commuters(&mut agent_list, commute_plan.unwrap(), region);
+        update_commuters(&mut agent_list, commute_plan.unwrap(), ctz_data.region);
     }
 
     agent_list
 }
 
+
+fn create_citizen(number: usize, ctz_data: &CitizensData, rng: &mut RandomWrapper, current_number_of_public_transport_users: &mut usize) -> Citizen {
+    let total_home_locations = ctz_data.home_locations.len();
+    let total_work_locations = ctz_data.work_locations.len();
+    let is_a_working_citizen = rng.get().gen_bool(ctz_data.working_percentage);
+
+
+    let home_location = ctz_data.home_locations[(number % total_home_locations)].clone();
+    let work_location = ctz_data.work_locations[(number % total_work_locations)].clone();
+
+    let uses_public_transport = rng.get().gen_bool(ctz_data.public_transport_percentage)
+        && is_a_working_citizen
+        && *current_number_of_public_transport_users < ctz_data.public_transport_locations.len();
+
+    let public_transport_location: Point = if uses_public_transport { ctz_data.public_transport_locations[*current_number_of_public_transport_users] } else {
+        home_location.get_random_point(rng)
+    };
+    if uses_public_transport { *current_number_of_public_transport_users += 1 };
+
+    let work_location = if is_a_working_citizen { work_location } else {
+        home_location.clone()
+    };
+    let work_status = Citizen::derive_work_status(is_a_working_citizen, rng);
+
+    Citizen::new(home_location, work_location, public_transport_location, uses_public_transport, work_status, rng)
+}
+
+
 pub fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, self_region: String) {
+    debug!("Start updating commuters");
+    let total_commuters_by_region: Vec<(String, u32)> =
+        commute_plan.get_total_commuters_by_region(self_region.clone());
+
     let mut working_agents = agent_list.iter_mut().filter(|agent| {
         agent.is_working()
             && agent.work_location.location_id == self_region.clone()
             && agent.uses_public_transport
-    });
-    let total_commuters_by_region: Vec<(String, u32)> =
-        commute_plan.get_total_commuters_by_region(self_region.clone());
+    }).take(total_commuters_by_region.iter().map(|(_, n)| *n as usize).sum());
+
+    debug!("Got all working agents");
 
     for (region, commuters) in total_commuters_by_region {
         working_agents
@@ -562,7 +595,8 @@ pub fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, s
             .take(commuters as usize)
             .for_each(|working_agent| {
                 working_agent.work_location.location_id = region.to_string();
-            })
+            });
+        debug!("Updated {} commuters for region {}", region, commuters);
     }
     debug!("updated the commuters");
 }
@@ -606,8 +640,10 @@ mod tests {
 
         let public_transport_location = vec![Point::new(5, 0), Point::new(5, 1), Point::new(5, 2), Point::new(5, 3)];
         let start_infections = StartingInfections::new(0, 0, 0, 1);
-        citizen_factory(4, &home_locations, &work_locations, &public_transport_location, 0.5, 0.5,
-                        &mut rng, &start_infections, None, "engine1".to_string())
+
+        let ctz_data = CitizensData::new("engine1".to_string(), 4, &home_locations, &work_locations, &public_transport_location, 0.5, 0.5, &start_infections);
+
+        citizen_factory(ctz_data, None, &mut rng)
     }
 
     #[test]

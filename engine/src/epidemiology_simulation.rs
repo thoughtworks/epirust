@@ -85,7 +85,8 @@ impl Epidemiology {
         );
 
         let agent_location_map = AgentLocationMap::new(config.get_grid_size(), &agent_list, &start_locations);
-        let write_agent_location_map = agent_location_map.clone();
+        let write_agent_location_map =
+            AgentLocationMap::init_with_capacity(config.get_grid_size(), agent_location_map.current_population() as usize);
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         Epidemiology { travel_plan_config, agent_location_map, write_agent_location_map, grid, disease, sim_id }
@@ -205,8 +206,6 @@ impl Epidemiology {
         let population = self.agent_location_map.current_population();
         let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
         let mut rng = RandomWrapper::new();
-
-        self.write_agent_location_map.init_with_capacity(population as usize);
 
         let mut interventions = self.init_interventions(config, &mut rng);
 

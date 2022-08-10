@@ -40,8 +40,9 @@ pub struct AgentLocationMap {
 }
 
 impl AgentLocationMap {
-    pub fn init_with_capacity(&mut self, size: usize) {
-        self.agent_cells = FnvHashMap::with_capacity_and_hasher(size, Default::default());
+    pub fn init_with_capacity(grid_size: Size, size: usize) -> Self {
+        let agent_cells: FnvHashMap<Point, Citizen> = FnvHashMap::with_capacity_and_hasher(size, Default::default());
+        AgentLocationMap { grid_size, agent_cells }
     }
 
     pub fn new(grid_size: Size, agent_list: &[Citizen], points: &[Point]) -> AgentLocationMap {

@@ -61,10 +61,10 @@ impl KafkaConsumer<'_> {
         match request {
             Request::SimulationRequest(req) => {
                 let mut epidemiology = Epidemiology::new(&req.config, None, req.sim_id);
-                epidemiology.run(&req.config, None, run_mode).await;
+                epidemiology.run(&req.config, run_mode).await;
             }
             Request::MultiSimRequest(req) => {
-                let travel_plan_config = req.travel_plan;
+                let travel_plan_config = Some(req.travel_plan);
                 let sim_req = req.engine_configs.iter().find(|c| c.engine_id == self.engine_id);
                 match sim_req {
                     None => {
@@ -72,8 +72,8 @@ impl KafkaConsumer<'_> {
                     }
                     Some(req) => {
                         let mut epidemiology =
-                            Epidemiology::new(&req.config.config, Some(travel_plan_config.clone()), req.engine_id.to_string());
-                        epidemiology.run(&req.config.config, Some(travel_plan_config.clone()), run_mode).await;
+                            Epidemiology::new(&req.config.config, travel_plan_config, req.engine_id.to_string());
+                        epidemiology.run(&req.config.config, run_mode).await;
                     }
                 }
             }

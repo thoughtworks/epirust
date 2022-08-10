@@ -593,13 +593,13 @@ impl Citizen {
 
 pub fn citizen_factory(
     ctz_data: CitizensData,
-    travel_plan_config: Option<TravelPlanConfig>,
+    travel_plan_config: &Option<TravelPlanConfig>,
     rng: &mut RandomWrapper,
 ) -> Vec<Citizen> {
     let total_home_locations = ctz_data.home_locations.len();
     let mut agent_list = Vec::with_capacity(total_home_locations);
 
-    let commute_plan = travel_plan_config.filter(|t_conf| t_conf.commute.enabled).map(|t_conf| t_conf.commute_plan());
+    let commute_plan = travel_plan_config.as_ref().filter(|t_conf| t_conf.commute.enabled).map(|t_conf| t_conf.commute_plan());
 
     let mut current_number_of_public_transport_users = 0;
     for i in 0..ctz_data.number_of_agents as usize {
@@ -727,7 +727,7 @@ mod tests {
             &start_infections,
         );
 
-        citizen_factory(ctz_data, None, &mut rng)
+        citizen_factory(ctz_data, &None, &mut rng)
     }
 
     #[test]

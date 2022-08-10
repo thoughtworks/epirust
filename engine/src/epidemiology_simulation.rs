@@ -61,6 +61,7 @@ pub struct Epidemiology {
     pub grid: Grid,
     pub disease: Disease,
     pub sim_id: String,
+    pub travel_plan_config: Option<TravelPlanConfig>,
 }
 
 impl Epidemiology {
@@ -73,7 +74,7 @@ impl Epidemiology {
         let (start_locations, agent_list) = match config.get_population() {
             Population::Csv(csv_pop) => grid.read_population(&csv_pop, &start_infections, &mut rng, &sim_id),
             Population::Auto(auto_pop) => {
-                grid.generate_population(&auto_pop, &start_infections, &mut rng, travel_plan_config, sim_id.clone())
+                grid.generate_population(&auto_pop, &start_infections, &mut rng, &travel_plan_config, sim_id.clone())
             }
         };
         grid.resize_hospital(
@@ -87,7 +88,7 @@ impl Epidemiology {
         let write_agent_location_map = agent_location_map.clone();
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
-        Epidemiology { agent_location_map, write_agent_location_map, grid, disease, sim_id }
+        Epidemiology { travel_plan_config, agent_location_map, write_agent_location_map, grid, disease, sim_id }
     }
 
     fn stop_simulation(lock_down_details: &mut LockdownIntervention, run_mode: &RunMode, row: Counts) -> bool {
@@ -199,7 +200,7 @@ impl Epidemiology {
         }
     }
 
-    pub async fn run(&mut self, config: &Config, travel_plan_config: Option<TravelPlanConfig>, run_mode: &RunMode) {
+    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
         let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
@@ -212,16 +213,7 @@ impl Epidemiology {
         listeners.grid_updated(&self.grid);
         match run_mode {
             RunMode::MultiEngine { .. } => {
-                self.run_multi_engine(
-                    config,
-                    travel_plan_config.unwrap(),
-                    run_mode,
-                    &mut listeners,
-                    &mut counts_at_hr,
-                    &mut interventions,
-                    &mut rng,
-                )
-                .await
+                self.run_multi_engine(config, run_mode, &mut listeners, &mut counts_at_hr, &mut interventions, &mut rng).await
             }
             _ => {
                 self.run_single_engine(
@@ -323,7 +315,6 @@ impl Epidemiology {
     pub async fn run_multi_engine(
         &mut self,
         config: &Config,
-        travel_plan_config: TravelPlanConfig,
         run_mode: &RunMode,
         listeners: &mut Listeners,
         counts_at_hr: &mut Counts,
@@ -336,6 +327,7 @@ impl Epidemiology {
         //todo stream should be started only in case of multi-sim mode
         let standalone_engine_id = "standalone".to_string();
         let engine_id = if let RunMode::MultiEngine { engine_id } = run_mode { engine_id } else { &standalone_engine_id };
+        let travel_plan_config = self.travel_plan_config.as_ref().unwrap();
 
         let is_commute_enabled = travel_plan_config.commute.enabled;
         let is_migration_enabled = travel_plan_config.migration.enabled;

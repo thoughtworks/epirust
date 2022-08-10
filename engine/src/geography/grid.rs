@@ -51,7 +51,7 @@ impl Grid {
         auto_pop: &AutoPopulation,
         start_infections: &StartingInfections,
         rng: &mut RandomWrapper,
-        travel_plan_config: Option<TravelPlanConfig>,
+        travel_plan_config: &Option<TravelPlanConfig>,
         region: String,
     ) -> (Vec<Point>, Vec<Citizen>) {
         debug!("Generating Population");
@@ -307,7 +307,7 @@ mod tests {
         let pop = AutoPopulation { number_of_agents: 10, public_transport_percentage: 0.2, working_percentage: 0.2 };
         let start_infections = StartingInfections::new(0, 0, 0, 1);
         let (home_locations, agent_list) =
-            grid.generate_population(&pop, &start_infections, &mut rng, None, "engine1".to_string());
+            grid.generate_population(&pop, &start_infections, &mut rng, &None, "engine1".to_string());
 
         assert_eq!(home_locations.len(), 10);
         assert_eq!(agent_list.len(), 10);

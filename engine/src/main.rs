@@ -117,7 +117,7 @@ async fn main() {
         let config = config::read(config_file.to_string()).expect("Failed to read config file");
 
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, None, STANDALONE_SIM_ID.to_string());
-        epidemiology.run(&config, None, &run_mode).await;
+        epidemiology.run(&config, &run_mode).await;
         info!("Done");
     }
 }

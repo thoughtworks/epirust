@@ -32,20 +32,22 @@ pub fn ipfn(margins: &Array1<Array1<f64>>) -> Matrix {
 
 fn adjustment(current_matrix: &Matrix, margins: &Array1<Array1<f64>>) -> Matrix {
     let totals = compute_totals(current_matrix);
-    let row_adjusted_matrix =
-        adjust(current_matrix, margins, &totals, true);
+    let row_adjusted_matrix = adjust(current_matrix, margins, &totals, true);
     let new_totals = compute_totals(&row_adjusted_matrix);
     adjust(&row_adjusted_matrix, margins, &new_totals, false)
-
 }
 
-fn adjust(current_matrix: &Matrix, margins: &Array1<Array1<f64>>, totals: &(Array1<f64>, Array1<f64>), is_row_adjustment: bool) -> Matrix {
+fn adjust(
+    current_matrix: &Matrix,
+    margins: &Array1<Array1<f64>>,
+    totals: &(Array1<f64>, Array1<f64>),
+    is_row_adjustment: bool,
+) -> Matrix {
     if is_row_adjustment {
         let mut row_adjusted_matrix: Matrix = Matrix::zeros(current_matrix.dim());
         for ((x, y), value) in current_matrix.indexed_iter() {
             let row_total = &totals.0;
-            row_adjusted_matrix[[x, y]] = value *
-                margins.get(0).unwrap()[x] / row_total.get(x).unwrap();
+            row_adjusted_matrix[[x, y]] = value * margins.get(0).unwrap()[x] / row_total.get(x).unwrap();
         }
         return row_adjusted_matrix;
     }
@@ -53,8 +55,7 @@ fn adjust(current_matrix: &Matrix, margins: &Array1<Array1<f64>>, totals: &(Arra
     let mut column_adjusted_matrix: Matrix = Matrix::zeros(current_matrix.dim());
     for ((x, y), value) in current_matrix.indexed_iter() {
         let column_total = &totals.1;
-        column_adjusted_matrix[[x, y]] = value *
-            margins.get(1).unwrap()[y] / column_total.get(y).unwrap();
+        column_adjusted_matrix[[x, y]] = value * margins.get(1).unwrap()[y] / column_total.get(y).unwrap();
     }
 
     column_adjusted_matrix
@@ -63,9 +64,7 @@ fn adjust(current_matrix: &Matrix, margins: &Array1<Array1<f64>>, totals: &(Arra
 fn column_adjust(current: &mut Matrix, last_iteration: &Matrix, row_count: usize, column_count: usize) {
     for ((x, y), _old_value) in last_iteration.indexed_iter() {
         if x != row_count && y != column_count {
-            current[[x, y]] =
-                (last_iteration[[x, column_count]] *
-                    last_iteration[[row_count, y]]) / current[[row_count, y]];
+            current[[x, y]] = (last_iteration[[x, column_count]] * last_iteration[[row_count, y]]) / current[[row_count, y]];
         } else {
             current[[x, y]] = last_iteration[[x, y]];
         }

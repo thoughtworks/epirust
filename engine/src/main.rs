@@ -30,26 +30,26 @@ use crate::kafka_consumer::KafkaConsumer;
 mod constants;
 
 mod agent;
-mod epidemiology_simulation;
 mod allocation_map;
-mod geography;
 mod disease;
-mod random_wrapper;
+mod epidemiology_simulation;
+mod geography;
 mod listeners;
 mod population;
+mod random_wrapper;
 // mod geojson_service;
 // mod models;
+mod commute;
 mod config;
+mod custom_types;
+mod disease_state_machine;
+mod environment;
 mod interventions;
 mod kafka_consumer;
 mod kafka_producer;
 mod ticks_consumer;
-mod environment;
-mod disease_state_machine;
-mod travel_plan;
-mod custom_types;
-mod commute;
 mod travel_consumer;
+mod travel_plan;
 
 const STANDALONE_SIM_ID: &str = "0";
 
@@ -59,23 +59,29 @@ async fn main() {
     let matches = App::new("EpiRust")
         .version("0.1")
         .about("Epidemiology Simulations in Rust")
-        .arg(Arg::with_name("config")
-            .long("config")
-            .short("c")
-            .value_name("FILE")
-            .help("Use a config file to run the simulation"))
-        .arg(Arg::with_name("daemon")
-            .long("daemon")
-            .short("d")
-            .help("Start the engine in daemon mode. It will wait for messages from Kafka. \
-            Specifying this flag will cause the config argument to be ignored")
-            .takes_value(false))
-        .arg(Arg::with_name("id")
-            .long("id")
-            .short("i")
-            .help("An identifier for the engine. Needed in daemon mode when running a larger simulation \
-            distributed across multiple engines.")
-            .takes_value(true))
+        .arg(
+            Arg::with_name("config").long("config").short("c").value_name("FILE").help("Use a config file to run the simulation"),
+        )
+        .arg(
+            Arg::with_name("daemon")
+                .long("daemon")
+                .short("d")
+                .help(
+                    "Start the engine in daemon mode. It will wait for messages from Kafka. \
+            Specifying this flag will cause the config argument to be ignored",
+                )
+                .takes_value(false),
+        )
+        .arg(
+            Arg::with_name("id")
+                .long("id")
+                .short("i")
+                .help(
+                    "An identifier for the engine. Needed in daemon mode when running a larger simulation \
+            distributed across multiple engines.",
+                )
+                .takes_value(true),
+        )
         .get_matches();
 
     let daemon = matches.is_present("daemon");
@@ -111,7 +117,7 @@ async fn main() {
         let config = config::read(config_file.to_string()).expect("Failed to read config file");
 
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, None, STANDALONE_SIM_ID.to_string());
-        epidemiology.run(&config, None,&run_mode).await;
+        epidemiology.run(&config, None, &run_mode).await;
         info!("Done");
     }
 }

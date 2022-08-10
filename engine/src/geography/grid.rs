@@ -46,21 +46,36 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn generate_population(&mut self, auto_pop: &AutoPopulation, start_infections: &StartingInfections,
-                               rng: &mut RandomWrapper, travel_plan_config: Option<TravelPlanConfig>, region: String) -> (Vec<Point>, Vec<Citizen>) {
+    pub fn generate_population(
+        &mut self,
+        auto_pop: &AutoPopulation,
+        start_infections: &StartingInfections,
+        rng: &mut RandomWrapper,
+        travel_plan_config: Option<TravelPlanConfig>,
+        region: String,
+    ) -> (Vec<Point>, Vec<Citizen>) {
         debug!("Generating Population");
         let number_of_agents = auto_pop.number_of_agents;
         let working_percentage = auto_pop.working_percentage;
         let public_transport_percentage = auto_pop.public_transport_percentage;
 
         //        TODO: fix the hack
-        let number_of_agents_using_public_transport = number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
+        let number_of_agents_using_public_transport =
+            number_of_agents as f64 * (public_transport_percentage + 0.1) * (working_percentage + 0.1);
         let transport_locations = self.transport_area.random_points(number_of_agents_using_public_transport.ceil() as usize, rng);
         debug!("transport locations: {}", transport_locations.len());
         debug!("Finished generating transport locations");
 
-        let ctz_data = CitizensData::new(region.clone(), number_of_agents, &self.houses, &self.offices,
-                                         &transport_locations, public_transport_percentage, working_percentage, start_infections);
+        let ctz_data = CitizensData::new(
+            region.clone(),
+            number_of_agents,
+            &self.houses,
+            &self.offices,
+            &transport_locations,
+            public_transport_percentage,
+            working_percentage,
+            start_infections,
+        );
 
         let agent_list = agent::citizen_factory(ctz_data, travel_plan_config, rng);
         // info!("agent list - {:?} ", agent_list);
@@ -72,7 +87,12 @@ impl Grid {
         (home_loc, agents_in_order)
     }
 
-    fn set_start_locations_and_occupancies(&mut self, rng: &mut RandomWrapper, agent_list: &Vec<Citizen>, region_name: &String) -> (Vec<Point>, Vec<Citizen>) {
+    fn set_start_locations_and_occupancies(
+        &mut self,
+        rng: &mut RandomWrapper,
+        agent_list: &Vec<Citizen>,
+        region_name: &String,
+    ) -> (Vec<Point>, Vec<Citizen>) {
         let mut home_loc: Vec<Point> = Vec::new();
         let agents_by_home_locations = Grid::group_agents_by_home_locations(agent_list);
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
@@ -83,8 +103,7 @@ impl Grid {
             trace!("agents in home: {:?}", agents.len());
 
             if agents.len() as Count > house_capacity {
-                panic!("There are {} agents assigned to a house, but house capacity is {}",
-                       agents.len(), house_capacity)
+                panic!("There are {} agents assigned to a house, but house capacity is {}", agents.len(), house_capacity)
             }
 
             let mut random_points_within_home = home.random_points(agents.len(), rng);
@@ -103,16 +122,14 @@ impl Grid {
 
     pub fn group_agents_by_home_locations(agent_list: &[Citizen]) -> HashMap<&Area, Vec<&Citizen>> {
         let mut agents_by_home_locations: HashMap<&Area, Vec<&Citizen>> = HashMap::new();
-        agent_list.iter().for_each(|agent| {
-            match agents_by_home_locations.get(&agent.home_location) {
-                None => {
-                    agents_by_home_locations.insert(&agent.home_location, vec![agent]);
-                }
-                Some(citizens) => {
-                    let mut updated_citizens = citizens.clone();
-                    updated_citizens.push(agent);
-                    agents_by_home_locations.insert(&agent.home_location, updated_citizens);
-                }
+        agent_list.iter().for_each(|agent| match agents_by_home_locations.get(&agent.home_location) {
+            None => {
+                agents_by_home_locations.insert(&agent.home_location, vec![agent]);
+            }
+            Some(citizens) => {
+                let mut updated_citizens = citizens.clone();
+                updated_citizens.push(agent);
+                agents_by_home_locations.insert(&agent.home_location, updated_citizens);
             }
         });
         agents_by_home_locations
@@ -136,13 +153,22 @@ impl Grid {
     }
 
     fn draw_rect(svg: &mut impl DrawingBackend, area: &Area, style: &RGBColor) {
-        svg.draw_rect((area.start_offset.x as i32, area.start_offset.y as i32),
-                      (area.end_offset.x as i32, area.end_offset.y as i32),
-                      style, true).unwrap();
+        svg.draw_rect(
+            (area.start_offset.x as i32, area.start_offset.y as i32),
+            (area.end_offset.x as i32, area.end_offset.y as i32),
+            style,
+            true,
+        )
+        .unwrap();
     }
 
-    pub fn read_population(&mut self, csv_pop: &CsvPopulation, starting_infections: &StartingInfections,
-                           rng: &mut RandomWrapper, region_name: &String) -> (Vec<Point>, Vec<Citizen>) {
+    pub fn read_population(
+        &mut self,
+        csv_pop: &CsvPopulation,
+        starting_infections: &StartingInfections,
+        rng: &mut RandomWrapper,
+        region_name: &String,
+    ) -> (Vec<Point>, Vec<Citizen>) {
         let file = File::open(&csv_pop.file).expect("Could not read population file");
         let mut rdr = csv::Reader::from_reader(file);
         let mut homes_iter = self.houses.iter().cycle();
@@ -160,8 +186,11 @@ impl Grid {
         }
         let house_capacity = (constants::HOME_SIZE * constants::HOME_SIZE) as usize;
         if citizens.len() > house_capacity * self.houses.len() {
-            panic!("Cannot accommodate citizens into homes! There are {} citizens, but {} home points",
-                   citizens.len(), house_capacity * self.houses.len());
+            panic!(
+                "Cannot accommodate citizens into homes! There are {} citizens, but {} home points",
+                citizens.len(),
+                house_capacity * self.houses.len()
+            );
         }
 
         let (home_loc, mut agents_in_order) = self.set_start_locations_and_occupancies(rng, &citizens, region_name);
@@ -178,13 +207,22 @@ impl Grid {
         self.hospital_area = Area::new(sim_id, start_offset, end_offset)
     }
 
-    pub fn resize_hospital(&mut self, number_of_agents: i32, hospital_staff_percentage: f64, hospital_beds_percentage: f64, sim_id: String) {
-        let hospital_bed_count = (number_of_agents as f64 * hospital_beds_percentage +
-            number_of_agents as f64 * hospital_staff_percentage).ceil() as Count;
+    pub fn resize_hospital(
+        &mut self,
+        number_of_agents: i32,
+        hospital_staff_percentage: f64,
+        hospital_beds_percentage: f64,
+        sim_id: String,
+    ) {
+        let hospital_bed_count = (number_of_agents as f64 * hospital_beds_percentage
+            + number_of_agents as f64 * hospital_staff_percentage)
+            .ceil() as Count;
 
         if hospital_bed_count <= self.hospital_area.get_number_of_cells() {
-            let hospital_end_y: CoOrdinate = (hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x) as u32) as CoOrdinate;
-            self.hospital_area = Area::new(sim_id, self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
+            let hospital_end_y: CoOrdinate =
+                (hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x) as u32) as CoOrdinate;
+            self.hospital_area =
+                Area::new(sim_id, self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
             info!("Hospital capacity {}: ", hospital_bed_count);
         }
     }
@@ -206,24 +244,33 @@ impl Grid {
         self.offices.iter().for_each(|office| {
             occupancy.insert(office.clone(), 0);
         });
-        citizens.iter().filter(|citizen| citizen.is_working() && citizen.work_location.location_id == *region_name)
-            .for_each(|worker| {
+        citizens.iter().filter(|citizen| citizen.is_working() && citizen.work_location.location_id == *region_name).for_each(
+            |worker| {
                 let office = worker.work_location.clone();
                 *occupancy.get_mut(&office).expect("Unknown office! Doesn't exist in grid") += 1;
-            });
+            },
+        );
         occupancy
     }
 
     pub fn choose_house_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
-        self.houses_occupancy.iter().find(|(_house, occupants)| **occupants < house_capacity)
-            .expect("Couldn't find any house with free space!").0.clone()
+        self.houses_occupancy
+            .iter()
+            .find(|(_house, occupants)| **occupants < house_capacity)
+            .expect("Couldn't find any house with free space!")
+            .0
+            .clone()
     }
 
     pub fn choose_office_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
-        self.offices_occupancy.iter().find(|(_office, occupants)| **occupants < office_capacity)
-            .expect("Couldn't find any offices with free space!").0.clone()
+        self.offices_occupancy
+            .iter()
+            .find(|(_office, occupants)| **occupants < office_capacity)
+            .expect("Couldn't find any offices with free space!")
+            .0
+            .clone()
     }
 
     pub fn add_house_occupant(&mut self, house: &Area) {
@@ -257,23 +304,21 @@ mod tests {
         let transport_area = grid.transport_area.clone();
         let work_area = grid.work_area.clone();
 
-        let pop = AutoPopulation {
-            number_of_agents: 10,
-            public_transport_percentage: 0.2,
-            working_percentage: 0.2,
-        };
+        let pop = AutoPopulation { number_of_agents: 10, public_transport_percentage: 0.2, working_percentage: 0.2 };
         let start_infections = StartingInfections::new(0, 0, 0, 1);
-        let (home_locations, agent_list) = grid.generate_population(&pop, &start_infections, &mut rng, None, "engine1".to_string());
+        let (home_locations, agent_list) =
+            grid.generate_population(&pop, &start_infections, &mut rng, None, "engine1".to_string());
 
         assert_eq!(home_locations.len(), 10);
         assert_eq!(agent_list.len(), 10);
 
         for agent in agent_list {
             assert!(housing_area.contains(&agent.home_location.start_offset));
-            assert!(work_area.contains(&agent.work_location.end_offset)
-                || housing_area.contains(&agent.home_location.start_offset)); //for citizens that are not working
-            assert!(transport_area.contains(&agent.transport_location)
-                || housing_area.contains(&agent.transport_location)) //for citizens that aren't using public transport
+            assert!(
+                work_area.contains(&agent.work_location.end_offset) || housing_area.contains(&agent.home_location.start_offset)
+            ); //for citizens that are not working
+            assert!(transport_area.contains(&agent.transport_location) || housing_area.contains(&agent.transport_location))
+            //for citizens that aren't using public transport
         }
     }
 

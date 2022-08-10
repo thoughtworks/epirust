@@ -44,7 +44,6 @@ pub fn get_hours(filename: &str) -> i64 {
     hours.unwrap().as_i64().unwrap()
 }
 
-
 #[derive(Deserialize, Serialize)]
 pub struct Configuration {
     engine_configs: Vec<EngineConfig>,
@@ -79,11 +78,10 @@ impl Configuration {
             let mut total_population = 0;
 
             let transport_area_row_size = (*grid_size as f64 * TRANSPORT_AREA_RELATIVE_SIZE).ceil() as u32 - 1;
-            let total_number_of_transport_cells =  transport_area_row_size * grid_size;
+            let total_number_of_transport_cells = transport_area_row_size * grid_size;
 
-
-            let mut  total_number_of_agents = 0;
-            let mut public_transport_percentage : f64 = 0.0;
+            let mut total_number_of_agents = 0;
+            let mut public_transport_percentage: f64 = 0.0;
             //TODO: Handled only for Auto population right now, Add CSV support
             if let Auto(x) = population {
                 total_population += &x.number_of_agents;
@@ -96,9 +94,14 @@ impl Configuration {
                 let incoming_commuters = commute_plan.get_total_incoming(&eng_conf.engine_id);
                 let outgoing_commuters = commute_plan.get_total_outgoing(&eng_conf.engine_id);
 
-                debug!("For engine id - {}, Total incoming commuters: {}, Total outgoing commuters: {}", eng_conf.engine_id ,incoming_commuters, outgoing_commuters);
+                debug!(
+                    "For engine id - {}, Total incoming commuters: {}, Total outgoing commuters: {}",
+                    eng_conf.engine_id, incoming_commuters, outgoing_commuters
+                );
 
-                let total_commuters_with_public_transport = (total_number_of_agents as f64 * public_transport_percentage).ceil() as u32 - outgoing_commuters +  incoming_commuters;
+                let total_commuters_with_public_transport =
+                    (total_number_of_agents as f64 * public_transport_percentage).ceil() as u32 - outgoing_commuters
+                        + incoming_commuters;
 
                 if total_commuters_with_public_transport > total_number_of_transport_cells {
                     panic!("For engine id - {}, Incoming commuters are more than engine transport capacity", eng_conf.engine_id);
@@ -139,7 +142,6 @@ pub struct GeographyParameters {
     pub hospital_beds_percentage: Percentage,
 }
 
-
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum Population {
     Csv(CsvPopulation),
@@ -177,10 +179,8 @@ mod tests {
         let config = Configuration::read("config/test/travel_plan.json").unwrap();
         let travel_plan = config.get_travel_plan();
 
-        assert_eq!(travel_plan.get_regions(), &vec!["engine1".to_string(), "engine2".to_string(),
-                                                    "engine3".to_string()]);
-        assert_eq!(config.get_engine_ids(), vec!["engine1".to_string(), "engine2".to_string(),
-                                                 "engine3".to_string()])
+        assert_eq!(travel_plan.get_regions(), &vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()]);
+        assert_eq!(config.get_engine_ids(), vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()])
     }
 
     #[test]

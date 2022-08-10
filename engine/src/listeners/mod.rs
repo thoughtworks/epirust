@@ -17,10 +17,10 @@
  *
  */
 
-pub mod events_kafka_producer;
 pub mod csv_service;
 pub mod disease_tracker;
-pub mod listener;
 pub mod events;
-pub mod travel_counter;
+pub mod events_kafka_producer;
 pub mod intervention_reporter;
+pub mod listener;
+pub mod travel_counter;

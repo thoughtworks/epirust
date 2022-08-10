@@ -30,8 +30,7 @@ impl KafkaConsumer<'_> {
             .create()
             .expect("Consumer creation failed");
 
-        consumer.subscribe(topics)
-            .expect("Can't subscribe to specified topics");
+        consumer.subscribe(topics).expect("Can't subscribe to specified topics");
 
         KafkaConsumer { engine_id, consumer }
     }
@@ -42,8 +41,11 @@ impl KafkaConsumer<'_> {
             let simulation_config = self.parse_message(message);
             match simulation_config {
                 Err(e) => {
-                    error!("Received a message, but could not parse it.\n\
-                        Error Details: {}", e);
+                    error!(
+                        "Received a message, but could not parse it.\n\
+                        Error Details: {}",
+                        e
+                    );
                 }
                 Ok(request) => {
                     self.run_sim(request, run_mode).await;
@@ -65,9 +67,12 @@ impl KafkaConsumer<'_> {
                 let travel_plan_config = req.travel_plan;
                 let sim_req = req.engine_configs.iter().find(|c| c.engine_id == self.engine_id);
                 match sim_req {
-                    None => { error!("Couldn't find any work for engine_id: {}", self.engine_id) }
+                    None => {
+                        error!("Couldn't find any work for engine_id: {}", self.engine_id)
+                    }
                     Some(req) => {
-                        let mut epidemiology = Epidemiology::new(&req.config.config, Some(travel_plan_config.clone()), req.engine_id.to_string());
+                        let mut epidemiology =
+                            Epidemiology::new(&req.config.config, Some(travel_plan_config.clone()), req.engine_id.to_string());
                         epidemiology.run(&req.config.config, Some(travel_plan_config.clone()), run_mode).await;
                     }
                 }
@@ -96,7 +101,7 @@ struct SimRequestByEngine {
     config: SimulationRequest,
 }
 
-#[derive(Clone ,Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Migration {
     pub enabled: bool,
     matrix: Option<Vec<Vec<u32>>>,
@@ -108,7 +113,7 @@ pub struct Migration {
 pub struct TravelPlanConfig {
     pub regions: Vec<String>,
     pub migration: Migration,
-    pub commute: Commute
+    pub commute: Commute,
 }
 
 impl TravelPlanConfig {
@@ -129,15 +134,14 @@ impl TravelPlanConfig {
     }
 
     pub fn commute_plan(&self) -> CommutePlan {
-        CommutePlan {regions: self.regions.clone(), matrix: self.commute.matrix.as_ref().unwrap().clone()}
+        CommutePlan { regions: self.regions.clone(), matrix: self.commute.matrix.as_ref().unwrap().clone() }
     }
-
 }
 
 #[derive(Debug, Deserialize)]
 struct MultiSimRequest {
     engine_configs: Vec<SimRequestByEngine>,
-    travel_plan: TravelPlanConfig
+    travel_plan: TravelPlanConfig,
 }
 
 #[derive(Debug, Deserialize)]

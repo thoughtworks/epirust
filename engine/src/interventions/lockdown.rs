@@ -40,12 +40,15 @@ pub struct LockdownIntervention {
 
 impl LockdownIntervention {
     pub fn get_lock_down_intervention(config: &Config) -> Option<LockdownConfig> {
-        return config.get_interventions().iter().filter_map(|i| {
-            match i {
+        return config
+            .get_interventions()
+            .iter()
+            .filter_map(|i| match i {
                 Lockdown(x) => Some(x),
-                _ => None
-            }
-        }).next().copied();
+                _ => None,
+            })
+            .next()
+            .copied();
     }
 
     pub fn init(config: &Config) -> LockdownIntervention {
@@ -62,23 +65,22 @@ impl LockdownIntervention {
 
     fn above_threshold(&self, counts: &Counts) -> bool {
         match self.intervention {
-            Some(i) => {
-                counts.get_infected() > i.at_number_of_infections
-            }
-            None => false
+            Some(i) => counts.get_infected() > i.at_number_of_infections,
+            None => false,
         }
     }
 
-    pub fn set_zero_infection_hour(&mut self, zero_infection_hour: Hour){
+    pub fn set_zero_infection_hour(&mut self, zero_infection_hour: Hour) {
         if self.zero_infection_hour == 0 {
             self.zero_infection_hour = zero_infection_hour;
         }
     }
 
     pub fn should_unlock(&self, counts: &Counts) -> bool {
-        if counts.get_hour() == self.zero_infection_hour +
-            (constants::QUARANTINE_DAYS as f64 * 1.5).round() as Hour * constants::HOURS_IN_A_DAY {
-            return self.is_locked_down
+        if counts.get_hour()
+            == self.zero_infection_hour + (constants::QUARANTINE_DAYS as f64 * 1.5).round() as Hour * constants::HOURS_IN_A_DAY
+        {
+            return self.is_locked_down;
         }
         false
     }
@@ -88,7 +90,9 @@ impl LockdownIntervention {
             Some(_i) => {
                 self.is_locked_down = true;
             }
-            None => { panic!("Tried to apply lockdown when intervention is not present"); }
+            None => {
+                panic!("Tried to apply lockdown when intervention is not present");
+            }
         }
     }
 
@@ -98,9 +102,9 @@ impl LockdownIntervention {
     }
 
     pub fn get_essential_workers_percentage(&self) -> f64 {
-        match self.intervention{
+        match self.intervention {
             Some(x) => x.essential_workers_population,
-            _ => 0.0
+            _ => 0.0,
         }
     }
 
@@ -128,28 +132,14 @@ mod tests {
     use super::*;
 
     fn get_test_lockdown_intervention(is_locked_down: bool) -> LockdownIntervention {
-        let config = LockdownConfig {
-            at_number_of_infections: 20,
-            essential_workers_population: 0.1,
-        };
-        LockdownIntervention {
-            is_locked_down,
-            intervention: Some(config),
-            zero_infection_hour: 0,
-        }
+        let config = LockdownConfig { at_number_of_infections: 20, essential_workers_population: 0.1 };
+        LockdownIntervention { is_locked_down, intervention: Some(config), zero_infection_hour: 0 }
     }
 
     #[test]
     fn should_apply_lockdown_at_threshold() {
-        let config = LockdownConfig {
-            at_number_of_infections: 20,
-            essential_workers_population: 0.1,
-        };
-        let mut lockdown = LockdownIntervention {
-            is_locked_down: false,
-            intervention: Some(config),
-            zero_infection_hour: 0,
-        };
+        let config = LockdownConfig { at_number_of_infections: 20, essential_workers_population: 0.1 };
+        let mut lockdown = LockdownIntervention { is_locked_down: false, intervention: Some(config), zero_infection_hour: 0 };
 
         assert!(!lockdown.should_apply(&Counts::new_test(0, 99, 0, 1, 0, 0, 0)));
         assert!(!lockdown.should_apply(&Counts::new_test(22, 80, 0, 20, 0, 0, 0)));
@@ -162,15 +152,8 @@ mod tests {
 
     #[test]
     fn should_not_apply_lockdown_when_already_locked_down() {
-        let config = LockdownConfig {
-            at_number_of_infections: 20,
-            essential_workers_population: 0.1,
-        };
-        let mut lockdown = LockdownIntervention {
-            is_locked_down: false,
-            intervention: Some(config),
-            zero_infection_hour: 0,
-        };
+        let config = LockdownConfig { at_number_of_infections: 20, essential_workers_population: 0.1 };
+        let mut lockdown = LockdownIntervention { is_locked_down: false, intervention: Some(config), zero_infection_hour: 0 };
 
         assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0)));
         lockdown.apply();
@@ -179,15 +162,8 @@ mod tests {
 
     #[test]
     fn should_lift_lockdown_at_after_time_elapsed_and_infections_below_threshold() {
-        let config = LockdownConfig {
-            at_number_of_infections: 20,
-            essential_workers_population: 0.1,
-        };
-        let mut lockdown = LockdownIntervention {
-            is_locked_down: false,
-            intervention: Some(config),
-            zero_infection_hour: 0,
-        };
+        let config = LockdownConfig { at_number_of_infections: 20, essential_workers_population: 0.1 };
+        let mut lockdown = LockdownIntervention { is_locked_down: false, intervention: Some(config), zero_infection_hour: 0 };
         assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0)));
 
         lockdown.apply();
@@ -202,15 +178,8 @@ mod tests {
 
     #[test]
     fn should_extend_lockdown_until_infections_below_threshold() {
-        let config = LockdownConfig {
-            at_number_of_infections: 20,
-            essential_workers_population: 0.1,
-        };
-        let mut lockdown = LockdownIntervention {
-            is_locked_down: false,
-            intervention: Some(config),
-            zero_infection_hour: 0,
-        };
+        let config = LockdownConfig { at_number_of_infections: 20, essential_workers_population: 0.1 };
+        let mut lockdown = LockdownIntervention { is_locked_down: false, intervention: Some(config), zero_infection_hour: 0 };
         assert!(lockdown.should_apply(&Counts::new_test(48, 79, 0, 21, 0, 0, 0)));
 
         lockdown.apply();
@@ -226,15 +195,8 @@ mod tests {
 
     #[test]
     fn should_not_reapply_lockdown() {
-        let config = LockdownConfig {
-            at_number_of_infections: 20,
-            essential_workers_population: 0.1,
-        };
-        let mut lockdown = LockdownIntervention {
-            is_locked_down: false,
-            intervention: Some(config),
-            zero_infection_hour: 0,
-        };
+        let config = LockdownConfig { at_number_of_infections: 20, essential_workers_population: 0.1 };
+        let mut lockdown = LockdownIntervention { is_locked_down: false, intervention: Some(config), zero_infection_hour: 0 };
         lockdown.apply();
         lockdown.set_zero_infection_hour(28);
         assert!(lockdown.should_unlock(&Counts::new_test(532, 80, 0, 20, 0, 0, 0)));

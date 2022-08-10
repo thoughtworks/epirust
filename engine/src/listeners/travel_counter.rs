@@ -40,35 +40,21 @@ impl CountsByRegion {
         let mut exposed = 0;
         let mut infected = 0;
         let mut recovered = 0;
-        travellers_by_region.get_migrators_slice().iter().for_each(|traveller| {
-            match traveller.state_machine.state {
-                State::Susceptible { .. } => { susceptible += 1 }
-                State::Exposed { .. } => { exposed += 1 }
-                State::Infected { .. } => { infected += 1 }
-                State::Recovered { .. } => { recovered += 1 }
-                State::Deceased { .. } => { panic!("Deceased citizen should never be travelling!") }
+        travellers_by_region.get_migrators_slice().iter().for_each(|traveller| match traveller.state_machine.state {
+            State::Susceptible { .. } => susceptible += 1,
+            State::Exposed { .. } => exposed += 1,
+            State::Infected { .. } => infected += 1,
+            State::Recovered { .. } => recovered += 1,
+            State::Deceased { .. } => {
+                panic!("Deceased citizen should never be travelling!")
             }
         });
-        CountsByRegion {
-            hr,
-            destination: travellers_by_region.to_engine_id().clone(),
-            susceptible,
-            exposed,
-            infected,
-            recovered,
-        }
+        CountsByRegion { hr, destination: travellers_by_region.to_engine_id().clone(), susceptible, exposed, infected, recovered }
     }
 
     #[cfg(test)]
     fn new(hr: Hour, destination: String, s: i32, e: i32, i: i32, r: i32) -> CountsByRegion {
-        CountsByRegion {
-            hr,
-            destination,
-            susceptible: s,
-            exposed: e,
-            infected: i,
-            recovered: r,
-        }
+        CountsByRegion { hr, destination, susceptible: s, exposed: e, infected: i, recovered: r }
     }
 }
 
@@ -79,10 +65,7 @@ pub struct TravelCounter {
 
 impl TravelCounter {
     pub fn new(output_file_name: String) -> TravelCounter {
-        TravelCounter {
-            counts: Vec::new(),
-            output_file_name,
-        }
+        TravelCounter { counts: Vec::new(), output_file_name }
     }
 }
 
@@ -92,17 +75,16 @@ impl Listener for TravelCounter {
         output_path.push(&self.output_file_name);
         match crate::listeners::csv_service::write(&output_path, &self.counts) {
             Ok(_) => {}
-            Err(e) => { error!("Failed to serialize outgoing travels: {}", e) }
+            Err(e) => {
+                error!("Failed to serialize outgoing travels: {}", e)
+            }
         }
     }
 
     fn outgoing_migrators_added(&mut self, hr: Hour, travellers: &[MigratorsByRegion]) {
-        let counts_by_region: Vec<CountsByRegion> = travellers.iter().map(|t| {
-            CountsByRegion::create_from(hr, t)
-        }).collect();
+        let counts_by_region: Vec<CountsByRegion> = travellers.iter().map(|t| CountsByRegion::create_from(hr, t)).collect();
         self.counts.extend(counts_by_region);
     }
-
 
     fn as_any(&self) -> &dyn Any {
         self

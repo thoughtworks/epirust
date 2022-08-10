@@ -67,8 +67,7 @@ impl Listener for CsvListener {
         let mut output_path = environment::output_dir();
         output_path.push(&self.output_file_name);
 
-        write(&output_path, &self.counts)
-            .expect("Failed to write to file");
+        write(&output_path, &self.counts).expect("Failed to write to file");
     }
 
     fn as_any(&self) -> &dyn Any {

@@ -35,7 +35,6 @@ pub struct Commuter {
     pub state_machine: DiseaseStateMachine,
 }
 
-
 impl PartialEq for Commuter {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
@@ -56,19 +55,18 @@ impl CommutersByRegion {
     pub fn get_commuters(self) -> Vec<Commuter> {
         self.commuters
     }
-
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Commute {
     pub enabled: bool,
-    pub matrix: Option<Vec<Vec<u32>>>
+    pub matrix: Option<Vec<Vec<u32>>>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct CommutePlan {
     pub regions: Vec<String>,
-    pub matrix: Vec<Vec<u32>>
+    pub matrix: Vec<Vec<u32>>,
 }
 
 impl CommutePlan {
@@ -86,31 +84,34 @@ impl CommutePlan {
     }
 
     fn get_position(&self, engine_id: &String) -> usize {
-        self.regions.iter().position(|i| i.eq(engine_id))
-            .expect("Could not find region with specified name")
+        self.regions.iter().position(|i| i.eq(engine_id)).expect("Could not find region with specified name")
     }
 
-    fn column(&self, index: usize) -> impl Iterator<Item=u32> + '_ {
+    fn column(&self, index: usize) -> impl Iterator<Item = u32> + '_ {
         self.matrix.iter().map(move |row| *row.get(index).unwrap())
     }
 
     pub fn get_total_commuters_by_region(&self, from_region: String) -> Vec<(String, u32)> {
-        let mut commuters_by_region: Vec<(String, u32)>  = vec![];
+        let mut commuters_by_region: Vec<(String, u32)> = vec![];
         for region in &self.regions {
-            commuters_by_region.push((region.to_string(), self.get_outgoing(&from_region,region )))
+            commuters_by_region.push((region.to_string(), self.get_outgoing(&from_region, region)))
         }
         commuters_by_region
     }
 
     pub fn get_commuters_by_region(&self, commuters: &Vec<(Point, Commuter)>, simulation_hour: Hour) -> Vec<CommutersByRegion> {
-        let mut commuters_by_region : Vec<CommutersByRegion> = Vec::new();
+        let mut commuters_by_region: Vec<CommutersByRegion> = Vec::new();
         for region in &self.regions {
-            let mut commuters_for_region : Vec<Commuter> = Vec::new();
+            let mut commuters_for_region: Vec<Commuter> = Vec::new();
             for (_point, commuter) in commuters {
-                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME && commuter.work_location.location_id == *region {commuters_for_region.push(commuter.clone())}
-                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME && commuter.home_location.location_id == *region {commuters_for_region.push(commuter.clone())}
+                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME && commuter.work_location.location_id == *region {
+                    commuters_for_region.push(commuter.clone())
+                }
+                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME && commuter.home_location.location_id == *region {
+                    commuters_for_region.push(commuter.clone())
+                }
             }
-            commuters_by_region.push(CommutersByRegion{to_engine_id: region.clone(), commuters: commuters_for_region })
+            commuters_by_region.push(CommutersByRegion { to_engine_id: region.clone(), commuters: commuters_for_region })
         }
         commuters_by_region
     }

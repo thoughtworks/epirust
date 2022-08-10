@@ -37,28 +37,25 @@ pub fn start(engine_id: &str, topics: &[&str]) -> StreamConsumer {
         .create()
         .expect("Consumer creation failed");
 
-    consumer.subscribe(topics)
-        .expect("Couldn't subscribe to specified topics");
+    consumer.subscribe(topics).expect("Couldn't subscribe to specified topics");
 
     consumer
 }
 
 pub fn read_commuters(message: Option<KafkaResult<BorrowedMessage>>) -> Option<CommutersByRegion> {
     match message {
-        None => { None }
-        Some(msg) => {
-            match msg {
-                Err(e) => {
-                    error!("error occurred: {}", e);
-                    None
-                }
-                Ok(borrowed_message) => {
-                    let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-                    trace!("Reading Commute Data: {}", str_message);
-                    Some(parse_commuters(str_message))
-                }
+        None => None,
+        Some(msg) => match msg {
+            Err(e) => {
+                error!("error occurred: {}", e);
+                None
             }
-        }
+            Ok(borrowed_message) => {
+                let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
+                trace!("Reading Commute Data: {}", str_message);
+                Some(parse_commuters(str_message))
+            }
+        },
     }
 }
 
@@ -68,20 +65,18 @@ fn parse_commuters(message: &str) -> CommutersByRegion {
 
 pub fn read_migrators(message: Option<KafkaResult<BorrowedMessage>>) -> Option<MigratorsByRegion> {
     match message {
-        None => { None }
-        Some(msg) => {
-            match msg {
-                Err(e) => {
-                    debug!("error occured: {}", e);
-                    None
-                }
-                Ok(borrowed_message) => {
-                    let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-                    debug!("Reading Migration Data: {}", str_message);
-                    Some(parse_migrators(str_message))
-                }
+        None => None,
+        Some(msg) => match msg {
+            Err(e) => {
+                debug!("error occured: {}", e);
+                None
             }
-        }
+            Ok(borrowed_message) => {
+                let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
+                debug!("Reading Migration Data: {}", str_message);
+                Some(parse_migrators(str_message))
+            }
+        },
     }
 }
 

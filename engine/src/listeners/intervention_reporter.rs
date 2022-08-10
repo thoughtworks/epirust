@@ -17,7 +17,6 @@
  *
  */
 
-
 use crate::listeners::listener::Listener;
 use std::any::Any;
 use crate::interventions::intervention_type::InterventionType;
@@ -35,11 +34,7 @@ struct InterventionReport {
 
 impl InterventionReport {
     pub fn new(hour: Hour, intervention: String, data: String) -> InterventionReport {
-        InterventionReport {
-            hour,
-            intervention,
-            data: serde_json::from_str(data.as_str()).unwrap(),
-        }
+        InterventionReport { hour, intervention, data: serde_json::from_str(data.as_str()).unwrap() }
     }
 }
 
@@ -50,10 +45,7 @@ pub struct InterventionReporter {
 
 impl InterventionReporter {
     pub fn new(output_file_name: String) -> InterventionReporter {
-        InterventionReporter {
-            interventions: Vec::new(),
-            output_file_name,
-        }
+        InterventionReporter { interventions: Vec::new(), output_file_name }
     }
 }
 

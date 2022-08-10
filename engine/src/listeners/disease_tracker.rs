@@ -24,22 +24,20 @@ use crate::listeners::events::counts::Counts;
 use fnv::FnvHashMap;
 
 pub struct Hotspot {
-    disease_hotspot_tracker: FnvHashMap<Point, i32>
+    disease_hotspot_tracker: FnvHashMap<Point, i32>,
 }
 
 impl Hotspot {
     pub fn new() -> Hotspot {
         let disease_hotspot_tracker = FnvHashMap::default();
-        Hotspot{disease_hotspot_tracker}
+        Hotspot { disease_hotspot_tracker }
     }
 }
 
 impl Listener for Hotspot {
-    fn counts_updated(&mut self, _counts: Counts) {
-    }
+    fn counts_updated(&mut self, _counts: Counts) {}
 
-    fn simulation_ended(&mut self) {
-    }
+    fn simulation_ended(&mut self) {}
 
     fn citizen_got_infected(&mut self, cell: &Point) {
         let counter = self.disease_hotspot_tracker.entry(*cell).or_insert(0);
@@ -52,19 +50,19 @@ impl Listener for Hotspot {
 }
 
 #[cfg(test)]
-mod tests{
+mod tests {
     use crate::listeners::disease_tracker::Hotspot;
     use crate::geography::Point;
     use crate::listeners::listener::Listener;
 
     #[test]
-    fn should_initialize(){
+    fn should_initialize() {
         let tracker = Hotspot::new();
         assert_eq!(tracker.disease_hotspot_tracker.len(), 0);
     }
 
     #[test]
-    fn should_add_new_entry(){
+    fn should_add_new_entry() {
         let mut tracker = Hotspot::new();
         let current_point = Point::new(0, 1);
 
@@ -74,7 +72,7 @@ mod tests{
     }
 
     #[test]
-    fn should_update_tracker(){
+    fn should_update_tracker() {
         let mut tracker = Hotspot::new();
         let current_point = Point::new(0, 1);
 

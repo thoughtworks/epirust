@@ -38,8 +38,7 @@ pub fn start(engine_id: &str) -> StreamConsumer {
         .create()
         .expect("Consumer creation failed");
 
-    consumer.subscribe(&[TICKS_TOPIC])
-        .expect("Couldn't subscribe to specified topics");
+    consumer.subscribe(&[TICKS_TOPIC]).expect("Couldn't subscribe to specified topics");
 
     consumer
 }
@@ -50,19 +49,17 @@ pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Option<Tick> {
             debug!("End of tick stream");
             None
         }
-        Some(m) => {
-            match m {
-                Err(e) => {
-                    debug!("error occured: {}", e);
-                    None
-                }
-                Ok(borrowed_message) => {
-                    let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-                    debug!("Tick Data: {}", str_message);
-                    Some(parse_tick(str_message))
-                }
+        Some(m) => match m {
+            Err(e) => {
+                debug!("error occured: {}", e);
+                None
             }
-        }
+            Ok(borrowed_message) => {
+                let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
+                debug!("Tick Data: {}", str_message);
+                Some(parse_tick(str_message))
+            }
+        },
     }
 }
 

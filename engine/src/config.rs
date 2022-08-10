@@ -83,9 +83,15 @@ impl Config {
     }
 
     #[cfg(test)]
-    pub fn new(population: Population, disease: Disease, geography_parameters: GeographyParameters, disease_overrides: Vec<DiseaseOverride>,
-               hours: Hour, interventions: Vec<InterventionConfig>, output_file: Option<String>)
-               -> Config {
+    pub fn new(
+        population: Population,
+        disease: Disease,
+        geography_parameters: GeographyParameters,
+        disease_overrides: Vec<DiseaseOverride>,
+        hours: Hour,
+        interventions: Vec<InterventionConfig>,
+        output_file: Option<String>,
+    ) -> Config {
         Config {
             population,
             disease,
@@ -107,12 +113,10 @@ pub struct GeographyParameters {
     pub hospital_beds_percentage: Percentage,
 }
 
-impl GeographyParameters{
+impl GeographyParameters {
     #[cfg(test)]
     pub fn new(grid_size: Size, hospital_beds_percentage: f64) -> GeographyParameters {
-        GeographyParameters{
-            grid_size, hospital_beds_percentage
-        }
+        GeographyParameters { grid_size, hospital_beds_percentage }
     }
 }
 
@@ -189,12 +193,7 @@ impl StartingInfections {
 
 impl Default for StartingInfections {
     fn default() -> Self {
-        StartingInfections {
-            infected_mild_asymptomatic: 0,
-            infected_mild_symptomatic: 0,
-            infected_severe: 0,
-            exposed: 1,
-        }
+        StartingInfections { infected_mild_asymptomatic: 0, infected_mild_symptomatic: 0, infected_severe: 0, exposed: 1 }
     }
 }
 
@@ -211,12 +210,12 @@ mod tests {
         let disease_override = DiseaseOverride::new(
             String::from("age"),
             vec!["60-64".to_string(), "65-69".to_string(), "70-74".to_string(), "75-79".to_string(), "80+".to_string()],
-            Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.2, 0.3, 0.3, 48, 48));
+            Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.2, 0.3, 0.3, 48, 48),
+        );
 
         let population = Population::Csv(CsvPopulation {
             file: "config/pune_population.csv".to_string(),
-            cols: vec![String::from("age"), String::from("sex"), String::from("working"),
-                       String::from("pub_transport")],
+            cols: vec![String::from("age"), String::from("sex"), String::from("working"), String::from("pub_transport")],
         });
 
         let expected_config = Config {

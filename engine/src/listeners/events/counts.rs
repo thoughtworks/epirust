@@ -32,7 +32,15 @@ pub struct Counts {
 
 impl Counts {
     #[cfg(test)]
-    pub fn new_test(hour: Hour, susceptible: Count, exposed: Count, infected: Count, hospitalized: Count, recovered: Count, deceased: Count) -> Counts {
+    pub fn new_test(
+        hour: Hour,
+        susceptible: Count,
+        exposed: Count,
+        infected: Count,
+        hospitalized: Count,
+        recovered: Count,
+        deceased: Count,
+    ) -> Counts {
         Counts { hour, susceptible, exposed, infected, hospitalized, recovered, deceased }
     }
 
@@ -68,7 +76,9 @@ impl Counts {
         self.hour
     }
 
-    pub fn update_susceptible(&mut self, count: Count) { self.susceptible += count; }
+    pub fn update_susceptible(&mut self, count: Count) {
+        self.susceptible += count;
+    }
 
     pub fn update_exposed(&mut self, count: Count) {
         self.exposed += count;
@@ -90,7 +100,9 @@ impl Counts {
         self.hospitalized += count;
     }
 
-    pub fn remove_susceptible(&mut self, count: Count) { self.susceptible -= count; }
+    pub fn remove_susceptible(&mut self, count: Count) {
+        self.susceptible -= count;
+    }
 
     pub fn remove_exposed(&mut self, count: Count) {
         self.exposed -= count;
@@ -123,21 +135,21 @@ impl Counts {
     }
 
     pub fn total(&self) -> Count {
-        self.susceptible +
-        self.exposed +
-        self.infected +
-        self.hospitalized +
-        self.recovered +
-        self.deceased
+        self.susceptible + self.exposed + self.infected + self.hospitalized + self.recovered + self.deceased
     }
 
     pub fn log(&self) {
-        info!("S: {}, E:{}, I: {}, H: {}, R: {}, D: {}", self.get_susceptible(), self.get_exposed(),
-              self.get_infected(), self.get_hospitalized(), self.get_recovered(),
-              self.get_deceased())
+        info!(
+            "S: {}, E:{}, I: {}, H: {}, R: {}, D: {}",
+            self.get_susceptible(),
+            self.get_exposed(),
+            self.get_infected(),
+            self.get_hospitalized(),
+            self.get_recovered(),
+            self.get_deceased()
+        )
     }
 }
-
 
 #[cfg(test)]
 mod tests {

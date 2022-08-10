@@ -17,7 +17,6 @@
  *
  */
 
-
 extern crate core;
 #[macro_use]
 extern crate log;
@@ -36,13 +35,13 @@ use crate::config::{Configuration, get_hours};
 use crate::kafka_producer::KafkaProducer;
 use crate::travel_plan::TravelPlan;
 
-mod kafka_producer;
-mod kafka_consumer;
-mod ticks;
-mod environment;
-mod travel_plan;
 mod config;
 mod custom_types;
+mod environment;
+mod kafka_consumer;
+mod kafka_producer;
+mod ticks;
+mod travel_plan;
 
 #[tokio::main]
 async fn main() {
@@ -51,12 +50,14 @@ async fn main() {
     let matches = App::new("EpiRust Orchestrator")
         .version("0.1")
         .about("Epidemiology Simulations in Rust")
-        .arg(Arg::with_name("config")
-            .long("config")
-            .short("c")
-            .value_name("FILE")
-            .default_value("config/simulation.json")
-            .help("Use a config file to run the simulation"))
+        .arg(
+            Arg::with_name("config")
+                .long("config")
+                .short("c")
+                .value_name("FILE")
+                .default_value("config/simulation.json")
+                .help("Use a config file to run the simulation"),
+        )
         .get_matches();
 
     let config_path = matches.value_of("config").unwrap_or("config/simulation.json");
@@ -74,42 +75,83 @@ async fn main() {
 
 async fn cleanup(regions: &Vec<String>) {
     let kafka_url = environment::kafka_url();
-    let kafka_admin: AdminClient<DefaultClientContext> = ClientConfig::new()
-        .set("bootstrap.servers", kafka_url.as_str())
-        .create()
-        .expect("Admin client creation failed");
-    match kafka_admin.delete_topics(&["simulation_requests", "counts_updated", "ticks", "ticks_ack"], &AdminOptions::new()).await {
-        Ok(t) => { debug!("Deleted topics {:?}", t) }
-        Err(e) => { debug!("Error while deleting topics {:?}", e) }
+    let kafka_admin: AdminClient<DefaultClientContext> =
+        ClientConfig::new().set("bootstrap.servers", kafka_url.as_str()).create().expect("Admin client creation failed");
+    match kafka_admin.delete_topics(&["simulation_requests", "counts_updated", "ticks", "ticks_ack"], &AdminOptions::new()).await
+    {
+        Ok(t) => {
+            debug!("Deleted topics {:?}", t)
+        }
+        Err(e) => {
+            debug!("Error while deleting topics {:?}", e)
+        }
     }
     for region in regions {
         match kafka_admin.delete_topics(&[&*format!("{}{}", "commute_", region)], &AdminOptions::new()).await {
-            Ok(t) => { debug!("Deleted topic {:?}", t) }
-            Err(e) => { debug!("Error while deleting topic {:?}", e) }
+            Ok(t) => {
+                debug!("Deleted topic {:?}", t)
+            }
+            Err(e) => {
+                debug!("Error while deleting topic {:?}", e)
+            }
         }
         match kafka_admin.delete_topics(&[&*format!("{}{}", "migration_", region)], &AdminOptions::new()).await {
-            Ok(t) => { debug!("Deleted topic {:?}", t) }
-            Err(e) => { debug!("Error while deleting topic {:?}", e) }
+            Ok(t) => {
+                debug!("Deleted topic {:?}", t)
+            }
+            Err(e) => {
+                debug!("Error while deleting topic {:?}", e)
+            }
         }
     }
     for region in regions {
-        match kafka_admin.create_topics(&[NewTopic::new(&*format!("{}{}", "commute_", region), 1, TopicReplication::Fixed(1))], &AdminOptions::new()).await {
-            Ok(t) => { debug!("Created topic {:?}", t) }
-            Err(e) => { debug!("Error while creating topics {:?}", e) }
+        match kafka_admin
+            .create_topics(
+                &[NewTopic::new(&*format!("{}{}", "commute_", region), 1, TopicReplication::Fixed(1))],
+                &AdminOptions::new(),
+            )
+            .await
+        {
+            Ok(t) => {
+                debug!("Created topic {:?}", t)
+            }
+            Err(e) => {
+                debug!("Error while creating topics {:?}", e)
+            }
         }
-        match kafka_admin.create_topics(&[NewTopic::new(&*format!("{}{}", "migration_", region), 1, TopicReplication::Fixed(1))], &AdminOptions::new()).await {
-            Ok(t) => { debug!("Created topic {:?}", t) }
-            Err(e) => { debug!("Error while creating topics {:?}", e) }
+        match kafka_admin
+            .create_topics(
+                &[NewTopic::new(&*format!("{}{}", "migration_", region), 1, TopicReplication::Fixed(1))],
+                &AdminOptions::new(),
+            )
+            .await
+        {
+            Ok(t) => {
+                debug!("Created topic {:?}", t)
+            }
+            Err(e) => {
+                debug!("Error while creating topics {:?}", e)
+            }
         }
     }
-    match kafka_admin.create_topics(&[
-        NewTopic::new("simulation_requests", 1, TopicReplication::Fixed(1)),
-        NewTopic::new("counts_updated", 1, TopicReplication::Fixed(1)),
-        NewTopic::new("ticks", 1, TopicReplication::Fixed(1)),
-        NewTopic::new("ticks_ack", 1, TopicReplication::Fixed(1)),
-    ], &AdminOptions::new()).await {
-        Ok(t) => { debug!("Created topics {:?}", t) }
-        Err(e) => { debug!("Error while creating topics {:?}", e) }
+    match kafka_admin
+        .create_topics(
+            &[
+                NewTopic::new("simulation_requests", 1, TopicReplication::Fixed(1)),
+                NewTopic::new("counts_updated", 1, TopicReplication::Fixed(1)),
+                NewTopic::new("ticks", 1, TopicReplication::Fixed(1)),
+                NewTopic::new("ticks_ack", 1, TopicReplication::Fixed(1)),
+            ],
+            &AdminOptions::new(),
+        )
+        .await
+    {
+        Ok(t) => {
+            debug!("Created topics {:?}", t)
+        }
+        Err(e) => {
+            debug!("Error while creating topics {:?}", e)
+        }
     }
 }
 
@@ -117,7 +159,11 @@ async fn start(travel_plan: &TravelPlan, hours: Range<i64>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();
 
     match producer.start_request(sim_conf).await.unwrap() {
-        Ok(_) => { ticks::start_ticking(travel_plan, hours).await; }
-        Err(_) => { panic!("Failed to send simulation request to engines"); }
+        Ok(_) => {
+            ticks::start_ticking(travel_plan, hours).await;
+        }
+        Err(_) => {
+            panic!("Failed to send simulation request to engines");
+        }
     }
 }

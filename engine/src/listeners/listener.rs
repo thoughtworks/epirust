@@ -49,15 +49,15 @@ impl Listeners {
 
 impl Listeners {
     pub fn counts_updated(&mut self, counts: Counts) {
-        self.listeners.iter_mut().for_each(|listener| { listener.counts_updated(counts) });
+        self.listeners.iter_mut().for_each(|listener| listener.counts_updated(counts));
     }
 
     pub fn simulation_ended(&mut self) {
-        self.listeners.iter_mut().for_each(|listener| { listener.simulation_ended() });
+        self.listeners.iter_mut().for_each(|listener| listener.simulation_ended());
     }
 
     pub fn citizen_got_infected(&mut self, cell: &Point) {
-        self.listeners.iter_mut().for_each(|listener| { listener.citizen_got_infected(cell) });
+        self.listeners.iter_mut().for_each(|listener| listener.citizen_got_infected(cell));
     }
 
     pub fn citizen_state_updated(&mut self, hr: Hour, citizen: &Citizen, location: &Point) {
@@ -67,14 +67,11 @@ impl Listeners {
     }
 
     pub fn grid_updated(&self, grid: &Grid) {
-        self.listeners.iter().for_each(|l| { l.grid_updated(grid) })
+        self.listeners.iter().for_each(|l| l.grid_updated(grid))
     }
 
-    pub fn intervention_applied(&mut self,
-                                _at_hour: Hour,
-                                _intervention: &dyn InterventionType,
-    ) {
-        self.listeners.iter_mut().for_each(|l| { l.intervention_applied(_at_hour, _intervention) })
+    pub fn intervention_applied(&mut self, _at_hour: Hour, _intervention: &dyn InterventionType) {
+        self.listeners.iter_mut().for_each(|l| l.intervention_applied(_at_hour, _intervention))
     }
 
     pub fn outgoing_migrators_added(&mut self, hr: Hour, travellers: &Vec<MigratorsByRegion>) {
@@ -98,11 +95,7 @@ mod tests {
 
     impl MockListener {
         fn new() -> MockListener {
-            MockListener {
-                calls_counts_updated: 0,
-                calls_simulation_ended: 0,
-                calls_citizen_got_infected: 0,
-            }
+            MockListener { calls_counts_updated: 0, calls_simulation_ended: 0, calls_citizen_got_infected: 0 }
         }
     }
 
@@ -131,7 +124,6 @@ mod tests {
 
         let mocks: Vec<Box<dyn Listener>> = vec![mock1, mock2];
         let mut listeners = Listeners::from(mocks);
-
 
         listeners.counts_updated(Counts::new(10, 1, 0));
         listeners.citizen_got_infected(&Point::new(1, 1));

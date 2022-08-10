@@ -58,8 +58,20 @@ impl Disease {
     }
 
     #[cfg(test)]
-    pub fn new(regular_transmission_start_day: Day, high_transmission_start_day: Day, last_day: Day, asymptomatic_last_day: Day,
-               mild_infected_last_day: Day, regular_transmission_rate: Percentage, high_transmission_rate: Percentage, death_rate: Percentage, percentage_asymptomatic_population: Percentage, percentage_severe_infected_population: Percentage, exposed_duration: Hour, pre_symptomatic_duration: Hour) -> Disease {
+    pub fn new(
+        regular_transmission_start_day: Day,
+        high_transmission_start_day: Day,
+        last_day: Day,
+        asymptomatic_last_day: Day,
+        mild_infected_last_day: Day,
+        regular_transmission_rate: Percentage,
+        high_transmission_rate: Percentage,
+        death_rate: Percentage,
+        percentage_asymptomatic_population: Percentage,
+        percentage_severe_infected_population: Percentage,
+        exposed_duration: Hour,
+        pre_symptomatic_duration: Hour,
+    ) -> Disease {
         Disease {
             regular_transmission_start_day,
             high_transmission_start_day,
@@ -72,7 +84,7 @@ impl Disease {
             percentage_asymptomatic_population,
             percentage_severe_infected_population,
             exposed_duration,
-            pre_symptomatic_duration
+            pre_symptomatic_duration,
         }
     }
 
@@ -132,9 +144,7 @@ pub struct DiseaseOverride {
 impl DiseaseOverride {
     #[cfg(test)]
     pub fn new(population_param: String, values: Vec<String>, disease: Disease) -> DiseaseOverride {
-        DiseaseOverride {
-            population_param, values, disease
-        }
+        DiseaseOverride { population_param, values, disease }
     }
 }
 
@@ -177,7 +187,7 @@ mod tests {
             percentage_asymptomatic_population: 0.0,
             percentage_severe_infected_population: 1.0,
             exposed_duration: 0,
-            pre_symptomatic_duration: 0
+            pre_symptomatic_duration: 0,
         };
         assert_eq!(expected, disease)
     }

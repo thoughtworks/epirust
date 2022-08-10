@@ -50,10 +50,7 @@ pub struct CitizenStatesAtHr {
 
 impl CitizenStatesAtHr {
     pub fn init(population_size: usize) -> CitizenStatesAtHr {
-        CitizenStatesAtHr {
-            hr: 1,
-            citizen_states: Vec::with_capacity(population_size),
-        }
+        CitizenStatesAtHr { hr: 1, citizen_states: Vec::with_capacity(population_size) }
     }
 
     pub fn update(&mut self, citizen: &Citizen, location: &Point) {
@@ -69,7 +66,6 @@ impl CitizenStatesAtHr {
         self.citizen_states.clear();
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -95,7 +91,7 @@ mod tests {
     }
 
     fn citizen() -> Citizen {
-        let area = Area::new("sim_id".to_string(),Point::new(0, 0), Point::new(1, 1));
+        let area = Area::new("sim_id".to_string(), Point::new(0, 0), Point::new(1, 1));
         Citizen::new(area.clone(), area, Point::new(2, 2), true, WorkStatus::Normal {}, &mut RandomWrapper::new())
     }
 }

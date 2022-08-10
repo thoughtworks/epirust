@@ -15,21 +15,19 @@ impl KafkaProducer {
                 .set("bootstrap.servers", kafka_url.as_str())
                 .set("message.max.bytes", "104857600") //in order to allow message greater than 1MB
                 .create()
-                .expect("Could not create Kafka Producer")
+                .expect("Could not create Kafka Producer"),
         }
     }
 
     pub fn start_request(&mut self, request: &String) -> DeliveryFuture {
-        let record: FutureRecord<String, String> = FutureRecord::to("simulation_requests")
-            .payload(request);
+        let record: FutureRecord<String, String> = FutureRecord::to("simulation_requests").payload(request);
         info!("Sent simulation request");
         self.producer.send(record, 0)
     }
 
     pub fn send_tick(&mut self, tick: &Tick) -> DeliveryFuture {
         let payload = serde_json::to_string(tick).unwrap();
-        let record: FutureRecord<String, String> = FutureRecord::to("ticks")
-            .payload(&payload);
+        let record: FutureRecord<String, String> = FutureRecord::to("ticks").payload(&payload);
         debug!("Send tick: {}", payload);
         self.producer.send(record, 0)
     }

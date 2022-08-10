@@ -22,9 +22,9 @@ use crate::interventions::lockdown::{LockdownConfig, LockdownIntervention};
 use crate::interventions::hospital::{BuildNewHospitalConfig, BuildNewHospital};
 
 pub mod hospital;
+pub mod intervention_type;
 pub mod lockdown;
 pub mod vaccination;
-pub mod intervention_type;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 #[serde(rename = "Intervention")]

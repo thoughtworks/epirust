@@ -46,21 +46,21 @@ pub struct VaccinateIntervention {
 
 impl VaccinateIntervention {
     pub fn init(config: &Config) -> VaccinateIntervention {
-        VaccinateIntervention {
-            intervention: VaccinateIntervention::prepare_vaccinations(config)
-        }
+        VaccinateIntervention { intervention: VaccinateIntervention::prepare_vaccinations(config) }
     }
 
     fn prepare_vaccinations(config: &Config) -> HashMap<Hour, Percentage> {
         let mut vaccinations: HashMap<Hour, f64> = HashMap::new();
-        config.get_interventions().iter().filter_map(|i| {
-            match i {
+        config
+            .get_interventions()
+            .iter()
+            .filter_map(|i| match i {
                 InterventionConfig::Vaccinate(v) => Some(v),
                 _ => None,
-            }
-        }).for_each(|v| {
-            vaccinations.insert(v.at_hour, v.percent);
-        });
+            })
+            .for_each(|v| {
+                vaccinations.insert(v.at_hour, v.percent);
+            });
         vaccinations
     }
 

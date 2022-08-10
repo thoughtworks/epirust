@@ -17,7 +17,6 @@
  *
  */
 
-
 use std::any::Any;
 
 use rdkafka::ClientConfig;
@@ -60,11 +59,9 @@ impl EventsKafkaProducer {
     }
 
     fn publish_citizen_states_buffer(&mut self) {
-        let message = serde_json::to_string(&self.citizen_states_buffer)
-            .expect("Failed to serialize citizen states");
-        let record: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
-            .key(&self.sim_id)
-            .payload(&message);
+        let message = serde_json::to_string(&self.citizen_states_buffer).expect("Failed to serialize citizen states");
+        let record: FutureRecord<String, String> =
+            FutureRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&message);
         self.producer.send(record, 0);
         self.citizen_states_buffer.next_hour();
     }
@@ -73,24 +70,21 @@ impl EventsKafkaProducer {
 impl Listener for EventsKafkaProducer {
     fn counts_updated(&mut self, counts: Counts) {
         let message = serde_json::to_string(&counts).expect("Failed to serialize counts");
-        let record: FutureRecord<String, String> = FutureRecord::to(&self.count_updated_topic)
-            .key(&self.sim_id)
-            .payload(&message);
+        let record: FutureRecord<String, String> =
+            FutureRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&message);
         self.producer.send(record, 0);
     }
 
     fn simulation_ended(&mut self) {
         let message = r#"{"simulation_ended": true}"#.to_string();
-        let record: FutureRecord<String, String> = FutureRecord::to(&self.count_updated_topic)
-            .key(&self.sim_id)
-            .payload(&message);
+        let record: FutureRecord<String, String> =
+            FutureRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&message);
         self.producer.send(record, 0);
 
         if self.enable_citizen_state_messages {
             self.publish_citizen_states_buffer();
-            let record2: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
-                .key(&self.sim_id)
-                .payload(&message);
+            let record2: FutureRecord<String, String> =
+                FutureRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&message);
             self.producer.send(record2, 0);
         }
     }
@@ -111,32 +105,28 @@ impl Listener for EventsKafkaProducer {
             let message = serde_json::to_string(grid);
             match message {
                 Ok(m) => {
-                    let record: FutureRecord<String, String> = FutureRecord::to(&self.citizen_states_topic)
-                        .key(&self.sim_id)
-                        .payload(&m);
+                    let record: FutureRecord<String, String> =
+                        FutureRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&m);
 
                     self.producer.send(record, 0);
                 }
-                Err(e) => error!("Failed to parse the grid, cannot publish to kafka! Error: {}", e)
+                Err(e) => error!("Failed to parse the grid, cannot publish to kafka! Error: {}", e),
             }
         }
     }
 
-    fn intervention_applied(&mut self,
-                            _at_hour: Hour,
-                            _intervention: &dyn InterventionType,
-    ) {
-        let formatted_message = format!(r#"{{"hour": {}, "intervention": "{}", "data": {}}}"#,
-                                        _at_hour,
-                                        _intervention.name(),
-                                        _intervention.json_data());
+    fn intervention_applied(&mut self, _at_hour: Hour, _intervention: &dyn InterventionType) {
+        let formatted_message = format!(
+            r#"{{"hour": {}, "intervention": "{}", "data": {}}}"#,
+            _at_hour,
+            _intervention.name(),
+            _intervention.json_data()
+        );
 
-        let record: FutureRecord<String, String> = FutureRecord::to(&self.count_updated_topic)
-            .key(&self.sim_id)
-            .payload(&formatted_message);
+        let record: FutureRecord<String, String> =
+            FutureRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&formatted_message);
         self.producer.send(record, 0);
     }
-
 
     fn as_any(&self) -> &dyn Any {
         self

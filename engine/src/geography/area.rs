@@ -36,10 +36,8 @@ impl Area {
         Area { location_id, start_offset, end_offset }
     }
 
-    pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item=Point> + '_ {
-        point.neighbor_iterator().filter(move |p| {
-            self.contains(p)
-        })
+    pub fn get_neighbors_of(&self, point: Point) -> impl Iterator<Item = Point> + '_ {
+        point.neighbor_iterator().filter(move |p| self.contains(p))
     }
 
     pub fn iter(&self) -> AreaIterator {
@@ -51,9 +49,11 @@ impl Area {
         let rand_xs = (self.start_offset.x..=self.end_offset.x).into_iter().choose_multiple(rng.get(), nx);
         let rand_ys = (self.start_offset.y..=self.end_offset.y).into_iter().choose_multiple(rng.get(), nx);
 
-        rand_xs.iter().flat_map(|coord_x| {
-            rand_ys.iter().map(move |coord_y| Point::new(*coord_x, *coord_y))
-        }).take(number_of_points).collect()
+        rand_xs
+            .iter()
+            .flat_map(|coord_x| rand_ys.iter().map(move |coord_y| Point::new(*coord_x, *coord_y)))
+            .take(number_of_points)
+            .collect()
     }
 
     pub fn get_random_point(&self, rng: &mut RandomWrapper) -> Point {
@@ -64,8 +64,10 @@ impl Area {
     }
 
     pub fn contains(&self, point: &Point) -> bool {
-        self.start_offset.x <= point.x && self.end_offset.x >= point.x
-            && self.start_offset.y <= point.y && self.end_offset.y >= point.y
+        self.start_offset.x <= point.x
+            && self.end_offset.x >= point.x
+            && self.start_offset.y <= point.y
+            && self.end_offset.y >= point.y
     }
 
     pub fn get_number_of_cells(&self) -> Count {
@@ -89,7 +91,8 @@ pub fn area_factory(start_point: Point, end_point: Point, size: u32, engine_id: 
 
     for _i in 0..feasible_houses_in_y_dim {
         for _j in 0..feasible_houses_in_x_dim {
-            let current_end_point: Point = Point::new(current_start_point.x + size as i32 - 1, current_start_point.y + size as i32 - 1);
+            let current_end_point: Point =
+                Point::new(current_start_point.x + size as i32 - 1, current_start_point.y + size as i32 - 1);
 
             areas.push(Area::new(engine_id.to_string(), current_start_point, current_end_point));
 
@@ -110,10 +113,7 @@ pub struct AreaIterator {
 
 impl AreaIterator {
     pub fn new(area: Area) -> AreaIterator {
-        AreaIterator {
-            iter_index: Point::new(area.start_offset.x - 1, area.start_offset.y),
-            area,
-        }
+        AreaIterator { iter_index: Point::new(area.start_offset.x - 1, area.start_offset.y), area }
     }
 }
 
@@ -155,14 +155,24 @@ mod tests {
     fn should_iterate_over_points_in_area() {
         let area = Area::new("engine1".to_string(), Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
-        assert_eq!(x, vec![Point::new(0, 0), Point::new(1, 0), Point::new(2, 0),
-                           Point::new(0, 1), Point::new(1, 1), Point::new(2, 1),
-                           Point::new(0, 2), Point::new(1, 2), Point::new(2, 2)]);
+        assert_eq!(
+            x,
+            vec![
+                Point::new(0, 0),
+                Point::new(1, 0),
+                Point::new(2, 0),
+                Point::new(0, 1),
+                Point::new(1, 1),
+                Point::new(2, 1),
+                Point::new(0, 2),
+                Point::new(1, 2),
+                Point::new(2, 2)
+            ]
+        );
 
         let area = Area::new("engine1".to_string(), Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
-        assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1),
-                           Point::new(1, 2), Point::new(2, 2)])
+        assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1), Point::new(1, 2), Point::new(2, 2)])
     }
 
     #[test]

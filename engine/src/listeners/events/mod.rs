@@ -17,5 +17,5 @@
  *
  */
 
-pub mod counts;
 pub mod citizen_state;
+pub mod counts;

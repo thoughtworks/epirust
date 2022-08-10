@@ -17,7 +17,6 @@
  *
  */
 
-
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Migration {
     pub enabled: bool,
@@ -42,7 +41,6 @@ pub struct TravelPlan {
     // lockdown_travellers: i32,
 }
 
-
 #[derive(Clone, Debug, Deserialize)]
 pub struct CommutePlan {
     pub regions: Vec<String>,
@@ -62,16 +60,13 @@ impl CommutePlan {
     }
 
     fn get_position(&self, engine_id: &String) -> usize {
-        self.regions.iter().position(|i| i.eq(engine_id))
-            .expect("Could not find region with specified name")
+        self.regions.iter().position(|i| i.eq(engine_id)).expect("Could not find region with specified name")
     }
 
-    fn column(&self, index: usize) -> impl Iterator<Item=u32> + '_ {
+    fn column(&self, index: usize) -> impl Iterator<Item = u32> + '_ {
         self.matrix.iter().map(move |row| *row.get(index).unwrap())
     }
-
 }
-
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct MigrationPlan {
@@ -90,21 +85,19 @@ impl MigrationPlan {
         row.iter().sum()
     }
 
-    pub fn get_total_incoming(&self, engine_id:&str) -> u32 {
+    pub fn get_total_incoming(&self, engine_id: &str) -> u32 {
         let index = self.get_position(engine_id);
         self.column(index).sum()
     }
 
     fn get_position(&self, engine_id: &str) -> usize {
-        self.regions.iter().position(|i| i.eq(engine_id))
-            .expect("Could not find region with specified name")
+        self.regions.iter().position(|i| i.eq(engine_id)).expect("Could not find region with specified name")
     }
 
-    fn column(&self, index: usize) -> impl Iterator<Item=u32> + '_ {
+    fn column(&self, index: usize) -> impl Iterator<Item = u32> + '_ {
         self.matrix.iter().map(move |row| *row.get(index).unwrap())
     }
 }
-
 
 impl TravelPlan {
     pub fn get_regions(&self) -> &Vec<String> {
@@ -112,9 +105,7 @@ impl TravelPlan {
     }
 
     pub fn validate_regions(&self, regions: &[String]) -> bool {
-        regions.len() == self.regions.len() &&
-            regions.iter().map(|region| self.regions.contains(region))
-                .all(|x| x)
+        regions.len() == self.regions.len() && regions.iter().map(|region| self.regions.contains(region)).all(|x| x)
     }
 
     pub fn commute_plan(&self) -> CommutePlan {
@@ -158,12 +149,14 @@ mod tests {
     fn should_validate_regions() {
         let config = Configuration::read("config/test/travel_plan.json").unwrap();
         let travel_plan = config.get_travel_plan();
-        assert!(travel_plan.validate_regions(&vec!["engine1".to_string(), "engine2".to_string(),
-                                                   "engine3".to_string()]));
-        assert!(travel_plan.validate_regions(&vec!["engine3".to_string(), "engine2".to_string(),
-                                                   "engine1".to_string()]));
+        assert!(travel_plan.validate_regions(&vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()]));
+        assert!(travel_plan.validate_regions(&vec!["engine3".to_string(), "engine2".to_string(), "engine1".to_string()]));
         assert!(!travel_plan.validate_regions(&vec!["engine3".to_string()]));
-        assert!(!travel_plan.validate_regions(&vec!["engine1".to_string(), "engine2".to_string(),
-                                                    "engine3".to_string(), "engine4".to_string()]));
+        assert!(!travel_plan.validate_regions(&vec![
+            "engine1".to_string(),
+            "engine2".to_string(),
+            "engine3".to_string(),
+            "engine4".to_string()
+        ]));
     }
 }

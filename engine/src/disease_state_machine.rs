@@ -48,26 +48,19 @@ pub struct DiseaseStateMachine {
 
 impl DiseaseStateMachine {
     pub fn new() -> Self {
-        DiseaseStateMachine {
-            state: State::Susceptible {},
-            infection_day: 0,
-        }
+        DiseaseStateMachine { state: State::Susceptible {}, infection_day: 0 }
     }
 
     pub fn get_infection_day(self) -> Day {
         match self.state {
-            State::Infected { .. } => {
-                self.infection_day
-            }
-            _ => 0
+            State::Infected { .. } => self.infection_day,
+            _ => 0,
         }
     }
 
     pub fn expose(&mut self, current_hour: Hour) {
         match self.state {
-            State::Susceptible {} => {
-                self.state = State::Exposed { at_hour: current_hour }
-            }
+            State::Susceptible {} => self.state = State::Exposed { at_hour: current_hour },
             _ => {
                 panic!("Invalid state transition!")
             }
@@ -99,21 +92,19 @@ impl DiseaseStateMachine {
 
     pub fn change_infection_severity(&mut self, current_hour: Hour, rng: &mut RandomWrapper, disease: &Disease) {
         match self.state {
-            State::Infected { symptoms: true, severity } => {
-                match severity {
-                    InfectionSeverity::Pre { at_hour } => {
-                        if current_hour - at_hour >= disease.get_pre_symptomatic_duration() {
-                            let mut severity = InfectionSeverity::Mild {};
-                            let severe = rng.get().gen_bool(disease.get_percentage_severe_infected_population());
-                            if severe {
-                                severity = InfectionSeverity::Severe {};
-                            }
-                            self.state = State::Infected { symptoms: true, severity };
+            State::Infected { symptoms: true, severity } => match severity {
+                InfectionSeverity::Pre { at_hour } => {
+                    if current_hour - at_hour >= disease.get_pre_symptomatic_duration() {
+                        let mut severity = InfectionSeverity::Mild {};
+                        let severe = rng.get().gen_bool(disease.get_percentage_severe_infected_population());
+                        if severe {
+                            severity = InfectionSeverity::Severe {};
                         }
+                        self.state = State::Infected { symptoms: true, severity };
                     }
-                    _ => {}
                 }
-            }
+                _ => {}
+            },
             _ => {
                 panic!("Invalid state transition!")
             }
@@ -122,10 +113,12 @@ impl DiseaseStateMachine {
 
     pub fn hospitalize(&mut self, disease: &Disease, immunity: i32) -> bool {
         match self.state {
-            State::Infected { symptoms: true, severity: InfectionSeverity::Severe} =>
+            State::Infected { symptoms: true, severity: InfectionSeverity::Severe } =>
             // why we are adding immunity in infection day
-                disease.to_be_hospitalized((self.infection_day as i32 + immunity) as Day),
-            State::Infected { .. } => { false }
+            {
+                disease.to_be_hospitalized((self.infection_day as i32 + immunity) as Day)
+            }
+            State::Infected { .. } => false,
             _ => {
                 panic!("Invalid state transition!")
             }
@@ -144,7 +137,7 @@ impl DiseaseStateMachine {
                     return (0, 1);
                 }
             }
-            State::Infected { symptoms:true, severity: InfectionSeverity::Mild{} } => {
+            State::Infected { symptoms: true, severity: InfectionSeverity::Mild {} } => {
                 if self.infection_day == constants::MILD_INFECTED_LAST_DAY {
                     self.state = State::Recovered {};
                     return (0, 1);
@@ -165,63 +158,49 @@ impl DiseaseStateMachine {
 
     pub fn is_susceptible(&self) -> bool {
         match self.state {
-            State::Susceptible {} => {
-                true
-            }
-            _ => false
+            State::Susceptible {} => true,
+            _ => false,
         }
     }
 
     pub fn is_exposed(&self) -> bool {
         match self.state {
-            State::Exposed { .. } => {
-                true
-            }
-            _ => false
+            State::Exposed { .. } => true,
+            _ => false,
         }
     }
 
     pub fn is_infected(&self) -> bool {
         match self.state {
-            State::Infected { .. } => {
-                true
-            }
-            _ => false
+            State::Infected { .. } => true,
+            _ => false,
         }
     }
 
     pub fn is_pre_symptomatic(&self) -> bool {
         match self.state {
-            State::Infected { symptoms: _, severity } => {
-                match severity {
-                    InfectionSeverity::Pre { .. } => {
-                        true
-                    }
-                    _ => false
-                }
-            }
-            _ => false
+            State::Infected { symptoms: _, severity } => match severity {
+                InfectionSeverity::Pre { .. } => true,
+                _ => false,
+            },
+            _ => false,
         }
     }
 
     pub fn is_symptomatic(&self) -> bool {
         match self.state {
-            State::Infected { symptoms: true, severity} => {
-                match severity{
-                    InfectionSeverity::Pre { .. } => false,
-                    _ => true
-                }
-            }
-            _ => false
+            State::Infected { symptoms: true, severity } => match severity {
+                InfectionSeverity::Pre { .. } => false,
+                _ => true,
+            },
+            _ => false,
         }
     }
 
     pub fn is_deceased(&self) -> bool {
         match self.state {
-            State::Deceased {} => {
-                true
-            }
-            _ => false
+            State::Deceased {} => true,
+            _ => false,
         }
     }
 
@@ -250,22 +229,22 @@ impl DiseaseStateMachine {
     #[cfg(test)]
     pub fn is_mild_asymptomatic(&self) -> bool {
         match self.state {
-            State::Infected { symptoms: false, severity: InfectionSeverity::Mild } => { true }
-            _ => { false }
+            State::Infected { symptoms: false, severity: InfectionSeverity::Mild } => true,
+            _ => false,
         }
     }
 
     pub fn is_mild_symptomatic(&self) -> bool {
         match self.state {
-            State::Infected { symptoms: true, severity: InfectionSeverity::Mild } => { true }
-            _ => { false }
+            State::Infected { symptoms: true, severity: InfectionSeverity::Mild } => true,
+            _ => false,
         }
     }
 
     pub fn is_infected_severe(&self) -> bool {
         match self.state {
-            State::Infected { symptoms: true, severity: InfectionSeverity::Severe } => { true }
-            _ => { false }
+            State::Infected { symptoms: true, severity: InfectionSeverity::Severe } => true,
+            _ => false,
         }
     }
 }
@@ -280,7 +259,7 @@ mod tests {
 
         let result = match machine.state {
             State::Susceptible {} => true,
-            _ => false
+            _ => false,
         };
         assert_eq!(result, true);
         assert_eq!(machine.get_infection_day(), 0);
@@ -296,7 +275,7 @@ mod tests {
         let result = match machine.state {
             State::Infected { symptoms: false, severity: InfectionSeverity::Mild {} } => true,
             State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 140 } } => true,
-            _ => false
+            _ => false,
         };
 
         assert_eq!(result, true);
@@ -312,7 +291,7 @@ mod tests {
 
         let result = match machine.state {
             State::Exposed { .. } => true,
-            _ => false
+            _ => false,
         };
 
         assert_eq!(result, true);
@@ -337,15 +316,11 @@ mod tests {
         machine.change_infection_severity(140, &mut rng, &disease);
 
         let result = match machine.state {
-            State::Infected { symptoms: true, severity } => {
-                match severity {
-                    InfectionSeverity::Pre { .. } => {
-                        false
-                    }
-                    _ => true
-                }
-            }
-            _ => false
+            State::Infected { symptoms: true, severity } => match severity {
+                InfectionSeverity::Pre { .. } => false,
+                _ => true,
+            },
+            _ => false,
         };
 
         assert_eq!(result, true);
@@ -362,15 +337,11 @@ mod tests {
         machine.change_infection_severity(120, &mut rng, &disease);
 
         let result = match machine.state {
-            State::Infected { symptoms: true, severity } => {
-                match severity {
-                    InfectionSeverity::Pre { at_hour: 100 } => {
-                        true
-                    }
-                    _ => false
-                }
-            }
-            _ => false
+            State::Infected { symptoms: true, severity } => match severity {
+                InfectionSeverity::Pre { at_hour: 100 } => true,
+                _ => false,
+            },
+            _ => false,
         };
 
         assert_eq!(result, true);
@@ -421,7 +392,7 @@ mod tests {
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Severe };
         assert_eq!(machine.is_symptomatic(), true);
 
-        machine.state = State::Infected { symptoms: false, severity: InfectionSeverity::Mild};
+        machine.state = State::Infected { symptoms: false, severity: InfectionSeverity::Mild };
         assert_eq!(machine.is_symptomatic(), false);
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 100 } };

@@ -18,8 +18,7 @@ impl KafkaConsumer {
             .expect("Consumer creation failed");
 
         let topics = ["ticks_ack"];
-        consumer.subscribe(&topics)
-            .expect("Can't subscribe to specified topics");
+        consumer.subscribe(&topics).expect("Can't subscribe to specified topics");
 
         KafkaConsumer { consumer }
     }

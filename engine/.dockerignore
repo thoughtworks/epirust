@@ -4,4 +4,4 @@ Cargo.lock
 files
 *.db
 Dockerfile
-
+output/

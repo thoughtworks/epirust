@@ -211,8 +211,8 @@ impl Epidemiology {
 
         listeners.grid_updated(&self.grid);
         match run_mode {
-            RunMode::MultiEngine { .. } => {
-                self.run_multi_engine(config, run_mode, &mut listeners, &mut counts_at_hr, &mut interventions, &mut rng).await
+            RunMode::MultiEngine { engine_id } => {
+                self.run_multi_engine(config, engine_id, &mut listeners, &mut counts_at_hr, &mut interventions, &mut rng).await
             }
             _ => {
                 self.run_single_engine(
@@ -314,7 +314,7 @@ impl Epidemiology {
     pub async fn run_multi_engine(
         &mut self,
         config: &Config,
-        run_mode: &RunMode,
+        engine_id: &String,
         listeners: &mut Listeners,
         counts_at_hr: &mut Counts,
         interventions: &mut Interventions,
@@ -323,11 +323,9 @@ impl Epidemiology {
         let start_time = Instant::now();
         let mut producer = KafkaProducer::new();
 
-        //todo stream should be started only in case of multi-sim mode
-        let standalone_engine_id = "standalone".to_string();
-        let engine_id = if let RunMode::MultiEngine { engine_id } = run_mode { engine_id } else { &standalone_engine_id };
         let travel_plan_config = self.travel_plan_config.as_ref().unwrap();
 
+        debug!("{}: Start Multi Engine Simulation", engine_id);
         let is_commute_enabled = travel_plan_config.commute.enabled;
         let is_migration_enabled = travel_plan_config.migration.enabled;
 
@@ -340,6 +338,7 @@ impl Epidemiology {
         let mut engine_migration_plan =
             EngineMigrationPlan::new(engine_id.clone(), migration_plan, self.agent_location_map.current_population());
 
+        debug!("{}: Start Migrator Consumer", engine_id);
         let migrators_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", MIGRATION_TOPIC, engine_id)]);
         let mut migration_stream = migrators_consumer.start_with(Duration::from_millis(1), false);
 
@@ -348,6 +347,8 @@ impl Epidemiology {
         } else {
             CommutePlan { regions: Vec::new(), matrix: Vec::new() }
         };
+
+        debug!("{}: Start Commuter Consumer", engine_id);
         let commute_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", COMMUTE_TOPIC, engine_id)]);
         let mut commute_stream = commute_consumer.start_with(Duration::from_millis(1), false);
 
@@ -361,11 +362,12 @@ impl Epidemiology {
 
         let mut total_tick_sync_time = 0;
         let mut total_commute_sync_time = 0;
+        let run_mode = RunMode::MultiEngine { engine_id: engine_id.to_string() };
 
         for simulation_hour in 1..config.get_hours() {
             let start_time = Instant::now();
             let tick = Epidemiology::receive_tick(
-                run_mode,
+                &run_mode,
                 &mut ticks_stream,
                 simulation_hour,
                 is_commute_enabled,
@@ -412,6 +414,7 @@ impl Epidemiology {
             let mut actual_outgoing: Vec<(Point, Migrator)> = Vec::new();
 
             let received_migrators = if is_migration_enabled {
+                debug!("{}: Received Migrators | Simulation hour: {}", engine_id, simulation_hour);
                 Some(Epidemiology::receive_migrators(tick, &mut migration_stream, &engine_migration_plan))
             } else {
                 None
@@ -419,6 +422,7 @@ impl Epidemiology {
 
             let mut outgoing_commuters: Vec<(Point, Commuter)> = Vec::new();
             let sim = async {
+                debug!("{}: Start simulation for hour: {}", engine_id, simulation_hour);
                 Epidemiology::simulate(
                     counts_at_hr,
                     simulation_hour,
@@ -435,6 +439,7 @@ impl Epidemiology {
                     Some(&travel_plan_config),
                     engine_id,
                 );
+                debug!("{}: Simulation finished for hour: {}", engine_id, simulation_hour);
 
                 let (outgoing_migrators_by_region, actual_total_outgoing) = if is_migration_enabled {
                     engine_migration_plan.alloc_outgoing_to_regions(&outgoing)
@@ -455,9 +460,11 @@ impl Epidemiology {
                 };
 
                 if is_migration_enabled {
+                    debug!("{}: Send Migrators", engine_id);
                     Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
                 }
                 if is_commute_enabled {
+                    debug!("{}: Send Commuters", engine_id);
                     Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
                 }
             };
@@ -466,7 +473,7 @@ impl Epidemiology {
 
             if is_commute_enabled {
                 let commute_start_time = Instant::now();
-                let received_commuters = Epidemiology::receive_commuters(tick, &mut commute_stream, &commute_plan, engine_id);
+                let received_commuters = Epidemiology::receive_commuters(tick, &mut commute_stream, &commute_plan, &engine_id);
                 let (mut incoming_commuters,) = join!(received_commuters);
                 total_commute_sync_time += commute_start_time.elapsed().as_millis();
                 info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
@@ -480,7 +487,7 @@ impl Epidemiology {
                     rng,
                     simulation_hour,
                 );
-                debug!("assimilated the commuters");
+                debug!("{}: assimilated the commuters", engine_id);
             }
 
             if is_migration_enabled {
@@ -489,6 +496,7 @@ impl Epidemiology {
                 n_outgoing += outgoing.len();
                 write_buffer_reference.remove_migrators(&actual_outgoing, counts_at_hr, &mut self.grid);
                 write_buffer_reference.assimilate_migrators(&mut incoming, &mut self.grid, counts_at_hr, rng);
+                debug!("{}: assimilated the migrators", engine_id);
             }
 
             listeners.counts_updated(*counts_at_hr);
@@ -503,12 +511,12 @@ impl Epidemiology {
                 engine_id.to_string(),
             );
 
-            if Epidemiology::stop_simulation(&mut interventions.lockdown, run_mode, *counts_at_hr) {
+            if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
             }
 
             Epidemiology::send_ack(
-                run_mode,
+                &run_mode,
                 &mut producer,
                 *counts_at_hr,
                 simulation_hour,
@@ -646,12 +654,9 @@ impl Epidemiology {
             let mut incoming: Vec<Migrator> = Vec::new();
             while expected_incoming_regions != received_incoming_regions {
                 let maybe_msg = Epidemiology::receive_migrators_from_region(message_stream, engine_migration_plan).await;
-                match maybe_msg {
-                    None => {}
-                    Some(region_incoming) => {
-                        incoming.extend(region_incoming.get_migrators());
-                        received_incoming_regions += 1;
-                    }
+                if let Some(region_incoming) = maybe_msg {
+                    incoming.extend(region_incoming.get_migrators());
+                    received_incoming_regions += 1;
                 }
             }
             incoming

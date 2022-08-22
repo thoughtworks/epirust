@@ -83,7 +83,7 @@ impl KafkaConsumer<'_> {
     fn parse_message(&self, message: Result<BorrowedMessage, KafkaError>) -> Result<Request, Box<dyn Error>> {
         let borrowed_message = message?;
         let parsed_message = borrowed_message.payload_view::<str>().unwrap()?;
-        debug!("Received: {}", parsed_message);
+        trace!("Received: {}", parsed_message);
         serde_json::from_str(parsed_message).map_err(|e| e.into())
     }
 }

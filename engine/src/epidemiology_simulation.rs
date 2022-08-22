@@ -681,6 +681,21 @@ impl Epidemiology {
                 while expected_incoming_regions != received_incoming_regions {
                     let maybe_msg = Epidemiology::receive_commuters_from_region(message_stream, engine_id).await;
                     if let Some(region_incoming) = maybe_msg {
+                        if hour == constants::ROUTINE_TRAVEL_START_TIME {
+                            trace!(
+                                "Travel_start: Received {} commuters from {:?} region",
+                                region_incoming.commuters.len(),
+                                region_incoming.commuters.get(0).map(|x| x.home_location.location_id.to_string())
+                            );
+                        }
+
+                        if hour == constants::ROUTINE_TRAVEL_END_TIME {
+                            trace!(
+                                "Travel_end: Received {} commuters from {:?} region",
+                                region_incoming.commuters.len(),
+                                region_incoming.commuters.get(0).map(|x| x.work_location.location_id.to_string())
+                            )
+                        }
                         incoming.extend(region_incoming.get_commuters());
                         received_incoming_regions += 1;
                     }

@@ -119,7 +119,7 @@ impl AgentLocationMap {
                     )
                 }
                 Some(citizen) => {
-                    debug!("removed the commuter successfully {:?}", citizen);
+                    trace!("removed the commuter successfully {:?}", citizen);
                 }
             }
         }
@@ -154,13 +154,11 @@ impl AgentLocationMap {
             panic!("Not enough housing locations are available for migrators")
         };
 
-        let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
         for (migrator, migration_location) in incoming.iter().zip(migration_locations) {
             let house = grid.choose_house_with_free_space(rng);
             let office = if migrator.working { grid.choose_office_with_free_space(rng) } else { house.clone() };
             let citizen =
                 Citizen::from_migrator(migrator, house.clone(), office.clone(), migration_location, grid.housing_area.clone());
-            new_citizens.push(citizen.clone());
             grid.add_house_occupant(&house.clone());
             if migrator.working {
                 grid.add_office_occupant(&office.clone())
@@ -202,31 +200,28 @@ impl AgentLocationMap {
             panic!("Not enough transport location are available for commuters")
         };
 
-        let mut new_citizens: Vec<Citizen> = Vec::with_capacity(incoming.len());
         for (commuter, transport_location) in incoming.iter().zip(transport_locations) {
             let work_area: Option<Area> = if simulation_hour == constants::ROUTINE_TRAVEL_START_TIME {
-                debug!("inside if of simulation hour");
+                trace!("inside if of simulation hour");
                 let office = grid.choose_office_with_free_space(rng);
-                debug!("got the office space - {:?}", office.clone());
+                trace!("got the office space - {:?}", office.clone());
                 grid.add_office_occupant(&office.clone());
-                debug!("added the office occupant");
+                trace!("added the office occupant");
                 Some(office.clone())
             } else {
                 None
             };
 
             let citizen = Citizen::from_commuter(commuter, transport_location, grid.housing_area.clone(), work_area);
-            new_citizens.push(citizen.clone()); //use current area as transport area
 
             AgentLocationMap::increment_counts(&citizen.state_machine.state, counts);
 
             let result = self.insert(citizen.transport_location, citizen);
-            debug!("citizen inserted");
+            trace!("citizen inserted");
             assert!(result.is_none());
-            debug!("assert passes");
+            trace!("assert passes");
         }
 
-        debug!("total new citizens: {}", new_citizens.len());
         debug!("For loop ended");
     }
 

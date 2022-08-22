@@ -32,6 +32,8 @@ pub fn start(engine_id: &str, topics: &[&str]) -> StreamConsumer {
         .set("bootstrap.servers", kafka_url.as_str())
         .set("group.id", engine_id)
         .set("auto.offset.reset", "earliest")
+        .set("auto.commit.interval.ms", "1000")
+        .set("session.timeout.ms", "120000")
         .set("max.poll.interval.ms", "86400000") //max allowed
         .set("fetch.message.max.bytes", "104857600")
         .create()

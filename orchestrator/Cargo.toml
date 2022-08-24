@@ -1,5 +1,5 @@
 [package]
-name = "orchestrator"
+name = "epirust-orchestrator"
 version = "0.1.0"
 authors = ["Akshay Dewan <akshayde@thoughtworks.com>"]
 edition = "2018"

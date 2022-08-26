@@ -2,45 +2,53 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-config: "10k_100_latest.json"
+# Add the name of config file for which you want to run the simulations
+config: "pune_ward_wise.json"
 
+# Set it as "true" if you are running simulations for distributed mode (multi-engine) and
+# "false" for serial, parallel implementation (single engine).
 multiengineSim: true
 
 engine:
-  fullname: "10-100-engine-sep-topics-2"
+  fullname: "pune-engines-1"
+
   spec:
-    completions: 100
-    parallelism: 100
+    # Specify the number of engines for which you are running simulation
+    completions: 15
+    parallelism: 15
+
   image:
-    repository: "sapanakale/epirust-engine"
-    tag: "commute-latest-16"
+    # Replace it with your image repository and tag for engine
+    repository: "epirust-engine"
+    tag: "latest"
     pullPolicy: Always
+
   resources:
+    # Update the resources for engine according to need
     requests:
       cpu: "1000m"
       memory: "2Gi"
     limits:
       cpu: "1000m"
       memory: "2Gi"
+
   env:
-    EPI_KAFKA_URL: "kafka-cp-kafka:9092"
+    # Replace with your kafka service url
+    EPI_KAFKA_URL: "kafka-service"
+
     RUST_LOG: info
     RUST_BACKTRACE: full
-  volumes:
-    name: "epirust-storage"
-    claimName: "epirust-claim"
-  volumeMounts:
-    output:
-      subPath: "epirust/output/10k_100"
-    config:
-      subPath: "epirust/config"
 
 orchestrator:
-  fullname: "1m-100-orchestrator-sep-topics-2"
+  fullname: "pune-orchestrator-1"
+
+  # Replace it with your image repository and tag for orchestrator
   image:
-    repository: "sapanakale/epirust-orchestrator"
+    repository: "epirust-orchestrator"
     pullPolicy: Always
-    tag: "commute-latest-12"
+    tag: "latest"
+
+  # Update the resources for orchestrator according to need
   resources:
     requests:
       cpu: "1000m"
@@ -48,53 +56,40 @@ orchestrator:
     limits:
       cpu: "1000m"
       memory: "2Gi"
+
   env:
+    # Replace with your kafka service url
     EPI_KAFKA_URL: "kafka-cp-kafka:9092"
+
     RUST_LOG: info
     RUST_BACKTRACE: full
+
+#Update the storage related details
+storage:
+  # Update with your volume name and claim name
   volumes:
     name: "epirust-storage"
     claimName: "epirust-claim"
+
+  # Update the sub paths for output and config
   volumeMounts:
     config:
-      mountPath: "config"
       subPath: "epirust/config"
+    output:
+      subPath: "epirust/output/pune/run_1"
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
-podAnnotations: {}
-
-podSecurityContext: {}
-# fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-#   - ALL
-# readOnlyRootFilesystem: true
-# runAsNonRoot: true
-# runAsUser: 1000
+# Security settings for epirust engine and orchestrator pods
+securityContext:
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  runAsUser: 100001
+  runAsGroup: 100001
+  seccompProfile:
+    type: RuntimeDefault
 
 nodeSelector: {}
 
 tolerations: []
 
 affinity: {}
-#  nodeAffinity:
-#    requiredDuringSchedulingIgnoredDuringExecution:
-#      nodeSelectorTerms:
-#        - matchExpressions:
-#            - key: kubernetes.io/hostname
-#              operator: NotIn
-#              values:
-#                - k8s-node2.e4r.thoughtworks.net
-
-
-

@@ -12,6 +12,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
   nfs:
+    # replace <dns-name> it with your efs server
     server: <dns-name>
     path: /
     readOnly: no

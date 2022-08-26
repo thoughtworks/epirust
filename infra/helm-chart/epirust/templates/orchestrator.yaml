@@ -14,7 +14,7 @@ spec:
         - name: {{ .Values.orchestrator.fullname }}
           image: {{ .Values.orchestrator.image.repository }}:{{ .Values.orchestrator.image.tag }}
           imagePullPolicy: IfNotPresent
-          command: ["./orchestrator", "-c", "{{ .Values.orchestrator.volumeMounts.config.mountPath }}/{{ .Values.config }}"]
+          command: ["./orchestrator", "-c", "{{ .Values.storage.volumeMounts.config.mountPath }}/{{ .Values.config }}"]
           resources:
             requests:
               cpu: {{ .Values.orchestrator.resources.requests.cpu }}
@@ -23,14 +23,25 @@ spec:
               cpu: {{ .Values.orchestrator.resources.limits.cpu }}
               memory: {{ .Values.orchestrator.resources.limits.memory }}
           volumeMounts:
-            - mountPath: {{ .Values.orchestrator.volumeMounts.config.mountPath }}
-              name: {{ .Values.orchestrator.volumes.name }}
-              subPath: {{ .Values.orchestrator.volumeMounts.config.subPath }}
+            - mountPath: config
+              name: {{ .Values.storage.volumes.name }}
+              subPath: {{ .Values.storage.volumeMounts.config.subPath }}
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
+            runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+            allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+            runAsGroup: {{ .Values.securityContext.runAsGroup }}
+            seccompProfile:
+              type: {{ .Values.securityContext.seccompProfile.type }}
           env:
           {{- include "helpers.list-orchestrator-env-variables" . | indent 8 }}
       restartPolicy: Never
       volumes:
-        - name: {{ .Values.orchestrator.volumes.name }}
+        - name: {{ .Values.storage.volumes.name }}
           persistentVolumeClaim:
-            claimName: {{ .Values.orchestrator.volumes.claimName }}
+            claimName: {{ .Values.storage.volumes.claimName }}
 {{end}}

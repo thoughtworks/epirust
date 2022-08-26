@@ -6,8 +6,9 @@
 This is a monorepo containing code for the EpiRust framework -
 
 1. engine - The main EpiRust engine, which can be run as a CLI app
-2. orchestrator - WIP - Coordinator for multiple engines to run large scale simulations
-3. web - The Web UI for EpiRust
+2. orchestrator - Coordinator for multiple engines to run large scale simulations
+
+Note: We are no longer maintaining the Web UI for EpiRust which allows you to trigger simulations and grid visualization for upto 1000 agents. Hence, it has been removed from here. Please refer sims2020 branch for web. 
 
 ### Quickstart
 

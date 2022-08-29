@@ -341,6 +341,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "epirust"
+version = "0.1.0"
+
+[[package]]
 name = "epirust-engine"
 version = "0.1.0"
 dependencies = [
@@ -364,6 +368,22 @@ dependencies = [
  "serde_yaml",
  "tokio",
  "uuid",
+ "validator",
+]
+
+[[package]]
+name = "epirust-orchestrator"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "env_logger",
+ "futures",
+ "log",
+ "rdkafka",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tokio",
  "validator",
 ]
 

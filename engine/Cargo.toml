@@ -19,8 +19,8 @@ rdkafka = { version = "0.23", features = ["cmake-build"] }
 clap = "2.33.0"
 ndarray = "0.13.0"
 futures = "0.3.4"
-tokio = { version = "0.2.11", features = ["full"] }
-chrono = "0.4.10"
+tokio = { version = ">=1.8.4, <1.9.0", features = ["full"] }
+chrono = ">=0.4.20"
 geo-types = "0.4.3"
 geo = "0.12.2"
 geojson = "0.17.0"
@@ -28,7 +28,7 @@ plotters = "^0.2.12"
 log = "0.4"
 env_logger = "0.7"
 uuid = { version = "0.8", features = ["serde", "v4"] }
-validator = { version = "0.12", features = ["derive"] }
+validator = { version = "0.15", features = ["derive"] }
 
 [profile.release]
 opt-level = 3

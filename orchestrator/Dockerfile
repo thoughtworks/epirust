@@ -27,8 +27,10 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release
 
-FROM debian:stable-slim
-RUN apt-get update && \
+FROM gcr.io/distroless/cc
+CMD apt-get update && \
     apt-get install --no-install-recommends -y \
     libfreetype6-dev libfontconfig1-dev jq
+CMD useradd -u 8877 nonroot
+USER nonroot
 COPY --from=builder /app/target/release/orchestrator /

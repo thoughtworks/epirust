@@ -227,18 +227,6 @@ impl Grid {
         }
     }
 
-    // pub fn group_home_locations_by_occupancy(&self, citizens: &[&Citizen]) -> HashMap<Area, i32> {
-    //     let mut occupancy = HashMap::new();
-    //     self.houses.iter().for_each(|house| {
-    //         occupancy.insert(*house, 0);
-    //     });
-    //     citizens.iter().for_each(|citizen| {
-    //         let home = citizen.home_location;
-    //         *occupancy.get_mut(&home).expect("Unknown home! Doesn't exist in grid") += 1;
-    //     });
-    //     occupancy
-    // }
-
     pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen], region_name: &String) -> HashMap<Area, u32> {
         let mut occupancy = HashMap::new();
         self.offices.iter().for_each(|office| {

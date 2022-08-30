@@ -2,5 +2,13 @@
 name = "epirust"
 version = "0.1.0"
 
+[[bin]]
+name = "engine"
+path = "engine/src/main.rs"
+
+[[bin]]
+name = "orchestrator"
+path = "orchestrator/src/main.rs"
+
 [workspace]
 members = ["engine", "orchestrator"]

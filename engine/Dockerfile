@@ -35,4 +35,4 @@ CMD mkdir "output"
 CMD useradd -u 8877 nonroot
 USER nonroot
 COPY config/ config/
-COPY --from=builder /app/target/release/epirust /
+COPY --from=builder /app/target/release/epirust-engine /

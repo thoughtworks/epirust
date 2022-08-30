@@ -14,7 +14,7 @@ spec:
         - name: {{ .Values.orchestrator.fullname }}
           image: {{ .Values.orchestrator.image.repository }}:{{ .Values.orchestrator.image.tag }}
           imagePullPolicy: IfNotPresent
-          command: ["./orchestrator", "-c", "{{ .Values.storage.volumeMounts.config.mountPath }}/{{ .Values.config }}"]
+          command: ["./epirust-orchestrator", "-c", "{{ .Values.storage.volumeMounts.config.mountPath }}/{{ .Values.config }}"]
           resources:
             requests:
               cpu: {{ .Values.orchestrator.resources.requests.cpu }}

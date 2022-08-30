@@ -33,4 +33,4 @@ CMD apt-get update && \
     libfreetype6-dev libfontconfig1-dev jq
 CMD useradd -u 8877 nonroot
 USER nonroot
-COPY --from=builder /app/target/release/orchestrator /
+COPY --from=builder /app/target/release/epirust-orchestrator /

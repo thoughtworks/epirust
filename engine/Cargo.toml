@@ -1,5 +1,5 @@
 [package]
-name = "epirust"
+name = "epirust-engine"
 version = "0.1.0"
 authors = ["KJAYANTA <jayantak@thoughtworks.com>"]
 edition = "2018"

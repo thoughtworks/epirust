@@ -4,18 +4,15 @@ on:
     branches:
       - dev
 
-
 jobs:
   paradox:
     runs-on: ubuntu-latest
     steps:
-#        - uses: actions/checkout@v1
-#        - run: cd $GITHUB_WORKSPACE && mv engine/Cargo.toml .
-#        - run: cd $GITHUB_WORKSPACE && rm -rf infra
-#        - name: rust-audit-check
-#          uses: actions-rs/audit-check@v1.2.0
-#          with:
-#            token: ${{ secrets.GITHUB_TOKEN }}
+        - uses: actions/checkout@v1
+        - name: rust-audit-check
+          uses: actions-rs/audit-check@v1.2.0
+          with:
+            token: ${{ secrets.GITHUB_TOKEN }}
 
         - uses: actions/checkout@v2
           with:

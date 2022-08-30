@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
         - uses: actions/checkout@v1
-        - run: cd $GITHUB_WORKSPACE && mv engine/* .
+        - run: cd $GITHUB_WORKSPACE && mv engine/ .
         - run: cd $GITHUB_WORKSPACE && rm -rf infra
         - name: rust-audit-check
           uses: actions-rs/audit-check@v1.2.0

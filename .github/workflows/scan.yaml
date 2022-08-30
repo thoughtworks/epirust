@@ -3,6 +3,11 @@ on:
   push:
     branches:
       - dev
+    paths:
+      - 'engine/Cargo.toml'
+      - 'engine/Cargo.lock'
+      - 'orchestrator/Cargo.lock'
+      - 'orchestrator/Cargo.toml'
 
 jobs:
   paradox:

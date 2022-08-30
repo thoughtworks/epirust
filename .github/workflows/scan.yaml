@@ -13,7 +13,6 @@ jobs:
         - name: rust-audit-check
           uses: actions-rs/audit-check@v1.2.0
           working-directory: ./engine
-          run: cargo audit
           with:
             token: ${{ secrets.GITHUB_TOKEN }}
 

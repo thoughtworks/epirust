@@ -9,20 +9,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
         - uses: actions/checkout@v1
+          if: always()
+
         - name: rust-audit-check
+          if: always()
           uses: actions-rs/audit-check@v1.2.0
           with:
             token: ${{ secrets.GITHUB_TOKEN }}
 
         - uses: actions/checkout@v2
+          if: always()
           with:
             fetch-depth: 0
             ref: ${{ github.head_ref }}
 
         - name: Trufflehog Actions Scan
+          if: always()
           uses: edplato/trufflehog-actions-scan@v0.9l-beta
 
         - name: Aqua Security Trivy
+          if: always()
           uses: aquasecurity/trivy-action@0.7.1
           with:
             image-ref: 'gcr.io/distroless/cc'

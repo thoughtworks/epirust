@@ -103,6 +103,17 @@ async fn main() {
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
 
+        // let (count, grid_default) = match input_count {
+        //     0..=100 => (100, 25),
+        //     101..=1000 => (1000, 80),
+        //     1001..=10000 => (10000, 250),
+        //     10001..=100_000 => (100_000, 800),
+        //     100_001..=1_000_000 => (1_000_000, 2500),
+        //     1_000_001..=2_000_000 => (2_000_000, 3550),
+        //     2_000_001..=5_000_000 => (5_000_000, 5660),
+        //     _ => panic!("Cannot run for {} agents", input_count)
+        // };
+
         let config = config::read(config_file.to_string()).expect("Failed to read config file");
 
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, None, STANDALONE_SIM_ID.to_string());

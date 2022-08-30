@@ -653,7 +653,7 @@ impl Epidemiology {
             debug!("Receiving migrators from {} regions", expected_incoming_regions);
             let mut incoming: Vec<Migrator> = Vec::new();
             while expected_incoming_regions != received_incoming_regions {
-                let maybe_msg = travel_consumer::read_migrators(message_stream.next().await);
+                let maybe_msg = Epidemiology::receive_migrators_from_region(message_stream, engine_migration_plan).await;
                 if let Some(region_incoming) = maybe_msg {
                     incoming.extend(region_incoming.get_migrators());
                     received_incoming_regions += 1;
@@ -720,7 +720,15 @@ impl Epidemiology {
             let next_msg = message_stream.next().await;
             maybe_commuters = travel_consumer::read_commuters(next_msg);
         }
-        maybe_commuters
+        maybe_commuters.filter(|incoming| incoming.to_engine_id() == engine_id)
+    }
+
+    async fn receive_migrators_from_region(
+        message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+        engine_migration_plan: &EngineMigrationPlan,
+    ) -> Option<MigratorsByRegion> {
+        let msg = message_stream.next().await;
+        travel_consumer::read_migrators(msg).filter(|incoming| incoming.to_engine_id() == engine_migration_plan.engine_id())
     }
 
     fn apply_vaccination_intervention(

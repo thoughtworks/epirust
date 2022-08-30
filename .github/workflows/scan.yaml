@@ -11,6 +11,11 @@ jobs:
   paradox:
     runs-on: ubuntu-latest
     steps:
+        - uses: actions/checkout@v2
+          with:
+            fetch-depth: 0
+            ref: ${{ github.head_ref }} // necessary for pull request workflow trigger
+
         - name: Trufflehog Actions Scan
           uses: edplato/trufflehog-actions-scan@v0.9l-beta
 

@@ -341,7 +341,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "epirust-engine"
+name = "epirust"
 version = "0.1.0"
 dependencies = [
  "chrono",

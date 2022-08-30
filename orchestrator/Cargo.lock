@@ -110,22 +110,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "epirust-orchestrator"
-version = "0.1.0"
-dependencies = [
- "clap",
- "env_logger",
- "futures",
- "log",
- "rdkafka",
- "serde",
- "serde_derive",
- "serde_json",
- "tokio",
- "validator",
-]
-
-[[package]]
 name = "form_urlencoded"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -397,6 +381,22 @@ name = "once_cell"
 version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "074864da206b4973b84eb91683020dbefd6a8c3f0f38e054d93954e891935e4e"
+
+[[package]]
+name = "orchestrator"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "env_logger",
+ "futures",
+ "log",
+ "rdkafka",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tokio",
+ "validator",
+]
 
 [[package]]
 name = "parking_lot"

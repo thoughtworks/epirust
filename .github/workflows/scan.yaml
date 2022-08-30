@@ -8,11 +8,13 @@ on:
 jobs:
   paradox:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./engine
     steps:
         - uses: actions/checkout@v1
         - name: rust-audit-check
           uses: actions-rs/audit-check@v1.2.0
-          working-directory: ./engine
           with:
             token: ${{ secrets.GITHUB_TOKEN }}
 

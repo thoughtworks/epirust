@@ -31,7 +31,7 @@ jobs:
           if: always()
           uses: aquasecurity/trivy-action@0.7.1
           with:
-            image-ref: 'gcr.io/distroless/cc'
+            image-ref: 'gcr.io/distroless/cc-debian11'
             format: 'table'
             exit-code: '1'
             ignore-unfixed: true

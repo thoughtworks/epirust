@@ -19,13 +19,13 @@
 
 use core::borrow::Borrow;
 use core::borrow::BorrowMut;
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, Instant};
 
-use chrono::{DateTime, Local};
 use futures::join;
 use futures::StreamExt;
 use rand::Rng;
 use rdkafka::consumer::{DefaultConsumerContext, MessageStream};
+use time::OffsetDateTime;
 
 use crate::{constants, RunMode, ticks_consumer, travel_consumer};
 use crate::agent::Citizen;
@@ -106,12 +106,13 @@ impl Epidemiology {
     }
 
     fn output_file_format(config: &Config, run_mode: &RunMode) -> String {
-        let now: DateTime<Local> = SystemTime::now().into();
+        let format = time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]").unwrap();
+        let now = OffsetDateTime::now_utc();
         let mut output_file_prefix = config.get_output_file().unwrap_or_else(|| "simulation".to_string());
         if let RunMode::MultiEngine { engine_id } = run_mode {
             output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
         }
-        format!("output/{}_{}", output_file_prefix, now.format("%Y-%m-%dT%H:%M:%S"))
+        format!("output/{}_{}", output_file_prefix, now.format(&format).unwrap())
     }
 
     fn create_listeners(&self, config: &Config, run_mode: &RunMode) -> Listeners {

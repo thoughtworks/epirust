@@ -32,8 +32,7 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     libfreetype6-dev libfontconfig1-dev
 
-FROM gcr.io/distroless/cc-debian11
+FROM gcr.io/distroless/cc-debian11:nonroot
 COPY --from=pre-builder /lib/x86_64-linux-gnu/ /lib/x86_64-linux-gnu/
-CMD useradd -u 8877 nonroot
-USER nonroot
-COPY --from=builder /app/target/release/epirust-orchestrator /
+COPY --from=builder --chown=nonroot:nonroot /app/target/release/epirust-orchestrator app/
+WORKDIR app

@@ -74,9 +74,11 @@ storage:
   # Update the sub paths for output and config
   volumeMounts:
     config:
+      mountPath: "/nonroot/app/config"
       subPath: "epirust/config"
     output:
-      subPath: "epirust/output/pune/run_1"
+      mountPath: "/nonroot/app/output"
+      subPath: "epirust/output/100k_100"
 
 # Security settings for epirust engine and orchestrator pods
 securityContext:

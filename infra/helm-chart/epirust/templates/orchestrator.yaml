@@ -23,7 +23,7 @@ spec:
               cpu: {{ .Values.orchestrator.resources.limits.cpu }}
               memory: {{ .Values.orchestrator.resources.limits.memory }}
           volumeMounts:
-            - mountPath: config
+            - mountPath: {{ .Values.storage.volumeMounts.config.mountPath }}
               name: {{ .Values.storage.volumes.name }}
               subPath: {{ .Values.storage.volumeMounts.config.subPath }}
           securityContext:

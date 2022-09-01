@@ -26,18 +26,25 @@ COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release
+RUN mkdir output
 
 FROM debian:stable-slim AS pre-builder
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     libfreetype6-dev libfontconfig1-dev jq
 
-FROM gcr.io/distroless/cc-debian11
+FROM gcr.io/distroless/cc-debian11:nonroot
 COPY --from=pre-builder /usr/lib/x86_64-linux-gnu/ /usr/lib/x86_64-linux-gnu/
 COPY --from=pre-builder /lib/x86_64-linux-gnu/ /lib/x86_64-linux-gnu/
 COPY --from=pre-builder /usr/bin/jq /usr/bin/
-CMD mkdir output
-CMD useradd -u 8877 nonroot
-USER nonroot
-COPY config/ config/
-COPY --from=builder /app/target/release/epirust-engine ./
+COPY --from=pre-builder /bin/chown /bin/
+COPY --from=pre-builder /bin/chmod /bin/
+COPY --from=pre-builder /bin/mkdir /bin/
+COPY --from=pre-builder /usr/bin/xargs /usr/bin/
+COPY --from=pre-builder /bin/sh /bin/
+COPY --from=pre-builder /bin/ls /bin/
+COPY --from=builder --chown=nonroot:nonroot /app/target/release/epirust-engine app/
+WORKDIR app/
+RUN mkdir "output"
+RUN chown nonroot:nonroot output/
+RUN chmod +rwx output/

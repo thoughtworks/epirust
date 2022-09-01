@@ -53,7 +53,7 @@ async fn main() {
         .arg(
             Arg::with_name("config")
                 .long("config")
-                .short("c")
+                .short('c')
                 .value_name("FILE")
                 .default_value("config/simulation.json")
                 .help("Use a config file to run the simulation"),

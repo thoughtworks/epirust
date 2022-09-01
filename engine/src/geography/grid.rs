@@ -148,7 +148,7 @@ impl Grid {
             Grid::draw_rect(&mut draw_backend, office, &RGBColor(51, 153, 255));
         }
         for home in home_locations {
-            draw_backend.draw_pixel((home.x as i32, home.y as i32), &BLACK.to_rgba()).unwrap();
+            draw_backend.draw_pixel((home.x as i32, home.y as i32), BLACK.to_backend_color()).unwrap();
         }
     }
 

@@ -60,12 +60,12 @@ async fn main() {
         .version("0.1")
         .about("Epidemiology Simulations in Rust")
         .arg(
-            Arg::with_name("config").long("config").short("c").value_name("FILE").help("Use a config file to run the simulation"),
+            Arg::with_name("config").long("config").short('c').value_name("FILE").help("Use a config file to run the simulation"),
         )
         .arg(
             Arg::with_name("daemon")
                 .long("daemon")
-                .short("d")
+                .short('d')
                 .help(
                     "Start the engine in daemon mode. It will wait for messages from Kafka. \
             Specifying this flag will cause the config argument to be ignored",
@@ -75,7 +75,7 @@ async fn main() {
         .arg(
             Arg::with_name("id")
                 .long("id")
-                .short("i")
+                .short('i')
                 .help(
                     "An identifier for the engine. Needed in daemon mode when running a larger simulation \
             distributed across multiple engines.",

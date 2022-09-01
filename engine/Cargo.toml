@@ -14,21 +14,21 @@ csv = "1.1.1"
 serde = "1.0.103"
 serde_derive = "1.0.103"
 serde_json = "1.0.48"
-serde_yaml = "0.8.11"
+serde_yaml = "0.9.10"
 rdkafka = { version = "0.23", features = ["cmake-build"] }
-clap = "2.33.0"
-ndarray = "0.13.0"
+clap = "3.2.19"
+ndarray = "0.15.6"
 futures = "0.3.4"
 tokio = { version = ">=1.8.4, <1.9.0", features = ["full"] }
 chrono = ">=0.4.20"
-geo-types = "0.4.3"
-geo = "0.12.2"
-geojson = "0.17.0"
-plotters = "^0.2.12"
+geo-types = "0.7.7"
+geo = "0.23.0"
+geojson = "0.23.0"
+plotters = "0.3.3"
 log = "0.4"
-env_logger = "0.7"
-uuid = { version = "0.8", features = ["serde", "v4"] }
-validator = { version = "0.15", features = ["derive"] }
+env_logger = "0.9.0"
+uuid = { version = "1.1.2", features = ["serde", "v4"] }
+validator = { version = "0.16.0", features = ["derive"] }
 
 [profile.release]
 opt-level = 3

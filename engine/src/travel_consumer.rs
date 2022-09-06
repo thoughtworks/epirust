@@ -75,7 +75,7 @@ pub fn read_migrators(message: Option<KafkaResult<BorrowedMessage>>) -> Option<M
             }
             Ok(borrowed_message) => {
                 let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
-                debug!("Reading Migration Data: {}", str_message);
+                trace!("Reading Migration Data: {}", str_message);
                 Some(parse_migrators(str_message))
             }
         },

@@ -54,7 +54,7 @@ impl KafkaProducer {
     pub fn send_migrators(&mut self, outgoing: Vec<MigratorsByRegion>) {
         outgoing.iter().for_each(|out_region| {
             let payload = serde_json::to_string(out_region).unwrap();
-            debug!("Sending migrators: {} to region: {}", payload, out_region.to_engine_id());
+            trace!("Sending migrators: {} to region: {}", payload, out_region.to_engine_id());
             let topic = &*format!("{}{}", MIGRATION_TOPIC, out_region.to_engine_id());
             let record: FutureRecord<String, String> = FutureRecord::to(topic).payload(&payload);
             self.producer.send(record, 0);

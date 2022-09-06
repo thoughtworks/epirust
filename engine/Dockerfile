@@ -45,6 +45,3 @@ COPY --from=pre-builder /bin/sh /bin/
 COPY --from=pre-builder /bin/ls /bin/
 COPY --from=builder --chown=nonroot:nonroot /app/target/release/epirust-engine app/
 WORKDIR app/
-RUN mkdir "output"
-RUN chown nonroot:nonroot output/
-RUN chmod +rwx output/

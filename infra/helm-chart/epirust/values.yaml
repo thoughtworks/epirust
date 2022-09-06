@@ -34,7 +34,7 @@ engine:
 
   env:
     # Replace with your kafka service url
-    EPI_KAFKA_URL: "kafka-service"
+    EPI_KAFKA_URL: "kafka-cp-kafka:9092"
 
     RUST_LOG: info
     RUST_BACKTRACE: full
@@ -74,10 +74,10 @@ storage:
   # Update the sub paths for output and config
   volumeMounts:
     config:
-      mountPath: "/nonroot/app/config"
+      mountPath: "/home/nonroot/app/config"
       subPath: "epirust/config"
     output:
-      mountPath: "/nonroot/app/output"
+      mountPath: "/home/nonroot/app/output"
       subPath: "epirust/output/100k_100"
 
 # Security settings for epirust engine and orchestrator pods
@@ -85,8 +85,9 @@ securityContext:
   readOnlyRootFilesystem: true
   runAsNonRoot: true
   allowPrivilegeEscalation: false
-  runAsUser: 100001
-  runAsGroup: 100001
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
   seccompProfile:
     type: RuntimeDefault
 

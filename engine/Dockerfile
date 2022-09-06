@@ -26,7 +26,6 @@ COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release
-RUN mkdir output
 
 FROM debian:stable-slim AS pre-builder
 RUN apt-get update && \
@@ -39,9 +38,7 @@ COPY --from=pre-builder /lib/x86_64-linux-gnu/ /lib/x86_64-linux-gnu/
 COPY --from=pre-builder /usr/bin/jq /usr/bin/
 COPY --from=pre-builder /bin/chown /bin/
 COPY --from=pre-builder /bin/chmod /bin/
-COPY --from=pre-builder /bin/mkdir /bin/
 COPY --from=pre-builder /usr/bin/xargs /usr/bin/
 COPY --from=pre-builder /bin/sh /bin/
-COPY --from=pre-builder /bin/ls /bin/
 COPY --from=builder --chown=nonroot:nonroot /app/target/release/epirust-engine app/
 WORKDIR app/

@@ -2,7 +2,7 @@ use std::error::Error;
 
 use futures::StreamExt;
 use rdkafka::ClientConfig;
-use rdkafka::consumer::{DefaultConsumerContext, MessageStream, StreamConsumer};
+use rdkafka::consumer::{MessageStream, StreamConsumer};
 use rdkafka::consumer::Consumer;
 use rdkafka::error::KafkaError;
 use rdkafka::message::BorrowedMessage;
@@ -23,7 +23,7 @@ impl KafkaConsumer<'_> {
         let kafka_url = environment::kafka_url();
         let consumer: StreamConsumer = ClientConfig::new()
             .set("bootstrap.servers", kafka_url.as_str())
-            .set("group.id", engine_id)
+            .set("group.id", &*format!("request_{}", engine_id))
             .set("auto.offset.reset", "earliest")
             .set("max.poll.interval.ms", "86400000") //max allowed
             .set("message.max.bytes", "104857600") //in order to allow message greater than 1MB
@@ -36,7 +36,8 @@ impl KafkaConsumer<'_> {
     }
 
     pub async fn listen_loop(&self, run_mode: &RunMode) {
-        let mut message_stream: MessageStream<DefaultConsumerContext> = self.consumer.start();
+        let mut message_stream: MessageStream = self.consumer.stream();
+        debug!("Started the stream. Waiting for simulation request");
         while let Some(message) = message_stream.next().await {
             let simulation_config = self.parse_message(message);
             match simulation_config {

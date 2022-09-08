@@ -1,6 +1,6 @@
 use rdkafka::ClientConfig;
-use rdkafka::consumer::{DefaultConsumerContext, MessageStream, StreamConsumer, Consumer};
-use std::time::Duration;
+use rdkafka::consumer::{MessageStream, StreamConsumer, Consumer};
+
 use crate::environment;
 
 pub struct KafkaConsumer {
@@ -24,7 +24,7 @@ impl KafkaConsumer {
         KafkaConsumer { consumer }
     }
 
-    pub fn start_message_stream(&self) -> MessageStream<DefaultConsumerContext> {
-        self.consumer.start_with(Duration::from_millis(1), false)
+    pub fn start_message_stream(&self) -> MessageStream {
+        self.consumer.stream()
     }
 }

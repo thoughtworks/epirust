@@ -55,11 +55,12 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
         acks.reset(h);
         let tick = Tick::new(h, should_terminate);
 
-        match producer.send_tick(&tick).await.unwrap() {
+        match producer.send_tick(&tick).await {
             Ok(_) => {
                 if should_terminate {
                     break;
                 }
+                debug!("Sent tick successfully");
                 while let Some(message) = message_stream.next().await {
                     let tick_ack = TickAck::parse_message(message);
                     match tick_ack {
@@ -71,6 +72,7 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
                             )
                         }
                         Ok(ack) => {
+                            debug!("Received tick acknowledgement successfully");
                             acks.push(ack);
                             if acks.all_received() {
                                 should_terminate = acks.should_terminate();

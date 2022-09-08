@@ -30,7 +30,25 @@ pub fn start(engine_id: &str, topics: &[&str]) -> StreamConsumer {
     let kafka_url = environment::kafka_url();
     let consumer: StreamConsumer = ClientConfig::new()
         .set("bootstrap.servers", kafka_url.as_str())
-        .set("group.id", engine_id)
+        .set("group.id", &*format!("commute_{}", engine_id))
+        .set("auto.offset.reset", "earliest")
+        .set("auto.commit.interval.ms", "1000")
+        .set("session.timeout.ms", "120000")
+        .set("max.poll.interval.ms", "86400000") //max allowed
+        .set("fetch.message.max.bytes", "104857600")
+        .create()
+        .expect("Consumer creation failed");
+
+    consumer.subscribe(topics).expect("Couldn't subscribe to specified topics");
+
+    consumer
+}
+
+pub fn start_migration(engine_id: &str, topics: &[&str]) -> StreamConsumer {
+    let kafka_url = environment::kafka_url();
+    let consumer: StreamConsumer = ClientConfig::new()
+        .set("bootstrap.servers", kafka_url.as_str())
+        .set("group.id", &*format!("migration_{}", engine_id))
         .set("auto.offset.reset", "earliest")
         .set("auto.commit.interval.ms", "1000")
         .set("session.timeout.ms", "120000")

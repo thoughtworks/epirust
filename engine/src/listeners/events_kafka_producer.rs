@@ -18,6 +18,7 @@
  */
 
 use std::any::Any;
+use std::time::Duration;
 
 use rdkafka::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
@@ -62,7 +63,7 @@ impl EventsKafkaProducer {
         let message = serde_json::to_string(&self.citizen_states_buffer).expect("Failed to serialize citizen states");
         let record: FutureRecord<String, String> =
             FutureRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&message);
-        self.producer.send(record, 0);
+        let _ = self.producer.send(record, Duration::from_secs(0));
         self.citizen_states_buffer.next_hour();
     }
 }
@@ -72,20 +73,20 @@ impl Listener for EventsKafkaProducer {
         let message = serde_json::to_string(&counts).expect("Failed to serialize counts");
         let record: FutureRecord<String, String> =
             FutureRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&message);
-        self.producer.send(record, 0);
+        let _ = self.producer.send(record, Duration::from_secs(0));
     }
 
     fn simulation_ended(&mut self) {
         let message = r#"{"simulation_ended": true}"#.to_string();
         let record: FutureRecord<String, String> =
             FutureRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&message);
-        self.producer.send(record, 0);
+        let _ = self.producer.send(record, Duration::from_secs(0));
 
         if self.enable_citizen_state_messages {
             self.publish_citizen_states_buffer();
             let record2: FutureRecord<String, String> =
                 FutureRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&message);
-            self.producer.send(record2, 0);
+            let _ = self.producer.send(record2, Duration::from_secs(0));
         }
     }
 
@@ -108,7 +109,7 @@ impl Listener for EventsKafkaProducer {
                     let record: FutureRecord<String, String> =
                         FutureRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&m);
 
-                    self.producer.send(record, 0);
+                    let _ = self.producer.send(record, Duration::from_secs(0));
                 }
                 Err(e) => error!("Failed to parse the grid, cannot publish to kafka! Error: {}", e),
             }
@@ -125,7 +126,7 @@ impl Listener for EventsKafkaProducer {
 
         let record: FutureRecord<String, String> =
             FutureRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&formatted_message);
-        self.producer.send(record, 0);
+        let _ = self.producer.send(record, Duration::from_secs(0));
     }
 
     fn as_any(&self) -> &dyn Any {

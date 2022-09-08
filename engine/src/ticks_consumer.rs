@@ -31,7 +31,7 @@ pub fn start(engine_id: &str) -> StreamConsumer {
     let kafka_url = environment::kafka_url();
     let consumer: StreamConsumer = ClientConfig::new()
         .set("bootstrap.servers", kafka_url.as_str())
-        .set("group.id", engine_id)
+        .set("group.id", &*format!("ticks_{}", engine_id))
         .set("auto.offset.reset", "earliest")
         .set("enable.auto.commit", "true") //to avoid consuming duplicate message
         .set("max.poll.interval.ms", "86400000") //max allowed

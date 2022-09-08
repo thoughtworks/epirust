@@ -19,12 +19,12 @@
 
 use core::borrow::Borrow;
 use core::borrow::BorrowMut;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use futures::join;
 use futures::StreamExt;
 use rand::Rng;
-use rdkafka::consumer::{DefaultConsumerContext, MessageStream};
+use rdkafka::consumer::MessageStream;
 use time::OffsetDateTime;
 
 use crate::{constants, RunMode, ticks_consumer, travel_consumer};
@@ -340,8 +340,8 @@ impl Epidemiology {
             EngineMigrationPlan::new(engine_id.clone(), migration_plan, self.agent_location_map.current_population());
 
         debug!("{}: Start Migrator Consumer", engine_id);
-        let migrators_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", MIGRATION_TOPIC, engine_id)]);
-        let mut migration_stream = migrators_consumer.start_with(Duration::from_millis(1), false);
+        let migrators_consumer = travel_consumer::start_migration(engine_id, &[&*format!("{}{}", MIGRATION_TOPIC, engine_id)]);
+        let mut migration_stream = migrators_consumer.stream();
 
         let commute_plan = if is_commute_enabled {
             travel_plan_config.commute_plan()
@@ -351,10 +351,10 @@ impl Epidemiology {
 
         debug!("{}: Start Commuter Consumer", engine_id);
         let commute_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", COMMUTE_TOPIC, engine_id)]);
-        let mut commute_stream = commute_consumer.start_with(Duration::from_millis(1), false);
+        let mut commute_stream = commute_consumer.stream();
 
         let ticks_consumer = ticks_consumer::start(engine_id);
-        let mut ticks_stream = ticks_consumer.start_with(Duration::from_millis(1), false);
+        let mut ticks_stream = ticks_consumer.stream();
 
         let mut n_incoming = 0;
         let mut n_outgoing = 0;
@@ -462,11 +462,11 @@ impl Epidemiology {
 
                 if is_migration_enabled {
                     debug!("{}: Send Migrators", engine_id);
-                    Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
+                    Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region).await;
                 }
                 if is_commute_enabled {
                     debug!("{}: Send Commuters", engine_id);
-                    Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
+                    Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region).await;
                 }
             };
 
@@ -553,17 +553,20 @@ impl Epidemiology {
         listeners.simulation_ended();
     }
 
-    async fn extract_tick(message_stream: &mut MessageStream<'_, DefaultConsumerContext>) -> Tick {
+    async fn extract_tick(message_stream: &mut MessageStream<'_>) -> Tick {
+        debug!("Start receiving tick");
         let msg = message_stream.next().await;
         let mut maybe_tick = ticks_consumer::read(msg);
         while maybe_tick.is_none() {
+            debug!("Retry for Tick");
             let next_msg = message_stream.next().await;
             maybe_tick = ticks_consumer::read(next_msg);
         }
+        debug!("Received Tick Successfully");
         maybe_tick.unwrap()
     }
 
-    async fn get_tick(message_stream: &mut MessageStream<'_, DefaultConsumerContext>, simulation_hour: Hour) -> Tick {
+    async fn get_tick(message_stream: &mut MessageStream<'_>, simulation_hour: Hour) -> Tick {
         let mut tick = Epidemiology::extract_tick(message_stream).await;
         let mut tick_hour = tick.hour();
         while tick_hour < simulation_hour {
@@ -575,7 +578,7 @@ impl Epidemiology {
 
     async fn receive_tick(
         run_mode: &RunMode,
-        message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+        message_stream: &mut MessageStream<'_>,
         simulation_hour: Hour,
         is_commute_enabled: bool,
         is_migration_enabled: bool,
@@ -620,7 +623,7 @@ impl Epidemiology {
                     counts,
                     locked_down: lockdown.is_locked_down(),
                 };
-                match producer.send_ack(&ack).await.unwrap() {
+                match producer.send_ack(&ack).await {
                     Ok(_) => {}
                     Err(e) => panic!("Failed while sending acknowledgement: {:?}", e.0),
                 }
@@ -628,24 +631,24 @@ impl Epidemiology {
         }
     }
 
-    fn send_migrators(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<MigratorsByRegion>) {
+    async fn send_migrators(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<MigratorsByRegion>) {
         if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
-            producer.send_migrators(outgoing);
+            producer.send_migrators(outgoing).await;
         }
     }
 
-    fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
+    async fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
         if tick.is_some() {
             let hour = tick.unwrap().hour() % 24;
             if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
-                producer.send_commuters(outgoing);
+                producer.send_commuters(outgoing).await;
             }
         }
     }
 
     async fn receive_migrators(
         tick: Option<Tick>,
-        message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+        message_stream: &mut MessageStream<'_>,
         engine_migration_plan: &EngineMigrationPlan,
     ) -> Vec<Migrator> {
         if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
@@ -668,7 +671,7 @@ impl Epidemiology {
 
     async fn receive_commuters(
         tick: Option<Tick>,
-        message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+        message_stream: &mut MessageStream<'_>,
         commute_plan: &CommutePlan,
         engine_id: &String,
     ) -> Vec<Commuter> {
@@ -709,7 +712,7 @@ impl Epidemiology {
     }
 
     async fn receive_commuters_from_region(
-        message_stream: &mut MessageStream<'_, DefaultConsumerContext>,
+        message_stream: &mut MessageStream<'_>,
         engine_id: &String,
     ) -> Option<CommutersByRegion> {
         let msg = message_stream.next().await;

@@ -15,11 +15,11 @@ serde = "1.0.103"
 serde_derive = "1.0.103"
 serde_json = "1.0.48"
 serde_yaml = "0.9.10"
-rdkafka = { version = "0.23", features = ["cmake-build"] }
+rdkafka = { version = "0.28.0", features = ["cmake-build"] }
 clap = "3.2.19"
 ndarray = "0.15.6"
 futures = "0.3.4"
-tokio = { version = ">=1.8.4, <1.9.0", features = ["full"] }
+tokio = { version = "1.20.1", features = ["full"] }
 time = { version = "0.3.14", features = ["formatting"] }
 geo-types = "0.7.7"
 geo = "0.23.0"

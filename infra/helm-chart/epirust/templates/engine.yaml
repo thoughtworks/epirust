@@ -34,9 +34,9 @@ spec:
           command: [ "/bin/sh", "-c" ]
           args:
           {{ if .Values.multiengineSim }}
-            [ "jq .travel_plan.regions[$(JOB_COMPLETION_INDEX)] /home/nonroot/app/config/{{ .Values.config }} | xargs ./epirust-engine -d  2> /home/nonroot/app/output/logs/$(JOB_COMPLETION_INDEX)_logs.txt -i" ]
+            [ "jq .travel_plan.regions[$(JOB_COMPLETION_INDEX)] {{ .Values.storage.volumeMounts.config.mountPath }}/{{ .Values.config }} | xargs ./epirust-engine -d  2> {{ .Values.storage.volumeMounts.output.mountPath }}/logs/$(JOB_COMPLETION_INDEX)_logs.txt -i" ]
           {{ else }}
-            [ "./epirust -c config/{{ .Values.config }}" ]
+            [ "./epirust-engine -c config/{{ .Values.config }}" ]
           {{ end }}
           resources:
             requests:

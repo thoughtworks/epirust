@@ -35,6 +35,7 @@ engine:
   env:
     # Replace with your kafka service url
     EPI_KAFKA_URL: "kafka-cp-kafka:9092"
+    EPI_OUTPUT_DIR: "/home/nonroot/app/output"
 
     RUST_LOG: info
     RUST_BACKTRACE: full

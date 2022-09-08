@@ -35,4 +35,5 @@ RUN apt-get update && \
 FROM gcr.io/distroless/cc-debian11:nonroot
 COPY --from=pre-builder /lib/x86_64-linux-gnu/ /lib/x86_64-linux-gnu/
 COPY --from=builder --chown=nonroot:nonroot /app/target/release/epirust-orchestrator app/
+COPY --from=builder --chown=nonroot:nonroot /app/config app/config/
 WORKDIR app

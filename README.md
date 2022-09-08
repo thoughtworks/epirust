@@ -27,11 +27,11 @@ docker build -t epirust-engine .
 
 ##### Running EpiRust engine docker container
 ```
-docker run --rm --name epirust-engine epirust-engine /bin/bash -c 'cargo run --release -- -c config/default.json && ls *.csv'
+docker run --rm --name epirust-engine epirust-engine /bin/sh -c './epirust-engine -c config/default.json && ls *.csv'
 ```
 - Copy the listed CSV produced from the container to the host machine
 ```
-docker cp epirust-engine:/engine/<CSV_FILE> .
+docker cp epirust-engine:/home/nonroot/app/<CSV_FILE> .
 ```
 - Go to the visualization section to plot the copied CSV file
 
@@ -69,10 +69,10 @@ Steps for running a multi-region simulation:
     - The travel plan, which defines a matrix containing the daily travellers from one region to another.
     You can take a look at the `orchestrator/config` directory for examples of the configuration.
 2. Start Kafka. The engines and orchestrator will communicate using Kafka. (The topics should be created automatically when the first messages are sent).
-3. Start the engines. If there are n regions in the config, n engines should be started with the name specified in the config. E.g. `./epirust -d -i [engine-name]`, where `epirust` is the engine binary.
-4. Start the orchestrator, pointing to the config file. E.g. `./orchestrator -c [path_to_config]`. The simulation should now start.
+3. Start the engines. If there are n regions in the config, n engines should be started with the name specified in the config. E.g. `./epirust-engine -d -i [engine-name]`, where `epirust-engine` is the engine binary.
+4. Start the orchestrator, pointing to the config file. E.g. `./epirust-orchestrator -c [path_to_config]`. The simulation should now start.
 
-The multi-region simulation doesn't currently support the web interface. It will generate output CSV and JSON files which you can use to for analysis and charting.
+It will generate output CSV and JSON files which you can use to for analysis and charting.
 
 ### License
 EpiRust is an open source project licensed under [AGPL v3](https://www.gnu.org/licenses/agpl-3.0.en.html)

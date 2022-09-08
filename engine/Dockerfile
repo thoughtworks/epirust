@@ -39,6 +39,8 @@ COPY --from=pre-builder /usr/bin/jq /usr/bin/
 COPY --from=pre-builder /bin/chown /bin/
 COPY --from=pre-builder /bin/chmod /bin/
 COPY --from=pre-builder /usr/bin/xargs /usr/bin/
+COPY --from=pre-builder /bin/ls /bin/
 COPY --from=pre-builder /bin/sh /bin/
 COPY --from=builder --chown=nonroot:nonroot /app/target/release/epirust-engine app/
+COPY --from=builder --chown=nonroot:nonroot /app/config app/config/
 WORKDIR app/

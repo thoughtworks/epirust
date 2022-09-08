@@ -5,5 +5,4 @@ files
 *.db
 Dockerfile
 output/
-config/
 *.json

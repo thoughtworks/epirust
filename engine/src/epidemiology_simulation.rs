@@ -112,7 +112,7 @@ impl Epidemiology {
         if let RunMode::MultiEngine { engine_id } = run_mode {
             output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
         }
-        format!("/home/nonroot/app/output/{}_{}", output_file_prefix, now.format(&format).unwrap())
+        format!("{}_{}", output_file_prefix, now.format(&format).unwrap())
     }
 
     fn create_listeners(&self, config: &Config, run_mode: &RunMode) -> Listeners {

@@ -15,6 +15,10 @@ By default, the simulation will run as a commandline application. Use `cargo run
 ### Daemon
 You can specify the `--daemon` parameter to run the engine in daemon mode. In this mode, the engine will wait for messages from Kafka to start the simulation.
 
+### Output files 
+Set "EPI_OUTPUT_DIR" environment variable to the path where you want to store your output files.
+`Export EPI_OUTPUT_DIR="output"`
+
 ## Kafka setup
 In the daemon mode, the engine will consume the `simulation_requests` topic for starting the simulation. It expects a JSON payload with the schema of `config/default.json`
 

@@ -340,7 +340,7 @@ impl Epidemiology {
             EngineMigrationPlan::new(engine_id.clone(), migration_plan, self.agent_location_map.current_population());
 
         debug!("{}: Start Migrator Consumer", engine_id);
-        let migrators_consumer = travel_consumer::start_migration(engine_id, &[&*format!("{}{}", MIGRATION_TOPIC, engine_id)]);
+        let migrators_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", MIGRATION_TOPIC, engine_id)], "migrate");
         let mut migration_stream = migrators_consumer.stream();
 
         let commute_plan = if is_commute_enabled {
@@ -350,7 +350,7 @@ impl Epidemiology {
         };
 
         debug!("{}: Start Commuter Consumer", engine_id);
-        let commute_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", COMMUTE_TOPIC, engine_id)]);
+        let commute_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", COMMUTE_TOPIC, engine_id)], "commute");
         let mut commute_stream = commute_consumer.stream();
 
         let ticks_consumer = ticks_consumer::start(engine_id);
@@ -462,11 +462,11 @@ impl Epidemiology {
 
                 if is_migration_enabled {
                     debug!("{}: Send Migrators", engine_id);
-                    Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region).await;
+                    Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
                 }
                 if is_commute_enabled {
                     debug!("{}: Send Commuters", engine_id);
-                    Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region).await;
+                    Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
                 }
             };
 
@@ -524,8 +524,7 @@ impl Epidemiology {
                 &interventions.lockdown,
                 is_commute_enabled,
                 is_migration_enabled,
-            )
-            .await;
+            );
 
             if simulation_hour % 100 == 0 {
                 info!(
@@ -600,7 +599,7 @@ impl Epidemiology {
         None
     }
 
-    async fn send_ack(
+    fn send_ack(
         run_mode: &RunMode,
         producer: &mut KafkaProducer,
         counts: Counts,
@@ -623,7 +622,8 @@ impl Epidemiology {
                     counts,
                     locked_down: lockdown.is_locked_down(),
                 };
-                match producer.send_ack(&ack).await {
+                let tick_string = serde_json::to_string(&ack).unwrap();
+                match producer.send_ack(&tick_string) {
                     Ok(_) => {}
                     Err(e) => panic!("Failed while sending acknowledgement: {:?}", e.0),
                 }
@@ -631,17 +631,17 @@ impl Epidemiology {
         }
     }
 
-    async fn send_migrators(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<MigratorsByRegion>) {
+    fn send_migrators(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<MigratorsByRegion>) {
         if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
-            producer.send_migrators(outgoing).await;
+            producer.send_migrators(outgoing);
         }
     }
 
-    async fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
+    fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
         if tick.is_some() {
             let hour = tick.unwrap().hour() % 24;
             if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
-                producer.send_commuters(outgoing).await;
+                producer.send_commuters(outgoing);
             }
         }
     }

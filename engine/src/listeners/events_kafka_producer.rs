@@ -18,23 +18,22 @@
  */
 
 use std::any::Any;
-use std::time::Duration;
 
 use rdkafka::ClientConfig;
-use rdkafka::producer::{FutureProducer, FutureRecord};
+use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 
 use crate::agent::Citizen;
 use crate::custom_types::Hour;
+use crate::environment;
 use crate::geography::{Grid, Point};
+use crate::interventions::intervention_type::InterventionType;
 use crate::listeners::events::citizen_state::CitizenStatesAtHr;
 use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
-use crate::environment;
-use crate::interventions::intervention_type::InterventionType;
 
 pub struct EventsKafkaProducer {
     sim_id: String,
-    producer: FutureProducer,
+    producer: ThreadedProducer<DefaultProducerContext>,
     citizen_states_buffer: CitizenStatesAtHr,
     enable_citizen_state_messages: bool,
     count_updated_topic: String,
@@ -61,9 +60,8 @@ impl EventsKafkaProducer {
 
     fn publish_citizen_states_buffer(&mut self) {
         let message = serde_json::to_string(&self.citizen_states_buffer).expect("Failed to serialize citizen states");
-        let record: FutureRecord<String, String> =
-            FutureRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&message);
-        let _ = self.producer.send(record, Duration::from_secs(0));
+        let record: BaseRecord<String, String> = BaseRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&message);
+        self.producer.send(record).expect("TODO: panic message");
         self.citizen_states_buffer.next_hour();
     }
 }
@@ -71,22 +69,20 @@ impl EventsKafkaProducer {
 impl Listener for EventsKafkaProducer {
     fn counts_updated(&mut self, counts: Counts) {
         let message = serde_json::to_string(&counts).expect("Failed to serialize counts");
-        let record: FutureRecord<String, String> =
-            FutureRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&message);
-        let _ = self.producer.send(record, Duration::from_secs(0));
+        let record: BaseRecord<String, String> = BaseRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&message);
+        self.producer.send(record).expect("TODO: panic message");
     }
 
     fn simulation_ended(&mut self) {
         let message = r#"{"simulation_ended": true}"#.to_string();
-        let record: FutureRecord<String, String> =
-            FutureRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&message);
-        let _ = self.producer.send(record, Duration::from_secs(0));
+        let record: BaseRecord<String, String> = BaseRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&message);
+        self.producer.send(record).expect("TODO: panic message");
 
         if self.enable_citizen_state_messages {
             self.publish_citizen_states_buffer();
-            let record2: FutureRecord<String, String> =
-                FutureRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&message);
-            let _ = self.producer.send(record2, Duration::from_secs(0));
+            let record2: BaseRecord<String, String> =
+                BaseRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&message);
+            self.producer.send(record2).expect("TODO: panic message");
         }
     }
 
@@ -106,10 +102,10 @@ impl Listener for EventsKafkaProducer {
             let message = serde_json::to_string(grid);
             match message {
                 Ok(m) => {
-                    let record: FutureRecord<String, String> =
-                        FutureRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&m);
+                    let record: BaseRecord<String, String> =
+                        BaseRecord::to(&self.citizen_states_topic).key(&self.sim_id).payload(&m);
 
-                    let _ = self.producer.send(record, Duration::from_secs(0));
+                    self.producer.send(record).expect("TODO: panic message");
                 }
                 Err(e) => error!("Failed to parse the grid, cannot publish to kafka! Error: {}", e),
             }
@@ -124,9 +120,9 @@ impl Listener for EventsKafkaProducer {
             _intervention.json_data()
         );
 
-        let record: FutureRecord<String, String> =
-            FutureRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&formatted_message);
-        let _ = self.producer.send(record, Duration::from_secs(0));
+        let record: BaseRecord<String, String> =
+            BaseRecord::to(&self.count_updated_topic).key(&self.sim_id).payload(&formatted_message);
+        self.producer.send(record).expect("TODO: panic message");
     }
 
     fn as_any(&self) -> &dyn Any {

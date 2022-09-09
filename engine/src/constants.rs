@@ -17,7 +17,11 @@
  *
  */
 
+use rdkafka::error::KafkaError;
+use rdkafka::producer::BaseRecord;
 use crate::custom_types::{Day, Hour, Percentage, Size};
+
+pub type SendResult<'a> = Result<(), (KafkaError, BaseRecord<'a, String, String>)>;
 
 pub const HOUSE_AREA_RELATIVE_SIZE: Percentage = 0.4;
 pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;

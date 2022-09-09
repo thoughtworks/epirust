@@ -55,7 +55,8 @@ pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
         acks.reset(h);
         let tick = Tick::new(h, should_terminate);
 
-        match producer.send_tick(&tick).await {
+        let tick_ack_str = serde_json::to_string(&tick).unwrap();
+        match producer.send_tick(&tick_ack_str) {
             Ok(_) => {
                 if should_terminate {
                     break;

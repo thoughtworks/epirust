@@ -1,13 +1,14 @@
-use std::time::Duration;
-use rdkafka::producer::{FutureProducer, FutureRecord};
 use rdkafka::ClientConfig;
-use rdkafka::producer::future_producer::OwnedDeliveryResult;
+use rdkafka::error::KafkaError;
+use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
+
 use crate::environment;
-use crate::ticks::Tick;
 
 pub struct KafkaProducer {
-    producer: FutureProducer,
+    producer: ThreadedProducer<DefaultProducerContext>,
 }
+
+type SendResult<'a> = Result<(), (KafkaError, BaseRecord<'a, String, String>)>;
 
 impl KafkaProducer {
     pub fn new() -> KafkaProducer {
@@ -21,16 +22,15 @@ impl KafkaProducer {
         }
     }
 
-    pub async fn start_request(&mut self, request: &String) -> OwnedDeliveryResult {
-        let record: FutureRecord<String, String> = FutureRecord::to("simulation_requests").payload(request);
+    pub fn start_request<'a>(&mut self, request: &'a String) -> SendResult<'a> {
+        let record: BaseRecord<String, String> = BaseRecord::to("simulation_requests").payload(request);
         info!("Sent simulation request");
-        self.producer.send(record, Duration::from_secs(0)).await
+        self.producer.send(record)
     }
 
-    pub async fn send_tick(&mut self, tick: &Tick) -> OwnedDeliveryResult {
-        let payload = serde_json::to_string(tick).unwrap();
-        let record: FutureRecord<String, String> = FutureRecord::to("ticks").payload(&payload);
-        debug!("Send tick: {}", payload);
-        self.producer.send(record, Duration::from_secs(0)).await
+    pub fn send_tick<'a>(&mut self, tick_ack_str: &'a String) -> SendResult<'a> {
+        let record: BaseRecord<String, String> = BaseRecord::to("ticks").payload(tick_ack_str);
+        debug!("Send tick: {}", record.payload.unwrap());
+        self.producer.send(record)
     }
 }

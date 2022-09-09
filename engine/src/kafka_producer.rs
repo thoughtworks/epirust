@@ -17,14 +17,11 @@
  *
  */
 
-use std::time::Duration;
-
 use rdkafka::ClientConfig;
-use rdkafka::producer::future_producer::OwnedDeliveryResult;
-use rdkafka::producer::FutureProducer;
-use rdkafka::producer::FutureRecord;
+use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 
 use crate::commute::CommutersByRegion;
+use crate::constants::SendResult;
 use crate::custom_types::Hour;
 use crate::environment;
 use crate::listeners::events::counts::Counts;
@@ -35,7 +32,7 @@ pub const MIGRATION_TOPIC: &str = "migration_";
 pub const COMMUTE_TOPIC: &str = "commute_";
 
 pub struct KafkaProducer {
-    producer: FutureProducer,
+    producer: ThreadedProducer<DefaultProducerContext>,
 }
 
 impl KafkaProducer {
@@ -50,30 +47,29 @@ impl KafkaProducer {
         }
     }
 
-    pub async fn send_ack(&mut self, tick: &TickAck) -> OwnedDeliveryResult {
-        let tick_string = serde_json::to_string(&tick).unwrap();
-        let record: FutureRecord<String, String> = FutureRecord::to(TICK_ACKS_TOPIC).payload(&tick_string);
-        self.producer.send(record, Duration::from_secs(0)).await
+    pub fn send_ack<'a>(&mut self, tick_string: &'a String) -> SendResult<'a> {
+        let record: BaseRecord<String, String> = BaseRecord::to(TICK_ACKS_TOPIC).payload(&tick_string);
+        self.producer.send(record)
     }
 
-    pub async fn send_migrators(&mut self, outgoing: Vec<MigratorsByRegion>) {
+    pub fn send_migrators(&mut self, outgoing: Vec<MigratorsByRegion>) {
         for out_region in outgoing.iter() {
             let payload = serde_json::to_string(out_region).unwrap();
             trace!("Sending migrators: {} to region: {}", payload, out_region.to_engine_id());
             let topic = &*format!("{}{}", MIGRATION_TOPIC, out_region.to_engine_id());
-            let record: FutureRecord<String, String> = FutureRecord::to(topic).payload(&payload);
-            let _ = self.producer.send(record, Duration::from_secs(0)).await;
+            let record: BaseRecord<String, String> = BaseRecord::to(topic).payload(&payload);
+            self.producer.send(record).expect("TODO: panic message");
         }
     }
 
-    pub async fn send_commuters(&mut self, outgoing: Vec<CommutersByRegion>) {
+    pub fn send_commuters(&mut self, outgoing: Vec<CommutersByRegion>) {
         for out_region in outgoing.iter() {
             let payload = serde_json::to_string(out_region).unwrap();
             trace!("Sending commuters: {} to region: {}", payload, out_region.to_engine_id());
             debug!("Sending commuters: {} to region: {}", out_region.commuters.len(), out_region.to_engine_id());
             let topic = &*format!("{}{}", COMMUTE_TOPIC, out_region.to_engine_id());
-            let record: FutureRecord<String, String> = FutureRecord::to(topic).payload(&payload);
-            let _ = self.producer.send(record, Duration::from_secs(0)).await;
+            let record: BaseRecord<String, String> = BaseRecord::to(topic).payload(&payload);
+            self.producer.send(record).expect("TODO: panic message");
             //     match result.await {
             //         Ok(d) => {
             //             match d {

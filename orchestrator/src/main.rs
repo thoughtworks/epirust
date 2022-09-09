@@ -158,7 +158,7 @@ async fn cleanup(regions: &Vec<String>) {
 async fn start(travel_plan: &TravelPlan, hours: Range<i64>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();
 
-    match producer.start_request(sim_conf).await {
+    match producer.start_request(sim_conf) {
         Ok(_) => {
             debug!("Sent Request Successfully");
             ticks::start_ticking(travel_plan, hours).await;

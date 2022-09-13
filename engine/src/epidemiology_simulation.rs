@@ -888,17 +888,17 @@ mod tests {
             vec![InterventionConfig::Vaccinate(vac)],
             None,
         );
-        let epidemiology: Epidemiology = Epidemiology::new(&config, None, "id".to_string());
+        let epidemiology: Epidemiology = Epidemiology::new(&config, None, STANDALONE_SIM_ID.to_string());
         let expected_housing_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.grid.housing_area, expected_housing_area);
 
-        let expected_transport_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(40, 0), Point::new(49, 100));
+        let expected_transport_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(40, 0), Point::new(59, 100));
         assert_eq!(epidemiology.grid.transport_area, expected_transport_area);
 
-        let expected_work_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(50, 0), Point::new(69, 100));
+        let expected_work_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(60, 0), Point::new(79, 100));
         assert_eq!(epidemiology.grid.work_area, expected_work_area);
 
-        let expected_hospital_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(70, 0), Point::new(79, 0));
+        let expected_hospital_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(80, 0), Point::new(89, 0));
         assert_eq!(epidemiology.grid.hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.agent_location_map.current_population(), 10);

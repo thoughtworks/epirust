@@ -19,12 +19,6 @@
 #
 #
 
-cd engine || exit
 cargo build || exit
 cargo fmt --check || exit
-
-cd ..
-
-cd orchestrator || exit
-cargo build || exit
-cargo fmt --check || exit
+cargo test || exit

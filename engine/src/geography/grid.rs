@@ -316,7 +316,7 @@ mod tests {
 
         grid.increase_hospital_size(120, "engine1".to_string());
 
-        assert_eq!(grid.hospital_area.start_offset, Point::new(70, 0));
+        assert_eq!(grid.hospital_area.start_offset, Point::new(80, 0));
         assert_eq!(grid.hospital_area.end_offset, Point::new(120, 120));
     }
 
@@ -343,8 +343,8 @@ mod tests {
         let mut grid = define_geography(100, "engine1".to_string());
         grid.resize_hospital(1000, 0.02, 0.01, "engine1".to_string());
 
-        assert_eq!(grid.hospital_area.start_offset, Point::new(70, 0));
-        assert_eq!(grid.hospital_area.end_offset, Point::new(79, 3));
+        assert_eq!(grid.hospital_area.start_offset, Point::new(80, 0));
+        assert_eq!(grid.hospital_area.end_offset, Point::new(89, 3));
     }
 
     #[test]
@@ -352,7 +352,7 @@ mod tests {
         let mut grid = define_geography(100, "engine1".to_string());
         grid.resize_hospital(50000, 0.02, 0.01, "engine1".to_string());
 
-        assert_eq!(grid.hospital_area.start_offset, Point::new(70, 0));
-        assert_eq!(grid.hospital_area.end_offset, Point::new(79, 100));
+        assert_eq!(grid.hospital_area.start_offset, Point::new(80, 0));
+        assert_eq!(grid.hospital_area.end_offset, Point::new(89, 100));
     }
 }

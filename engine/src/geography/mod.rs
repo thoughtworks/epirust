@@ -79,12 +79,12 @@ mod tests {
         assert_eq!(grid.housing_area.end_offset, Point::new(3, 10));
 
         assert_eq!(grid.transport_area.start_offset, Point::new(4, 0));
-        assert_eq!(grid.transport_area.end_offset, Point::new(4, 10));
+        assert_eq!(grid.transport_area.end_offset, Point::new(5, 10));
 
-        assert_eq!(grid.work_area.start_offset, Point::new(5, 0));
-        assert_eq!(grid.work_area.end_offset, Point::new(6, 10));
+        assert_eq!(grid.work_area.start_offset, Point::new(6, 0));
+        assert_eq!(grid.work_area.end_offset, Point::new(7, 10));
 
-        assert_eq!(grid.hospital_area.start_offset, Point::new(7, 0));
-        assert_eq!(grid.hospital_area.end_offset, Point::new(7, 10));
+        assert_eq!(grid.hospital_area.start_offset, Point::new(8, 0));
+        assert_eq!(grid.hospital_area.end_offset, Point::new(8, 10));
     }
 }

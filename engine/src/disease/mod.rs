@@ -17,9 +17,6 @@
  *
  */
 
-pub mod csv_service;
-pub mod disease_tracker;
-pub mod events_kafka_producer;
-pub mod intervention_reporter;
-pub mod listener;
-pub mod travel_counter;
+mod disease;
+
+pub use disease::*;

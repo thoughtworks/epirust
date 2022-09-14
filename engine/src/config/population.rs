@@ -17,9 +17,27 @@
  *
  */
 
-pub mod csv_service;
-pub mod disease_tracker;
-pub mod events_kafka_producer;
-pub mod intervention_reporter;
-pub mod listener;
-pub mod travel_counter;
+use validator::Validate;
+
+use crate::models::custom_types::{Count, Percentage, validate_percentage};
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub enum Population {
+    Csv(CsvPopulation),
+    Auto(AutoPopulation),
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub struct CsvPopulation {
+    pub file: String,
+    pub cols: Vec<String>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
+pub struct AutoPopulation {
+    pub number_of_agents: Count,
+    #[validate(custom = "validate_percentage")]
+    pub public_transport_percentage: Percentage,
+    #[validate(custom = "validate_percentage")]
+    pub working_percentage: Percentage,
+}

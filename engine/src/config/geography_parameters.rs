@@ -17,18 +17,19 @@
  *
  */
 
-use validator::ValidationError;
+use validator::Validate;
+use crate::models::custom_types::{Percentage, Size, validate_percentage};
 
-pub type Hour = u32;
-pub type Count = u32;
-pub type Day = u32;
-pub type Size = u32;
-pub type CoOrdinate = i32;
-pub type Percentage = f64;
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Validate)]
+pub struct GeographyParameters {
+    pub grid_size: Size,
+    #[validate(custom = "validate_percentage")]
+    pub hospital_beds_percentage: Percentage,
+}
 
-pub fn validate_percentage(value: &f64) -> Result<(), ValidationError> {
-    if value < &0.0 && value > &1.0 {
-        return Err(ValidationError::new("percentage value needs to be between 0 to 1"));
+impl GeographyParameters {
+    #[cfg(test)]
+    pub fn new(grid_size: Size, hospital_beds_percentage: f64) -> GeographyParameters {
+        GeographyParameters { grid_size, hospital_beds_percentage }
     }
-    Ok(())
 }

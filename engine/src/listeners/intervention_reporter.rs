@@ -16,14 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+use std::any::Any;
+use serde_json::Value;
+use std::fs::File;
 
 use crate::listeners::listener::Listener;
-use std::any::Any;
 use crate::interventions::intervention_type::InterventionType;
-use serde_json::Value;
 use crate::environment;
-use std::fs::File;
-use crate::custom_types::Hour;
+use crate::models::custom_types::Hour;
 
 #[derive(Serialize)]
 struct InterventionReport {

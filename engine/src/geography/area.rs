@@ -20,7 +20,7 @@
 use rand::Rng;
 use rand::seq::IteratorRandom;
 
-use crate::custom_types::Count;
+use crate::models::custom_types::Count;
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
 

@@ -22,9 +22,9 @@ use validator::Validate;
 
 use crate::config::Config;
 use crate::interventions::InterventionConfig;
-use crate::listeners::events::counts::Counts;
 use crate::interventions::intervention_type::InterventionType;
-use crate::custom_types::{Hour, Percentage, validate_percentage};
+use crate::models::custom_types::{Hour, Percentage, validate_percentage};
+use crate::models::events::Counts;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
 pub struct VaccinateConfig {
@@ -81,18 +81,17 @@ impl InterventionType for VaccinateIntervention {
 
 #[cfg(test)]
 mod tests {
-    use crate::config;
 
     use super::*;
 
     fn get_test_vaccination_intervention() -> VaccinateIntervention {
-        let config = config::read("config/test/auto_pop.json".to_string()).unwrap();
+        let config = Config::read("config/test/auto_pop.json").unwrap();
         VaccinateIntervention::init(&config)
     }
 
     #[test]
     fn should_parse_vaccinations_from_config() {
-        let config = config::read("config/test/auto_pop.json".to_string()).unwrap();
+        let config = Config::read("config/test/auto_pop.json").unwrap();
         let vaccinate_intervention = VaccinateIntervention::init(&config);
 
         let mut expected: HashMap<Hour, f64> = HashMap::new();
@@ -103,7 +102,7 @@ mod tests {
 
     #[test]
     fn should_get_vaccination_at_hour() {
-        let config = config::read("config/test/auto_pop.json".to_string()).unwrap();
+        let config = Config::read("config/test/auto_pop.json").unwrap();
         let vaccinate_intervention = VaccinateIntervention::init(&config);
 
         let counts = Counts::new_test(5000, 10, 0, 10, 10, 10, 10);

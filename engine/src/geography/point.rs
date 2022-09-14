@@ -18,7 +18,7 @@
  */
 
 use std::ops::Add;
-use crate::custom_types::{CoOrdinate};
+use crate::models::custom_types::CoOrdinate;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Point {

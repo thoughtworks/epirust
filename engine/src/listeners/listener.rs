@@ -20,11 +20,11 @@
 use std::any::Any;
 
 use crate::agent::Citizen;
-use crate::custom_types::Hour;
 use crate::geography::{Point, Grid};
-use crate::listeners::events::counts::Counts;
 use crate::interventions::intervention_type::InterventionType;
+use crate::models::events::Counts;
 use crate::travel_plan::MigratorsByRegion;
+use crate::models::custom_types::Hour;
 
 pub trait Listener {
     fn counts_updated(&mut self, _counts: Counts) {}
@@ -84,8 +84,8 @@ mod tests {
     use std::any::Any;
 
     use crate::geography::Point;
-    use crate::listeners::events::counts::Counts;
     use crate::listeners::listener::{Listener, Listeners};
+    use crate::models::events::Counts;
 
     struct MockListener {
         calls_counts_updated: u32,

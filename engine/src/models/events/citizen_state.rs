@@ -16,12 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+use uuid::Uuid;
 
 use crate::agent::Citizen;
 use crate::geography::Point;
 use crate::disease_state_machine::State;
-use uuid::Uuid;
-use crate::custom_types::Hour;
+use crate::models::custom_types::Hour;
 
 #[derive(Serialize)]
 pub struct CitizenState {
@@ -71,9 +71,9 @@ impl CitizenStatesAtHr {
 mod tests {
     use crate::geography::Area;
     use crate::random_wrapper::RandomWrapper;
+    use crate::agent::WorkStatus;
 
     use super::*;
-    use crate::agent::WorkStatus;
 
     #[test]
     fn citizen_states_at_hr() {

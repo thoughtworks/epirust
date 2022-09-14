@@ -18,10 +18,11 @@
  */
 
 use std::any::Any;
+use fnv::FnvHashMap;
+
 use crate::listeners::listener::Listener;
 use crate::geography::Point;
-use crate::listeners::events::counts::Counts;
-use fnv::FnvHashMap;
+use crate::models::events::Counts;
 
 pub struct Hotspot {
     disease_hotspot_tracker: FnvHashMap<Point, i32>,

@@ -27,13 +27,13 @@ use rand::Rng;
 use rdkafka::consumer::MessageStream;
 use time::OffsetDateTime;
 
-use crate::{constants, RunMode, ticks_consumer, travel_consumer};
+use crate::{RunMode, ticks_consumer, travel_consumer};
 use crate::agent::Citizen;
 use crate::allocation_map::AgentLocationMap;
 use crate::commute::{CommutePlan, Commuter, CommutersByRegion};
-use crate::config::{Config, Population, StartingInfections};
-use crate::constants::HOSPITAL_STAFF_PERCENTAGE;
-use crate::custom_types::{Count, Hour};
+use crate::config::Config;
+use crate::config::Population;
+use crate::config::StartingInfections;
 use crate::disease::Disease;
 use crate::disease_state_machine::State;
 use crate::geography;
@@ -46,11 +46,13 @@ use crate::kafka_consumer::TravelPlanConfig;
 use crate::kafka_producer::{COMMUTE_TOPIC, KafkaProducer, MIGRATION_TOPIC, TickAck};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
-use crate::listeners::events::counts::Counts;
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
 use crate::listeners::intervention_reporter::InterventionReporter;
 use crate::listeners::listener::{Listener, Listeners};
 use crate::listeners::travel_counter::TravelCounter;
+use crate::models::constants;
+use crate::models::custom_types::{Count, Hour};
+use crate::models::events::Counts;
 use crate::random_wrapper::RandomWrapper;
 use crate::ticks_consumer::Tick;
 use crate::travel_plan::{EngineMigrationPlan, MigrationPlan, Migrator, MigratorsByRegion};
@@ -79,7 +81,7 @@ impl Epidemiology {
         };
         grid.resize_hospital(
             agent_list.len() as i32,
-            HOSPITAL_STAFF_PERCENTAGE,
+            constants::HOSPITAL_STAFF_PERCENTAGE,
             config.get_geography_parameters().hospital_beds_percentage,
             sim_id.clone(),
         );

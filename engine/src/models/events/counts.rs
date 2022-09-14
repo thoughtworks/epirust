@@ -17,7 +17,8 @@
  *
  */
 
-use crate::custom_types::{Count, Hour};
+use log::info;
+use crate::models::custom_types::{Count, Hour};
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq)]
 pub struct Counts {
@@ -116,11 +117,6 @@ impl Counts {
         self.recovered -= count;
     }
 
-    // why we never remove hospitalized
-    // pub fn remove_hospitalized(&mut self, count: Count) {
-    //     self.hospitalized -= count;
-    // }
-
     pub fn increment_hour(&mut self) {
         self.hour += 1;
     }
@@ -153,7 +149,7 @@ impl Counts {
 
 #[cfg(test)]
 mod tests {
-    use crate::listeners::events::counts::Counts;
+    use crate::models::events::counts::Counts;
 
     #[test]
     fn should_create_counts() {

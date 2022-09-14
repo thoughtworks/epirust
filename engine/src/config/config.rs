@@ -20,10 +20,14 @@
 use std::error::Error;
 use std::fs::File;
 
-use crate::disease::{Disease, DiseaseOverride};
-use crate::interventions::{InterventionConfig};
-use crate::custom_types::{Count, Hour, Size, Percentage, validate_percentage};
 use validator::Validate;
+
+use crate::disease::{Disease, DiseaseOverride};
+use crate::interventions::InterventionConfig;
+use crate::models::custom_types::{Hour, Size};
+use crate::config::geography_parameters::GeographyParameters;
+use crate::config::population::Population;
+use crate::config::starting_infections::StartingInfections;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Validate)]
 pub struct Config {
@@ -42,46 +46,6 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn get_disease(&self) -> Disease {
-        self.disease
-    }
-
-    pub fn get_starting_infections(&self) -> StartingInfections {
-        self.starting_infections
-    }
-
-    pub fn get_population(&self) -> Population {
-        self.population.clone()
-    }
-
-    // pub fn get_disease_overrides(&self) -> Vec<DiseaseOverride> {
-    //     self.disease_overrides.clone()
-    // }
-
-    pub fn get_grid_size(&self) -> Size {
-        self.geography_parameters.grid_size
-    }
-
-    pub fn get_hours(&self) -> Hour {
-        self.hours
-    }
-
-    pub fn get_interventions(&self) -> Vec<InterventionConfig> {
-        self.interventions.clone()
-    }
-
-    pub fn get_output_file(&self) -> Option<String> {
-        self.output_file.clone()
-    }
-
-    pub fn enable_citizen_state_messages(&self) -> bool {
-        self.enable_citizen_state_messages
-    }
-
-    pub fn get_geography_parameters(&self) -> GeographyParameters {
-        self.geography_parameters.clone()
-    }
-
     #[cfg(test)]
     pub fn new(
         population: Population,
@@ -104,107 +68,60 @@ impl Config {
             starting_infections: StartingInfections::default(),
         }
     }
-}
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Validate)]
-pub struct GeographyParameters {
-    pub grid_size: Size,
-    #[validate(custom = "validate_percentage")]
-    pub hospital_beds_percentage: Percentage,
-}
-
-impl GeographyParameters {
-    #[cfg(test)]
-    pub fn new(grid_size: Size, hospital_beds_percentage: f64) -> GeographyParameters {
-        GeographyParameters { grid_size, hospital_beds_percentage }
-    }
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-pub enum Population {
-    Csv(CsvPopulation),
-    Auto(AutoPopulation),
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-pub struct CsvPopulation {
-    pub file: String,
-    pub cols: Vec<String>,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
-pub struct AutoPopulation {
-    pub number_of_agents: Count,
-    #[validate(custom = "validate_percentage")]
-    pub public_transport_percentage: Percentage,
-    #[validate(custom = "validate_percentage")]
-    pub working_percentage: Percentage,
-}
-
-pub fn read(filename: String) -> Result<Config, Box<dyn Error>> {
-    let reader = File::open(filename)?;
-    let v: Config = serde_json::from_reader(reader)?;
-    Ok(v)
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
-pub struct StartingInfections {
-    infected_mild_asymptomatic: Count,
-    infected_mild_symptomatic: Count,
-    infected_severe: Count,
-    exposed: Count,
-}
-
-impl StartingInfections {
-    #[cfg(test)]
-    pub fn new(mild_asymp: Count, mild_symp: Count, severe: Count, exposed: Count) -> StartingInfections {
-        StartingInfections {
-            infected_mild_asymptomatic: mild_asymp,
-            infected_mild_symptomatic: mild_symp,
-            infected_severe: severe,
-            exposed,
-        }
+    pub fn get_disease(&self) -> Disease {
+        self.disease
     }
 
-    pub fn total(&self) -> Count {
-        self.total_infected() + self.exposed
+    pub fn get_starting_infections(&self) -> &StartingInfections {
+        &self.starting_infections
     }
 
-    pub fn total_infected(&self) -> Count {
-        self.infected_mild_asymptomatic + self.infected_mild_symptomatic + self.infected_severe
+    pub fn get_population(&self) -> &Population {
+        &self.population
     }
 
-    pub fn get_infected_mild_asymptomatic(&self) -> Count {
-        self.infected_mild_asymptomatic
+    pub fn get_grid_size(&self) -> Size {
+        self.geography_parameters.grid_size
     }
 
-    pub fn get_infected_mild_symptomatic(&self) -> Count {
-        self.infected_mild_symptomatic
+    pub fn get_hours(&self) -> Hour {
+        self.hours
     }
 
-    pub fn get_infected_severe(&self) -> Count {
-        self.infected_severe
+    pub fn get_interventions(&self) -> &Vec<InterventionConfig> {
+        &self.interventions
     }
 
-    pub fn get_exposed(&self) -> Count {
-        self.exposed
+    pub fn get_output_file(&self) -> Option<String> {
+        self.output_file.clone()
     }
-}
 
-impl Default for StartingInfections {
-    fn default() -> Self {
-        StartingInfections { infected_mild_asymptomatic: 0, infected_mild_symptomatic: 0, infected_severe: 0, exposed: 1 }
+    pub fn enable_citizen_state_messages(&self) -> bool {
+        self.enable_citizen_state_messages
+    }
+
+    pub fn get_geography_parameters(&self) -> &GeographyParameters {
+        &self.geography_parameters
+    }
+
+    pub fn read(filename: &str) -> Result<Config, Box<dyn Error>> {
+        let reader = File::open(filename)?;
+        let v: Config = serde_json::from_reader(reader)?;
+        Ok(v)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::interventions::vaccination::VaccinateConfig;
+    use crate::config::population::{AutoPopulation, CsvPopulation};
+
+    use super::*;
 
     #[test]
     fn should_read_config_with_csv_population() {
-        let read_config = read(String::from("config/test/csv_pop.json")).unwrap();
+        let read_config = Config::read("config/test/csv_pop.json").unwrap();
 
         let vaccinate = VaccinateConfig::new(5000, 0.2);
         let disease_override = DiseaseOverride::new(
@@ -235,7 +152,7 @@ mod tests {
 
     #[test]
     fn should_read_config_with_auto_population() {
-        let read_config = read(String::from("config/test/auto_pop.json")).unwrap();
+        let read_config = Config::read("config/test/auto_pop.json").unwrap();
 
         let vaccinate = VaccinateConfig::new(5000, 0.2);
 

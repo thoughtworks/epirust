@@ -21,7 +21,7 @@ use rdkafka::{ClientConfig, Message};
 use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
-use crate::custom_types::Hour;
+use crate::models::custom_types::Hour;
 
 use crate::environment;
 

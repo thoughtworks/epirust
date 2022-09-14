@@ -23,13 +23,13 @@ use rdkafka::ClientConfig;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 
 use crate::agent::Citizen;
-use crate::custom_types::Hour;
+use crate::models::custom_types::Hour;
 use crate::environment;
 use crate::geography::{Grid, Point};
 use crate::interventions::intervention_type::InterventionType;
-use crate::listeners::events::citizen_state::CitizenStatesAtHr;
-use crate::listeners::events::counts::Counts;
 use crate::listeners::listener::Listener;
+use crate::models::events::CitizenStatesAtHr;
+use crate::models::events::Counts;
 
 pub struct EventsKafkaProducer {
     sim_id: String,

@@ -24,10 +24,9 @@ extern crate serde_derive;
 extern crate log;
 
 use clap::{App, Arg};
+use crate::config::Config;
 
 use crate::kafka_consumer::KafkaConsumer;
-
-mod constants;
 
 mod agent;
 mod allocation_map;
@@ -41,12 +40,12 @@ mod random_wrapper;
 // mod models;
 mod commute;
 mod config;
-mod custom_types;
 mod disease_state_machine;
 mod environment;
 mod interventions;
 mod kafka_consumer;
 mod kafka_producer;
+mod models;
 mod ticks_consumer;
 mod travel_consumer;
 mod travel_plan;
@@ -103,7 +102,7 @@ async fn main() {
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
 
-        let config = config::read(config_file.to_string()).expect("Failed to read config file");
+        let config = Config::read(config_file).expect("Failed to read config file");
 
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, None, STANDALONE_SIM_ID.to_string());
         epidemiology.run(&config, &run_mode).await;

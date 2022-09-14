@@ -18,10 +18,9 @@
  */
 
 use rand::Rng;
-use serde::Deserialize;
-use crate::custom_types::{Day, Hour, Percentage, validate_percentage};
 use validator::Validate;
 
+use crate::models::custom_types::{Day, Hour, Percentage, validate_percentage};
 use crate::random_wrapper::RandomWrapper;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Validate)]
@@ -98,11 +97,7 @@ impl Disease {
     }
 
     pub fn to_be_hospitalized(&self, infection_day: Day) -> bool {
-        let transmission_rate = self.get_current_transmission_rate(infection_day);
-        if transmission_rate >= self.high_transmission_rate {
-            return true;
-        }
-        false
+        self.get_current_transmission_rate(infection_day) >= self.high_transmission_rate
     }
 
     pub fn get_disease_last_day(&self) -> Day {
@@ -110,10 +105,7 @@ impl Disease {
     }
 
     pub fn to_be_deceased(&self, rng: &mut RandomWrapper) -> bool {
-        if rng.get().gen_bool(self.death_rate) {
-            return true;
-        }
-        false
+        rng.get().gen_bool(self.death_rate)
     }
 
     pub fn get_percentage_asymptomatic_population(&self) -> Percentage {

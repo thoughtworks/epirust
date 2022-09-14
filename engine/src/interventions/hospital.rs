@@ -17,11 +17,11 @@
  *
  */
 
-use crate::listeners::events::counts::Counts;
 use crate::interventions::InterventionConfig;
 use crate::interventions::intervention_type::InterventionType;
 use crate::config::Config;
-use crate::custom_types::Count;
+use crate::models::custom_types::Count;
+use crate::models::events::Counts;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 pub struct BuildNewHospitalConfig {

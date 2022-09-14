@@ -18,15 +18,16 @@
  */
 
 use plotters::prelude::*;
+use std::collections::HashMap;
+use std::fs::File;
 
-use crate::{agent, constants};
+use crate::agent;
 use crate::agent::{Citizen, CitizensData, PopulationRecord};
 use crate::config::{AutoPopulation, CsvPopulation, StartingInfections};
 use crate::geography::{Area, Point};
 use crate::random_wrapper::RandomWrapper;
-use std::fs::File;
-use std::collections::HashMap;
-use crate::custom_types::{CoOrdinate, Count, Size};
+use crate::models::constants;
+use crate::models::custom_types::{CoOrdinate, Count, Size};
 use crate::kafka_consumer::TravelPlanConfig;
 
 #[derive(Serialize)]

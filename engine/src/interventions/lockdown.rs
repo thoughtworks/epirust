@@ -17,13 +17,14 @@
  *
  */
 
-use crate::config::Config;
-use crate::constants;
-use crate::interventions::InterventionConfig::Lockdown;
-use crate::listeners::events::counts::Counts;
-use crate::interventions::intervention_type::InterventionType;
 use validator::{Validate};
-use crate::custom_types::{Count, Hour, Percentage, validate_percentage};
+
+use crate::config::Config;
+use crate::interventions::InterventionConfig::Lockdown;
+use crate::interventions::intervention_type::InterventionType;
+use crate::models::constants;
+use crate::models::custom_types::{Count, Hour, Percentage, validate_percentage};
+use crate::models::events::Counts;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
 pub struct LockdownConfig {

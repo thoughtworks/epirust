@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+use rand::Rng;
+use rand::seq::SliceRandom;
 
 use crate::disease::Disease;
 use crate::random_wrapper::RandomWrapper;
-use rand::Rng;
-use crate::constants;
-use rand::seq::SliceRandom;
-use crate::custom_types::{Day, Hour};
+use crate::models::constants;
+use crate::models::custom_types::{Day, Hour};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum State {

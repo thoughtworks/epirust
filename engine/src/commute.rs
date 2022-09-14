@@ -18,8 +18,9 @@
  */
 
 use uuid::Uuid;
-use crate::constants;
-use crate::custom_types::Hour;
+
+use crate::models::constants;
+use crate::models::custom_types::Hour;
 use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::{Area, Point};
 

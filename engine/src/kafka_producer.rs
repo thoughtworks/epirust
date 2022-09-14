@@ -20,11 +20,11 @@
 use rdkafka::ClientConfig;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 
-use crate::commute::CommutersByRegion;
-use crate::constants::SendResult;
-use crate::custom_types::Hour;
 use crate::environment;
-use crate::listeners::events::counts::Counts;
+use crate::commute::CommutersByRegion;
+use crate::models::custom_types::SendResult;
+use crate::models::events::Counts;
+use crate::models::custom_types::Hour;
 use crate::travel_plan::MigratorsByRegion;
 
 const TICK_ACKS_TOPIC: &str = "ticks_ack";

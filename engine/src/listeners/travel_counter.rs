@@ -16,10 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+use std::any::Any;
 
 use crate::listeners::listener::Listener;
-use std::any::Any;
-use crate::custom_types::Hour;
+use crate::models::custom_types::Hour;
 use crate::disease_state_machine::State;
 use crate::environment;
 use crate::travel_plan::MigratorsByRegion;

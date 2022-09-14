@@ -25,16 +25,16 @@ use serde::de::Unexpected;
 use uuid::Uuid;
 
 use crate::allocation_map::AgentLocationMap;
-use crate::config::StartingInfections;
-use crate::constants;
-use crate::custom_types::{Count, Day, Hour, Percentage};
+use crate::models::custom_types::{Count, Day, Hour, Percentage};
 use crate::disease::Disease;
 use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::{Area, Grid, Point};
 use crate::random_wrapper::RandomWrapper;
 use crate::travel_plan::Migrator;
 use crate::commute::{CommutePlan, Commuter};
+use crate::config::StartingInfections;
 use crate::kafka_consumer::TravelPlanConfig;
+use crate::models::constants;
 
 pub struct CitizensData<'a> {
     number_of_agents: Count,

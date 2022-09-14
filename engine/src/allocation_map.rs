@@ -24,12 +24,12 @@ use rand::seq::IteratorRandom;
 
 use crate::agent::Citizen;
 use crate::commute::Commuter;
-use crate::constants;
-use crate::custom_types::{CoOrdinate, Count, Hour, Size};
+use crate::models::constants;
+use crate::models::custom_types::{CoOrdinate, Count, Hour, Size};
 use crate::disease_state_machine::State;
 use crate::geography::{Area, Grid};
 use crate::geography::Point;
-use crate::listeners::events::counts::Counts;
+use crate::models::events::Counts;
 use crate::random_wrapper::RandomWrapper;
 use crate::travel_plan::Migrator;
 

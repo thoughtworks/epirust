@@ -17,11 +17,12 @@
  *
  */
 
+use uuid::Uuid;
+
 use crate::agent::Citizen;
 use crate::geography::Point;
-use uuid::Uuid;
 use crate::commute::Commuter;
-use crate::custom_types::Count;
+use crate::models::custom_types::Count;
 use crate::disease_state_machine::DiseaseStateMachine;
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]

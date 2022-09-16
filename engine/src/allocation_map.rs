@@ -56,7 +56,11 @@ impl AgentLocationMap {
     }
 
     pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point {
-        return if self.is_cell_vacant(&new_cell) { new_cell } else { old_cell };
+        if self.is_cell_vacant(&new_cell) {
+            new_cell
+        } else {
+            old_cell
+        }
     }
 
     pub fn goto_hospital(&self, hospital_area: &Area, cell: Point, citizen: &mut Citizen) -> (bool, Point) {

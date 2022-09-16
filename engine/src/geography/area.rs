@@ -17,6 +17,7 @@
  *
  */
 
+use std::hash::{Hash, Hasher};
 use rand::Rng;
 use rand::seq::IteratorRandom;
 
@@ -24,11 +25,25 @@ use crate::models::custom_types::Count;
 use crate::geography::Point;
 use crate::random_wrapper::RandomWrapper;
 
-#[derive(Clone, Hash, Eq, Debug, Serialize, Deserialize)]
+#[derive(Clone, Eq, Debug, Serialize, Deserialize)]
 pub struct Area {
     pub location_id: String,
     pub start_offset: Point,
     pub end_offset: Point,
+}
+
+// We need to ignore the iter_index when comparing
+impl PartialEq for Area {
+    fn eq(&self, other: &Self) -> bool {
+        self.start_offset == other.start_offset && self.end_offset == other.end_offset
+    }
+}
+
+impl Hash for Area {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.start_offset.hash(state);
+        self.end_offset.hash(state);
+    }
 }
 
 impl Area {
@@ -72,13 +87,6 @@ impl Area {
 
     pub fn get_number_of_cells(&self) -> Count {
         ((self.end_offset.x - self.start_offset.x) * (self.end_offset.y - self.start_offset.y)) as Count
-    }
-}
-
-// We need to ignore the iter_index when comparing
-impl PartialEq for Area {
-    fn eq(&self, other: &Self) -> bool {
-        self.start_offset == other.start_offset && self.end_offset == other.end_offset
     }
 }
 

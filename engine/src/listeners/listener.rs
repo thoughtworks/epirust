@@ -74,7 +74,7 @@ impl Listeners {
         self.listeners.iter_mut().for_each(|l| l.intervention_applied(_at_hour, _intervention))
     }
 
-    pub fn outgoing_migrators_added(&mut self, hr: Hour, travellers: &Vec<MigratorsByRegion>) {
+    pub fn outgoing_migrators_added(&mut self, hr: Hour, travellers: &[MigratorsByRegion]) {
         self.listeners.iter_mut().for_each(|l| l.outgoing_migrators_added(hr, travellers));
     }
 }

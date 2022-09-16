@@ -74,9 +74,9 @@ impl Epidemiology {
         let mut grid = geography::define_geography(config.get_grid_size(), sim_id.clone());
         let mut rng = RandomWrapper::new();
         let (start_locations, agent_list) = match config.get_population() {
-            Population::Csv(csv_pop) => grid.read_population(&csv_pop, &start_infections, &mut rng, &sim_id),
+            Population::Csv(csv_pop) => grid.read_population(csv_pop, start_infections, &mut rng, &sim_id),
             Population::Auto(auto_pop) => {
-                grid.generate_population(&auto_pop, &start_infections, &mut rng, &travel_plan_config, sim_id.clone())
+                grid.generate_population(auto_pop, start_infections, &mut rng, &travel_plan_config, sim_id.clone())
             }
         };
         grid.resize_hospital(
@@ -207,7 +207,7 @@ impl Epidemiology {
     pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
-        let mut counts_at_hr = Epidemiology::counts_at_start(population, &config.get_starting_infections());
+        let mut counts_at_hr = Epidemiology::counts_at_start(population, config.get_starting_infections());
         let mut rng = RandomWrapper::new();
 
         let mut interventions = self.init_interventions(config, &mut rng);
@@ -439,7 +439,7 @@ impl Epidemiology {
                     &mut outgoing,
                     &mut outgoing_commuters,
                     config.enable_citizen_state_messages(),
-                    Some(&travel_plan_config),
+                    Some(travel_plan_config),
                     engine_id,
                 );
                 debug!("{}: Simulation finished for hour: {}", engine_id, simulation_hour);
@@ -476,7 +476,7 @@ impl Epidemiology {
 
             if is_commute_enabled {
                 let commute_start_time = Instant::now();
-                let received_commuters = Epidemiology::receive_commuters(tick, &mut commute_stream, &commute_plan, &engine_id);
+                let received_commuters = Epidemiology::receive_commuters(tick, &mut commute_stream, &commute_plan, engine_id);
                 let (mut incoming_commuters,) = join!(received_commuters);
                 total_commute_sync_time += commute_start_time.elapsed().as_millis();
                 info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
@@ -639,9 +639,9 @@ impl Epidemiology {
         }
     }
 
-    fn send_commuters(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
-        if tick.is_some() {
-            let hour = tick.unwrap().hour() % 24;
+    fn send_commuters(tick_op: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<CommutersByRegion>) {
+        if let Some(tick) = tick_op {
+            let hour = tick.hour() % 24;
             if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
                 producer.send_commuters(outgoing);
             }

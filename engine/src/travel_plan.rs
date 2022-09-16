@@ -89,10 +89,7 @@ impl EngineMigrationPlan {
         }
     }
 
-    pub fn alloc_outgoing_to_regions(
-        &self,
-        outgoing: &Vec<(Point, Migrator)>,
-    ) -> (Vec<MigratorsByRegion>, Vec<(Point, Migrator)>) {
+    pub fn alloc_outgoing_to_regions(&self, outgoing: &[(Point, Migrator)]) -> (Vec<MigratorsByRegion>, Vec<(Point, Migrator)>) {
         let mut migrators: Vec<Migrator> = outgoing.iter().map(|x| x.1).collect();
         let total_outgoing = migrators.len();
         let outgoing_by_region = match &self.migration_plan {

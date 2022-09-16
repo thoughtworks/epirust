@@ -21,4 +21,5 @@
 
 cargo build || exit
 cargo fmt --check || exit
+cargo clippy
 cargo test || exit

@@ -611,8 +611,8 @@ pub fn citizen_factory(
 
     set_starting_infections(&mut agent_list, ctz_data.starting_infections, rng);
 
-    if commute_plan.is_some() {
-        update_commuters(&mut agent_list, commute_plan.unwrap(), ctz_data.region);
+    if let Some(cp) = commute_plan {
+        update_commuters(&mut agent_list, cp, ctz_data.region);
     }
 
     agent_list

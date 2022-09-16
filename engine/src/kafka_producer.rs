@@ -49,7 +49,7 @@ impl KafkaProducer {
     }
 
     pub fn send_ack<'a>(&mut self, tick_string: &'a String) -> SendResult<'a> {
-        let record: BaseRecord<String, String> = BaseRecord::to(TICK_ACKS_TOPIC).payload(&tick_string);
+        let record: BaseRecord<String, String> = BaseRecord::to(TICK_ACKS_TOPIC).payload(tick_string);
         self.producer.send(record)
     }
 

@@ -26,6 +26,7 @@ use crate::models::custom_types::SendResult;
 use crate::models::events::Counts;
 use crate::models::custom_types::Hour;
 use crate::travel_plan::MigratorsByRegion;
+use crate::utils::SendRecord;
 
 const TICK_ACKS_TOPIC: &str = "ticks_ack";
 pub const MIGRATION_TOPIC: &str = "migration_";
@@ -58,7 +59,7 @@ impl KafkaProducer {
             trace!("Sending migrators: {} to region: {}", payload, out_region.to_engine_id());
             let topic = &*format!("{}{}", MIGRATION_TOPIC, out_region.to_engine_id());
             let record: BaseRecord<String, String> = BaseRecord::to(topic).payload(&payload);
-            self.producer.send(record).expect("TODO: panic message");
+            self.producer.send_record(record);
         }
     }
 
@@ -69,7 +70,7 @@ impl KafkaProducer {
             debug!("Sending commuters: {} to region: {}", out_region.commuters.len(), out_region.to_engine_id());
             let topic = &*format!("{}{}", COMMUTE_TOPIC, out_region.to_engine_id());
             let record: BaseRecord<String, String> = BaseRecord::to(topic).payload(&payload);
-            self.producer.send(record).expect("TODO: panic message");
+            self.producer.send_record(record);
             //     match result.await {
             //         Ok(d) => {
             //             match d {

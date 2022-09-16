@@ -49,6 +49,7 @@ mod models;
 mod ticks_consumer;
 mod travel_consumer;
 mod travel_plan;
+mod utils;
 
 const STANDALONE_SIM_ID: &str = "0";
 

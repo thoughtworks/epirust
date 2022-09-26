@@ -30,7 +30,7 @@ use crate::models::constants;
 use crate::models::custom_types::{CoOrdinate, Count, Size};
 use crate::kafka_consumer::TravelPlanConfig;
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Grid {
     pub grid_size: Size,
     pub housing_area: Area,

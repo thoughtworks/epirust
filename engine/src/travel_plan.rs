@@ -19,7 +19,7 @@
 
 use uuid::Uuid;
 
-use crate::agent::Citizen;
+use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::commute::Commuter;
 use crate::models::custom_types::Count;

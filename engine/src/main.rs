@@ -28,8 +28,8 @@ use crate::config::Config;
 
 use crate::kafka_consumer::KafkaConsumer;
 
-mod agent;
 mod allocation_map;
+mod citizen;
 mod disease;
 mod epidemiology_simulation;
 mod geography;

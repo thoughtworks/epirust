@@ -24,7 +24,7 @@ use serde::{de, Deserialize, Deserializer};
 use serde::de::Unexpected;
 use uuid::Uuid;
 
-use crate::allocation_map::AgentLocationMap;
+use crate::allocation_map::CitizenLocationMap;
 use crate::models::custom_types::{Count, Day, Hour, Percentage};
 use crate::disease::Disease;
 use crate::disease_state_machine::DiseaseStateMachine;
@@ -282,7 +282,7 @@ impl Citizen {
         cell: Point,
         simulation_hour: Hour,
         grid: &Grid,
-        map: &AgentLocationMap,
+        map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
         disease: &Disease,
     ) -> Point {
@@ -294,7 +294,7 @@ impl Citizen {
         cell: Point,
         simulation_hour: Hour,
         grid: &Grid,
-        map: &AgentLocationMap,
+        map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
         disease: &Disease,
     ) -> Point {
@@ -333,7 +333,7 @@ impl Citizen {
         hour_of_day: Hour,
         simulation_hr: Hour,
         grid: &Grid,
-        map: &AgentLocationMap,
+        map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
         disease: &Disease,
     ) -> Point {
@@ -426,7 +426,7 @@ impl Citizen {
     fn update_infection_dynamics(
         &mut self,
         cell: Point,
-        map: &AgentLocationMap,
+        map: &CitizenLocationMap,
         sim_hr: Hour,
         rng: &mut RandomWrapper,
         disease: &Disease,
@@ -442,12 +442,12 @@ impl Citizen {
         }
     }
 
-    fn hospitalize(&mut self, cell: Point, hospital: &Area, map: &AgentLocationMap, disease: &Disease) -> Point {
+    fn hospitalize(&mut self, cell: Point, hospital: &Area, map: &CitizenLocationMap, disease: &Disease) -> Point {
         let mut new_cell = cell;
         if self.state_machine.is_infected() && !self.hospitalized {
             let to_be_hospitalized = self.state_machine.hospitalize(disease, self.immunity);
             if to_be_hospitalized {
-                let (is_hospitalized, new_location) = AgentLocationMap::goto_hospital(map, hospital, cell, self);
+                let (is_hospitalized, new_location) = CitizenLocationMap::goto_hospital(map, hospital, cell, self);
                 new_cell = new_location;
                 if is_hospitalized {
                     self.hospitalized = true;
@@ -469,7 +469,14 @@ impl Citizen {
         }
     }
 
-    fn update_exposure(&mut self, cell: Point, map: &AgentLocationMap, sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
+    fn update_exposure(
+        &mut self,
+        cell: Point,
+        map: &CitizenLocationMap,
+        sim_hr: Hour,
+        rng: &mut RandomWrapper,
+        disease: &Disease,
+    ) {
         if self.state_machine.is_susceptible() && !self.work_quarantined && !self.vaccinated {
             let neighbours = self.current_area.get_neighbors_of(cell);
 
@@ -485,7 +492,7 @@ impl Citizen {
         }
     }
 
-    fn goto_area(&mut self, target_area: Area, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
+    fn goto_area(&mut self, target_area: Area, map: &CitizenLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
         //TODO: Refactor - Jayanta
         // If agent is working and current_area is work, target area is home and symptomatic then allow movement
         let mut override_movement = false;
@@ -515,7 +522,7 @@ impl Citizen {
         self.move_agent_from(map, cell, rng)
     }
 
-    fn deceased(&mut self, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper, disease: &Disease) -> Point {
+    fn deceased(&mut self, map: &CitizenLocationMap, cell: Point, rng: &mut RandomWrapper, disease: &Disease) -> Point {
         let mut new_cell = cell;
         if self.state_machine.is_infected() {
             let result = self.state_machine.decease(rng, disease);
@@ -529,7 +536,7 @@ impl Citizen {
         new_cell
     }
 
-    fn move_agent_from(&mut self, map: &AgentLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
+    fn move_agent_from(&mut self, map: &CitizenLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
         if !self.can_move() {
             return cell;
         }

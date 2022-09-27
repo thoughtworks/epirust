@@ -22,7 +22,7 @@ use std::any::Any;
 use rdkafka::ClientConfig;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 
-use crate::agent::Citizen;
+use crate::citizen::Citizen;
 use crate::models::custom_types::Hour;
 use crate::environment;
 use crate::geography::{Grid, Point};

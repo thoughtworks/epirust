@@ -19,7 +19,7 @@
 
 use std::any::Any;
 
-use crate::agent::Citizen;
+use crate::citizen::Citizen;
 use crate::geography::{Point, Grid};
 use crate::interventions::intervention_type::InterventionType;
 use crate::models::events::Counts;

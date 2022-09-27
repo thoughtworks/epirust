@@ -23,7 +23,7 @@ use fnv::FnvHashMap;
 use rand::Rng;
 use rand::seq::IteratorRandom;
 
-use crate::agent::Citizen;
+use crate::citizen::Citizen;
 use crate::commute::Commuter;
 use crate::Config;
 use crate::disease::Disease;
@@ -41,13 +41,13 @@ use crate::random_wrapper::RandomWrapper;
 use crate::travel_plan::Migrator;
 
 #[derive(Clone)]
-pub struct AgentLocationMap {
+pub struct CitizenLocationMap {
     pub grid: Grid,
-    agent_cells: FnvHashMap<Point, Citizen>,
-    next_cells: FnvHashMap<Point, Citizen>,
+    current_locations: FnvHashMap<Point, Citizen>,
+    upcoming_locations: FnvHashMap<Point, Citizen>,
 }
 
-impl AgentLocationMap {
+impl CitizenLocationMap {
     pub fn new(grid: Grid, agent_list: &[Citizen], points: &[Point]) -> Self {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
         let mut map: FnvHashMap<Point, Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
@@ -56,10 +56,10 @@ impl AgentLocationMap {
         });
 
         let capacity = grid.grid_size as usize;
-        AgentLocationMap {
+        CitizenLocationMap {
             grid,
-            agent_cells: map,
-            next_cells: FnvHashMap::with_capacity_and_hasher(capacity, Default::default()),
+            current_locations: map,
+            upcoming_locations: FnvHashMap::with_capacity_and_hasher(capacity, Default::default()),
         }
     }
 
@@ -78,11 +78,11 @@ impl AgentLocationMap {
         region_name: &String,
     ) {
         csv_record.clear();
-        for (cell, agent) in self.agent_cells.iter() {
+        for (cell, agent) in self.current_locations.iter() {
             let mut current_agent = agent.clone();
             let infection_status = current_agent.state_machine.is_infected();
             let point = current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, rng, disease);
-            let agent_option = self.next_cells.get(&point);
+            let agent_option = self.upcoming_locations.get(&point);
             let new_location = match agent_option {
                 Some(_) => *cell, //occupied
                 _ => point,
@@ -135,15 +135,15 @@ impl AgentLocationMap {
             if publish_citizen_state {
                 listeners.citizen_state_updated(simulation_hour, &current_agent, &new_location);
             }
-            self.next_cells.insert(new_location, current_agent.clone());
+            self.upcoming_locations.insert(new_location, current_agent.clone());
         }
         self.swap();
         assert_eq!(csv_record.total(), self.current_population());
     }
 
     fn swap(&mut self) {
-        self.agent_cells.clear();
-        std::mem::swap(&mut self.agent_cells, &mut self.next_cells);
+        self.current_locations.clear();
+        std::mem::swap(&mut self.current_locations, &mut self.upcoming_locations);
     }
 
     pub fn move_agent(&self, old_cell: Point, new_cell: Point) -> Point {
@@ -163,7 +163,7 @@ impl AgentLocationMap {
     }
 
     pub fn get_agent_for(&self, cell: &Point) -> Option<&Citizen> {
-        self.agent_cells.get(cell)
+        self.current_locations.get(cell)
     }
 
     pub fn is_point_in_grid(&self, point: &Point) -> bool {
@@ -172,7 +172,7 @@ impl AgentLocationMap {
     }
 
     pub fn is_cell_vacant(&self, cell: &Point) -> bool {
-        !self.agent_cells.contains_key(cell)
+        !self.current_locations.contains_key(cell)
     }
 
     pub fn remove_migrators(&mut self, outgoing: &Vec<(Point, Migrator)>, counts: &mut Counts) {
@@ -181,8 +181,8 @@ impl AgentLocationMap {
         }
         debug!("Removing {} outgoing travellers", outgoing.len());
         for (point, migrator) in outgoing {
-            AgentLocationMap::decrement_counts(&migrator.state_machine.state, counts);
-            match self.agent_cells.remove(point) {
+            CitizenLocationMap::decrement_counts(&migrator.state_machine.state, counts);
+            match self.current_locations.remove(point) {
                 None => {
                     panic!(
                         "Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
@@ -205,8 +205,8 @@ impl AgentLocationMap {
         }
         debug!("Removing {} outgoing commuters", outgoing.len());
         for (point, commuter) in outgoing {
-            AgentLocationMap::decrement_counts(&commuter.state_machine.state, counts);
-            match self.agent_cells.remove(point) {
+            CitizenLocationMap::decrement_counts(&commuter.state_machine.state, counts);
+            match self.current_locations.remove(point) {
                 None => {
                     panic!(
                         "Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
@@ -258,8 +258,8 @@ impl AgentLocationMap {
                 self.grid.add_office_occupant(&office.clone())
             }
 
-            AgentLocationMap::increment_counts(&citizen.state_machine.state, counts);
-            let result = self.agent_cells.insert(migration_location, citizen);
+            CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
+            let result = self.current_locations.insert(migration_location, citizen);
             assert!(result.is_none());
         }
     }
@@ -307,9 +307,9 @@ impl AgentLocationMap {
 
             let citizen = Citizen::from_commuter(commuter, transport_location, self.grid.housing_area.clone(), work_area);
 
-            AgentLocationMap::increment_counts(&citizen.state_machine.state, counts);
+            CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
 
-            let result = self.agent_cells.insert(citizen.transport_location, citizen);
+            let result = self.current_locations.insert(citizen.transport_location, citizen);
             trace!("citizen inserted");
             assert!(result.is_none());
             trace!("assert passes");
@@ -353,30 +353,32 @@ impl AgentLocationMap {
 
     fn select_starting_points(&self, area: &Area, no_of_incoming: usize, rng: &mut RandomWrapper) -> Vec<Point> {
         let empty_spaces = (area.start_offset.x..area.end_offset.x).flat_map(|x| {
-            (area.start_offset.y..area.end_offset.y).map(move |y| Point { x, y }).filter(|z| !self.agent_cells.contains_key(z))
+            (area.start_offset.y..area.end_offset.y)
+                .map(move |y| Point { x, y })
+                .filter(|z| !self.current_locations.contains_key(z))
         });
 
         empty_spaces.choose_multiple(rng.get(), no_of_incoming)
     }
 
     pub fn current_population(&self) -> Count {
-        self.agent_cells.len() as Count
+        self.current_locations.len() as Count
     }
 
     pub fn iter_mut(&mut self) -> IterMut<'_, Point, Citizen> {
-        self.agent_cells.iter_mut()
+        self.current_locations.iter_mut()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::agent::WorkStatus;
+    use crate::citizen::WorkStatus;
     use crate::geography::define_geography;
     use crate::random_wrapper::RandomWrapper;
 
     use super::*;
 
-    fn before_each() -> AgentLocationMap {
+    fn before_each() -> CitizenLocationMap {
         let mut rng = RandomWrapper::new();
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
         let engine_id = "engine1".to_string();
@@ -397,7 +399,7 @@ mod tests {
             Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, working, &mut rng),
         ];
         let grid = define_geography(5, engine_id);
-        AgentLocationMap::new(grid, &agents, &points)
+        CitizenLocationMap::new(grid, &agents, &points)
     }
 
     #[test]
@@ -428,7 +430,7 @@ mod tests {
         let citizen2 = Citizen::new(home_locations[1].clone(), work_locations[0].clone(), points[0], true, working, &mut rng);
         let agents = vec![citizen1.clone(), citizen2];
         let grid = define_geography(5, engine_id.clone());
-        let map = AgentLocationMap::new(grid, &agents, &points);
+        let map = CitizenLocationMap::new(grid, &agents, &points);
         let hospital = Area::new(engine_id, Point::new(2, 2), Point::new(4, 4));
         let result = map.goto_hospital(&hospital, points[0], &mut citizen1);
 
@@ -451,7 +453,7 @@ mod tests {
         let citizen4 = Citizen::new(home, work, points[0], false, work_status, &mut rng);
         let agents = vec![citizen1.clone(), citizen2, citizen3, citizen4];
         let grid = define_geography(5, engine_id.clone());
-        let map = AgentLocationMap::new(grid, &agents, &points);
+        let map = CitizenLocationMap::new(grid, &agents, &points);
         let hospital = Area::new(engine_id, Point::new(0, 0), Point::new(1, 1));
 
         let result = map.goto_hospital(&hospital, points[0], &mut citizen1.clone());

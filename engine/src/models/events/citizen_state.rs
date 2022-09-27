@@ -18,7 +18,7 @@
  */
 use uuid::Uuid;
 
-use crate::agent::Citizen;
+use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::disease_state_machine::State;
 use crate::models::custom_types::Hour;
@@ -71,7 +71,7 @@ impl CitizenStatesAtHr {
 mod tests {
     use crate::geography::Area;
     use crate::random_wrapper::RandomWrapper;
-    use crate::agent::WorkStatus;
+    use crate::citizen::WorkStatus;
 
     use super::*;
 

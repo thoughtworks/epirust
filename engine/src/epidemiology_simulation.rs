@@ -27,8 +27,8 @@ use rdkafka::consumer::MessageStream;
 use time::OffsetDateTime;
 
 use crate::{RunMode, ticks_consumer, travel_consumer};
-use crate::agent::Citizen;
-use crate::allocation_map::AgentLocationMap;
+use crate::citizen::Citizen;
+use crate::allocation_map::CitizenLocationMap;
 use crate::commute::{CommutePlan, Commuter, CommutersByRegion};
 use crate::config::Config;
 use crate::config::Population;
@@ -57,7 +57,7 @@ use crate::ticks_consumer::Tick;
 use crate::travel_plan::{EngineMigrationPlan, MigrationPlan, Migrator, MigratorsByRegion};
 
 pub struct Epidemiology {
-    pub agent_location_map: AgentLocationMap,
+    pub agent_location_map: CitizenLocationMap,
     pub disease: Disease,
     pub sim_id: String,
     pub travel_plan_config: Option<TravelPlanConfig>,
@@ -83,7 +83,7 @@ impl Epidemiology {
             sim_id.clone(),
         );
 
-        let agent_location_map = AgentLocationMap::new(grid, &agent_list, &start_locations);
+        let agent_location_map = CitizenLocationMap::new(grid, &agent_list, &start_locations);
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         Epidemiology { travel_plan_config, agent_location_map, disease, sim_id }
@@ -647,7 +647,7 @@ impl Epidemiology {
     pub fn apply_vaccination_intervention(
         vaccinations: &VaccinateIntervention,
         counts: &Counts,
-        write_buffer_reference: &mut AgentLocationMap,
+        write_buffer_reference: &mut CitizenLocationMap,
         rng: &mut RandomWrapper,
         listeners: &mut Listeners,
     ) {
@@ -658,7 +658,7 @@ impl Epidemiology {
         };
     }
 
-    fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut AgentLocationMap, rng: &mut RandomWrapper) {
+    fn vaccinate(vaccination_percentage: f64, write_buffer_reference: &mut CitizenLocationMap, rng: &mut RandomWrapper) {
         write_buffer_reference
             .iter_mut()
             .filter(|(_v, agent)| agent.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage))
@@ -681,7 +681,7 @@ impl Epidemiology {
         }
     }
 
-    pub fn lock_city(hr: Hour, write_buffer_reference: &mut AgentLocationMap) {
+    pub fn lock_city(hr: Hour, write_buffer_reference: &mut CitizenLocationMap) {
         info!("Locking the city. Hour: {}", hr);
         write_buffer_reference
             .iter_mut()
@@ -689,7 +689,7 @@ impl Epidemiology {
             .for_each(|(_, agent)| agent.set_isolation(true));
     }
 
-    pub fn unlock_city(hr: Hour, write_buffer_reference: &mut AgentLocationMap) {
+    pub fn unlock_city(hr: Hour, write_buffer_reference: &mut CitizenLocationMap) {
         info!("Unlocking city. Hour: {}", hr);
         write_buffer_reference
             .iter_mut()

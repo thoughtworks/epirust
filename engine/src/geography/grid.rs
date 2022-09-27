@@ -21,8 +21,8 @@ use plotters::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
 
-use crate::agent;
-use crate::agent::{Citizen, CitizensData, PopulationRecord};
+use crate::citizen;
+use crate::citizen::{Citizen, CitizensData, PopulationRecord};
 use crate::config::{AutoPopulation, CsvPopulation, StartingInfections};
 use crate::geography::{Area, Point};
 use crate::random_wrapper::RandomWrapper;
@@ -78,7 +78,7 @@ impl Grid {
             start_infections,
         );
 
-        let agent_list = agent::citizen_factory(ctz_data, travel_plan_config, rng);
+        let agent_list = citizen::citizen_factory(ctz_data, travel_plan_config, rng);
         // info!("agent list - {:?} ", agent_list);
         debug!("Finished creating agent list");
 
@@ -195,7 +195,7 @@ impl Grid {
         }
 
         let (home_loc, mut agents_in_order) = self.set_start_locations_and_occupancies(rng, &citizens, region_name);
-        agent::set_starting_infections(&mut agents_in_order, starting_infections, rng);
+        citizen::set_starting_infections(&mut agents_in_order, starting_infections, rng);
 
         self.draw(&home_loc, &self.houses, &self.offices);
         (home_loc, agents_in_order)

@@ -10,7 +10,8 @@ use rdkafka::message::Message;
 
 use crate::config::Config;
 use crate::epidemiology_simulation::Epidemiology;
-use crate::{RunMode, environment};
+use crate::RunMode;
+use crate::utils::environment;
 use crate::commute::{Commute, CommutePlan};
 
 pub struct KafkaConsumer<'a> {

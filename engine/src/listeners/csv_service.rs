@@ -27,7 +27,7 @@ use std::path::PathBuf;
 use serde::Serialize;
 
 use crate::listeners::listener::Listener;
-use crate::environment;
+use crate::utils::environment;
 use crate::models::events::Counts;
 
 pub struct CsvListener {

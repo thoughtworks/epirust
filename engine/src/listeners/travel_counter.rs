@@ -21,7 +21,7 @@ use std::any::Any;
 use crate::listeners::listener::Listener;
 use crate::models::custom_types::Hour;
 use crate::disease_state_machine::State;
-use crate::environment;
+use crate::utils::environment;
 use crate::travel_plan::MigratorsByRegion;
 
 #[derive(Serialize, Debug, PartialEq)]

@@ -70,7 +70,7 @@ impl CitizenStatesAtHr {
 #[cfg(test)]
 mod tests {
     use crate::geography::Area;
-    use crate::random_wrapper::RandomWrapper;
+    use crate::utils::RandomWrapper;
     use crate::citizen::WorkStatus;
 
     use super::*;

@@ -21,9 +21,9 @@ use rdkafka::{ClientConfig, Message};
 use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
-use crate::models::custom_types::Hour;
 
-use crate::environment;
+use crate::models::custom_types::Hour;
+use crate::utils::environment;
 
 const TICKS_TOPIC: &str = "ticks";
 

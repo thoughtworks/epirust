@@ -22,7 +22,7 @@ use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
 
-use crate::environment;
+use crate::utils::environment;
 use crate::commute::CommutersByRegion;
 use crate::travel_plan::MigratorsByRegion;
 

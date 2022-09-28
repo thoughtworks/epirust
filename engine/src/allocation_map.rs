@@ -37,7 +37,7 @@ use crate::interventions::Interventions;
 use crate::kafka_consumer::TravelPlanConfig;
 use crate::listeners::listener::Listeners;
 use crate::models::events::Counts;
-use crate::random_wrapper::RandomWrapper;
+use crate::utils::RandomWrapper;
 use crate::travel_plan::Migrator;
 
 #[derive(Clone)]
@@ -374,7 +374,7 @@ impl CitizenLocationMap {
 mod tests {
     use crate::citizen::WorkStatus;
     use crate::geography::define_geography;
-    use crate::random_wrapper::RandomWrapper;
+    use crate::utils::RandomWrapper;
 
     use super::*;
 

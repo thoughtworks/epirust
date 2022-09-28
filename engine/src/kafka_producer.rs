@@ -20,13 +20,12 @@
 use rdkafka::ClientConfig;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 
-use crate::environment;
 use crate::commute::CommutersByRegion;
 use crate::models::custom_types::SendResult;
 use crate::models::events::Counts;
 use crate::models::custom_types::Hour;
 use crate::travel_plan::MigratorsByRegion;
-use crate::utils::SendRecord;
+use crate::utils::{environment, SendRecord};
 
 const TICK_ACKS_TOPIC: &str = "ticks_ack";
 pub const MIGRATION_TOPIC: &str = "migration_";

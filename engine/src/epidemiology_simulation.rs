@@ -52,7 +52,7 @@ use crate::listeners::travel_counter::TravelCounter;
 use crate::models::constants;
 use crate::models::custom_types::{Count, Hour};
 use crate::models::events::Counts;
-use crate::random_wrapper::RandomWrapper;
+use crate::utils::RandomWrapper;
 use crate::ticks_consumer::Tick;
 use crate::travel_plan::{EngineMigrationPlan, MigrationPlan, Migrator, MigratorsByRegion};
 

@@ -25,7 +25,7 @@ use crate::citizen;
 use crate::citizen::{Citizen, CitizensData, PopulationRecord};
 use crate::config::{AutoPopulation, CsvPopulation, StartingInfections};
 use crate::geography::{Area, Point};
-use crate::random_wrapper::RandomWrapper;
+use crate::utils::RandomWrapper;
 use crate::models::constants;
 use crate::models::custom_types::{CoOrdinate, Count, Size};
 use crate::kafka_consumer::TravelPlanConfig;

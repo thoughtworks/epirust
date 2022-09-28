@@ -17,9 +17,27 @@
  *
  */
 
-pub mod environment;
-mod random_wrapper;
-mod send_record;
+use serde::{de, Deserialize, Deserializer};
+use serde::de::Unexpected;
 
-pub use send_record::SendRecord;
-pub use random_wrapper::RandomWrapper;
+#[derive(Deserialize)]
+pub struct PopulationRecord {
+    pub ind: u32,
+    pub age: String,
+    #[serde(deserialize_with = "bool_from_string")]
+    pub working: bool,
+    #[serde(deserialize_with = "bool_from_string")]
+    pub pub_transport: bool,
+}
+
+/// Deserialize bool from String with custom value mapping
+fn bool_from_string<'de, D>(deserializer: D) -> Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    match String::deserialize(deserializer)?.as_ref() {
+        "True" => Ok(true),
+        "False" => Ok(false),
+        other => Err(de::Error::invalid_value(Unexpected::Str(other), &"True or False")),
+    }
+}

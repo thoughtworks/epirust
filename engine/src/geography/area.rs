@@ -23,7 +23,7 @@ use rand::seq::IteratorRandom;
 
 use crate::models::custom_types::Count;
 use crate::geography::Point;
-use crate::random_wrapper::RandomWrapper;
+use crate::utils::RandomWrapper;
 
 #[derive(Clone, Eq, Debug, Serialize, Deserialize)]
 pub struct Area {

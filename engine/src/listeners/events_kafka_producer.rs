@@ -24,7 +24,7 @@ use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 
 use crate::citizen::Citizen;
 use crate::models::custom_types::Hour;
-use crate::environment;
+use crate::utils::environment;
 use crate::geography::{Grid, Point};
 use crate::interventions::intervention_type::InterventionType;
 use crate::listeners::listener::Listener;

@@ -20,7 +20,7 @@ use rand::Rng;
 use rand::seq::SliceRandom;
 
 use crate::disease::Disease;
-use crate::random_wrapper::RandomWrapper;
+use crate::utils::RandomWrapper;
 use crate::models::constants;
 use crate::models::custom_types::{Day, Hour};
 

@@ -17,7 +17,7 @@
  *
  */
 
-#[derive(Debug, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct MigrationPlan {
     pub(in crate::travel::migration) regions: Vec<String>,
     pub(in crate::travel::migration) matrix: Vec<Vec<u32>>,

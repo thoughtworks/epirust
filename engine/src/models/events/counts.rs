@@ -22,7 +22,7 @@ use crate::citizen::Citizen;
 use crate::disease_state_machine::State;
 use crate::models::custom_types::{Count, Hour};
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Counts {
     hour: Hour,
     susceptible: Count,

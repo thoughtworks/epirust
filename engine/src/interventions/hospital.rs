@@ -23,7 +23,7 @@ use crate::config::Config;
 use crate::models::custom_types::Count;
 use crate::models::events::Counts;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Copy, Clone)]
 pub struct BuildNewHospitalConfig {
     pub spread_rate_threshold: u32,
 }

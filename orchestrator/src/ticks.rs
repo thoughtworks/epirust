@@ -100,7 +100,7 @@ impl Tick {
     }
 }
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub struct TickAck {
     engine_id: String,
     hour: i64,
@@ -116,7 +116,7 @@ impl TickAck {
     }
 }
 
-#[derive(Deserialize, Copy, Clone, Debug, PartialEq)]
+#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Counts {
     hour: i32,
     susceptible: i32,

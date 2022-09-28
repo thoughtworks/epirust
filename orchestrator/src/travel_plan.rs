@@ -17,7 +17,7 @@
  *
  */
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Migration {
     pub enabled: bool,
     matrix: Option<Vec<Vec<u32>>>,
@@ -25,13 +25,13 @@ pub struct Migration {
     end_migration_hour: Option<u32>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Commute {
     pub enabled: bool,
     pub matrix: Option<Vec<Vec<u32>>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct TravelPlan {
     regions: Vec<String>,
     pub migration: Migration,
@@ -68,7 +68,7 @@ impl CommutePlan {
     }
 }
 
-#[derive(Debug, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct MigrationPlan {
     regions: Vec<String>,
     matrix: Vec<Vec<u32>>,

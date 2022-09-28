@@ -148,7 +148,7 @@ pub enum Population {
     Auto(AutoPopulation),
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct CsvPopulation {
     pub file: String,
     pub cols: Vec<String>,

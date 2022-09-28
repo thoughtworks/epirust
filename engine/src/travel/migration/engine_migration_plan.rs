@@ -28,7 +28,7 @@ use crate::models::events::Tick;
 use crate::travel::migration::{MigrationPlan, Migrator, MigratorsByRegion};
 
 /// Travel plan in the context of the current engine
-#[derive(Debug, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct EngineMigrationPlan {
     engine_id: String,
     migration_plan: Option<MigrationPlan>,

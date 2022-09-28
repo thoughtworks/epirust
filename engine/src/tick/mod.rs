@@ -17,6 +17,6 @@
  *
  */
 
-pub mod tick;
+pub mod tick_util;
 
-pub use tick::{extract_tick, get_tick, receive_tick, send_ack};
+pub use tick_util::{extract_tick, get_tick, receive_tick, send_ack};

@@ -19,7 +19,7 @@
 
 use crate::models::custom_types::Count;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Copy, Clone)]
 pub struct StartingInfections {
     infected_mild_asymptomatic: Count,
     infected_mild_symptomatic: Count,

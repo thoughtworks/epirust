@@ -19,7 +19,7 @@
 
 use crate::models::custom_types::Hour;
 
-#[derive(Debug, Copy, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Copy, Deserialize, PartialEq, Eq, Clone)]
 pub struct Tick {
     hour: Hour,
     terminate: bool,

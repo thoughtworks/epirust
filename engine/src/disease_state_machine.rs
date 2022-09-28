@@ -24,7 +24,7 @@ use crate::utils::RandomWrapper;
 use crate::models::constants;
 use crate::models::custom_types::{Day, Hour};
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum State {
     Susceptible {},
     Exposed { at_hour: Hour },
@@ -33,14 +33,14 @@ pub enum State {
     Deceased {},
 }
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum InfectionSeverity {
     Pre { at_hour: Hour },
     Mild,
     Severe,
 }
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiseaseStateMachine {
     pub state: State,
     infection_day: Day,
@@ -115,7 +115,7 @@ impl DiseaseStateMachine {
             State::Infected { symptoms: true, severity: InfectionSeverity::Severe } =>
             // why we are adding immunity in infection day
             {
-                disease.to_be_hospitalized((self.infection_day as i32 + immunity) as Day)
+                disease.is_to_be_hospitalized((self.infection_day as i32 + immunity) as Day)
             }
             State::Infected { .. } => false,
             _ => {
@@ -128,7 +128,7 @@ impl DiseaseStateMachine {
         match self.state {
             State::Infected { symptoms: true, severity: InfectionSeverity::Severe {} } => {
                 if self.infection_day == disease.get_disease_last_day() {
-                    if disease.to_be_deceased(rng) {
+                    if disease.is_to_be_deceased(rng) {
                         self.state = State::Deceased {};
                         return (1, 0);
                     }

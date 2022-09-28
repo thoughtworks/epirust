@@ -96,7 +96,7 @@ impl Disease {
         0.0
     }
 
-    pub fn to_be_hospitalized(&self, infection_day: Day) -> bool {
+    pub fn is_to_be_hospitalized(&self, infection_day: Day) -> bool {
         self.get_current_transmission_rate(infection_day) >= self.high_transmission_rate
     }
 
@@ -104,7 +104,7 @@ impl Disease {
         self.last_day
     }
 
-    pub fn to_be_deceased(&self, rng: &mut RandomWrapper) -> bool {
+    pub fn is_to_be_deceased(&self, rng: &mut RandomWrapper) -> bool {
         rng.get().gen_bool(self.death_rate)
     }
 
@@ -157,10 +157,10 @@ mod tests {
     #[test]
     fn to_be_quarantined() {
         let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
-        let actual = disease.to_be_hospitalized(12);
+        let actual = disease.is_to_be_hospitalized(12);
         assert!(!actual);
 
-        let actual = disease.to_be_hospitalized(22);
+        let actual = disease.is_to_be_hospitalized(22);
         assert!(actual);
     }
 

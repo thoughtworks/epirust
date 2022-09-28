@@ -42,7 +42,7 @@ use crate::models::constants;
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum WorkStatus {
     Normal,
     Essential,

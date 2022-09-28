@@ -17,9 +17,13 @@
  *
  */
 
+use rdkafka::consumer::MessageStream;
+use futures::StreamExt;
 use crate::geography::Point;
+use crate::kafka::travel_consumer;
 
 use crate::models::custom_types::Count;
+use crate::models::events::Tick;
 
 use crate::travel::migration::{MigrationPlan, Migrator, MigratorsByRegion};
 
@@ -84,6 +88,25 @@ impl EngineMigrationPlan {
 
     pub fn set_current_population(&mut self, val: Count) {
         self.current_total_population = val;
+    }
+
+    pub async fn receive_migrators(&self, tick: Option<Tick>, message_stream: &mut MessageStream<'_>) -> Vec<Migrator> {
+        if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
+            let expected_incoming_regions = self.incoming_regions_count();
+            let mut received_incoming_regions = 0;
+            debug!("Receiving migrators from {} regions", expected_incoming_regions);
+            let mut incoming: Vec<Migrator> = Vec::new();
+            while expected_incoming_regions != received_incoming_regions {
+                let maybe_msg = travel_consumer::read_migrators(message_stream.next().await);
+                if let Some(region_incoming) = maybe_msg {
+                    incoming.extend(region_incoming.get_migrators());
+                    received_incoming_regions += 1;
+                }
+            }
+            incoming
+        } else {
+            Vec::new()
+        }
     }
 }
 

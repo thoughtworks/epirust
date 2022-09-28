@@ -31,10 +31,10 @@ use crate::disease::Disease;
 use crate::models::constants;
 use crate::models::custom_types::{CoOrdinate, Count, Hour};
 use crate::disease_state_machine::State;
-use crate::epidemiology_simulation::Epidemiology;
 use crate::geography::{Area, Grid};
 use crate::geography::Point;
 use crate::interventions::Interventions;
+use crate::interventions::vaccination::VaccinateIntervention;
 use crate::listeners::listener::Listeners;
 use crate::models::events::Counts;
 use crate::utils::RandomWrapper;
@@ -87,7 +87,7 @@ impl CitizenLocationMap {
                 Some(_) => *cell, //occupied
                 _ => point,
             };
-            Epidemiology::update_counts(csv_record, &current_agent);
+            Counts::update_counts(csv_record, &current_agent);
 
             if !infection_status && current_agent.state_machine.is_infected() {
                 listeners.citizen_got_infected(cell);
@@ -220,18 +220,6 @@ impl CitizenLocationMap {
         }
     }
 
-    fn decrement_counts(state: &State, counts: &mut Counts) {
-        match state {
-            State::Susceptible { .. } => counts.remove_susceptible(1),
-            State::Exposed { .. } => counts.remove_exposed(1),
-            State::Infected { .. } => counts.remove_infected(1),
-            State::Recovered { .. } => counts.remove_recovered(1),
-            State::Deceased { .. } => {
-                panic!("Deceased agent should not travel!")
-            }
-        }
-    }
-
     pub fn assimilate_migrators(&mut self, incoming: &mut Vec<Migrator>, counts: &mut Counts, rng: &mut RandomWrapper) {
         if incoming.is_empty() {
             return;
@@ -261,18 +249,6 @@ impl CitizenLocationMap {
             CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
             let result = self.current_locations.insert(migration_location, citizen);
             assert!(result.is_none());
-        }
-    }
-
-    fn increment_counts(state: &State, counts: &mut Counts) {
-        match state {
-            State::Susceptible { .. } => counts.update_susceptible(1),
-            State::Exposed { .. } => counts.update_exposed(1),
-            State::Infected { .. } => counts.update_infected(1),
-            State::Recovered { .. } => counts.update_recovered(1),
-            State::Deceased { .. } => {
-                panic!("Should not receive deceased agent!")
-            }
         }
     }
 
@@ -318,6 +294,30 @@ impl CitizenLocationMap {
         debug!("For loop ended");
     }
 
+    fn increment_counts(state: &State, counts: &mut Counts) {
+        match state {
+            State::Susceptible { .. } => counts.update_susceptible(1),
+            State::Exposed { .. } => counts.update_exposed(1),
+            State::Infected { .. } => counts.update_infected(1),
+            State::Recovered { .. } => counts.update_recovered(1),
+            State::Deceased { .. } => {
+                panic!("Should not receive deceased agent!")
+            }
+        }
+    }
+
+    fn decrement_counts(state: &State, counts: &mut Counts) {
+        match state {
+            State::Susceptible { .. } => counts.remove_susceptible(1),
+            State::Exposed { .. } => counts.remove_exposed(1),
+            State::Infected { .. } => counts.remove_infected(1),
+            State::Recovered { .. } => counts.remove_recovered(1),
+            State::Deceased { .. } => {
+                panic!("Deceased agent should not travel!")
+            }
+        }
+    }
+
     pub fn process_interventions(
         &mut self,
         interventions: &mut Interventions,
@@ -327,15 +327,15 @@ impl CitizenLocationMap {
         config: &Config,
         engine_id: &String,
     ) {
-        Epidemiology::apply_vaccination_intervention(&interventions.vaccinate, counts_at_hr, self, rng, listeners);
+        self.apply_vaccination_intervention(&interventions.vaccinate, counts_at_hr, rng, listeners);
 
         if interventions.lockdown.should_apply(counts_at_hr) {
             interventions.lockdown.apply();
-            Epidemiology::lock_city(counts_at_hr.get_hour(), self);
+            self.lock_city(counts_at_hr.get_hour());
             listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
         }
         if interventions.lockdown.should_unlock(counts_at_hr) {
-            Epidemiology::unlock_city(counts_at_hr.get_hour(), self);
+            self.unlock_city(counts_at_hr.get_hour());
             interventions.lockdown.unapply();
             listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
         }
@@ -359,6 +359,36 @@ impl CitizenLocationMap {
         });
 
         empty_spaces.choose_multiple(rng.get(), no_of_incoming)
+    }
+
+    pub fn lock_city(&mut self, hr: Hour) {
+        info!("Locking the city. Hour: {}", hr);
+        self.iter_mut().filter(|(_, agent)| !agent.is_essential_worker()).for_each(|(_, agent)| agent.set_isolation(true));
+    }
+
+    pub fn unlock_city(&mut self, hr: Hour) {
+        info!("Unlocking city. Hour: {}", hr);
+        self.iter_mut().filter(|(_, agent)| agent.is_isolated()).for_each(|(_, agent)| agent.set_isolation(false));
+    }
+
+    pub fn apply_vaccination_intervention(
+        &mut self,
+        vaccinations: &VaccinateIntervention,
+        counts: &Counts,
+        rng: &mut RandomWrapper,
+        listeners: &mut Listeners,
+    ) {
+        if let Some(vac_percent) = vaccinations.get_vaccination_percentage(counts) {
+            info!("Vaccination");
+            self.vaccinate(*vac_percent, rng);
+            listeners.intervention_applied(counts.get_hour(), vaccinations)
+        };
+    }
+
+    pub(crate) fn vaccinate(&mut self, vaccination_percentage: f64, rng: &mut RandomWrapper) {
+        self.iter_mut()
+            .filter(|(_v, agent)| agent.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage))
+            .for_each(|(_v, agent)| agent.set_vaccination(true));
     }
 
     pub fn current_population(&self) -> Count {

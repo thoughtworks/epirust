@@ -18,6 +18,8 @@
  */
 
 use log::info;
+use crate::citizen::Citizen;
+use crate::disease_state_machine::State;
 use crate::models::custom_types::{Count, Hour};
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq)]
@@ -119,6 +121,22 @@ impl Counts {
 
     pub fn increment_hour(&mut self) {
         self.hour += 1;
+    }
+
+    pub fn update_counts(&mut self, citizen: &Citizen) {
+        match citizen.state_machine.state {
+            State::Susceptible { .. } => self.update_susceptible(1),
+            State::Exposed { .. } => self.update_exposed(1),
+            State::Infected { .. } => {
+                if citizen.is_hospitalized() {
+                    self.update_hospitalized(1);
+                } else {
+                    self.update_infected(1)
+                }
+            }
+            State::Recovered { .. } => self.update_recovered(1),
+            State::Deceased { .. } => self.update_deceased(1),
+        }
     }
 
     pub fn clear(&mut self) {

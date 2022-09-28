@@ -17,11 +17,6 @@
  *
  */
 
-pub mod environment;
-mod random_wrapper;
-mod send_record;
-pub(crate) mod util;
+pub mod tick;
 
-pub use send_record::SendRecord;
-pub use random_wrapper::RandomWrapper;
-pub use util::{output_file_format, counts_at_start};
+pub use tick::{extract_tick, get_tick, receive_tick, send_ack};

@@ -17,7 +17,10 @@
  *
  */
 
+use rdkafka::consumer::MessageStream;
+use crate::kafka::travel_consumer;
 use crate::travel::commute::Commuter;
+use futures::StreamExt;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct CommutersByRegion {
@@ -32,5 +35,21 @@ impl CommutersByRegion {
 
     pub fn get_commuters(self) -> Vec<Commuter> {
         self.commuters
+    }
+
+    pub(crate) async fn receive_commuters_from_region(
+        message_stream: &mut MessageStream<'_>,
+        engine_id: &String,
+    ) -> Option<CommutersByRegion> {
+        let msg = message_stream.next().await;
+        let mut maybe_commuters = travel_consumer::read_commuters(msg);
+        while maybe_commuters.is_none()
+            || (maybe_commuters.as_ref().unwrap().commuters.is_empty()
+                && maybe_commuters.as_ref().unwrap().to_engine_id() == engine_id)
+        {
+            let next_msg = message_stream.next().await;
+            maybe_commuters = travel_consumer::read_commuters(next_msg);
+        }
+        maybe_commuters
     }
 }

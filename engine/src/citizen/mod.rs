@@ -32,6 +32,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::allocation_map::CitizenLocationMap;
+use crate::config::TravelPlanConfig;
 use crate::models::custom_types::{Day, Hour, Percentage};
 use crate::disease::Disease;
 use crate::disease_state_machine::DiseaseStateMachine;
@@ -188,35 +189,70 @@ impl Citizen {
         disease.get_current_transmission_rate((self.state_machine.get_infection_day() as i32 + self.immunity) as Day)
     }
 
-    pub fn set_vaccination(&mut self, vaccinated: bool) {
-        self.vaccinated = vaccinated;
+    pub fn get_immunity(&self) -> i32 {
+        self.immunity
     }
 
-    pub fn can_move(&self) -> bool {
-        if self.state_machine.is_symptomatic() || self.hospitalized || self.state_machine.is_deceased() || self.isolated {
-            return false;
-        }
-        true
+    pub fn set_vaccination(&mut self, vaccinated: bool) {
+        self.vaccinated = vaccinated;
     }
 
     pub fn set_isolation(&mut self, state: bool) {
         self.isolated = state;
     }
 
-    pub fn is_isolated(&self) -> bool {
-        self.isolated
+    fn update_infection_dynamics(
+        &mut self,
+        cell: Point,
+        map: &CitizenLocationMap,
+        sim_hr: Hour,
+        rng: &mut RandomWrapper,
+        disease: &Disease,
+    ) {
+        self.update_exposure(cell, map, sim_hr, rng, disease);
+        self.update_infection(sim_hr, rng, disease);
+        self.update_infection_severity(sim_hr, rng, disease);
     }
 
-    pub fn is_working(&self) -> bool {
-        !matches!(self.work_status, WorkStatus::NA)
+    fn update_infection_day(&mut self) {
+        if self.state_machine.is_infected() {
+            self.state_machine.increment_infection_day();
+        }
     }
 
-    pub fn get_immunity(&self) -> i32 {
-        self.immunity
+    fn update_infection_severity(&mut self, sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
+        if self.state_machine.is_pre_symptomatic() {
+            self.state_machine.change_infection_severity(sim_hr, rng, disease);
+        }
     }
 
-    pub fn is_vaccinated(&self) -> bool {
-        self.vaccinated
+    fn update_infection(&mut self, sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
+        if self.state_machine.is_exposed() {
+            self.state_machine.infect(rng, sim_hr, disease);
+        }
+    }
+
+    fn update_exposure(
+        &mut self,
+        cell: Point,
+        map: &CitizenLocationMap,
+        sim_hr: Hour,
+        rng: &mut RandomWrapper,
+        disease: &Disease,
+    ) {
+        if self.state_machine.is_susceptible() && !self.work_quarantined && !self.vaccinated {
+            let neighbours = self.current_area.get_neighbors_of(cell);
+
+            let neighbor_that_spreads_infection = neighbours
+                .filter(|p| map.is_point_in_grid(p))
+                .filter_map(|cell| map.get_agent_for(&cell))
+                .filter(|agent| agent.state_machine.is_infected() && !agent.hospitalized)
+                .find(|neighbor| rng.get().gen_bool(neighbor.get_infection_transmission_rate(disease)));
+
+            if neighbor_that_spreads_infection.is_some() {
+                self.state_machine.expose(sim_hr);
+            }
+        }
     }
 
     fn generate_disease_randomness_factor(rng: &mut RandomWrapper) -> i32 {
@@ -264,14 +300,6 @@ impl Citizen {
             }
         }
         new_cell
-    }
-
-    fn is_hospital_staff(&self) -> bool {
-        matches!(self.work_status, WorkStatus::HospitalStaff { .. })
-    }
-
-    pub fn is_essential_worker(&self) -> bool {
-        matches!(self.work_status, WorkStatus::Essential {})
     }
 
     fn perform_movements(
@@ -370,25 +398,6 @@ impl Citizen {
         new_cell
     }
 
-    fn update_infection_dynamics(
-        &mut self,
-        cell: Point,
-        map: &CitizenLocationMap,
-        sim_hr: Hour,
-        rng: &mut RandomWrapper,
-        disease: &Disease,
-    ) {
-        self.update_exposure(cell, map, sim_hr, rng, disease);
-        self.update_infection(sim_hr, rng, disease);
-        self.update_infection_severity(sim_hr, rng, disease);
-    }
-
-    fn update_infection_day(&mut self) {
-        if self.state_machine.is_infected() {
-            self.state_machine.increment_infection_day();
-        }
-    }
-
     fn hospitalize(&mut self, cell: Point, hospital: &Area, map: &CitizenLocationMap, disease: &Disease) -> Point {
         let mut new_cell = cell;
         if self.state_machine.is_infected() && !self.hospitalized {
@@ -402,41 +411,6 @@ impl Citizen {
             }
         }
         new_cell
-    }
-
-    fn update_infection_severity(&mut self, sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
-        if self.state_machine.is_pre_symptomatic() {
-            self.state_machine.change_infection_severity(sim_hr, rng, disease);
-        }
-    }
-
-    fn update_infection(&mut self, sim_hr: Hour, rng: &mut RandomWrapper, disease: &Disease) {
-        if self.state_machine.is_exposed() {
-            self.state_machine.infect(rng, sim_hr, disease);
-        }
-    }
-
-    fn update_exposure(
-        &mut self,
-        cell: Point,
-        map: &CitizenLocationMap,
-        sim_hr: Hour,
-        rng: &mut RandomWrapper,
-        disease: &Disease,
-    ) {
-        if self.state_machine.is_susceptible() && !self.work_quarantined && !self.vaccinated {
-            let neighbours = self.current_area.get_neighbors_of(cell);
-
-            let neighbor_that_spreads_infection = neighbours
-                .filter(|p| map.is_point_in_grid(p))
-                .filter_map(|cell| map.get_agent_for(&cell))
-                .filter(|agent| agent.state_machine.is_infected() && !agent.hospitalized)
-                .find(|neighbor| rng.get().gen_bool(neighbor.get_infection_transmission_rate(disease)));
-
-            if neighbor_that_spreads_infection.is_some() {
-                self.state_machine.expose(sim_hr);
-            }
-        }
     }
 
     fn goto_area(&mut self, target_area: Area, map: &CitizenLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
@@ -518,6 +492,51 @@ impl Citizen {
             return WorkStatus::Normal {};
         }
         WorkStatus::NA {}
+    }
+
+    fn can_move(&self) -> bool {
+        !(self.state_machine.is_symptomatic() || self.hospitalized || self.state_machine.is_deceased() || self.isolated)
+    }
+
+    pub fn can_migrate(&self, region_id: &String, simulation_hour: Hour, travel_plan: &TravelPlanConfig) -> bool {
+        let start_migration_hour = travel_plan.get_start_migration_hour();
+        let end_migration_hour = travel_plan.get_end_migration_hour();
+
+        simulation_hour % 24 == 0
+            && simulation_hour > start_migration_hour
+            && simulation_hour < end_migration_hour
+            && self.work_location.location_id == *region_id
+            && self.home_location.location_id == *region_id
+            && self.can_move()
+    }
+
+    fn is_hospital_staff(&self) -> bool {
+        matches!(self.work_status, WorkStatus::HospitalStaff { .. })
+    }
+
+    pub fn is_vaccinated(&self) -> bool {
+        self.vaccinated
+    }
+
+    pub fn is_isolated(&self) -> bool {
+        self.isolated
+    }
+
+    pub fn is_working(&self) -> bool {
+        !matches!(self.work_status, WorkStatus::NA)
+    }
+
+    pub fn is_essential_worker(&self) -> bool {
+        matches!(self.work_status, WorkStatus::Essential {})
+    }
+
+    pub fn is_commuter(&self, region_id: &String, simulation_hour: Hour) -> bool {
+        (simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME
+            && self.can_move()
+            && self.work_location.location_id != *region_id)
+            || (simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME
+                && self.can_move()
+                && self.home_location.location_id != *region_id)
     }
 
     pub fn is_hospitalized(&self) -> bool {

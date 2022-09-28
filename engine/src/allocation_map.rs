@@ -71,7 +71,7 @@ impl CitizenLocationMap {
         rng: &mut RandomWrapper,
         disease: &Disease,
         percent_outgoing: f64,
-        outgoing: &mut Vec<(Point, Migrator)>,
+        outgoing_migrators: &mut Vec<(Point, Migrator)>,
         outgoing_commuters: &mut Vec<(Point, Commuter)>,
         publish_citizen_state: bool,
         travel_plan_config: Option<&TravelPlanConfig>,
@@ -79,7 +79,7 @@ impl CitizenLocationMap {
     ) {
         csv_record.clear();
         for (cell, agent) in self.current_locations.iter() {
-            let mut current_agent = agent.clone();
+            let mut current_agent: Citizen = agent.clone();
             let infection_status = current_agent.state_machine.is_infected();
             let point = current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, rng, disease);
             let agent_option = self.upcoming_locations.get(&point);
@@ -97,36 +97,15 @@ impl CitizenLocationMap {
                 let is_migration_enabled = travel_plan.migration.enabled;
                 let is_commute_enabled = travel_plan.commute.enabled;
 
-                let start_migration_hour = if is_migration_enabled { travel_plan.get_start_migration_hour() } else { 0 };
-                let end_migration_hour = if is_migration_enabled { travel_plan.get_end_migration_hour() } else { 0 };
-
                 if is_migration_enabled
-                    && simulation_hour % 24 == 0
-                    && current_agent.can_move()
-                    && current_agent.work_location.location_id == *region_name
-                    && current_agent.home_location.location_id == *region_name
-                    && simulation_hour > start_migration_hour
-                    && simulation_hour < end_migration_hour
+                    && current_agent.can_migrate(region_name, simulation_hour, travel_plan)
                     && rng.get().gen_bool(percent_outgoing)
                 {
                     let migrator = Migrator::from(&current_agent);
-                    outgoing.push((new_location, migrator));
+                    outgoing_migrators.push((new_location, migrator));
                 }
 
-                if is_commute_enabled
-                    && simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME
-                    && current_agent.can_move()
-                    && current_agent.work_location.location_id != *region_name
-                {
-                    let commuter = Commuter::from(&current_agent);
-                    outgoing_commuters.push((new_location, commuter));
-                }
-
-                if is_commute_enabled
-                    && simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME
-                    && current_agent.can_move()
-                    && current_agent.home_location.location_id != *region_name
-                {
+                if is_commute_enabled && current_agent.is_commuter(region_name, simulation_hour) {
                     let commuter = Commuter::from(&current_agent);
                     outgoing_commuters.push((new_location, commuter));
                 }

@@ -26,7 +26,7 @@ extern crate log;
 use clap::{App, Arg};
 use crate::config::Config;
 
-use crate::kafka_consumer::KafkaConsumer;
+use crate::kafka::kafka_consumer::KafkaConsumer;
 
 mod allocation_map;
 mod citizen;
@@ -41,11 +41,8 @@ mod commute;
 mod config;
 mod disease_state_machine;
 mod interventions;
-mod kafka_consumer;
-mod kafka_producer;
+mod kafka;
 mod models;
-mod ticks_consumer;
-mod travel_consumer;
 mod travel_plan;
 mod utils;
 

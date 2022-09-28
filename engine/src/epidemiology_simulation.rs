@@ -26,7 +26,7 @@ use rand::Rng;
 use rdkafka::consumer::MessageStream;
 use time::OffsetDateTime;
 
-use crate::{RunMode, ticks_consumer, travel_consumer};
+use crate::RunMode;
 use crate::citizen::Citizen;
 use crate::allocation_map::CitizenLocationMap;
 use crate::commute::{CommutePlan, Commuter, CommutersByRegion};
@@ -41,8 +41,8 @@ use crate::interventions::hospital::BuildNewHospital;
 use crate::interventions::Interventions;
 use crate::interventions::lockdown::LockdownIntervention;
 use crate::interventions::vaccination::VaccinateIntervention;
-use crate::kafka_consumer::TravelPlanConfig;
-use crate::kafka_producer::{COMMUTE_TOPIC, KafkaProducer, MIGRATION_TOPIC, TickAck};
+use crate::kafka::kafka_consumer::TravelPlanConfig;
+use crate::kafka::kafka_producer::{COMMUTE_TOPIC, KafkaProducer, MIGRATION_TOPIC, TickAck};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
@@ -53,7 +53,8 @@ use crate::models::constants;
 use crate::models::custom_types::{Count, Hour};
 use crate::models::events::Counts;
 use crate::utils::RandomWrapper;
-use crate::ticks_consumer::Tick;
+use crate::kafka::ticks_consumer::Tick;
+use crate::kafka::{ticks_consumer, travel_consumer};
 use crate::travel_plan::{EngineMigrationPlan, MigrationPlan, Migrator, MigratorsByRegion};
 
 pub struct Epidemiology {

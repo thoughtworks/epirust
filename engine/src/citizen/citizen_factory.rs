@@ -23,7 +23,7 @@ use crate::citizen::{Citizen, CitizensData, WorkStatus};
 use crate::commute::CommutePlan;
 use crate::config::StartingInfections;
 use crate::geography::Point;
-use crate::kafka_consumer::TravelPlanConfig;
+use crate::kafka::kafka_consumer::TravelPlanConfig;
 use crate::utils::RandomWrapper;
 
 pub fn citizen_factory(

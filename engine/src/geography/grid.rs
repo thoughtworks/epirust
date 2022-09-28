@@ -28,7 +28,7 @@ use crate::geography::{Area, Point};
 use crate::utils::RandomWrapper;
 use crate::models::constants;
 use crate::models::custom_types::{CoOrdinate, Count, Size};
-use crate::kafka_consumer::TravelPlanConfig;
+use crate::kafka::kafka_consumer::TravelPlanConfig;
 
 #[derive(Serialize, Clone)]
 pub struct Grid {

@@ -34,7 +34,7 @@ use crate::epidemiology_simulation::Epidemiology;
 use crate::geography::{Area, Grid};
 use crate::geography::Point;
 use crate::interventions::Interventions;
-use crate::kafka_consumer::TravelPlanConfig;
+use crate::kafka::kafka_consumer::TravelPlanConfig;
 use crate::listeners::listener::Listeners;
 use crate::models::events::Counts;
 use crate::utils::RandomWrapper;

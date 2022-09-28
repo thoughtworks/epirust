@@ -24,8 +24,9 @@ use rand::Rng;
 use rand::seq::IteratorRandom;
 
 use crate::citizen::Citizen;
-use crate::commute::Commuter;
+use crate::travel::commute::Commuter;
 use crate::Config;
+use crate::config::TravelPlanConfig;
 use crate::disease::Disease;
 use crate::models::constants;
 use crate::models::custom_types::{CoOrdinate, Count, Hour};
@@ -34,11 +35,10 @@ use crate::epidemiology_simulation::Epidemiology;
 use crate::geography::{Area, Grid};
 use crate::geography::Point;
 use crate::interventions::Interventions;
-use crate::kafka::kafka_consumer::TravelPlanConfig;
 use crate::listeners::listener::Listeners;
 use crate::models::events::Counts;
 use crate::utils::RandomWrapper;
-use crate::travel_plan::Migrator;
+use crate::travel::migration::Migrator;
 
 #[derive(Clone)]
 pub struct CitizenLocationMap {

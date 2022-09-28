@@ -37,9 +37,9 @@ use crate::disease::Disease;
 use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::{Area, Grid, Point};
 use crate::utils::RandomWrapper;
-use crate::travel_plan::Migrator;
-use crate::commute::{Commuter};
 use crate::models::constants;
+use crate::travel::commute::Commuter;
+use crate::travel::migration::Migrator;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum WorkStatus {

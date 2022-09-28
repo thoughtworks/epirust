@@ -20,9 +20,12 @@
 mod config;
 mod geography_parameters;
 mod population;
+pub mod request;
 mod starting_infections;
+mod travel_plan_config;
 
 pub use config::*;
 pub use population::*;
 pub use geography_parameters::GeographyParameters;
 pub use starting_infections::StartingInfections;
+pub use travel_plan_config::TravelPlanConfig;

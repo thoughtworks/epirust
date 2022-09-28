@@ -20,10 +20,9 @@
 use rand::Rng;
 use rand::seq::IteratorRandom;
 use crate::citizen::{Citizen, CitizensData, WorkStatus};
-use crate::commute::CommutePlan;
-use crate::config::StartingInfections;
+use crate::config::{StartingInfections, TravelPlanConfig};
 use crate::geography::Point;
-use crate::kafka::kafka_consumer::TravelPlanConfig;
+use crate::travel::commute::CommutePlan;
 use crate::utils::RandomWrapper;
 
 pub fn citizen_factory(

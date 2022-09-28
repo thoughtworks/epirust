@@ -16,13 +16,5 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
-mod citizen_state;
-mod counts;
-mod tick;
-mod tick_ack;
-
-pub use counts::Counts;
-pub use citizen_state::*;
-pub use tick_ack::TickAck;
-pub use tick::Tick;
+pub mod commute;
+pub mod migration;

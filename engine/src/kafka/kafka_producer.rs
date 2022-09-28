@@ -20,11 +20,9 @@
 use rdkafka::ClientConfig;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 
-use crate::commute::CommutersByRegion;
+use crate::travel::commute::CommutersByRegion;
 use crate::models::custom_types::SendResult;
-use crate::models::events::Counts;
-use crate::models::custom_types::Hour;
-use crate::travel_plan::MigratorsByRegion;
+use crate::travel::migration::MigratorsByRegion;
 use crate::utils::{environment, SendRecord};
 
 const TICK_ACKS_TOPIC: &str = "ticks_ack";
@@ -70,29 +68,6 @@ impl KafkaProducer {
             let topic = &*format!("{}{}", COMMUTE_TOPIC, out_region.to_engine_id());
             let record: BaseRecord<String, String> = BaseRecord::to(topic).payload(&payload);
             self.producer.send_record(record);
-            //     match result.await {
-            //         Ok(d) => {
-            //             match d {
-            //                 Ok(_) => { info!("successfully sent the commuters for region - {}", out_region.to_engine_id())}
-            //                 Err(e) => {
-            //                     error!("Error while sending commuters to region {}",out_region.to_engine_id());
-            //                     panic!("Error - {:?}", e);
-            //                 }
-            //             }
-            //         },
-            //         Err(e ) => {
-            //             error!("Error while sending commuters to region {}", out_region.to_engine_id());
-            //             panic!("Error - {}", e);
-            //         }
-            // };
         }
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TickAck {
-    pub engine_id: String,
-    pub hour: Hour,
-    pub counts: Counts,
-    pub locked_down: bool,
 }

@@ -23,8 +23,8 @@ use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
 
 use crate::utils::environment;
-use crate::commute::CommutersByRegion;
-use crate::travel_plan::MigratorsByRegion;
+use crate::travel::commute::CommutersByRegion;
+use crate::travel::migration::MigratorsByRegion;
 
 pub fn start(engine_id: &str, topics: &[&str], prefix: &str) -> StreamConsumer {
     let kafka_url = environment::kafka_url();

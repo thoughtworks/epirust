@@ -27,11 +27,10 @@ use rdkafka::error::KafkaError;
 use rdkafka::message::BorrowedMessage;
 use rdkafka::message::Message;
 
-use crate::config::Config;
+use crate::config::request::Request;
 use crate::epidemiology_simulation::Epidemiology;
 use crate::RunMode;
 use crate::utils::environment;
-use crate::commute::{Commute, CommutePlan};
 
 pub struct KafkaConsumer<'a> {
     engine_id: &'a str,
@@ -107,67 +106,4 @@ impl KafkaConsumer<'_> {
         trace!("Received: {}", parsed_message);
         serde_json::from_str(parsed_message).map_err(|e| e.into())
     }
-}
-
-#[derive(Debug, Deserialize)]
-struct SimulationRequest {
-    sim_id: String,
-    #[serde(flatten)]
-    config: Config,
-}
-
-#[derive(Debug, Deserialize)]
-struct SimRequestByEngine {
-    engine_id: String,
-    config: SimulationRequest,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct Migration {
-    pub enabled: bool,
-    matrix: Option<Vec<Vec<u32>>>,
-    start_migration_hour: u32,
-    end_migration_hour: u32,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct TravelPlanConfig {
-    pub regions: Vec<String>,
-    pub migration: Migration,
-    pub commute: Commute,
-}
-
-impl TravelPlanConfig {
-    pub fn get_end_migration_hour(&self) -> u32 {
-        self.migration.end_migration_hour
-    }
-
-    pub fn get_start_migration_hour(&self) -> u32 {
-        self.migration.start_migration_hour
-    }
-
-    pub fn get_migration_matrix(&self) -> Option<Vec<Vec<u32>>> {
-        self.migration.matrix.clone()
-    }
-
-    pub fn get_regions(&self) -> Vec<String> {
-        self.regions.clone()
-    }
-
-    pub fn commute_plan(&self) -> CommutePlan {
-        CommutePlan { regions: self.regions.clone(), matrix: self.commute.matrix.as_ref().unwrap().clone() }
-    }
-}
-
-#[derive(Debug, Deserialize)]
-struct MultiSimRequest {
-    engine_configs: Vec<SimRequestByEngine>,
-    travel_plan: TravelPlanConfig,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-enum Request {
-    SimulationRequest(SimulationRequest),
-    MultiSimRequest(MultiSimRequest),
 }

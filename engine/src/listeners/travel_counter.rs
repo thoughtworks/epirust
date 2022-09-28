@@ -21,8 +21,8 @@ use std::any::Any;
 use crate::listeners::listener::Listener;
 use crate::models::custom_types::Hour;
 use crate::disease_state_machine::State;
+use crate::travel::migration::MigratorsByRegion;
 use crate::utils::environment;
-use crate::travel_plan::MigratorsByRegion;
 
 #[derive(Serialize, Debug, PartialEq)]
 struct CountsByRegion {
@@ -96,7 +96,7 @@ mod tests {
     use super::*;
     use crate::disease_state_machine::InfectionSeverity;
     use std::env;
-    use crate::travel_plan::Migrator;
+    use crate::travel::migration::Migrator;
 
     #[test]
     fn should_add_outgoing_travellers() {

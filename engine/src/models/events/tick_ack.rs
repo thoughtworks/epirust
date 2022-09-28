@@ -17,12 +17,13 @@
  *
  */
 
-mod citizen_state;
-mod counts;
-mod tick;
-mod tick_ack;
+use crate::models::custom_types::Hour;
+use crate::models::events::Counts;
 
-pub use counts::Counts;
-pub use citizen_state::*;
-pub use tick_ack::TickAck;
-pub use tick::Tick;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TickAck {
+    pub engine_id: String,
+    pub hour: Hour,
+    pub counts: Counts,
+    pub locked_down: bool,
+}

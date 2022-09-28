@@ -23,8 +23,8 @@ use crate::citizen::Citizen;
 use crate::geography::{Point, Grid};
 use crate::interventions::intervention_type::InterventionType;
 use crate::models::events::Counts;
-use crate::travel_plan::MigratorsByRegion;
 use crate::models::custom_types::Hour;
+use crate::travel::migration::MigratorsByRegion;
 
 pub trait Listener {
     fn counts_updated(&mut self, _counts: Counts) {}

@@ -30,20 +30,17 @@ use crate::kafka::kafka_consumer::KafkaConsumer;
 
 mod allocation_map;
 mod citizen;
+mod config;
 mod disease;
+mod disease_state_machine;
 mod epidemiology_simulation;
 mod geography;
-mod listeners;
-mod population;
-// mod geojson_service;
-// mod models;
-mod commute;
-mod config;
-mod disease_state_machine;
 mod interventions;
 mod kafka;
+mod listeners;
 mod models;
-mod travel_plan;
+mod population;
+mod travel;
 mod utils;
 
 const STANDALONE_SIM_ID: &str = "0";

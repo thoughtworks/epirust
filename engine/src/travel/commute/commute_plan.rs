@@ -17,52 +17,11 @@
  *
  */
 
-use uuid::Uuid;
-
 use crate::models::constants;
 use crate::models::custom_types::Hour;
-use crate::disease_state_machine::DiseaseStateMachine;
-use crate::geography::{Area, Point};
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Commuter {
-    pub id: Uuid,
-    pub immunity: i32,
-    pub home_location: Area,
-    pub work_location: Area,
-    pub vaccinated: bool,
-    pub uses_public_transport: bool,
-    pub working: bool,
-    pub state_machine: DiseaseStateMachine,
-}
-
-impl PartialEq for Commuter {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-pub struct CommutersByRegion {
-    to_engine_id: String,
-    pub commuters: Vec<Commuter>,
-}
-
-impl CommutersByRegion {
-    pub fn to_engine_id(&self) -> &String {
-        &self.to_engine_id
-    }
-
-    pub fn get_commuters(self) -> Vec<Commuter> {
-        self.commuters
-    }
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct Commute {
-    pub enabled: bool,
-    pub matrix: Option<Vec<Vec<u32>>>,
-}
+use crate::geography::Point;
+use crate::travel::commute::Commuter;
+use crate::travel::commute::CommutersByRegion;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct CommutePlan {

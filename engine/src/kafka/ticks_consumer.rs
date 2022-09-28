@@ -22,7 +22,7 @@ use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
 
-use crate::models::custom_types::Hour;
+use crate::models::events::Tick;
 use crate::utils::environment;
 
 const TICKS_TOPIC: &str = "ticks";
@@ -57,44 +57,8 @@ pub fn read(msg: Option<KafkaResult<BorrowedMessage>>) -> Option<Tick> {
             Ok(borrowed_message) => {
                 let str_message = borrowed_message.payload_view::<str>().unwrap().unwrap();
                 debug!("Tick Data: {}", str_message);
-                Some(parse_tick(str_message))
+                Some(Tick::parse_tick(str_message))
             }
         },
-    }
-}
-
-fn parse_tick(message: &str) -> Tick {
-    serde_json::from_str(message).expect("Could not parse tick")
-}
-
-#[derive(Debug, Copy, Deserialize, PartialEq, Clone)]
-pub struct Tick {
-    hour: Hour,
-    terminate: bool,
-}
-
-impl Tick {
-    pub fn hour(&self) -> Hour {
-        self.hour
-    }
-
-    pub fn terminate(&self) -> bool {
-        self.terminate
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn should_parse_tick() {
-        let json = r#"
-        {
-            "hour": 1,
-            "terminate": false
-        }"#;
-        let expected = Tick { hour: 1, terminate: false };
-        assert_eq!(expected, parse_tick(json));
     }
 }

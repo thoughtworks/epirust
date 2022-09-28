@@ -23,12 +23,11 @@ use std::fs::File;
 
 use crate::citizen;
 use crate::citizen::{Citizen, CitizensData, PopulationRecord};
-use crate::config::{AutoPopulation, CsvPopulation, StartingInfections};
+use crate::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
 use crate::geography::{Area, Point};
 use crate::utils::RandomWrapper;
 use crate::models::constants;
 use crate::models::custom_types::{CoOrdinate, Count, Size};
-use crate::kafka::kafka_consumer::TravelPlanConfig;
 
 #[derive(Serialize, Clone)]
 pub struct Grid {

@@ -17,12 +17,31 @@
  *
  */
 
-mod citizen_state;
-mod counts;
-mod tick;
-mod tick_ack;
+use crate::Config;
+use crate::config::TravelPlanConfig;
 
-pub use counts::Counts;
-pub use citizen_state::*;
-pub use tick_ack::TickAck;
-pub use tick::Tick;
+#[derive(Debug, Deserialize)]
+pub struct SimulationRequest {
+    pub(crate) sim_id: String,
+    #[serde(flatten)]
+    pub(crate) config: Config,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SimRequestByEngine {
+    pub(crate) engine_id: String,
+    pub(crate) config: SimulationRequest,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MultiSimRequest {
+    pub(crate) engine_configs: Vec<SimRequestByEngine>,
+    pub(crate) travel_plan: TravelPlanConfig,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum Request {
+    SimulationRequest(SimulationRequest),
+    MultiSimRequest(MultiSimRequest),
+}

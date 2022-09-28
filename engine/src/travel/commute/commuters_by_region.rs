@@ -17,12 +17,20 @@
  *
  */
 
-mod citizen_state;
-mod counts;
-mod tick;
-mod tick_ack;
+use crate::travel::commute::Commuter;
 
-pub use counts::Counts;
-pub use citizen_state::*;
-pub use tick_ack::TickAck;
-pub use tick::Tick;
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct CommutersByRegion {
+    pub(in crate::travel::commute) to_engine_id: String,
+    pub commuters: Vec<Commuter>,
+}
+
+impl CommutersByRegion {
+    pub fn to_engine_id(&self) -> &String {
+        &self.to_engine_id
+    }
+
+    pub fn get_commuters(self) -> Vec<Commuter> {
+        self.commuters
+    }
+}

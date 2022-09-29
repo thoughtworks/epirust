@@ -206,10 +206,7 @@ impl DiseaseStateMachine {
 
     #[cfg(test)]
     pub fn is_mild_asymptomatic(&self) -> bool {
-        match self.state {
-            State::Infected { symptoms: false, severity: InfectionSeverity::Mild } => true,
-            _ => false,
-        }
+        matches!(self.state, State::Infected { symptoms: false, severity: InfectionSeverity::Mild })
     }
 
     pub fn is_mild_symptomatic(&self) -> bool {
@@ -229,11 +226,8 @@ mod tests {
     fn should_initialize() {
         let machine = DiseaseStateMachine::new();
 
-        let result = match machine.state {
-            State::Susceptible {} => true,
-            _ => false,
-        };
-        assert_eq!(result, true);
+        let result = matches!(machine.state, State::Susceptible {});
+        assert!(result);
         assert_eq!(machine.get_infection_day(), 0);
     }
 
@@ -244,13 +238,13 @@ mod tests {
         machine.expose(100);
         machine.infect(&mut RandomWrapper::new(), 140, &disease);
 
-        let result = match machine.state {
-            State::Infected { symptoms: false, severity: InfectionSeverity::Mild {} } => true,
-            State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 140 } } => true,
-            _ => false,
-        };
+        let result = matches!(
+            machine.state,
+            State::Infected { symptoms: false, severity: InfectionSeverity::Mild {} }
+                | State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 140 } }
+        );
 
-        assert_eq!(result, true);
+        assert!(result);
     }
 
     #[test]
@@ -261,12 +255,9 @@ mod tests {
         machine.expose(100);
         machine.infect(&mut RandomWrapper::new(), 110, &disease);
 
-        let result = match machine.state {
-            State::Exposed { .. } => true,
-            _ => false,
-        };
+        let result = matches!(machine.state, State::Exposed { .. });
 
-        assert_eq!(result, true);
+        assert!(result);
     }
 
     #[test]
@@ -288,14 +279,11 @@ mod tests {
         machine.change_infection_severity(140, &mut rng, &disease);
 
         let result = match machine.state {
-            State::Infected { symptoms: true, severity } => match severity {
-                InfectionSeverity::Pre { .. } => false,
-                _ => true,
-            },
+            State::Infected { symptoms: true, severity } => !matches!(severity, InfectionSeverity::Pre { .. }),
             _ => false,
         };
 
-        assert_eq!(result, true);
+        assert!(result);
     }
 
     #[test]
@@ -309,14 +297,11 @@ mod tests {
         machine.change_infection_severity(120, &mut rng, &disease);
 
         let result = match machine.state {
-            State::Infected { symptoms: true, severity } => match severity {
-                InfectionSeverity::Pre { at_hour: 100 } => true,
-                _ => false,
-            },
+            State::Infected { symptoms: true, severity } => matches!(severity, InfectionSeverity::Pre { at_hour: 100 }),
             _ => false,
         };
 
-        assert_eq!(result, true);
+        assert!(result);
     }
 
     #[test]
@@ -324,7 +309,7 @@ mod tests {
         let mut machine = DiseaseStateMachine::new();
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 100 } };
-        assert_eq!(machine.is_pre_symptomatic(), true);
+        assert!(machine.is_pre_symptomatic());
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Mild {} };
         assert_eq!(machine.is_pre_symptomatic(), false);
@@ -359,15 +344,15 @@ mod tests {
         let mut machine = DiseaseStateMachine::new();
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Mild };
-        assert_eq!(machine.is_symptomatic(), true);
+        assert!(machine.is_symptomatic());
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Severe };
-        assert_eq!(machine.is_symptomatic(), true);
+        assert!(machine.is_symptomatic());
 
         machine.state = State::Infected { symptoms: false, severity: InfectionSeverity::Mild };
-        assert_eq!(machine.is_symptomatic(), false);
+        assert!(!machine.is_symptomatic());
 
         machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Pre { at_hour: 100 } };
-        assert_eq!(machine.is_symptomatic(), false);
+        assert!(!machine.is_symptomatic());
     }
 }

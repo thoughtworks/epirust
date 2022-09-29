@@ -134,7 +134,7 @@ impl Citizen {
             state_machine: migrator.state_machine,
             isolated: false,
             current_area,
-            work_status: WorkStatus::NA {},
+            work_status: WorkStatus::NA,
             work_quarantined: false,
         }
     }
@@ -152,7 +152,7 @@ impl Citizen {
             state_machine: commuter.state_machine,
             isolated: false,
             current_area,
-            work_status: WorkStatus::Normal {},
+            work_status: WorkStatus::Normal,
             work_quarantined: false,
         }
     }
@@ -314,7 +314,7 @@ impl Citizen {
     ) -> Point {
         let mut new_cell = cell;
         match self.work_status {
-            WorkStatus::Normal {} | WorkStatus::Essential {} => {
+            WorkStatus::Normal | WorkStatus::Essential => {
                 match hour_of_day {
                     constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
                         if self.uses_public_transport {
@@ -377,7 +377,7 @@ impl Citizen {
                 self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
             }
 
-            WorkStatus::NA {} => {
+            WorkStatus::NA => {
                 match hour_of_day {
                     constants::ROUTINE_WORK_TIME => {
                         new_cell = self.goto_area(grid.housing_area.clone(), map, cell, rng);
@@ -419,7 +419,7 @@ impl Citizen {
         let mut override_movement = false;
 
         match self.work_status {
-            WorkStatus::Normal {} | WorkStatus::Essential {} => {
+            WorkStatus::Normal | WorkStatus::Essential => {
                 if self.work_location.contains(&cell)
                     && target_area == self.home_location
                     && (self.state_machine.is_mild_symptomatic() || self.state_machine.is_infected_severe())
@@ -477,9 +477,9 @@ impl Citizen {
     }
 
     pub fn assign_essential_worker(&mut self, essential_workers_percentage: f64, rng: &mut RandomWrapper) {
-        if let WorkStatus::Normal {} = self.work_status {
+        if let WorkStatus::Normal = self.work_status {
             if rng.get().gen_bool(essential_workers_percentage) {
-                self.work_status = WorkStatus::Essential {};
+                self.work_status = WorkStatus::Essential;
             }
         }
     }
@@ -489,9 +489,9 @@ impl Citizen {
             if rng.get().gen_bool(constants::HOSPITAL_STAFF_PERCENTAGE) {
                 return WorkStatus::HospitalStaff { work_start_at: constants::ROUTINE_WORK_TIME };
             }
-            return WorkStatus::Normal {};
+            return WorkStatus::Normal;
         }
-        WorkStatus::NA {}
+        WorkStatus::NA
     }
 
     fn can_move(&self) -> bool {
@@ -527,7 +527,7 @@ impl Citizen {
     }
 
     pub fn is_essential_worker(&self) -> bool {
-        matches!(self.work_status, WorkStatus::Essential {})
+        matches!(self.work_status, WorkStatus::Essential)
     }
 
     pub fn is_commuter(&self, region_id: &String, simulation_hour: Hour) -> bool {
@@ -578,9 +578,8 @@ mod test {
         let work_location = Area::new(engine_id, Point::new(11, 0), Point::new(20, 20));
         let mut rng = RandomWrapper::new();
         let working_citizen =
-            Citizen::new(home_location.clone(), work_location.clone(), Point::new(2, 2), false, WorkStatus::Normal {}, &mut rng);
-        let non_working_citizen =
-            Citizen::new(home_location, work_location, Point::new(2, 2), false, WorkStatus::NA {}, &mut rng);
+            Citizen::new(home_location.clone(), work_location.clone(), Point::new(2, 2), false, WorkStatus::Normal, &mut rng);
+        let non_working_citizen = Citizen::new(home_location, work_location, Point::new(2, 2), false, WorkStatus::NA, &mut rng);
 
         assert_eq!(working_citizen.is_working(), true);
         assert_eq!(non_working_citizen.is_working(), false);

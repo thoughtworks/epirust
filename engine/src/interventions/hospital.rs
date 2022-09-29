@@ -57,10 +57,7 @@ impl BuildNewHospital {
             return false;
         }
         let start_of_day = counts.get_hour() % 24 == 0;
-        let exceeds_threshold = match self.intervention {
-            None => false,
-            Some(i) => self.new_infections_in_a_day >= i.spread_rate_threshold,
-        };
+        let exceeds_threshold = matches!(self.intervention, Some(i) if self.new_infections_in_a_day >= i.spread_rate_threshold);
         start_of_day && exceeds_threshold
     }
 

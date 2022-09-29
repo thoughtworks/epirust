@@ -65,10 +65,7 @@ impl LockdownIntervention {
     }
 
     fn above_threshold(&self, counts: &Counts) -> bool {
-        match self.intervention {
-            Some(i) => counts.get_infected() > i.at_number_of_infections,
-            None => false,
-        }
+        matches!(self.intervention, Some(i) if counts.get_infected() > i.at_number_of_infections)
     }
 
     pub fn set_zero_infection_hour(&mut self, zero_infection_hour: Hour) {
@@ -78,12 +75,9 @@ impl LockdownIntervention {
     }
 
     pub fn should_unlock(&self, counts: &Counts) -> bool {
-        if counts.get_hour()
-            == self.zero_infection_hour + (constants::QUARANTINE_DAYS as f64 * 1.5).round() as Hour * constants::HOURS_IN_A_DAY
-        {
-            return self.is_locked_down;
-        }
-        false
+        let unlock_hour =
+            self.zero_infection_hour + (constants::QUARANTINE_DAYS as f64 * 1.5).round() as Hour * constants::HOURS_IN_A_DAY;
+        self.is_locked_down && counts.get_hour() == unlock_hour
     }
 
     pub fn apply(&mut self) {

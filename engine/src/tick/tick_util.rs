@@ -22,10 +22,10 @@ use crate::interventions::lockdown::LockdownIntervention;
 use crate::kafka::kafka_producer::KafkaProducer;
 use crate::kafka::ticks_consumer;
 use crate::models::constants;
-use crate::models::custom_types::Hour;
 use crate::models::events::{Counts, Tick, TickAck};
 use crate::RunMode;
 use futures::StreamExt;
+use common::models::custom_types::Hour;
 
 pub async fn extract_tick(message_stream: &mut MessageStream<'_>) -> Tick {
     debug!("Start receiving tick");

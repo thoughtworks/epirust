@@ -26,8 +26,8 @@ use rdkafka::consumer::Consumer;
 use rdkafka::error::KafkaError;
 use rdkafka::message::BorrowedMessage;
 use rdkafka::message::Message;
+use common::config::request::Request;
 
-use crate::config::request::Request;
 use crate::epidemiology_simulation::Epidemiology;
 use crate::RunMode;
 use crate::utils::environment;

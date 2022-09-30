@@ -20,38 +20,20 @@
 use std::error::Error;
 use std::fs::File;
 
-use serde_json::Value;
-use validator::Validate;
-use crate::config::Population::Auto;
-
-use crate::custom_types::{Count, Percentage, Size, validate_percentage};
-use crate::travel_plan::TravelPlan;
+use common::config::{Config, TravelPlanConfig};
+use common::config::Population::Auto;
+use common::models::custom_types::Percentage;
 
 pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;
-
-pub fn read_simulation_conf(filename: &str) -> String {
-    let reader = File::open(filename).unwrap();
-    let config: Value = serde_json::from_reader(reader).unwrap();
-    let sim = config.as_object().unwrap();
-    serde_json::to_string(sim).unwrap()
-}
-
-pub fn get_hours(filename: &str) -> i64 {
-    let reader = File::open(filename).unwrap();
-    let config: Value = serde_json::from_reader(reader).unwrap();
-    let sim = config.get("engine_configs").unwrap().as_array().unwrap();
-    let hours = sim[0].get("config").unwrap().get("hours");
-    hours.unwrap().as_i64().unwrap()
-}
 
 #[derive(Deserialize, Serialize)]
 pub struct Configuration {
     engine_configs: Vec<EngineConfig>,
-    travel_plan: TravelPlan,
+    travel_plan: TravelPlanConfig,
 }
 
 impl Configuration {
-    pub fn get_travel_plan(&self) -> &TravelPlan {
+    pub fn get_travel_plan(&self) -> &TravelPlanConfig {
         &self.travel_plan
     }
 
@@ -70,8 +52,8 @@ impl Configuration {
 
     pub fn validate(&self) {
         self.engine_configs.iter().for_each(|eng_conf: &EngineConfig| {
-            let population = &eng_conf.config.population;
-            let grid_size = &eng_conf.config.geography_parameters.grid_size;
+            let population = &eng_conf.config.get_population();
+            let grid_size = &eng_conf.config.get_grid_size();
             let min_accepted_ratio = 3;
             let travel_plan = self.get_travel_plan();
 
@@ -129,40 +111,6 @@ impl Configuration {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Validate)]
-struct Config {
-    population: Population,
-    geography_parameters: GeographyParameters,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Validate)]
-pub struct GeographyParameters {
-    pub grid_size: Size,
-    #[validate(custom = "validate_percentage")]
-    pub hospital_beds_percentage: Percentage,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-pub enum Population {
-    Csv(CsvPopulation),
-    Auto(AutoPopulation),
-}
-
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
-pub struct CsvPopulation {
-    pub file: String,
-    pub cols: Vec<String>,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
-pub struct AutoPopulation {
-    pub number_of_agents: Count,
-    #[validate(custom = "validate_percentage")]
-    pub public_transport_percentage: Percentage,
-    #[validate(custom = "validate_percentage")]
-    pub working_percentage: Percentage,
-}
-
 // just a struct for easier parsing
 #[derive(Deserialize, Serialize)]
 struct EngineConfig {
@@ -172,6 +120,8 @@ struct EngineConfig {
 
 #[cfg(test)]
 mod tests {
+    use crate::get_hours;
+    use crate::utils::read_simulation_conf;
     use super::*;
 
     #[test]
@@ -179,7 +129,7 @@ mod tests {
         let config = Configuration::read("config/test/travel_plan.json").unwrap();
         let travel_plan = config.get_travel_plan();
 
-        assert_eq!(travel_plan.get_regions(), &vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()]);
+        assert_eq!(&travel_plan.get_regions(), &vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()]);
         assert_eq!(config.get_engine_ids(), vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()])
     }
 

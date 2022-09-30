@@ -45,7 +45,6 @@ pub struct Disease {
 }
 
 impl Disease {
-    #[cfg(test)]
     pub fn init(config_file_path: &str, disease_name: &String) -> Disease {
         use std::collections::HashMap;
         use std::fs::File;
@@ -56,7 +55,6 @@ impl Disease {
         *disease
     }
 
-    #[cfg(test)]
     pub fn new(
         regular_transmission_start_day: Day,
         high_transmission_start_day: Day,

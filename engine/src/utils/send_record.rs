@@ -17,7 +17,10 @@
  *
  */
 
+use rdkafka::error::KafkaError;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
+
+pub type SendResult<'a> = Result<(), (KafkaError, BaseRecord<'a, String, String>)>;
 
 pub trait SendRecord {
     fn send_record(&self, record: BaseRecord<String, String>);

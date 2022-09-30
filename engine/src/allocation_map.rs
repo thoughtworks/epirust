@@ -22,14 +22,14 @@ use std::collections::hash_map::IterMut;
 use fnv::FnvHashMap;
 use rand::Rng;
 use rand::seq::IteratorRandom;
+use common::config::{Config, TravelPlanConfig};
+use common::disease::Disease;
+use common::models::custom_types::{CoOrdinate, Count, Hour};
+use common::utils::RandomWrapper;
 
 use crate::citizen::Citizen;
 use crate::travel::commute::Commuter;
-use crate::Config;
-use crate::config::TravelPlanConfig;
-use crate::disease::Disease;
 use crate::models::constants;
-use crate::models::custom_types::{CoOrdinate, Count, Hour};
 use crate::disease_state_machine::State;
 use crate::geography::{Area, Grid};
 use crate::geography::Point;
@@ -37,7 +37,6 @@ use crate::interventions::Interventions;
 use crate::interventions::vaccination::VaccinateIntervention;
 use crate::listeners::listener::Listeners;
 use crate::models::events::Counts;
-use crate::utils::RandomWrapper;
 use crate::travel::migration::Migrator;
 
 #[derive(Clone)]
@@ -383,7 +382,6 @@ impl CitizenLocationMap {
 mod tests {
     use crate::citizen::WorkStatus;
     use crate::geography::define_geography;
-    use crate::utils::RandomWrapper;
 
     use super::*;
 

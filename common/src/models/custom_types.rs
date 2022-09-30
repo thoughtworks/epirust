@@ -17,13 +17,18 @@
  *
  */
 
-use common::models::custom_types::Hour;
-use crate::models::events::Counts;
+use validator::ValidationError;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TickAck {
-    pub engine_id: String,
-    pub hour: Hour,
-    pub counts: Counts,
-    pub locked_down: bool,
+pub type Hour = u32;
+pub type Count = u32;
+pub type Day = u32;
+pub type Size = u32;
+pub type CoOrdinate = i32;
+pub type Percentage = f64;
+
+pub fn validate_percentage(value: &f64) -> Result<(), ValidationError> {
+    if value < &0.0 && value > &1.0 {
+        return Err(ValidationError::new("percentage value needs to be between 0 to 1"));
+    }
+    Ok(())
 }

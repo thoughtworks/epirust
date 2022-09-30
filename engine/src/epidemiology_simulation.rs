@@ -21,12 +21,13 @@ use core::borrow::BorrowMut;
 use std::time::Instant;
 
 use futures::join;
+use common::config::{Config, Population, TravelPlanConfig};
+use common::disease::Disease;
+use common::models::CommutePlan;
+use common::utils::RandomWrapper;
 
 use crate::RunMode;
 use crate::allocation_map::CitizenLocationMap;
-use crate::config::{Config, TravelPlanConfig};
-use crate::config::Population;
-use crate::disease::Disease;
 use crate::geography;
 use crate::geography::Point;
 use crate::interventions::hospital::BuildNewHospital;
@@ -42,14 +43,13 @@ use crate::listeners::listener::{Listener, Listeners};
 use crate::listeners::travel_counter::TravelCounter;
 use crate::models::constants;
 use crate::models::events::Counts;
-use crate::utils::RandomWrapper;
 use crate::models::events::Tick;
 use crate::kafka::{ticks_consumer, travel_consumer};
 use crate::tick::{receive_tick, send_ack};
 use crate::travel::commute;
-use crate::travel::commute::{CommutePlan, Commuter};
+use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
-use crate::travel::migration::{EngineMigrationPlan, MigrationPlan, Migrator, MigratorsByRegion};
+use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
 use crate::utils::util::{output_file_format, counts_at_start};
 
 pub struct Epidemiology {
@@ -238,11 +238,7 @@ impl Epidemiology {
         let is_commute_enabled = travel_plan_config.commute.enabled;
         let is_migration_enabled = travel_plan_config.migration.enabled;
 
-        let migration_plan = if is_migration_enabled {
-            Some(MigrationPlan::new(travel_plan_config.get_regions(), travel_plan_config.get_migration_matrix().unwrap()))
-        } else {
-            None
-        };
+        let migration_plan = if is_migration_enabled { Some(travel_plan_config.migration_plan()) } else { None };
 
         let mut engine_migration_plan =
             EngineMigrationPlan::new(engine_id.clone(), migration_plan, self.agent_location_map.current_population());
@@ -459,10 +455,10 @@ impl Epidemiology {
 
 #[cfg(test)]
 mod tests {
-    use crate::config::{AutoPopulation, GeographyParameters};
+    use common::config::{AutoPopulation, GeographyParameters};
+    use common::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use crate::geography::Area;
     use crate::geography::Point;
-    use crate::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use crate::STANDALONE_SIM_ID;
 
     use super::*;

@@ -18,9 +18,9 @@
  */
 
 use time::OffsetDateTime;
-use crate::{Config, RunMode};
-use crate::config::StartingInfections;
-use crate::models::custom_types::Count;
+use common::config::{Config, StartingInfections};
+use common::models::custom_types::Count;
+use crate::RunMode;
 use crate::models::events::Counts;
 
 pub fn output_file_format(config: &Config, run_mode: &RunMode) -> String {

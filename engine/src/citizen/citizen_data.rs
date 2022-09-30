@@ -17,9 +17,9 @@
  *
  */
 
-use crate::config::StartingInfections;
+use common::config::StartingInfections;
+use common::models::custom_types::{Count, Percentage};
 use crate::geography::{Area, Point};
-use crate::models::custom_types::{Count, Percentage};
 
 pub struct CitizensData<'a> {
     pub(crate) number_of_agents: Count,

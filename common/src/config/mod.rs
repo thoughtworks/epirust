@@ -56,7 +56,6 @@ pub struct Config {
 }
 
 impl Config {
-    #[cfg(test)]
     pub fn new(
         population: Population,
         disease: Disease,

@@ -21,9 +21,8 @@ use rdkafka::ClientConfig;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 
 use crate::travel::commute::CommutersByRegion;
-use crate::models::custom_types::SendResult;
 use crate::travel::migration::MigratorsByRegion;
-use crate::utils::{environment, SendRecord};
+use crate::utils::{environment, SendRecord, SendResult};
 
 const TICK_ACKS_TOPIC: &str = "ticks_ack";
 pub const MIGRATION_TOPIC: &str = "migration_";

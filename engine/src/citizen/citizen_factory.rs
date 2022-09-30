@@ -19,11 +19,12 @@
 
 use rand::Rng;
 use rand::seq::IteratorRandom;
+use common::config::{StartingInfections, TravelPlanConfig};
+use common::models::CommutePlan;
+use common::utils::RandomWrapper;
+
 use crate::citizen::{Citizen, CitizensData, WorkStatus};
-use crate::config::{StartingInfections, TravelPlanConfig};
 use crate::geography::Point;
-use crate::travel::commute::CommutePlan;
-use crate::utils::RandomWrapper;
 
 pub fn citizen_factory(
     ctz_data: CitizensData,
@@ -133,7 +134,6 @@ pub fn set_starting_infections(agent_list: &mut [Citizen], start_infections: &St
 #[cfg(test)]
 mod tests {
     use crate::citizen::citizen_factory::{citizen_factory, set_starting_infections};
-    use crate::config::StartingInfections;
     use crate::geography::Area;
     use super::*;
 

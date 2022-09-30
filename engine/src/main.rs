@@ -24,14 +24,12 @@ extern crate serde_derive;
 extern crate log;
 
 use clap::{App, Arg};
-use crate::config::Config;
+use common::config::Config;
 
 use crate::kafka::kafka_consumer::KafkaConsumer;
 
 mod allocation_map;
 mod citizen;
-mod config;
-mod disease;
 mod disease_state_machine;
 mod epidemiology_simulation;
 mod geography;

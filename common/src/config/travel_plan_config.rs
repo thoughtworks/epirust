@@ -17,9 +17,10 @@
  *
  */
 
-use crate::travel::commute::CommutePlan;
+use crate::models::CommutePlan;
+use crate::models::migration_plan::MigrationPlan;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Migration {
     pub enabled: bool,
     matrix: Option<Vec<Vec<u32>>>,
@@ -27,13 +28,13 @@ pub struct Migration {
     end_migration_hour: u32,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Commute {
     pub enabled: bool,
     pub matrix: Option<Vec<Vec<u32>>>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TravelPlanConfig {
     pub regions: Vec<String>,
     pub migration: Migration,
@@ -55,6 +56,14 @@ impl TravelPlanConfig {
 
     pub fn get_regions(&self) -> Vec<String> {
         self.regions.clone()
+    }
+
+    pub fn validate_regions(&self, regions: &[String]) -> bool {
+        regions.len() == self.regions.len() && regions.iter().all(|region| self.regions.contains(region))
+    }
+
+    pub fn migration_plan(&self) -> MigrationPlan {
+        MigrationPlan::new(self.get_regions(), self.get_migration_matrix().unwrap())
     }
 
     pub fn commute_plan(&self) -> CommutePlan {

@@ -17,15 +17,10 @@
  *
  */
 
-use validator::ValidationError;
+#[macro_use]
+extern crate serde_derive;
 
-pub type Count = u32;
-pub type Size = u32;
-pub type Percentage = f64;
-
-pub fn validate_percentage(value: &f64) -> Result<(), ValidationError> {
-    if value < &0.0 && value > &1.0 {
-        return Err(ValidationError::new("percentage value needs to be between 0 to 1"));
-    }
-    Ok(())
-}
+pub mod config;
+pub mod disease;
+pub mod models;
+pub mod utils;

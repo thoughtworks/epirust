@@ -17,9 +17,9 @@
  *
  */
 use std::any::Any;
+use common::models::custom_types::Hour;
 
 use crate::listeners::listener::Listener;
-use crate::models::custom_types::Hour;
 use crate::disease_state_machine::State;
 use crate::travel::migration::MigratorsByRegion;
 use crate::utils::environment;

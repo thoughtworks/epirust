@@ -19,7 +19,11 @@
           "mild_infected_last_day": 12,
           "regular_transmission_rate": 0.025,
           "high_transmission_rate": 0.25,
-          "death_rate": 0.035
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "percentage_severe_infected_population": 0.3,
+          "exposed_duration": 48,
+          "pre_symptomatic_duration": 48
         },
         "geography_parameters": {
           "grid_size": 250,
@@ -61,7 +65,11 @@
           "mild_infected_last_day": 12,
           "regular_transmission_rate": 0.025,
           "high_transmission_rate": 0.25,
-          "death_rate": 0.035
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "percentage_severe_infected_population": 0.3,
+          "exposed_duration": 48,
+          "pre_symptomatic_duration": 48
         },
         "geography_parameters": {
           "grid_size": 250,
@@ -103,7 +111,11 @@
           "mild_infected_last_day": 12,
           "regular_transmission_rate": 0.025,
           "high_transmission_rate": 0.25,
-          "death_rate": 0.035
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "percentage_severe_infected_population": 0.3,
+          "exposed_duration": 48,
+          "pre_symptomatic_duration": 48
         },
         "geography_parameters": {
           "grid_size": 250,

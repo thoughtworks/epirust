@@ -37,6 +37,17 @@ impl CommutePlan {
         *row.get(to_index).unwrap()
     }
 
+    pub fn get_total_outgoing(&self, region_id: &String) -> u32 {
+        let from_index = self.get_position(region_id);
+        let row = self.matrix.get(from_index).unwrap();
+        row.iter().sum()
+    }
+
+    pub fn get_total_incoming(&self, region_id: &String) -> u32 {
+        let region_index = self.get_position(region_id);
+        self.column(region_index).sum()
+    }
+
     fn get_position(&self, engine_id: &String) -> usize {
         self.regions.iter().position(|i| i.eq(engine_id)).expect("Could not find region with specified name")
     }

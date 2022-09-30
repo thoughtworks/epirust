@@ -18,10 +18,8 @@
  */
 
 pub mod environment;
-mod random_wrapper;
 mod send_record;
 pub(crate) mod util;
 
-pub use send_record::SendRecord;
-pub use random_wrapper::RandomWrapper;
+pub use send_record::{SendRecord, SendResult};
 pub use util::{output_file_format, counts_at_start};

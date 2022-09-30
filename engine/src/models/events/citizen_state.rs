@@ -17,11 +17,11 @@
  *
  */
 use uuid::Uuid;
+use common::models::custom_types::Hour;
 
 use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::disease_state_machine::State;
-use crate::models::custom_types::Hour;
 
 #[derive(Serialize)]
 pub struct CitizenState {
@@ -69,8 +69,8 @@ impl CitizenStatesAtHr {
 
 #[cfg(test)]
 mod tests {
+    use common::utils::RandomWrapper;
     use crate::geography::Area;
-    use crate::utils::RandomWrapper;
     use crate::citizen::WorkStatus;
 
     use super::*;

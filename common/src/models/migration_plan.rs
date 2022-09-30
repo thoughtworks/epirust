@@ -19,8 +19,8 @@
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct MigrationPlan {
-    pub(in crate::travel::migration) regions: Vec<String>,
-    pub(in crate::travel::migration) matrix: Vec<Vec<u32>>,
+    pub regions: Vec<String>,
+    pub matrix: Vec<Vec<u32>>,
 }
 
 impl MigrationPlan {
@@ -32,6 +32,11 @@ impl MigrationPlan {
         let index = self.get_position(engine_id);
         let row = self.matrix.get(index).unwrap();
         row.iter().sum()
+    }
+
+    pub fn get_total_incoming(&self, engine_id: &str) -> u32 {
+        let index = self.get_position(engine_id);
+        self.column(index).sum()
     }
 
     pub fn incoming_regions_count(&self, engine_id: &str) -> u32 {
@@ -63,7 +68,7 @@ impl MigrationPlan {
 
 #[cfg(test)]
 mod test {
-    use crate::travel::migration::MigrationPlan;
+    use crate::models::migration_plan::MigrationPlan;
 
     #[test]
     fn should_get_total_outgoing() {

@@ -19,11 +19,11 @@
 use std::any::Any;
 use serde_json::Value;
 use std::fs::File;
+use common::models::custom_types::Hour;
 
 use crate::listeners::listener::Listener;
 use crate::interventions::intervention_type::InterventionType;
 use crate::utils::environment;
-use crate::models::custom_types::Hour;
 
 #[derive(Serialize)]
 struct InterventionReport {

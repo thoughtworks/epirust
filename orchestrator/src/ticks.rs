@@ -25,15 +25,15 @@ use rdkafka::error::KafkaError;
 use std::error::Error;
 use rdkafka::Message;
 use futures::StreamExt;
-use crate::travel_plan::TravelPlan;
+use common::config::TravelPlanConfig;
 
 const ROUTINE_TRAVEL_START_TIME: i64 = 7;
 const ROUTINE_TRAVEL_END_TIME: i64 = 17;
 
 //Note: these ticks are safe, they don't cause Lyme disease
 
-pub async fn start_ticking(travel_plan: &TravelPlan, hours: Range<i64>) {
-    let mut acks: TickAcks = TickAcks::new(travel_plan.get_regions());
+pub async fn start_ticking(travel_plan: &TravelPlanConfig, hours: Range<i64>) {
+    let mut acks: TickAcks = TickAcks::new(&travel_plan.get_regions());
     let mut producer = KafkaProducer::new();
     let consumer = KafkaConsumer::new();
     let mut message_stream = consumer.start_message_stream();

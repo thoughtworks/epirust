@@ -28,7 +28,6 @@ pub struct StartingInfections {
 }
 
 impl StartingInfections {
-    #[cfg(test)]
     pub fn new(mild_asymp: Count, mild_symp: Count, severe: Count, exposed: Count) -> StartingInfections {
         StartingInfections {
             infected_mild_asymptomatic: mild_asymp,

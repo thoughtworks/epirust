@@ -30,14 +30,14 @@ use rand::seq::IteratorRandom;
 use rand::seq::SliceRandom;
 use serde::Deserialize;
 use uuid::Uuid;
+use common::config::TravelPlanConfig;
+use common::disease::Disease;
+use common::models::custom_types::{Day, Hour, Percentage};
+use common::utils::RandomWrapper;
 
 use crate::allocation_map::CitizenLocationMap;
-use crate::config::TravelPlanConfig;
-use crate::models::custom_types::{Day, Hour, Percentage};
-use crate::disease::Disease;
 use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::{Area, Grid, Point};
-use crate::utils::RandomWrapper;
 use crate::models::constants;
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
@@ -566,9 +566,9 @@ impl Citizen {
 
 #[cfg(test)]
 mod test {
+    use common::utils::RandomWrapper;
     use crate::citizen::{Citizen, WorkStatus};
     use crate::geography::{Area, Point};
-    use crate::utils::RandomWrapper;
 
     #[test]
     fn should_check_if_agent_is_working() {

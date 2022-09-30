@@ -17,11 +17,12 @@
  *
  */
 
-use crate::config::Config;
-use crate::config::intervention_config::{InterventionConfig, LockdownConfig};
+use common::config::Config;
+use common::config::intervention_config::{InterventionConfig, LockdownConfig};
+use common::models::custom_types::Hour;
+
 use crate::interventions::intervention_type::InterventionType;
 use crate::models::constants;
-use crate::models::custom_types::Hour;
 use crate::models::events::Counts;
 
 pub struct LockdownIntervention {

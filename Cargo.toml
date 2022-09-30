@@ -1,2 +1,2 @@
 [workspace]
-members = ["engine", "orchestrator"]
+members = ["engine", "orchestrator", "common"]

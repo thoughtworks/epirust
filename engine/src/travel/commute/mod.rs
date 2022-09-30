@@ -16,16 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-mod commute_plan;
 mod commuter;
 mod commuters_by_region;
 
 use rdkafka::consumer::MessageStream;
-pub use commuter::Commuter;
-pub use commuters_by_region::CommutersByRegion;
-pub use commute_plan::CommutePlan;
+use common::models::CommutePlan;
+
 use crate::models::constants;
 use crate::models::events::Tick;
+
+pub use commuter::Commuter;
+pub use commuters_by_region::CommutersByRegion;
 
 pub(crate) async fn receive_commuters(
     commute_plan: &CommutePlan,

@@ -21,9 +21,9 @@ use std::any::Any;
 
 use rdkafka::ClientConfig;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
+use common::models::custom_types::Hour;
 
 use crate::citizen::Citizen;
-use crate::models::custom_types::Hour;
 use crate::utils::environment;
 use crate::geography::{Grid, Point};
 use crate::interventions::intervention_type::InterventionType;

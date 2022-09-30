@@ -17,13 +17,18 @@
  *
  */
 
-use common::models::custom_types::Hour;
-use crate::models::events::Counts;
+use validator::Validate;
+use crate::models::custom_types::{Percentage, Size, validate_percentage};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TickAck {
-    pub engine_id: String,
-    pub hour: Hour,
-    pub counts: Counts,
-    pub locked_down: bool,
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Validate)]
+pub struct GeographyParameters {
+    pub grid_size: Size,
+    #[validate(custom = "validate_percentage")]
+    pub hospital_beds_percentage: Percentage,
+}
+
+impl GeographyParameters {
+    pub fn new(grid_size: Size, hospital_beds_percentage: f64) -> GeographyParameters {
+        GeographyParameters { grid_size, hospital_beds_percentage }
+    }
 }

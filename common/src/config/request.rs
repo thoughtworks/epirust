@@ -17,26 +17,25 @@
  *
  */
 
-use crate::Config;
-use crate::config::TravelPlanConfig;
+use crate::config::{Config, TravelPlanConfig};
 
 #[derive(Debug, Deserialize)]
 pub struct SimulationRequest {
-    pub(crate) sim_id: String,
+    pub sim_id: String,
     #[serde(flatten)]
-    pub(crate) config: Config,
+    pub config: Config,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SimRequestByEngine {
-    pub(crate) engine_id: String,
-    pub(crate) config: SimulationRequest,
+    pub engine_id: String,
+    pub config: SimulationRequest,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct MultiSimRequest {
-    pub(crate) engine_configs: Vec<SimRequestByEngine>,
-    pub(crate) travel_plan: TravelPlanConfig,
+    pub engine_configs: Vec<SimRequestByEngine>,
+    pub travel_plan: TravelPlanConfig,
 }
 
 #[derive(Debug, Deserialize)]

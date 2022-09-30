@@ -17,19 +17,8 @@
  *
  */
 
-use validator::Validate;
-use crate::models::custom_types::{Percentage, Size, validate_percentage};
+mod commute_plan;
+pub mod custom_types;
+pub mod migration_plan;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Validate)]
-pub struct GeographyParameters {
-    pub grid_size: Size,
-    #[validate(custom = "validate_percentage")]
-    pub hospital_beds_percentage: Percentage,
-}
-
-impl GeographyParameters {
-    #[cfg(test)]
-    pub fn new(grid_size: Size, hospital_beds_percentage: f64) -> GeographyParameters {
-        GeographyParameters { grid_size, hospital_beds_percentage }
-    }
-}
+pub use commute_plan::CommutePlan;

@@ -18,11 +18,11 @@
  */
 use rand::Rng;
 use rand::seq::SliceRandom;
+use common::disease::Disease;
+use common::models::custom_types::{Day, Hour};
+use common::utils::RandomWrapper;
 
-use crate::disease::Disease;
-use crate::utils::RandomWrapper;
 use crate::models::constants;
-use crate::models::custom_types::{Day, Hour};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum State {

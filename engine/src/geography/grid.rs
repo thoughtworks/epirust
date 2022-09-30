@@ -20,14 +20,14 @@
 use plotters::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
+use common::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
+use common::models::custom_types::{CoOrdinate, Count, Size};
+use common::utils::RandomWrapper;
 
 use crate::citizen;
 use crate::citizen::{Citizen, CitizensData, PopulationRecord};
-use crate::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
 use crate::geography::{Area, Point};
-use crate::utils::RandomWrapper;
 use crate::models::constants;
-use crate::models::custom_types::{CoOrdinate, Count, Size};
 
 #[derive(Serialize, Clone)]
 pub struct Grid {

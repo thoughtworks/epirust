@@ -1,0 +1,68 @@
+{
+  "population": {
+    "Csv": {
+      "file": "config/pune_population.csv",
+      "cols": [
+        "age",
+        "sex",
+        "working",
+        "pub_transport"
+      ]
+    }
+  },
+  "disease": {
+    "regular_transmission_start_day": 5,
+    "high_transmission_start_day": 20,
+    "last_day": 40,
+    "asymptomatic_last_day": 9,
+    "mild_infected_last_day": 12,
+    "regular_transmission_rate": 0.025,
+    "high_transmission_rate": 0.25,
+    "death_rate": 0.035,
+    "percentage_asymptomatic_population": 0.3,
+    "percentage_severe_infected_population": 0.3,
+    "exposed_duration": 48,
+    "pre_symptomatic_duration": 48
+  },
+  "disease_overrides": [
+    {
+      "population_param": "age",
+      "values": [
+        "60-64",
+        "65-69",
+        "70-74",
+        "75-79",
+        "80+"
+      ],
+      "disease": {
+        "regular_transmission_start_day": 5,
+        "high_transmission_start_day": 20,
+        "last_day": 40,
+        "asymptomatic_last_day": 9,
+        "mild_infected_last_day": 12,
+        "regular_transmission_rate": 0.025,
+        "high_transmission_rate": 0.25,
+        "death_rate": 0.2,
+        "percentage_asymptomatic_population": 0.3,
+        "percentage_severe_infected_population": 0.3,
+        "exposed_duration": 48,
+        "pre_symptomatic_duration": 48
+      }
+    }
+  ],
+  "geography_parameters": {
+    "grid_size": 5660,
+    "hospital_beds_percentage": 0.003
+  },
+  "end_of_migration": 336,
+  "reduced_travel_percentage": 0.0005,
+  "hours": 10000,
+  "interventions": [
+    {
+      "Vaccinate": {
+        "at_hour": 5000,
+        "percent": 0.2
+      }
+    }
+  ]
+}

@@ -30,18 +30,18 @@ use clap::{App, Arg};
 use rdkafka::admin::{AdminClient, AdminOptions, NewTopic, TopicReplication};
 use rdkafka::client::DefaultClientContext;
 use rdkafka::ClientConfig;
+use common::config::TravelPlanConfig;
 
-use crate::config::{Configuration, get_hours};
+use crate::config::Configuration;
 use crate::kafka_producer::KafkaProducer;
-use crate::travel_plan::TravelPlan;
+use crate::utils::get_hours;
 
 mod config;
-mod custom_types;
 mod environment;
 mod kafka_consumer;
 mod kafka_producer;
 mod ticks;
-mod travel_plan;
+mod utils;
 
 #[tokio::main]
 async fn main() {
@@ -63,13 +63,13 @@ async fn main() {
     let config_path = matches.value_of("config").unwrap_or("config/simulation.json");
 
     let config = Configuration::read(config_path).expect("Error while reading config");
-    let sim_conf = config::read_simulation_conf(config_path);
+    let sim_conf = utils::read_simulation_conf(config_path);
     let travel_plan = config.get_travel_plan();
 
     let hours = 1..get_hours(config_path);
 
     config.validate();
-    cleanup(travel_plan.get_regions()).await;
+    cleanup(&travel_plan.get_regions()).await;
     start(travel_plan, hours, &sim_conf).await;
 }
 
@@ -155,7 +155,7 @@ async fn cleanup(regions: &Vec<String>) {
     }
 }
 
-async fn start(travel_plan: &TravelPlan, hours: Range<i64>, sim_conf: &String) {
+async fn start(travel_plan: &TravelPlanConfig, hours: Range<i64>, sim_conf: &String) {
     let mut producer = KafkaProducer::new();
 
     match producer.start_request(sim_conf) {

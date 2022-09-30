@@ -17,7 +17,7 @@
  *
  */
 
-use crate::models::custom_types::Hour;
+use common::models::custom_types::Hour;
 
 #[derive(Debug, Copy, Deserialize, PartialEq, Eq, Clone)]
 pub struct Tick {

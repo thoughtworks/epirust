@@ -20,10 +20,10 @@
 use std::hash::{Hash, Hasher};
 use rand::Rng;
 use rand::seq::IteratorRandom;
+use common::models::custom_types::Count;
+use common::utils::RandomWrapper;
 
-use crate::models::custom_types::Count;
 use crate::geography::Point;
-use crate::utils::RandomWrapper;
 
 #[derive(Clone, Eq, Debug, Serialize, Deserialize)]
 pub struct Area {

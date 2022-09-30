@@ -21,9 +21,9 @@ use rdkafka::consumer::MessageStream;
 use crate::kafka::travel_consumer;
 use crate::travel::commute::Commuter;
 use futures::StreamExt;
+use common::models::custom_types::Hour;
 use crate::geography::Point;
 use crate::models::constants;
-use crate::models::custom_types::Hour;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct CommutersByRegion {

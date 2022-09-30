@@ -19,13 +19,13 @@
 
 use rdkafka::consumer::MessageStream;
 use futures::StreamExt;
+use common::models::custom_types::Count;
+use common::models::migration_plan::MigrationPlan;
+
 use crate::geography::Point;
 use crate::kafka::travel_consumer;
-
-use crate::models::custom_types::Count;
 use crate::models::events::Tick;
-
-use crate::travel::migration::{MigrationPlan, Migrator, MigratorsByRegion};
+use crate::travel::migration::{Migrator, MigratorsByRegion};
 
 /// Travel plan in the context of the current engine
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
@@ -112,6 +112,7 @@ impl EngineMigrationPlan {
 
 #[cfg(test)]
 mod tests {
+    use common::models::migration_plan::MigrationPlan;
     use super::*;
 
     #[test]

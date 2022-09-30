@@ -8,6 +8,7 @@ license = "AGPL-3.0-or-later"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+common = { path = "../common" }
 rand = "0.8.5"
 fnv = "1.0.6"
 csv = "1.1.1"
@@ -24,7 +25,7 @@ time = { version = "0.3.14", features = ["formatting"] }
 geo-types = "0.7.7"
 geo = "0.23.0"
 geojson = "0.23.0"
-plotters = { version = "0.3.3", default-features = false, features = ["bitmap_backend", "bitmap_encoder" ] }
+plotters = { version = "0.3.3", default-features = false, features = ["bitmap_backend", "bitmap_encoder"] }
 log = "0.4"
 env_logger = "0.9.0"
 uuid = { version = "1.1.2", features = ["serde", "v4"] }

@@ -1,6 +1,6 @@
 /*
  * EpiRust
- * Copyright (c) 2020  ThoughtWorks, Inc.
+ * Copyright (c) 2022  ThoughtWorks, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,22 +17,6 @@
  *
  */
 
-use rdkafka::error::KafkaError;
-use rdkafka::producer::BaseRecord;
-use validator::ValidationError;
+mod random_wrapper;
 
-pub type Hour = u32;
-pub type Count = u32;
-pub type Day = u32;
-pub type Size = u32;
-pub type CoOrdinate = i32;
-pub type Percentage = f64;
-
-pub type SendResult<'a> = Result<(), (KafkaError, BaseRecord<'a, String, String>)>;
-
-pub fn validate_percentage(value: &f64) -> Result<(), ValidationError> {
-    if value < &0.0 && value > &1.0 {
-        return Err(ValidationError::new("percentage value needs to be between 0 to 1"));
-    }
-    Ok(())
-}
+pub use random_wrapper::RandomWrapper;

@@ -23,6 +23,7 @@ use std::fs::File;
 use common::config::Population::Auto;
 use common::config::{Config, TravelPlanConfig};
 use common::models::custom_types::Percentage;
+use common::models::travel_plan::TravelPlan;
 
 pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;
 

@@ -17,8 +17,7 @@
  *
  */
 
-use crate::models::migration_plan::MigrationPlan;
-use crate::models::CommutePlan;
+use crate::models::{CommutePlan, MigrationPlan};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Migration {

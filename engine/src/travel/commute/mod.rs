@@ -19,6 +19,7 @@
 mod commuter;
 mod commuters_by_region;
 
+use common::models::travel_plan::TravelPlan;
 use common::models::CommutePlan;
 use rdkafka::consumer::MessageStream;
 

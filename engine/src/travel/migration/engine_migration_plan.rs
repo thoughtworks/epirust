@@ -18,7 +18,8 @@
  */
 
 use common::models::custom_types::Count;
-use common::models::migration_plan::MigrationPlan;
+use common::models::travel_plan::TravelPlan;
+use common::models::MigrationPlan;
 use futures::StreamExt;
 use rdkafka::consumer::MessageStream;
 
@@ -113,7 +114,7 @@ impl EngineMigrationPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common::models::migration_plan::MigrationPlan;
+    use common::models::MigrationPlan;
 
     #[test]
     fn should_calc_outgoing_percent() {

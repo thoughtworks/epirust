@@ -18,7 +18,10 @@
  */
 
 mod commute_plan;
+mod migration_plan;
+
 pub mod custom_types;
-pub mod migration_plan;
+pub mod travel_plan;
 
 pub use commute_plan::CommutePlan;
+pub use migration_plan::MigrationPlan;

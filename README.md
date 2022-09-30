@@ -21,8 +21,7 @@ Prerequisites:
 
 ##### Build EpiRust engine docker image 
 ```
-cd engine
-docker build -t epirust-engine .
+docker build -t epirust-engine -f ./engine/Dockerfile .
 ```
 
 ##### Running EpiRust engine docker container

@@ -1,0 +1,10 @@
+target
+Cargo.lock
+**/*.rs.bk
+files
+*.db
+Dockerfile.*
+output/
+*/Cargo.lock
+.idea
+*/target

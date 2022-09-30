@@ -12,11 +12,11 @@ Create PV and PVC in order to use that storage. You can refer the sample pv and 
 
 Build the docker images for engine
 ```sh
-docker build -t <image_repo:tag> engine/dockerfile
+docker build -t <image_repo:tag> -f engine/dockerfile .
 ```
 Build the docker images for orchestrator
 ```sh
-docker build -t <image_repo:tag> orchestrator/dockerfile
+docker build -t <image_repo:tag> -f orchestrator/dockerfile .
 ```
 Update the helm-chart/epirust/values.yaml with volume name, claim name, kafka url, config file etc.
 

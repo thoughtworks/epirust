@@ -21,6 +21,9 @@ use rdkafka::consumer::MessageStream;
 use crate::kafka::travel_consumer;
 use crate::travel::commute::Commuter;
 use futures::StreamExt;
+use crate::geography::Point;
+use crate::models::constants;
+use crate::models::custom_types::Hour;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct CommutersByRegion {
@@ -51,5 +54,26 @@ impl CommutersByRegion {
             maybe_commuters = travel_consumer::read_commuters(next_msg);
         }
         maybe_commuters
+    }
+
+    pub fn get_commuters_by_region(
+        regions: &[String],
+        commuters: &Vec<(Point, Commuter)>,
+        simulation_hour: Hour,
+    ) -> Vec<CommutersByRegion> {
+        let mut commuters_by_region: Vec<CommutersByRegion> = Vec::new();
+        for region in regions {
+            let mut commuters_for_region: Vec<Commuter> = Vec::new();
+            for (_point, commuter) in commuters {
+                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME && commuter.work_location.location_id == *region {
+                    commuters_for_region.push(commuter.clone())
+                }
+                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME && commuter.home_location.location_id == *region {
+                    commuters_for_region.push(commuter.clone())
+                }
+            }
+            commuters_by_region.push(CommutersByRegion { to_engine_id: region.clone(), commuters: commuters_for_region })
+        }
+        commuters_by_region
     }
 }

@@ -46,6 +46,7 @@ use crate::utils::RandomWrapper;
 use crate::models::events::Tick;
 use crate::kafka::{ticks_consumer, travel_consumer};
 use crate::tick::{receive_tick, send_ack};
+use crate::travel::commute;
 use crate::travel::commute::{CommutePlan, Commuter};
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, MigrationPlan, Migrator, MigratorsByRegion};
@@ -345,7 +346,7 @@ impl Epidemiology {
                 }
 
                 let outgoing_commuters_by_region = if is_commute_enabled {
-                    commute_plan.get_commuters_by_region(&outgoing_commuters, simulation_hour)
+                    CommutersByRegion::get_commuters_by_region(&commute_plan.regions, &outgoing_commuters, simulation_hour)
                 } else {
                     Vec::new()
                 };
@@ -364,7 +365,7 @@ impl Epidemiology {
 
             if is_commute_enabled {
                 let commute_start_time = Instant::now();
-                let received_commuters = commute_plan.receive_commuters(tick, &mut commute_stream, engine_id);
+                let received_commuters = commute::receive_commuters(&commute_plan, tick, &mut commute_stream, engine_id);
                 let (mut incoming_commuters,) = join!(received_commuters);
                 total_commute_sync_time += commute_start_time.elapsed().as_millis();
                 info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);

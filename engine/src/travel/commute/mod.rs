@@ -20,6 +20,51 @@ mod commute_plan;
 mod commuter;
 mod commuters_by_region;
 
+use rdkafka::consumer::MessageStream;
 pub use commuter::Commuter;
 pub use commuters_by_region::CommutersByRegion;
 pub use commute_plan::CommutePlan;
+use crate::models::constants;
+use crate::models::events::Tick;
+
+pub(crate) async fn receive_commuters(
+    commute_plan: &CommutePlan,
+    tick: Option<Tick>,
+    message_stream: &mut MessageStream<'_>,
+    engine_id: &String,
+) -> Vec<Commuter> {
+    if tick.is_some() {
+        let mut incoming: Vec<Commuter> = Vec::new();
+        let hour = tick.unwrap().hour() % 24;
+        if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
+            let expected_incoming_regions = commute_plan.incoming_regions_count(engine_id);
+            let mut received_incoming_regions = 0;
+            debug!("Receiving commuters from {} regions", expected_incoming_regions);
+            while expected_incoming_regions != received_incoming_regions {
+                let maybe_msg = CommutersByRegion::receive_commuters_from_region(message_stream, engine_id).await;
+                if let Some(region_incoming) = maybe_msg {
+                    if hour == constants::ROUTINE_TRAVEL_START_TIME {
+                        trace!(
+                            "Travel_start: Received {} commuters from {:?} region",
+                            region_incoming.commuters.len(),
+                            region_incoming.commuters.get(0).map(|x| x.home_location.location_id.to_string())
+                        );
+                    }
+
+                    if hour == constants::ROUTINE_TRAVEL_END_TIME {
+                        trace!(
+                            "Travel_end: Received {} commuters from {:?} region",
+                            region_incoming.commuters.len(),
+                            region_incoming.commuters.get(0).map(|x| x.work_location.location_id.to_string())
+                        )
+                    }
+                    incoming.extend(region_incoming.get_commuters());
+                    received_incoming_regions += 1;
+                }
+            }
+        }
+        incoming
+    } else {
+        Vec::new()
+    }
+}

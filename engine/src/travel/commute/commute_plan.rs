@@ -17,14 +17,6 @@
  *
  */
 
-use rdkafka::consumer::MessageStream;
-use crate::models::constants;
-use crate::models::custom_types::Hour;
-use crate::geography::Point;
-use crate::models::events::Tick;
-use crate::travel::commute::Commuter;
-use crate::travel::commute::CommutersByRegion;
-
 #[derive(Clone, Debug, Deserialize)]
 pub struct CommutePlan {
     pub regions: Vec<String>,
@@ -59,64 +51,5 @@ impl CommutePlan {
             commuters_by_region.push((region.to_string(), self.get_outgoing(&from_region, region)))
         }
         commuters_by_region
-    }
-
-    pub fn get_commuters_by_region(&self, commuters: &Vec<(Point, Commuter)>, simulation_hour: Hour) -> Vec<CommutersByRegion> {
-        let mut commuters_by_region: Vec<CommutersByRegion> = Vec::new();
-        for region in &self.regions {
-            let mut commuters_for_region: Vec<Commuter> = Vec::new();
-            for (_point, commuter) in commuters {
-                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME && commuter.work_location.location_id == *region {
-                    commuters_for_region.push(commuter.clone())
-                }
-                if simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME && commuter.home_location.location_id == *region {
-                    commuters_for_region.push(commuter.clone())
-                }
-            }
-            commuters_by_region.push(CommutersByRegion { to_engine_id: region.clone(), commuters: commuters_for_region })
-        }
-        commuters_by_region
-    }
-
-    pub(crate) async fn receive_commuters(
-        &self,
-        tick: Option<Tick>,
-        message_stream: &mut MessageStream<'_>,
-        engine_id: &String,
-    ) -> Vec<Commuter> {
-        if tick.is_some() {
-            let mut incoming: Vec<Commuter> = Vec::new();
-            let hour = tick.unwrap().hour() % 24;
-            if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
-                let expected_incoming_regions = self.incoming_regions_count(engine_id);
-                let mut received_incoming_regions = 0;
-                debug!("Receiving commuters from {} regions", expected_incoming_regions);
-                while expected_incoming_regions != received_incoming_regions {
-                    let maybe_msg = CommutersByRegion::receive_commuters_from_region(message_stream, engine_id).await;
-                    if let Some(region_incoming) = maybe_msg {
-                        if hour == constants::ROUTINE_TRAVEL_START_TIME {
-                            trace!(
-                                "Travel_start: Received {} commuters from {:?} region",
-                                region_incoming.commuters.len(),
-                                region_incoming.commuters.get(0).map(|x| x.home_location.location_id.to_string())
-                            );
-                        }
-
-                        if hour == constants::ROUTINE_TRAVEL_END_TIME {
-                            trace!(
-                                "Travel_end: Received {} commuters from {:?} region",
-                                region_incoming.commuters.len(),
-                                region_incoming.commuters.get(0).map(|x| x.work_location.location_id.to_string())
-                            )
-                        }
-                        incoming.extend(region_incoming.get_commuters());
-                        received_incoming_regions += 1;
-                    }
-                }
-            }
-            incoming
-        } else {
-            Vec::new()
-        }
     }
 }

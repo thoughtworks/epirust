@@ -17,10 +17,10 @@
  *
  */
 
-use rdkafka::consumer::MessageStream;
-use futures::StreamExt;
 use common::models::custom_types::Count;
 use common::models::migration_plan::MigrationPlan;
+use futures::StreamExt;
+use rdkafka::consumer::MessageStream;
 
 use crate::geography::Point;
 use crate::kafka::travel_consumer;
@@ -112,8 +112,8 @@ impl EngineMigrationPlan {
 
 #[cfg(test)]
 mod tests {
-    use common::models::migration_plan::MigrationPlan;
     use super::*;
+    use common::models::migration_plan::MigrationPlan;
 
     #[test]
     fn should_calc_outgoing_percent() {

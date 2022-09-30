@@ -17,10 +17,10 @@
  *
  */
 
-use uuid::Uuid;
 use crate::citizen::Citizen;
 use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::Area;
+use uuid::Uuid;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Commuter {

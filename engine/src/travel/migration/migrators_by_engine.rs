@@ -17,8 +17,8 @@
  *
  */
 
-use common::models::migration_plan::MigrationPlan;
 use crate::travel::migration::Migrator;
+use common::models::migration_plan::MigrationPlan;
 
 #[derive(Serialize, Deserialize)]
 pub struct MigratorsByRegion {

@@ -20,8 +20,8 @@
 use std::error::Error;
 use std::fs::File;
 
-use common::config::{Config, TravelPlanConfig};
 use common::config::Population::Auto;
+use common::config::{Config, TravelPlanConfig};
 use common::models::custom_types::Percentage;
 
 pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;
@@ -120,9 +120,9 @@ struct EngineConfig {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::get_hours;
     use crate::utils::read_simulation_conf;
-    use super::*;
 
     #[test]
     fn should_read_config() {

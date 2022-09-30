@@ -1,6 +1,6 @@
-use rdkafka::ClientConfig;
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
+use rdkafka::ClientConfig;
 
 use crate::environment;
 

@@ -17,7 +17,7 @@
  *
  */
 
-use ndarray::{Array2, Axis, Array1};
+use ndarray::{Array1, Array2, Axis};
 
 pub type Matrix = Array2<f64>;
 
@@ -77,8 +77,8 @@ fn compute_totals(matrix: &Matrix) -> (Array1<f64>, Array1<f64>) {
 
 #[cfg(test)]
 mod tests {
-    use ndarray::arr1;
     use crate::population::synthetic_population::ipfn;
+    use ndarray::arr1;
 
     #[test]
     fn should_generate_population_for_square_matrix() {

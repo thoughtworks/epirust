@@ -17,8 +17,8 @@
  *
  */
 
-use common::config::Config;
 use common::config::intervention_config::{InterventionConfig, LockdownConfig};
+use common::config::Config;
 use common::models::custom_types::Hour;
 
 use crate::interventions::intervention_type::InterventionType;

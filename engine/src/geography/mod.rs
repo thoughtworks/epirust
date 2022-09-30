@@ -26,8 +26,8 @@ mod point;
 pub use self::area::Area;
 pub use self::grid::Grid;
 pub use self::point::Point;
-use std::collections::HashMap;
 use common::models::custom_types::{CoOrdinate, Size};
+use std::collections::HashMap;
 
 pub fn define_geography(grid_size: Size, engine_id: String) -> Grid {
     let home_width = (grid_size as f64 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32;

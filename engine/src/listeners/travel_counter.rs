@@ -16,11 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use std::any::Any;
 use common::models::custom_types::Hour;
+use std::any::Any;
 
-use crate::listeners::listener::Listener;
 use crate::disease_state_machine::State;
+use crate::listeners::listener::Listener;
 use crate::travel::migration::MigratorsByRegion;
 use crate::utils::environment;
 
@@ -95,8 +95,8 @@ impl Listener for TravelCounter {
 mod tests {
     use super::*;
     use crate::disease_state_machine::InfectionSeverity;
-    use std::env;
     use crate::travel::migration::Migrator;
+    use std::env;
 
     #[test]
     fn should_add_outgoing_travellers() {

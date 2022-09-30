@@ -17,11 +17,11 @@
  *
  */
 
-use std::any::Any;
 use fnv::FnvHashMap;
+use std::any::Any;
 
-use crate::listeners::listener::Listener;
 use crate::geography::Point;
+use crate::listeners::listener::Listener;
 use crate::models::events::Counts;
 
 pub struct Hotspot {
@@ -52,8 +52,8 @@ impl Listener for Hotspot {
 
 #[cfg(test)]
 mod tests {
-    use crate::listeners::disease_tracker::Hotspot;
     use crate::geography::Point;
+    use crate::listeners::disease_tracker::Hotspot;
     use crate::listeners::listener::Listener;
 
     #[test]

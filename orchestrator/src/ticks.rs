@@ -16,16 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use std::collections::HashMap;
-use std::ops::Range;
-use crate::kafka_producer::KafkaProducer;
 use crate::kafka_consumer::KafkaConsumer;
-use rdkafka::message::BorrowedMessage;
-use rdkafka::error::KafkaError;
-use std::error::Error;
-use rdkafka::Message;
-use futures::StreamExt;
+use crate::kafka_producer::KafkaProducer;
 use common::config::TravelPlanConfig;
+use futures::StreamExt;
+use rdkafka::error::KafkaError;
+use rdkafka::message::BorrowedMessage;
+use rdkafka::Message;
+use std::collections::HashMap;
+use std::error::Error;
+use std::ops::Range;
 
 const ROUTINE_TRAVEL_START_TIME: i64 = 7;
 const ROUTINE_TRAVEL_END_TIME: i64 = 17;

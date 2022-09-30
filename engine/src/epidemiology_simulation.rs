@@ -20,21 +20,21 @@
 use core::borrow::BorrowMut;
 use std::time::Instant;
 
-use futures::join;
 use common::config::{Config, Population, TravelPlanConfig};
 use common::disease::Disease;
 use common::models::CommutePlan;
 use common::utils::RandomWrapper;
+use futures::join;
 
-use crate::RunMode;
 use crate::allocation_map::CitizenLocationMap;
 use crate::geography;
 use crate::geography::Point;
 use crate::interventions::hospital::BuildNewHospital;
-use crate::interventions::Interventions;
 use crate::interventions::lockdown::LockdownIntervention;
 use crate::interventions::vaccination::VaccinateIntervention;
-use crate::kafka::kafka_producer::{COMMUTE_TOPIC, KafkaProducer, MIGRATION_TOPIC};
+use crate::interventions::Interventions;
+use crate::kafka::kafka_producer::{KafkaProducer, COMMUTE_TOPIC, MIGRATION_TOPIC};
+use crate::kafka::{ticks_consumer, travel_consumer};
 use crate::listeners::csv_service::CsvListener;
 use crate::listeners::disease_tracker::Hotspot;
 use crate::listeners::events_kafka_producer::EventsKafkaProducer;
@@ -44,13 +44,13 @@ use crate::listeners::travel_counter::TravelCounter;
 use crate::models::constants;
 use crate::models::events::Counts;
 use crate::models::events::Tick;
-use crate::kafka::{ticks_consumer, travel_consumer};
 use crate::tick::{receive_tick, send_ack};
 use crate::travel::commute;
 use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
-use crate::utils::util::{output_file_format, counts_at_start};
+use crate::utils::util::{counts_at_start, output_file_format};
+use crate::RunMode;
 
 pub struct Epidemiology {
     pub agent_location_map: CitizenLocationMap,
@@ -455,11 +455,11 @@ impl Epidemiology {
 
 #[cfg(test)]
 mod tests {
-    use common::config::{AutoPopulation, GeographyParameters};
-    use common::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use crate::geography::Area;
     use crate::geography::Point;
     use crate::STANDALONE_SIM_ID;
+    use common::config::intervention_config::{InterventionConfig, VaccinateConfig};
+    use common::config::{AutoPopulation, GeographyParameters};
 
     use super::*;
 

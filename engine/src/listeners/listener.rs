@@ -17,11 +17,11 @@
  *
  */
 
-use std::any::Any;
 use common::models::custom_types::Hour;
+use std::any::Any;
 
 use crate::citizen::Citizen;
-use crate::geography::{Point, Grid};
+use crate::geography::{Grid, Point};
 use crate::interventions::intervention_type::InterventionType;
 use crate::models::events::Counts;
 use crate::travel::migration::MigratorsByRegion;

@@ -17,8 +17,8 @@
  *
  */
 
-use rdkafka::ClientConfig;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
+use rdkafka::ClientConfig;
 
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::MigratorsByRegion;

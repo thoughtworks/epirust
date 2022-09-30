@@ -17,8 +17,8 @@
  *
  */
 
+use crate::models::custom_types::{validate_percentage, Count, Hour, Percentage};
 use validator::Validate;
-use crate::models::custom_types::{Hour, Count, Percentage, validate_percentage};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
 #[serde(rename = "Intervention")]

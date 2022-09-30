@@ -17,11 +17,11 @@
  *
  */
 
-use std::hash::{Hash, Hasher};
-use rand::Rng;
-use rand::seq::IteratorRandom;
 use common::models::custom_types::Count;
 use common::utils::RandomWrapper;
+use rand::seq::IteratorRandom;
+use rand::Rng;
+use std::hash::{Hash, Hasher};
 
 use crate::geography::Point;
 

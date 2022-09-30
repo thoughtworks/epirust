@@ -17,8 +17,8 @@
  *
  */
 
-use serde::{de, Deserialize, Deserializer};
 use serde::de::Unexpected;
+use serde::{de, Deserialize, Deserializer};
 
 #[derive(Deserialize)]
 pub struct PopulationRecord {

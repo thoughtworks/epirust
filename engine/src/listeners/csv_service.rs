@@ -22,13 +22,13 @@ extern crate csv;
 use std::error::Error;
 
 use csv::Writer;
+use serde::Serialize;
 use std::any::Any;
 use std::path::PathBuf;
-use serde::Serialize;
 
 use crate::listeners::listener::Listener;
-use crate::utils::environment;
 use crate::models::events::Counts;
+use crate::utils::environment;
 
 pub struct CsvListener {
     output_file_name: String,

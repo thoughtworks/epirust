@@ -17,11 +17,11 @@
  *
  */
 
-use time::OffsetDateTime;
+use crate::models::events::Counts;
+use crate::RunMode;
 use common::config::{Config, StartingInfections};
 use common::models::custom_types::Count;
-use crate::RunMode;
-use crate::models::events::Counts;
+use time::OffsetDateTime;
 
 pub fn output_file_format(config: &Config, run_mode: &RunMode) -> String {
     let format = time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]").unwrap();

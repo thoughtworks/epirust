@@ -27,10 +27,10 @@ use std::ops::Range;
 use std::string::String;
 
 use clap::{App, Arg};
+use common::config::TravelPlanConfig;
 use rdkafka::admin::{AdminClient, AdminOptions, NewTopic, TopicReplication};
 use rdkafka::client::DefaultClientContext;
 use rdkafka::ClientConfig;
-use common::config::TravelPlanConfig;
 
 use crate::config::Configuration;
 use crate::kafka_producer::KafkaProducer;

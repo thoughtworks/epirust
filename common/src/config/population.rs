@@ -19,7 +19,7 @@
 
 use validator::Validate;
 
-use crate::models::custom_types::{Count, Percentage, validate_percentage};
+use crate::models::custom_types::{validate_percentage, Count, Percentage};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum Population {

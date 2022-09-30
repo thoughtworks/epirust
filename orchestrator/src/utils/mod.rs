@@ -17,8 +17,8 @@
  *
  */
 
-use std::fs::File;
 use serde_json::Value;
+use std::fs::File;
 
 pub fn read_simulation_conf(filename: &str) -> String {
     let reader = File::open(filename).unwrap();

@@ -17,11 +17,11 @@
  *
  */
 
-use rand::Rng;
-use rand::seq::IteratorRandom;
 use common::config::{StartingInfections, TravelPlanConfig};
 use common::models::CommutePlan;
 use common::utils::RandomWrapper;
+use rand::seq::IteratorRandom;
+use rand::Rng;
 
 use crate::citizen::{Citizen, CitizensData, WorkStatus};
 use crate::geography::Point;
@@ -133,9 +133,9 @@ pub fn set_starting_infections(agent_list: &mut [Citizen], start_infections: &St
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::citizen::citizen_factory::{citizen_factory, set_starting_infections};
     use crate::geography::Area;
-    use super::*;
 
     fn before_each() -> Vec<Citizen> {
         let mut rng = RandomWrapper::new();

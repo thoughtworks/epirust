@@ -16,11 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use rand::Rng;
-use rand::seq::SliceRandom;
 use common::disease::Disease;
 use common::models::custom_types::{Day, Hour};
 use common::utils::RandomWrapper;
+use rand::seq::SliceRandom;
+use rand::Rng;
 
 use crate::models::constants;
 

@@ -1,5 +1,5 @@
+use rdkafka::consumer::{Consumer, MessageStream, StreamConsumer};
 use rdkafka::ClientConfig;
-use rdkafka::consumer::{MessageStream, StreamConsumer, Consumer};
 
 use crate::environment;
 

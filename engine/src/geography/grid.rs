@@ -17,12 +17,12 @@
  *
  */
 
-use plotters::prelude::*;
-use std::collections::HashMap;
-use std::fs::File;
 use common::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
 use common::models::custom_types::{CoOrdinate, Count, Size};
 use common::utils::RandomWrapper;
+use plotters::prelude::*;
+use std::collections::HashMap;
+use std::fs::File;
 
 use crate::citizen;
 use crate::citizen::{Citizen, CitizensData, PopulationRecord};

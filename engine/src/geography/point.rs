@@ -17,8 +17,8 @@
  *
  */
 
-use std::ops::Add;
 use common::models::custom_types::CoOrdinate;
+use std::ops::Add;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Point {

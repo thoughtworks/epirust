@@ -17,10 +17,10 @@
  *
  */
 
-use rdkafka::{ClientConfig, Message};
 use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
+use rdkafka::{ClientConfig, Message};
 
 use crate::models::events::Tick;
 use crate::utils::environment;

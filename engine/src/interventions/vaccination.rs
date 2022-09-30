@@ -17,10 +17,10 @@
  *
  */
 
-use std::collections::HashMap;
-use common::config::Config;
 use common::config::intervention_config::InterventionConfig;
+use common::config::Config;
 use common::models::custom_types::{Hour, Percentage};
+use std::collections::HashMap;
 
 use crate::interventions::intervention_type::InterventionType;
 use crate::models::events::Counts;

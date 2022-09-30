@@ -17,8 +17,8 @@
  *
  */
 
+use crate::models::custom_types::{validate_percentage, Percentage, Size};
 use validator::Validate;
-use crate::models::custom_types::{Percentage, Size, validate_percentage};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Validate)]
 pub struct GeographyParameters {

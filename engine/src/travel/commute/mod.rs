@@ -19,8 +19,8 @@
 mod commuter;
 mod commuters_by_region;
 
-use rdkafka::consumer::MessageStream;
 use common::models::CommutePlan;
+use rdkafka::consumer::MessageStream;
 
 use crate::models::constants;
 use crate::models::events::Tick;

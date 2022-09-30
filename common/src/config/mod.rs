@@ -32,12 +32,12 @@ use std::fs::File;
 use validator::Validate;
 
 pub use crate::config::geography_parameters::GeographyParameters;
-pub use crate::config::starting_infections::StartingInfections;
 pub use crate::config::population::*;
+pub use crate::config::starting_infections::StartingInfections;
 
 use crate::disease::{Disease, DiseaseOverride};
-use intervention_config::InterventionConfig;
 use crate::models::custom_types::{Hour, Size};
+use intervention_config::InterventionConfig;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Validate)]
 pub struct Config {

@@ -22,18 +22,18 @@ mod citizen_factory;
 mod population_record;
 
 pub use self::citizen_data::CitizensData;
-pub use self::population_record::PopulationRecord;
 pub use self::citizen_factory::{citizen_factory, set_starting_infections};
+pub use self::population_record::PopulationRecord;
 
-use rand::Rng;
-use rand::seq::IteratorRandom;
-use rand::seq::SliceRandom;
-use serde::Deserialize;
-use uuid::Uuid;
 use common::config::TravelPlanConfig;
 use common::disease::Disease;
 use common::models::custom_types::{Day, Hour, Percentage};
 use common::utils::RandomWrapper;
+use rand::seq::IteratorRandom;
+use rand::seq::SliceRandom;
+use rand::Rng;
+use serde::Deserialize;
+use uuid::Uuid;
 
 use crate::allocation_map::CitizenLocationMap;
 use crate::disease_state_machine::DiseaseStateMachine;
@@ -566,9 +566,9 @@ impl Citizen {
 
 #[cfg(test)]
 mod test {
-    use common::utils::RandomWrapper;
     use crate::citizen::{Citizen, WorkStatus};
     use crate::geography::{Area, Point};
+    use common::utils::RandomWrapper;
 
     #[test]
     fn should_check_if_agent_is_working() {

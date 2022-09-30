@@ -17,8 +17,8 @@
  *
  */
 
-use rand::thread_rng;
 use rand::rngs::ThreadRng;
+use rand::thread_rng;
 
 pub struct RandomWrapper {
     rng: ThreadRng,

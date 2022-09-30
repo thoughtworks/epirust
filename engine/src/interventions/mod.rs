@@ -17,9 +17,9 @@
  *
  */
 
-use crate::interventions::vaccination::{VaccinateIntervention};
-use crate::interventions::lockdown::{LockdownIntervention};
-use crate::interventions::hospital::{BuildNewHospital};
+use crate::interventions::hospital::BuildNewHospital;
+use crate::interventions::lockdown::LockdownIntervention;
+use crate::interventions::vaccination::VaccinateIntervention;
 
 pub mod hospital;
 pub mod intervention_type;

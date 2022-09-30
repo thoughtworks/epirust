@@ -17,14 +17,14 @@
  *
  */
 
-use rdkafka::{ClientConfig, Message};
 use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::error::KafkaResult;
 use rdkafka::message::BorrowedMessage;
+use rdkafka::{ClientConfig, Message};
 
-use crate::utils::environment;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::MigratorsByRegion;
+use crate::utils::environment;
 
 pub fn start(engine_id: &str, topics: &[&str], prefix: &str) -> StreamConsumer {
     let kafka_url = environment::kafka_url();

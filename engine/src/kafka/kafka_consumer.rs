@@ -19,18 +19,18 @@
 
 use std::error::Error;
 
+use common::config::request::Request;
 use futures::StreamExt;
-use rdkafka::ClientConfig;
-use rdkafka::consumer::{MessageStream, StreamConsumer};
 use rdkafka::consumer::Consumer;
+use rdkafka::consumer::{MessageStream, StreamConsumer};
 use rdkafka::error::KafkaError;
 use rdkafka::message::BorrowedMessage;
 use rdkafka::message::Message;
-use common::config::request::Request;
+use rdkafka::ClientConfig;
 
 use crate::epidemiology_simulation::Epidemiology;
-use crate::RunMode;
 use crate::utils::environment;
+use crate::RunMode;
 
 pub struct KafkaConsumer<'a> {
     engine_id: &'a str,

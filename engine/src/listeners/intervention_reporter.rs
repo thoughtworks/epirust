@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use std::any::Any;
-use serde_json::Value;
-use std::fs::File;
 use common::models::custom_types::Hour;
+use serde_json::Value;
+use std::any::Any;
+use std::fs::File;
 
-use crate::listeners::listener::Listener;
 use crate::interventions::intervention_type::InterventionType;
+use crate::listeners::listener::Listener;
 use crate::utils::environment;
 
 #[derive(Serialize)]

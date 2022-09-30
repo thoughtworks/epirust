@@ -17,9 +17,9 @@
  *
  */
 
-use uuid::Uuid;
 use crate::citizen::Citizen;
 use crate::disease_state_machine::DiseaseStateMachine;
+use uuid::Uuid;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Migrator {

@@ -461,8 +461,7 @@ mod tests {
     use crate::config::{AutoPopulation, GeographyParameters};
     use crate::geography::Area;
     use crate::geography::Point;
-    use crate::interventions::InterventionConfig;
-    use crate::interventions::vaccination::VaccinateConfig;
+    use crate::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use crate::STANDALONE_SIM_ID;
 
     use super::*;

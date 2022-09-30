@@ -17,22 +17,14 @@
  *
  */
 
-use crate::interventions::vaccination::{VaccinateConfig, VaccinateIntervention};
-use crate::interventions::lockdown::{LockdownConfig, LockdownIntervention};
-use crate::interventions::hospital::{BuildNewHospitalConfig, BuildNewHospital};
+use crate::interventions::vaccination::{VaccinateIntervention};
+use crate::interventions::lockdown::{LockdownIntervention};
+use crate::interventions::hospital::{BuildNewHospital};
 
 pub mod hospital;
 pub mod intervention_type;
 pub mod lockdown;
 pub mod vaccination;
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone)]
-#[serde(rename = "Intervention")]
-pub enum InterventionConfig {
-    Vaccinate(VaccinateConfig),
-    Lockdown(LockdownConfig),
-    BuildNewHospital(BuildNewHospitalConfig),
-}
 
 pub struct Interventions {
     pub vaccinate: VaccinateIntervention,

@@ -22,6 +22,7 @@ mod population;
 mod starting_infections;
 mod travel_plan_config;
 
+pub mod intervention_config;
 pub mod request;
 
 pub use travel_plan_config::TravelPlanConfig;
@@ -35,7 +36,7 @@ pub use crate::config::starting_infections::StartingInfections;
 pub use crate::config::population::*;
 
 use crate::disease::{Disease, DiseaseOverride};
-use crate::interventions::InterventionConfig;
+use intervention_config::InterventionConfig;
 use crate::models::custom_types::{Hour, Size};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Validate)]
@@ -123,7 +124,7 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
-    use crate::interventions::vaccination::VaccinateConfig;
+    use crate::config::intervention_config::VaccinateConfig;
     use crate::config::population::{AutoPopulation, CsvPopulation};
 
     use super::*;
@@ -132,7 +133,7 @@ mod tests {
     fn should_read_config_with_csv_population() {
         let read_config = Config::read("config/test/csv_pop.json").unwrap();
 
-        let vaccinate = VaccinateConfig::new(5000, 0.2);
+        let vaccinate = VaccinateConfig { at_hour: 5000, percent: 0.2 };
         let disease_override = DiseaseOverride::new(
             String::from("age"),
             vec!["60-64".to_string(), "65-69".to_string(), "70-74".to_string(), "75-79".to_string(), "80+".to_string()],
@@ -163,7 +164,7 @@ mod tests {
     fn should_read_config_with_auto_population() {
         let read_config = Config::read("config/test/auto_pop.json").unwrap();
 
-        let vaccinate = VaccinateConfig::new(5000, 0.2);
+        let vaccinate = VaccinateConfig { at_hour: 5000, percent: 0.2 };
 
         let population = Population::Auto(AutoPopulation {
             number_of_agents: 10000,

@@ -17,16 +17,11 @@
  *
  */
 
-use crate::interventions::InterventionConfig;
+use crate::config::intervention_config::{BuildNewHospitalConfig, InterventionConfig};
 use crate::interventions::intervention_type::InterventionType;
 use crate::config::Config;
 use crate::models::custom_types::Count;
 use crate::models::events::Counts;
-
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Copy, Clone)]
-pub struct BuildNewHospitalConfig {
-    pub spread_rate_threshold: u32,
-}
 
 pub struct BuildNewHospital {
     new_infections_in_a_day: Count,

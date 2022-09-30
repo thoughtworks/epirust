@@ -18,27 +18,12 @@
  */
 
 use std::collections::HashMap;
-use validator::Validate;
 
 use crate::config::Config;
-use crate::interventions::InterventionConfig;
+use crate::config::intervention_config::InterventionConfig;
 use crate::interventions::intervention_type::InterventionType;
-use crate::models::custom_types::{Hour, Percentage, validate_percentage};
+use crate::models::custom_types::{Hour, Percentage};
 use crate::models::events::Counts;
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
-pub struct VaccinateConfig {
-    pub at_hour: Hour,
-    #[validate(custom = "validate_percentage")]
-    pub percent: Percentage,
-}
-
-impl VaccinateConfig {
-    #[cfg(test)]
-    pub fn new(at_hour: Hour, percent: Percentage) -> VaccinateConfig {
-        VaccinateConfig { at_hour, percent }
-    }
-}
 
 pub struct VaccinateIntervention {
     intervention: HashMap<Hour, Percentage>,

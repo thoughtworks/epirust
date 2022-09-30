@@ -17,21 +17,12 @@
  *
  */
 
-use validator::{Validate};
-
 use crate::config::Config;
-use crate::interventions::InterventionConfig::Lockdown;
+use crate::config::intervention_config::{InterventionConfig, LockdownConfig};
 use crate::interventions::intervention_type::InterventionType;
 use crate::models::constants;
-use crate::models::custom_types::{Count, Hour, Percentage, validate_percentage};
+use crate::models::custom_types::Hour;
 use crate::models::events::Counts;
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Copy, Clone, Validate)]
-pub struct LockdownConfig {
-    pub at_number_of_infections: Count,
-    #[validate(custom = "validate_percentage")]
-    pub essential_workers_population: Percentage,
-}
 
 pub struct LockdownIntervention {
     is_locked_down: bool,
@@ -45,7 +36,7 @@ impl LockdownIntervention {
             .get_interventions()
             .iter()
             .filter_map(|i| match i {
-                Lockdown(x) => Some(x),
+                InterventionConfig::Lockdown(x) => Some(x),
                 _ => None,
             })
             .next()

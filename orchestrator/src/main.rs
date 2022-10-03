@@ -66,6 +66,7 @@ async fn main() {
     let sim_conf = utils::read_simulation_conf(config_path);
     let travel_plan = config.get_travel_plan();
 
+    //TODO: use already read config instead of passing config path and reading file again
     let hours = 1..get_hours(config_path);
 
     config.validate();
@@ -77,8 +78,11 @@ async fn cleanup(regions: &Vec<String>) {
     let kafka_url = environment::kafka_url();
     let kafka_admin: AdminClient<DefaultClientContext> =
         ClientConfig::new().set("bootstrap.servers", kafka_url.as_str()).create().expect("Admin client creation failed");
-    match kafka_admin.delete_topics(&["simulation_requests", "counts_updated", "ticks", "ticks_ack"], &AdminOptions::new()).await
-    {
+    let mut fixed_topics_names: Vec<&str> = vec!["simulation_requests", "counts_updated", "ticks", "ticks_ack"];
+    let dynamic_topic_names: Vec<String> = generate_topic_names(regions);
+    let mut all_topic_names: Vec<&str> = dynamic_topic_names.iter().map(|s| &**s).collect();
+    all_topic_names.append(&mut fixed_topics_names);
+    match kafka_admin.delete_topics(all_topic_names.as_slice(), &AdminOptions::new()).await {
         Ok(t) => {
             debug!("Deleted topics {:?}", t)
         }
@@ -86,68 +90,23 @@ async fn cleanup(regions: &Vec<String>) {
             debug!("Error while deleting topics {:?}", e)
         }
     }
+    create_topics(all_topic_names, kafka_admin).await;
+}
+
+fn generate_topic_names(regions: &Vec<String>) -> Vec<String> {
+    let mut topics = vec![];
     for region in regions {
-        match kafka_admin.delete_topics(&[&*format!("{}{}", "commute_", region)], &AdminOptions::new()).await {
-            Ok(t) => {
-                debug!("Deleted topic {:?}", t)
-            }
-            Err(e) => {
-                debug!("Error while deleting topic {:?}", e)
-            }
-        }
-        match kafka_admin.delete_topics(&[&*format!("{}{}", "migration_", region)], &AdminOptions::new()).await {
-            Ok(t) => {
-                debug!("Deleted topic {:?}", t)
-            }
-            Err(e) => {
-                debug!("Error while deleting topic {:?}", e)
-            }
-        }
+        topics.push(format!("{}{}", "commute_", region));
+        topics.push(format!("{}{}", "migration_", region));
     }
-    for region in regions {
-        match kafka_admin
-            .create_topics(
-                &[NewTopic::new(&*format!("{}{}", "commute_", region), 1, TopicReplication::Fixed(1))],
-                &AdminOptions::new(),
-            )
-            .await
-        {
-            Ok(t) => {
-                debug!("Created topic {:?}", t)
-            }
-            Err(e) => {
-                debug!("Error while creating topics {:?}", e)
-            }
-        }
-        match kafka_admin
-            .create_topics(
-                &[NewTopic::new(&*format!("{}{}", "migration_", region), 1, TopicReplication::Fixed(1))],
-                &AdminOptions::new(),
-            )
-            .await
-        {
-            Ok(t) => {
-                debug!("Created topic {:?}", t)
-            }
-            Err(e) => {
-                debug!("Error while creating topics {:?}", e)
-            }
-        }
-    }
-    match kafka_admin
-        .create_topics(
-            &[
-                NewTopic::new("simulation_requests", 1, TopicReplication::Fixed(1)),
-                NewTopic::new("counts_updated", 1, TopicReplication::Fixed(1)),
-                NewTopic::new("ticks", 1, TopicReplication::Fixed(1)),
-                NewTopic::new("ticks_ack", 1, TopicReplication::Fixed(1)),
-            ],
-            &AdminOptions::new(),
-        )
-        .await
-    {
+    topics
+}
+
+async fn create_topics(topic_names: Vec<&str>, kafka_admin: AdminClient<DefaultClientContext>) {
+    let topics: Vec<NewTopic> = topic_names.iter().map(|name| NewTopic::new(name, 1, TopicReplication::Fixed(1))).collect();
+    match kafka_admin.create_topics(topics.iter(), &AdminOptions::new()).await {
         Ok(t) => {
-            debug!("Created topics {:?}", t)
+            debug!("Created topic {:?}", t)
         }
         Err(e) => {
             debug!("Error while creating topics {:?}", e)

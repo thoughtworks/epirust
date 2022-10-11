@@ -23,9 +23,10 @@ mod area;
 mod grid;
 mod point;
 
-pub use self::area::Area;
-pub use self::grid::Grid;
-pub use self::point::Point;
+pub use area::Area;
+pub use grid::Grid;
+pub use point::Point;
+
 use common::models::custom_types::{CoOrdinate, Size};
 use std::collections::HashMap;
 

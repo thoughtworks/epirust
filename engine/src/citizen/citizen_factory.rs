@@ -23,7 +23,8 @@ use common::utils::RandomWrapper;
 use rand::seq::IteratorRandom;
 use rand::Rng;
 
-use crate::citizen::{Citizen, CitizensData, WorkStatus};
+use crate::citizen::work_status::WorkStatus;
+use crate::citizen::{Citizen, CitizensData};
 use crate::geography::Point;
 
 pub fn citizen_factory(

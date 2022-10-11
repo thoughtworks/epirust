@@ -20,10 +20,12 @@
 mod citizen_data;
 mod citizen_factory;
 mod population_record;
+mod work_status;
 
-pub use self::citizen_data::CitizensData;
-pub use self::citizen_factory::{citizen_factory, set_starting_infections};
-pub use self::population_record::PopulationRecord;
+pub use citizen_data::CitizensData;
+pub use citizen_factory::{citizen_factory, set_starting_infections};
+pub use population_record::PopulationRecord;
+pub use work_status::WorkStatus;
 
 use common::config::TravelPlanConfig;
 use common::disease::Disease;
@@ -41,14 +43,6 @@ use crate::geography::{Area, Grid, Point};
 use crate::models::constants;
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
-
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub enum WorkStatus {
-    Normal,
-    Essential,
-    HospitalStaff { work_start_at: Hour },
-    NA,
-}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Citizen {
@@ -413,7 +407,7 @@ impl Citizen {
         new_cell
     }
 
-    fn goto_area(&mut self, target_area: Area, map: &CitizenLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
+    fn goto_area(&self, target_area: Area, map: &CitizenLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
         //TODO: Refactor - Jayanta
         // If agent is working and current_area is work, target area is home and symptomatic then allow movement
         let mut override_movement = false;
@@ -457,7 +451,7 @@ impl Citizen {
         new_cell
     }
 
-    fn move_agent_from(&mut self, map: &CitizenLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
+    fn move_agent_from(&self, map: &CitizenLocationMap, cell: Point, rng: &mut RandomWrapper) -> Point {
         if !self.can_move() {
             return cell;
         }
@@ -566,7 +560,8 @@ impl Citizen {
 
 #[cfg(test)]
 mod test {
-    use crate::citizen::{Citizen, WorkStatus};
+    use crate::citizen::work_status::WorkStatus;
+    use crate::citizen::Citizen;
     use crate::geography::{Area, Point};
     use common::utils::RandomWrapper;
 

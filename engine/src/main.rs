@@ -38,6 +38,7 @@ mod kafka;
 mod listeners;
 mod models;
 mod population;
+mod state_machine;
 mod tick;
 mod travel;
 mod utils;

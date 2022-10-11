@@ -28,7 +28,6 @@ use rand::seq::IteratorRandom;
 use rand::Rng;
 
 use crate::citizen::Citizen;
-use crate::disease_state_machine::State;
 use crate::geography::Point;
 use crate::geography::{Area, Grid};
 use crate::interventions::vaccination::VaccinateIntervention;
@@ -36,6 +35,7 @@ use crate::interventions::Interventions;
 use crate::listeners::listener::Listeners;
 use crate::models::constants;
 use crate::models::events::Counts;
+use crate::state_machine::State;
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
 

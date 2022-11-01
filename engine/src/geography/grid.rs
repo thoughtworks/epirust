@@ -204,7 +204,7 @@ impl Grid {
         let start_offset = self.hospital_area.start_offset;
         let end_offset = Point::new(grid_size as CoOrdinate, grid_size as CoOrdinate);
 
-        self.hospital_area = Area::new(sim_id, start_offset, end_offset)
+        self.hospital_area = Area::new(&sim_id, start_offset, end_offset)
     }
 
     pub fn resize_hospital(
@@ -222,7 +222,7 @@ impl Grid {
             let hospital_end_y: CoOrdinate =
                 (hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x) as u32) as CoOrdinate;
             self.hospital_area =
-                Area::new(sim_id, self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
+                Area::new(&sim_id, self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
             info!("Hospital capacity {}: ", hospital_bed_count);
         }
     }

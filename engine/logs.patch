@@ -1,0 +1,122 @@
+diff --git a/engine/src/epidemiology_simulation.rs b/engine/src/epidemiology_simulation.rs
+index df92cff..ee64d47 100644
+--- a/engine/src/epidemiology_simulation.rs
++++ b/engine/src/epidemiology_simulation.rs
+@@ -266,7 +266,10 @@ impl Epidemiology {
+         counts_at_hr.log();
+ 
+         let mut total_tick_sync_time = 0;
+-        let mut total_commute_sync_time = 0;
++        let mut total_receive_commute_sync_time = 0;
++        let mut total_receive_migration_sync_time = 0;
++        let mut total_send_commuters_time = 0;
++        let mut total_send_migrator_time = 0;
+         let run_mode = RunMode::MultiEngine { engine_id: engine_id.to_string() };
+ 
+         for simulation_hour in 1..config.get_hours() {
+@@ -349,11 +352,15 @@ impl Epidemiology {
+ 
+                 if is_migration_enabled {
+                     debug!("{}: Send Migrators", engine_id);
++                    let send_migrator_start_time = Instant::now();
+                     Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
++                    total_send_migrator_time += send_migrator_start_time.elapsed().as_millis();
+                 }
+                 if is_commute_enabled {
+                     debug!("{}: Send Commuters", engine_id);
++                    let send_commuter_start_time = Instant::now();
+                     Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
++                    total_send_commuters_time += send_commuter_start_time.elapsed().as_millis();
+                 }
+             };
+ 
+@@ -363,8 +370,8 @@ impl Epidemiology {
+                 let commute_start_time = Instant::now();
+                 let received_commuters = commute::receive_commuters(&commute_plan, tick, &mut commute_stream, engine_id);
+                 let (mut incoming_commuters,) = join!(received_commuters);
+-                total_commute_sync_time += commute_start_time.elapsed().as_millis();
+-                info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
++                total_receive_commute_sync_time += commute_start_time.elapsed().as_millis();
++                info!("total commute sync time as hour {} - is {}", simulation_hour, total_receive_commute_sync_time);
+                 n_incoming += incoming_commuters.len();
+                 n_outgoing += outgoing_commuters.len();
+                 self.agent_location_map.remove_commuters(&outgoing_commuters, counts_at_hr);
+@@ -373,7 +380,9 @@ impl Epidemiology {
+             }
+ 
+             if is_migration_enabled {
++                let migration_start_time = Instant::now();
+                 let (mut incoming,) = join!(received_migrators.unwrap());
++                total_receive_migration_sync_time += migration_start_time.elapsed().as_millis();
+                 n_incoming += incoming.len();
+                 n_outgoing += outgoing.len();
+                 self.agent_location_map.remove_migrators(&actual_outgoing, counts_at_hr);
+@@ -420,7 +429,10 @@ impl Epidemiology {
+         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
+         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
+         info!("total tick sync time: {}", total_tick_sync_time);
+-        info!("total commute sync time: {}", total_commute_sync_time);
++        info!("total receive commute sync time: {}", total_receive_commute_sync_time);
++        info!("total receive migration sync time: {}", total_receive_migration_sync_time);
++        info!("total send commuters sync time: {}", total_send_commuters_time);
++        info!("total send migrators sync time: {}", total_send_migrator_time);
+         listeners.simulation_ended();
+     }
+ 
+diff --git a/engine/src/kafka/kafka_producer.rs b/engine/src/kafka/kafka_producer.rs
+index b7ada3c..4b7a9e0 100644
+--- a/engine/src/kafka/kafka_producer.rs
++++ b/engine/src/kafka/kafka_producer.rs
+@@ -19,6 +19,7 @@
+ 
+ use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
+ use rdkafka::ClientConfig;
++use std::time::Instant;
+ 
+ use crate::travel::commute::CommutersByRegion;
+ use crate::travel::migration::MigratorsByRegion;
+@@ -55,7 +56,10 @@ impl KafkaProducer {
+             trace!("Sending migrators: {} to region: {}", payload, out_region.to_engine_id());
+             let topic = &*format!("{}{}", MIGRATION_TOPIC, out_region.to_engine_id());
+             let record: BaseRecord<String, String> = BaseRecord::to(topic).payload(&payload);
++            debug!("sending migrators");
++            let start_time = Instant::now();
+             self.producer.send_record(record);
++            debug!("sent migrators: {}", start_time.elapsed().as_millis());
+         }
+     }
+ 
+@@ -66,7 +70,10 @@ impl KafkaProducer {
+             debug!("Sending commuters: {} to region: {}", out_region.commuters.len(), out_region.to_engine_id());
+             let topic = &*format!("{}{}", COMMUTE_TOPIC, out_region.to_engine_id());
+             let record: BaseRecord<String, String> = BaseRecord::to(topic).payload(&payload);
++            debug!("sending commuters");
++            let start_time = Instant::now();
+             self.producer.send_record(record);
++            debug!("sent commuters: {}", start_time.elapsed().as_millis());
+         }
+     }
+ }
+diff --git a/engine/src/utils/send_record.rs b/engine/src/utils/send_record.rs
+index c4106d5..fdaaa48 100644
+--- a/engine/src/utils/send_record.rs
++++ b/engine/src/utils/send_record.rs
+@@ -19,6 +19,7 @@
+ 
+ use rdkafka::error::KafkaError;
+ use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
++use std::time::Instant;
+ 
+ pub type SendResult<'a> = Result<(), (KafkaError, BaseRecord<'a, String, String>)>;
+ 
+@@ -28,7 +29,10 @@ pub trait SendRecord {
+ 
+ impl SendRecord for ThreadedProducer<DefaultProducerContext> {
+     fn send_record(&self, record: BaseRecord<String, String>) {
++        info!("sending message");
+         let msg = &*format!("Failed to send msg {:?}, Reason", record.payload);
++        let time = Instant::now();
+         self.send(record).expect(msg);
++        info!("message sent: {}", time.elapsed().as_millis());
+     }
+ }

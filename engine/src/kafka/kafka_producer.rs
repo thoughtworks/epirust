@@ -19,6 +19,7 @@
 
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
 use rdkafka::ClientConfig;
+use std::time::Instant;
 
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::MigratorsByRegion;
@@ -55,7 +56,10 @@ impl KafkaProducer {
             trace!("Sending migrators: {} to region: {}", payload, out_region.to_engine_id());
             let topic = &*format!("{}{}", MIGRATION_TOPIC, out_region.to_engine_id());
             let record: BaseRecord<String, String> = BaseRecord::to(topic).payload(&payload);
+            debug!("sending migrators");
+            let start_time = Instant::now();
             self.producer.send_record(record);
+            debug!("sent migrators: {}", start_time.elapsed().as_millis());
         }
     }
 
@@ -66,7 +70,10 @@ impl KafkaProducer {
             debug!("Sending commuters: {} to region: {}", out_region.commuters.len(), out_region.to_engine_id());
             let topic = &*format!("{}{}", COMMUTE_TOPIC, out_region.to_engine_id());
             let record: BaseRecord<String, String> = BaseRecord::to(topic).payload(&payload);
+            debug!("sending commuters");
+            let start_time = Instant::now();
             self.producer.send_record(record);
+            debug!("sent commuters: {}", start_time.elapsed().as_millis());
         }
     }
 }

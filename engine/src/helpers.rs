@@ -17,22 +17,12 @@
  *
  */
 
-use rdkafka::error::KafkaError;
-use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
-use std::time::Instant;
+use copystr::s16;
 
-pub type SendResult<'a> = Result<(), (KafkaError, BaseRecord<'a, String, String>)>;
-
-pub trait SendRecord {
-    fn send_record(&self, record: BaseRecord<String, String>);
+pub fn string_to_s16(string: &String) -> s16 {
+    s16::new(string.as_str()).expect("can't convert to s16")
 }
 
-impl SendRecord for ThreadedProducer<DefaultProducerContext> {
-    fn send_record(&self, record: BaseRecord<String, String>) {
-        info!("sending message");
-        let msg = &*format!("Failed to send msg {:?}, Reason", record.payload);
-        let time = Instant::now();
-        self.send(record).expect(msg);
-        info!("message sent: {}", time.elapsed().as_millis());
-    }
+pub fn str_to_16(str: &str) -> s16 {
+    s16::new(str).expect("can't convert to s16")
 }

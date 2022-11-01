@@ -38,13 +38,13 @@ pub fn define_geography(grid_size: Size, engine_id: String) -> Grid {
     let hospital_start = work_area_end;
     let hospital_end = work_area_end + (grid_size as f64 * constants::INITIAL_HOSPITAL_RELATIVE_SIZE).ceil() as i32;
 
-    let housing_area = Area::new(engine_id.to_string(), Point::new(0, 0), Point::new(home_width - 1, grid_size as CoOrdinate));
+    let housing_area = Area::new(&engine_id.to_string(), Point::new(0, 0), Point::new(home_width - 1, grid_size as CoOrdinate));
     let transport_area =
-        Area::new(engine_id.to_string(), Point::new(transport_start, 0), Point::new(transport_end - 1, grid_size as CoOrdinate));
+        Area::new(&engine_id.to_string(), Point::new(transport_start, 0), Point::new(transport_end - 1, grid_size as CoOrdinate));
     let work_area =
-        Area::new(engine_id.to_string(), Point::new(work_area_start, 0), Point::new(work_area_end - 1, grid_size as CoOrdinate));
+        Area::new(&engine_id.to_string(), Point::new(work_area_start, 0), Point::new(work_area_end - 1, grid_size as CoOrdinate));
     let hospital_area =
-        Area::new(engine_id.to_string(), Point::new(hospital_start, 0), Point::new(hospital_end - 1, grid_size as CoOrdinate));
+        Area::new(&engine_id.to_string(), Point::new(hospital_start, 0), Point::new(hospital_end - 1, grid_size as CoOrdinate));
 
     let houses = area::area_factory(housing_area.start_offset, housing_area.end_offset, constants::HOME_SIZE, engine_id.clone());
     let offices = area::area_factory(work_area.start_offset, work_area.end_offset, constants::OFFICE_SIZE, engine_id);

@@ -209,7 +209,7 @@ impl State {
         if let State::Infected(infected) = self {
             infected.deceased(disease, rng)
         } else {
-            (*self).into()
+            *self
         }
     }
 

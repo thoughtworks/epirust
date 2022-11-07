@@ -468,9 +468,9 @@ impl Epidemiology {
 
 #[cfg(test)]
 mod tests {
+    use crate::engine_app::STANDALONE_SIM_ID;
     use crate::geography::Area;
     use crate::geography::Point;
-    use crate::STANDALONE_SIM_ID;
     use common::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use common::config::{AutoPopulation, GeographyParameters};
 

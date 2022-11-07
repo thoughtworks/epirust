@@ -23,14 +23,14 @@ extern crate serde_derive;
 #[macro_use]
 extern crate log;
 
+use crate::engine_app::EngineApp;
 use clap::{App, Arg};
 use common::config::Config;
-
-use crate::kafka::kafka_consumer::KafkaConsumer;
 
 mod allocation_map;
 mod citizen;
 mod disease_state_machine;
+mod engine_app;
 mod epidemiology_simulation;
 mod geography;
 mod interventions;
@@ -42,8 +42,6 @@ mod state_machine;
 mod tick;
 mod travel;
 mod utils;
-
-const STANDALONE_SIM_ID: &str = "0";
 
 #[tokio::main]
 async fn main() {
@@ -88,18 +86,11 @@ async fn main() {
     };
 
     if daemon {
-        info!("Started in daemon mode");
-        let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
-        consumer.listen_loop(&run_mode).await;
-        info!("Done");
+        EngineApp::start_in_daemon(engine_id, &run_mode).await;
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
-
         let config = Config::read(config_file).expect("Failed to read config file");
-
-        let mut epidemiology = epidemiology_simulation::Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), &run_mode);
-        epidemiology.run(&run_mode).await;
-        info!("Done");
+        EngineApp::start_standalone(config, &run_mode).await;
     }
 }
 

@@ -103,7 +103,7 @@ fn generate_topic_names(regions: &Vec<String>) -> Vec<String> {
 }
 
 async fn create_topics(topic_names: Vec<&str>, kafka_admin: AdminClient<DefaultClientContext>) {
-    let topics: Vec<NewTopic> = topic_names.iter().map(|name| NewTopic::new(name, 1, TopicReplication::Fixed(1))).collect();
+    let topics: Vec<NewTopic> = topic_names.iter().map(|name| NewTopic::new(name, 5, TopicReplication::Fixed(1))).collect();
     match kafka_admin.create_topics(topics.iter(), &AdminOptions::new()).await {
         Ok(t) => {
             debug!("Created topic {:?}", t)

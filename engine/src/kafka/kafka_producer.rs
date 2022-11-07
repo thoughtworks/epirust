@@ -40,7 +40,7 @@ impl KafkaProducer {
             producer: ClientConfig::new()
                 .set("bootstrap.servers", kafka_url.as_str())
                 .set("message.max.bytes", "104857600")
-                .set("compression.type", "Zstd")
+                .set("compression.type", "Lz4")
                 .create()
                 .expect("Could not create Kafka Producer"),
         }

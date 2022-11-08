@@ -266,7 +266,10 @@ impl Epidemiology {
         counts_at_hr.log();
 
         let mut total_tick_sync_time = 0;
-        let mut total_commute_sync_time = 0;
+        let mut total_receive_commute_sync_time = 0;
+        let mut total_receive_migration_sync_time = 0;
+        let mut total_send_commuters_time = 0;
+        let mut total_send_migrator_time = 0;
         let run_mode = RunMode::MultiEngine { engine_id: engine_id.to_string() };
 
         for simulation_hour in 1..config.get_hours() {
@@ -349,11 +352,15 @@ impl Epidemiology {
 
                 if is_migration_enabled {
                     debug!("{}: Send Migrators", engine_id);
+                    let send_migrator_start_time = Instant::now();
                     Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
+                    total_send_migrator_time += send_migrator_start_time.elapsed().as_millis();
                 }
                 if is_commute_enabled {
                     debug!("{}: Send Commuters", engine_id);
+                    let send_commuter_start_time = Instant::now();
                     Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
+                    total_send_commuters_time += send_commuter_start_time.elapsed().as_millis();
                 }
             };
 
@@ -363,8 +370,8 @@ impl Epidemiology {
                 let commute_start_time = Instant::now();
                 let received_commuters = commute::receive_commuters(&commute_plan, tick, &mut commute_stream, engine_id);
                 let (mut incoming_commuters,) = join!(received_commuters);
-                total_commute_sync_time += commute_start_time.elapsed().as_millis();
-                info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
+                total_receive_commute_sync_time += commute_start_time.elapsed().as_millis();
+                info!("total commute sync time as hour {} - is {}", simulation_hour, total_receive_commute_sync_time);
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
                 self.agent_location_map.remove_commuters(&outgoing_commuters, counts_at_hr);
@@ -373,7 +380,9 @@ impl Epidemiology {
             }
 
             if is_migration_enabled {
+                let migration_start_time = Instant::now();
                 let (mut incoming,) = join!(received_migrators.unwrap());
+                total_receive_migration_sync_time += migration_start_time.elapsed().as_millis();
                 n_incoming += incoming.len();
                 n_outgoing += outgoing.len();
                 self.agent_location_map.remove_migrators(&actual_outgoing, counts_at_hr);
@@ -420,7 +429,10 @@ impl Epidemiology {
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         info!("total tick sync time: {}", total_tick_sync_time);
-        info!("total commute sync time: {}", total_commute_sync_time);
+        info!("total receive commute sync time: {}", total_receive_commute_sync_time);
+        info!("total receive migration sync time: {}", total_receive_migration_sync_time);
+        info!("total send commuters sync time: {}", total_send_commuters_time);
+        info!("total send migrators sync time: {}", total_send_migrator_time);
         listeners.simulation_ended();
     }
 

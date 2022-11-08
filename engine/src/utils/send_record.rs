@@ -19,6 +19,7 @@
 
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
+use std::time::Instant;
 
 pub type SendResult<'a> = Result<(), (KafkaError, BaseRecord<'a, String, String>)>;
 
@@ -28,7 +29,10 @@ pub trait SendRecord {
 
 impl SendRecord for ThreadedProducer<DefaultProducerContext> {
     fn send_record(&self, record: BaseRecord<String, String>) {
+        info!("sending message");
         let msg = &*format!("Failed to send msg {:?}, Reason", record.payload);
+        let time = Instant::now();
         self.send(record).expect(msg);
+        info!("message sent: {}", time.elapsed().as_millis());
     }
 }

@@ -80,8 +80,8 @@ impl KafkaConsumer<'_> {
     async fn run_sim(&self, request: Request, run_mode: &RunMode) {
         match request {
             Request::SimulationRequest(req) => {
-                let mut epidemiology = Epidemiology::new(&req.config, None, req.sim_id);
-                epidemiology.run(&req.config, run_mode).await;
+                let mut epidemiology = Epidemiology::new(req.config, None, req.sim_id, run_mode);
+                epidemiology.run(run_mode).await;
             }
             Request::MultiSimRequest(req) => {
                 let travel_plan_config = Some(req.travel_plan);
@@ -92,8 +92,8 @@ impl KafkaConsumer<'_> {
                     }
                     Some(req) => {
                         let mut epidemiology =
-                            Epidemiology::new(&req.config.config, travel_plan_config, req.engine_id.to_string());
-                        epidemiology.run(&req.config.config, run_mode).await;
+                            Epidemiology::new(req.config.config.clone(), travel_plan_config, req.engine_id.to_string(), run_mode);
+                        epidemiology.run(run_mode).await;
                     }
                 }
             }

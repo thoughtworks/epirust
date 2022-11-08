@@ -39,7 +39,7 @@ use crate::disease::{Disease, DiseaseOverride};
 use crate::models::custom_types::{Hour, Size};
 use intervention_config::InterventionConfig;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Validate)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Validate, Clone)]
 pub struct Config {
     population: Population,
     disease: Disease,

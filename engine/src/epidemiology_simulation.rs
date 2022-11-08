@@ -53,14 +53,19 @@ use crate::utils::util::{counts_at_start, output_file_format};
 use crate::RunMode;
 
 pub struct Epidemiology {
-    pub agent_location_map: CitizenLocationMap,
+    pub citizen_location_map: CitizenLocationMap,
     pub disease: Disease,
     pub sim_id: String,
     pub travel_plan_config: Option<TravelPlanConfig>,
+    pub config: Config,
+    counts_at_hr: Counts,
+    listeners: Listeners,
+    interventions: Interventions,
+    rng: RandomWrapper,
 }
 
 impl Epidemiology {
-    pub fn new(config: &Config, travel_plan_config: Option<TravelPlanConfig>, sim_id: String) -> Epidemiology {
+    pub fn new(config: Config, travel_plan_config: Option<TravelPlanConfig>, sim_id: String, run_mode: &RunMode) -> Epidemiology {
         let start = Instant::now();
         let disease = config.get_disease();
         let start_infections = config.get_starting_infections();
@@ -79,18 +84,33 @@ impl Epidemiology {
             sim_id.clone(),
         );
 
-        let agent_location_map = CitizenLocationMap::new(grid, &agent_list, &start_locations);
+        let mut citizen_location_map = CitizenLocationMap::new(grid, &agent_list, &start_locations);
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
-        Epidemiology { travel_plan_config, agent_location_map, disease, sim_id }
+        let current_population = citizen_location_map.current_population();
+        let listeners = Epidemiology::create_listeners(&sim_id, current_population as usize, run_mode, &config);
+        let counts_at_hr = counts_at_start(current_population, config.get_starting_infections());
+
+        let interventions = Epidemiology::init_interventions(&config, &mut citizen_location_map, &mut rng);
+
+        Epidemiology {
+            interventions,
+            counts_at_hr,
+            listeners,
+            config,
+            travel_plan_config,
+            citizen_location_map,
+            disease,
+            sim_id,
+            rng,
+        }
     }
 
-    fn create_listeners(&self, config: &Config, run_mode: &RunMode) -> Listeners {
+    fn create_listeners(engine_id: &str, current_pop: usize, run_mode: &RunMode, config: &Config) -> Listeners {
         let output_file_format = output_file_format(config, run_mode);
         let counts_file_name = format!("{}.csv", output_file_format);
 
         let csv_listener = CsvListener::new(counts_file_name);
-        let population = self.agent_location_map.current_population();
 
         let hotspot_tracker = Hotspot::new();
         let intervention_reporter = InterventionReporter::new(format!("{}_interventions.json", output_file_format));
@@ -101,7 +121,7 @@ impl Epidemiology {
             RunMode::Standalone => {}
             RunMode::SingleDaemon => {
                 let kafka_listener =
-                    EventsKafkaProducer::new(self.sim_id.clone(), population as usize, config.enable_citizen_state_messages());
+                    EventsKafkaProducer::new(engine_id.to_string(), current_pop, config.enable_citizen_state_messages());
                 listeners_vec.push(Box::new(kafka_listener));
             }
             RunMode::MultiEngine { .. } => {
@@ -110,7 +130,7 @@ impl Epidemiology {
                 listeners_vec.push(Box::new(travel_counter));
 
                 let kafka_listener =
-                    EventsKafkaProducer::new(self.sim_id.clone(), population as usize, config.enable_citizen_state_messages());
+                    EventsKafkaProducer::new(engine_id.to_string(), current_pop, config.enable_citizen_state_messages());
                 listeners_vec.push(Box::new(kafka_listener));
             }
         }
@@ -118,72 +138,52 @@ impl Epidemiology {
         Listeners::from(listeners_vec)
     }
 
-    fn init_interventions(&mut self, config: &Config, rng: &mut RandomWrapper) -> Interventions {
+    fn init_interventions(
+        config: &Config,
+        citizen_location_map: &mut CitizenLocationMap,
+        rng: &mut RandomWrapper,
+    ) -> Interventions {
         let vaccinations = VaccinateIntervention::init(config);
         let lock_down_details = LockdownIntervention::init(config);
         let hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        for (_, agent) in self.agent_location_map.iter_mut() {
+        for (_, agent) in citizen_location_map.iter_mut() {
             agent.assign_essential_worker(essential_workers_population, rng);
         }
         Interventions { vaccinate: vaccinations, lockdown: lock_down_details, build_new_hospital: hospital_intervention }
     }
 
-    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
-        let mut listeners = self.create_listeners(config, run_mode);
-        let population = self.agent_location_map.current_population();
-        let mut counts_at_hr = counts_at_start(population, config.get_starting_infections());
-        let mut rng = RandomWrapper::new();
-
-        let mut interventions = self.init_interventions(config, &mut rng);
-
-        listeners.grid_updated(&self.agent_location_map.grid);
+    pub async fn run(&mut self, run_mode: &RunMode) {
+        self.listeners.grid_updated(&self.citizen_location_map.grid);
         match run_mode {
-            RunMode::MultiEngine { engine_id } => {
-                self.run_multi_engine(config, engine_id, &mut listeners, &mut counts_at_hr, &mut interventions, &mut rng).await
-            }
-            _ => {
-                self.run_single_engine(
-                    config,
-                    run_mode,
-                    &mut listeners,
-                    &mut counts_at_hr,
-                    &mut interventions,
-                    &mut rng,
-                    self.sim_id.to_string(),
-                )
-                .await
-            }
+            RunMode::MultiEngine { engine_id } => self.run_multi_engine(engine_id).await,
+            _ => self.run_single_engine(run_mode).await,
         }
     }
 
-    pub async fn run_single_engine(
-        &mut self,
-        config: &Config,
-        run_mode: &RunMode,
-        listeners: &mut Listeners,
-        counts_at_hr: &mut Counts,
-        interventions: &mut Interventions,
-        rng: &mut RandomWrapper,
-        sim_id: String,
-    ) {
+    pub async fn run_single_engine(&mut self, run_mode: &RunMode) {
         let start_time = Instant::now();
         let mut outgoing_migrators = Vec::new();
         let mut outgoing_commuters = Vec::new();
         let percent_outgoing = 0.0;
 
+        let counts_at_hr = self.counts_at_hr.borrow_mut();
+        let interventions = self.interventions.borrow_mut();
+        let rng = self.rng.borrow_mut();
+
         counts_at_hr.log();
-        for simulation_hour in 1..config.get_hours() {
+        let listeners = self.listeners.borrow_mut();
+        for simulation_hour in 1..self.config.get_hours() {
             counts_at_hr.increment_hour();
 
-            let population_before_travel = self.agent_location_map.current_population();
+            let population_before_travel = self.citizen_location_map.current_population();
 
             if population_before_travel == 0 {
                 panic!("No citizens!");
             }
 
-            self.agent_location_map.simulate(
+            self.citizen_location_map.simulate(
                 counts_at_hr,
                 simulation_hour,
                 listeners,
@@ -192,13 +192,20 @@ impl Epidemiology {
                 percent_outgoing,
                 &mut outgoing_migrators,
                 &mut outgoing_commuters,
-                config.enable_citizen_state_messages(),
+                self.config.enable_citizen_state_messages(),
                 None,
-                &sim_id,
+                &self.sim_id,
             );
 
             listeners.counts_updated(*counts_at_hr);
-            self.agent_location_map.process_interventions(interventions, counts_at_hr, listeners, rng, config, &sim_id);
+            self.citizen_location_map.process_interventions(
+                interventions,
+                counts_at_hr,
+                listeners,
+                rng,
+                &self.config,
+                &self.sim_id,
+            );
 
             if Epidemiology::stop_simulation(&mut interventions.lockdown, run_mode, *counts_at_hr) {
                 break;
@@ -209,7 +216,7 @@ impl Epidemiology {
                     "Throughput: {} iterations/sec; simulation hour {} of {}",
                     simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
                     simulation_hour,
-                    config.get_hours()
+                    self.config.get_hours()
                 );
                 counts_at_hr.log();
             }
@@ -220,15 +227,7 @@ impl Epidemiology {
         listeners.simulation_ended();
     }
 
-    pub async fn run_multi_engine(
-        &mut self,
-        config: &Config,
-        engine_id: &String,
-        listeners: &mut Listeners,
-        counts_at_hr: &mut Counts,
-        interventions: &mut Interventions,
-        rng: &mut RandomWrapper,
-    ) {
+    pub async fn run_multi_engine(&mut self, engine_id: &String) {
         let start_time = Instant::now();
         let mut producer = KafkaProducer::new();
 
@@ -241,7 +240,7 @@ impl Epidemiology {
         let migration_plan = if is_migration_enabled { Some(travel_plan_config.migration_plan()) } else { None };
 
         let mut engine_migration_plan =
-            EngineMigrationPlan::new(engine_id.clone(), migration_plan, self.agent_location_map.current_population());
+            EngineMigrationPlan::new(engine_id.clone(), migration_plan, self.citizen_location_map.current_population());
 
         debug!("{}: Start Migrator Consumer", engine_id);
         let migrators_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", MIGRATION_TOPIC, engine_id)], "migrate");
@@ -263,13 +262,19 @@ impl Epidemiology {
         let mut n_incoming = 0;
         let mut n_outgoing = 0;
 
+        let counts_at_hr = self.counts_at_hr.borrow_mut();
+        let interventions = self.interventions.borrow_mut();
+        let rng = self.rng.borrow_mut();
+
         counts_at_hr.log();
 
         let mut total_tick_sync_time = 0;
         let mut total_commute_sync_time = 0;
         let run_mode = RunMode::MultiEngine { engine_id: engine_id.to_string() };
 
-        for simulation_hour in 1..config.get_hours() {
+        let hours = self.config.get_hours();
+        let config = &self.config;
+        for simulation_hour in 1..hours {
             let start_time = Instant::now();
             let tick =
                 receive_tick(&run_mode, &mut ticks_stream, simulation_hour, is_commute_enabled, is_migration_enabled).await;
@@ -284,7 +289,7 @@ impl Epidemiology {
 
             counts_at_hr.increment_hour();
 
-            let population_before_travel = self.agent_location_map.current_population();
+            let population_before_travel = self.citizen_location_map.current_population();
 
             if population_before_travel == 0 {
                 panic!("No citizens!");
@@ -311,7 +316,8 @@ impl Epidemiology {
             };
 
             let mut outgoing_commuters: Vec<(Point, Commuter)> = Vec::new();
-            let location_map = self.agent_location_map.borrow_mut();
+            let location_map = self.citizen_location_map.borrow_mut();
+            let listeners = self.listeners.borrow_mut();
             let sim = async {
                 debug!("{}: Start simulation for hour: {}", engine_id, simulation_hour);
                 location_map.simulate(
@@ -367,8 +373,8 @@ impl Epidemiology {
                 info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
-                self.agent_location_map.remove_commuters(&outgoing_commuters, counts_at_hr);
-                self.agent_location_map.assimilate_commuters(&mut incoming_commuters, counts_at_hr, rng, simulation_hour);
+                self.citizen_location_map.remove_commuters(&outgoing_commuters, counts_at_hr);
+                self.citizen_location_map.assimilate_commuters(&mut incoming_commuters, counts_at_hr, rng, simulation_hour);
                 debug!("{}: assimilated the commuters", engine_id);
             }
 
@@ -376,13 +382,20 @@ impl Epidemiology {
                 let (mut incoming,) = join!(received_migrators.unwrap());
                 n_incoming += incoming.len();
                 n_outgoing += outgoing.len();
-                self.agent_location_map.remove_migrators(&actual_outgoing, counts_at_hr);
-                self.agent_location_map.assimilate_migrators(&mut incoming, counts_at_hr, rng);
+                self.citizen_location_map.remove_migrators(&actual_outgoing, counts_at_hr);
+                self.citizen_location_map.assimilate_migrators(&mut incoming, counts_at_hr, rng);
                 debug!("{}: assimilated the migrators", engine_id);
             }
 
-            listeners.counts_updated(*counts_at_hr);
-            self.agent_location_map.process_interventions(interventions, counts_at_hr, listeners, rng, config, engine_id);
+            self.listeners.counts_updated(*counts_at_hr);
+            self.citizen_location_map.process_interventions(
+                interventions,
+                counts_at_hr,
+                &mut self.listeners,
+                rng,
+                &self.config,
+                engine_id,
+            );
 
             if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
@@ -403,14 +416,14 @@ impl Epidemiology {
                     "Throughput: {} iterations/sec; simulation hour {} of {}",
                     simulation_hour as f32 / start_time.elapsed().as_secs_f32(),
                     simulation_hour,
-                    config.get_hours()
+                    self.config.get_hours()
                 );
                 counts_at_hr.log();
                 info!(
                     "Incoming: {}, Outgoing: {}, Current Population: {}",
                     n_incoming,
                     n_outgoing,
-                    self.agent_location_map.current_population()
+                    self.citizen_location_map.current_population()
                 );
                 n_incoming = 0;
                 n_outgoing = 0;
@@ -421,7 +434,7 @@ impl Epidemiology {
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         info!("total tick sync time: {}", total_tick_sync_time);
         info!("total commute sync time: {}", total_commute_sync_time);
-        listeners.simulation_ended();
+        self.listeners.simulation_ended();
     }
 
     fn send_migrators(tick: Option<Tick>, producer: &mut KafkaProducer, outgoing: Vec<MigratorsByRegion>) {
@@ -478,19 +491,19 @@ mod tests {
             vec![InterventionConfig::Vaccinate(vac)],
             None,
         );
-        let epidemiology: Epidemiology = Epidemiology::new(&config, None, STANDALONE_SIM_ID.to_string());
+        let epidemiology: Epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), &RunMode::Standalone);
         let expected_housing_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
-        assert_eq!(epidemiology.agent_location_map.grid.housing_area, expected_housing_area);
+        assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
 
         let expected_transport_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(40, 0), Point::new(59, 100));
-        assert_eq!(epidemiology.agent_location_map.grid.transport_area, expected_transport_area);
+        assert_eq!(epidemiology.citizen_location_map.grid.transport_area, expected_transport_area);
 
         let expected_work_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(60, 0), Point::new(79, 100));
-        assert_eq!(epidemiology.agent_location_map.grid.work_area, expected_work_area);
+        assert_eq!(epidemiology.citizen_location_map.grid.work_area, expected_work_area);
 
         let expected_hospital_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(80, 0), Point::new(89, 0));
-        assert_eq!(epidemiology.agent_location_map.grid.hospital_area, expected_hospital_area);
+        assert_eq!(epidemiology.citizen_location_map.grid.hospital_area, expected_hospital_area);
 
-        assert_eq!(epidemiology.agent_location_map.current_population(), 10);
+        assert_eq!(epidemiology.citizen_location_map.current_population(), 10);
     }
 }

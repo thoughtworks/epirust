@@ -53,7 +53,7 @@ impl DiseaseStateMachine {
 
     pub fn get_infection_day(self) -> Day {
         match self.state {
-            State::Infected(inf) => inf.get_infection_day(),
+            State::Infected { infection_day, .. } => infection_day,
             _ => 0,
         }
     }
@@ -76,11 +76,16 @@ impl DiseaseStateMachine {
         map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
     ) -> State {
-        self.state.next_state(sim_hr, cell, citizen, disease, map, rng)
+        match self.state {
+            State::Susceptible => self.state.on_susceptible(sim_hr, cell, citizen, disease, map, rng),
+            State::Exposed { at_hour } => self.state.on_exposed(at_hour, sim_hr, disease, rng),
+            State::Infected { infection_day, severity } => self.state.on_infected(sim_hr, infection_day, severity, disease, rng),
+            state => state,
+        }
     }
 
     pub fn decease(&mut self, rng: &mut RandomWrapper, disease: &Disease) {
-        let state = self.state.deceased(disease, rng);
+        let state = self.state.at_end_of_the_day(disease, rng);
         self.state = state;
     }
 
@@ -94,7 +99,7 @@ impl DiseaseStateMachine {
     }
 
     pub fn is_infected(&self) -> bool {
-        matches!(self.state, State::Infected(_))
+        matches!(self.state, State::Infected { .. })
     }
 
     pub fn is_symptomatic(&self) -> bool {

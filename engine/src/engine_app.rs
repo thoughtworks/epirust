@@ -35,7 +35,7 @@ impl EngineApp {
     }
 
     pub async fn start_standalone(config: Config, run_mode: &RunMode) {
-        let mut epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), &run_mode);
+        let mut epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode);
         epidemiology.run(run_mode).await;
         info!("Done");
     }

@@ -18,6 +18,7 @@
  */
 
 use core::borrow::BorrowMut;
+use std::borrow::Borrow;
 use std::time::Instant;
 
 use common::config::{Config, Population, TravelPlanConfig};
@@ -44,6 +45,7 @@ use crate::listeners::travel_counter::TravelCounter;
 use crate::models::constants;
 use crate::models::events::Counts;
 use crate::models::events::Tick;
+use crate::state_machine::DiseaseHandler;
 use crate::tick::{receive_tick, send_ack};
 use crate::travel::commute;
 use crate::travel::commute::Commuter;
@@ -52,7 +54,7 @@ use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion}
 use crate::utils::util::{counts_at_start, output_file_format};
 use crate::RunMode;
 
-pub struct Epidemiology {
+pub struct Epidemiology<T: DiseaseHandler> {
     pub citizen_location_map: CitizenLocationMap,
     pub disease: Disease,
     pub sim_id: String,
@@ -62,10 +64,17 @@ pub struct Epidemiology {
     listeners: Listeners,
     interventions: Interventions,
     rng: RandomWrapper,
+    disease_handler: T,
 }
 
-impl Epidemiology {
-    pub fn new(config: Config, travel_plan_config: Option<TravelPlanConfig>, sim_id: String, run_mode: &RunMode) -> Epidemiology {
+impl<T: DiseaseHandler> Epidemiology<T> {
+    pub fn new(
+        config: Config,
+        travel_plan_config: Option<TravelPlanConfig>,
+        sim_id: String,
+        run_mode: &RunMode,
+        disease_handler: T,
+    ) -> Self {
         let start = Instant::now();
         let disease = config.get_disease();
         let start_infections = config.get_starting_infections();
@@ -88,10 +97,10 @@ impl Epidemiology {
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         let current_population = citizen_location_map.current_population();
-        let listeners = Epidemiology::create_listeners(&sim_id, current_population as usize, run_mode, &config);
+        let listeners = Self::create_listeners(&sim_id, current_population as usize, run_mode, &config);
         let counts_at_hr = counts_at_start(current_population, config.get_starting_infections());
 
-        let interventions = Epidemiology::init_interventions(&config, &mut citizen_location_map, &mut rng);
+        let interventions = Self::init_interventions(&config, &mut citizen_location_map, &mut rng);
 
         Epidemiology {
             interventions,
@@ -103,6 +112,7 @@ impl Epidemiology {
             disease,
             sim_id,
             rng,
+            disease_handler,
         }
     }
 
@@ -195,6 +205,7 @@ impl Epidemiology {
                 self.config.enable_citizen_state_messages(),
                 None,
                 &self.sim_id,
+                &self.disease_handler,
             );
 
             listeners.counts_updated(*counts_at_hr);
@@ -207,7 +218,7 @@ impl Epidemiology {
                 &self.sim_id,
             );
 
-            if Epidemiology::stop_simulation(&mut interventions.lockdown, run_mode, *counts_at_hr) {
+            if Self::stop_simulation(&mut interventions.lockdown, run_mode, *counts_at_hr) {
                 break;
             }
 
@@ -265,6 +276,7 @@ impl Epidemiology {
         let counts_at_hr = self.counts_at_hr.borrow_mut();
         let interventions = self.interventions.borrow_mut();
         let rng = self.rng.borrow_mut();
+        let disease_handler = self.disease_handler.borrow();
 
         counts_at_hr.log();
 
@@ -332,6 +344,7 @@ impl Epidemiology {
                     config.enable_citizen_state_messages(),
                     Some(travel_plan_config),
                     engine_id,
+                    disease_handler,
                 );
                 debug!("{}: Simulation finished for hour: {}", engine_id, simulation_hour);
 
@@ -355,11 +368,11 @@ impl Epidemiology {
 
                 if is_migration_enabled {
                     debug!("{}: Send Migrators", engine_id);
-                    Epidemiology::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
+                    Self::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
                 }
                 if is_commute_enabled {
                     debug!("{}: Send Commuters", engine_id);
-                    Epidemiology::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
+                    Self::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
                 }
             };
 
@@ -397,7 +410,7 @@ impl Epidemiology {
                 engine_id,
             );
 
-            if Epidemiology::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
+            if Self::stop_simulation(&mut interventions.lockdown, &run_mode, *counts_at_hr) {
                 break;
             }
 
@@ -471,6 +484,7 @@ mod tests {
     use crate::engine_app::STANDALONE_SIM_ID;
     use crate::geography::Area;
     use crate::geography::Point;
+    use crate::state_machine::DefaultDiseaseHandler;
     use common::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use common::config::{AutoPopulation, GeographyParameters};
 
@@ -491,7 +505,8 @@ mod tests {
             vec![InterventionConfig::Vaccinate(vac)],
             None,
         );
-        let epidemiology: Epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), &RunMode::Standalone);
+        let epidemiology: Epidemiology<DefaultDiseaseHandler> =
+            Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), &RunMode::Standalone, DefaultDiseaseHandler);
         let expected_housing_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
 

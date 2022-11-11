@@ -23,23 +23,7 @@ use common::utils::RandomWrapper;
 use crate::allocation_map::CitizenLocationMap;
 use crate::citizen::Citizen;
 use crate::geography::Point;
-use crate::state_machine::State;
-
-// #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-// pub enum State {
-//     Susceptible {},
-//     Exposed { at_hour: Hour },
-//     Infected { symptoms: bool, severity: InfectionSeverity },
-//     Recovered {},
-//     Deceased {},
-// }
-
-// #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-// pub enum InfectionSeverity {
-//     Pre { at_hour: Hour },
-//     Mild,
-//     Severe,
-// }
+use crate::state_machine::{DiseaseHandler, State};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiseaseStateMachine {
@@ -67,7 +51,7 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn next(
+    pub fn next<T: DiseaseHandler>(
         &self,
         sim_hr: Hour,
         cell: Point,
@@ -75,18 +59,23 @@ impl DiseaseStateMachine {
         disease: &Disease,
         map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
+        disease_handler: &T,
     ) -> State {
         match self.state {
-            State::Susceptible => self.state.on_susceptible(sim_hr, cell, citizen, disease, map, rng),
-            State::Exposed { at_hour } => self.state.on_exposed(at_hour, sim_hr, disease, rng),
-            State::Infected { infection_day, severity } => self.state.on_infected(sim_hr, infection_day, severity, disease, rng),
+            State::Susceptible => disease_handler.on_susceptible(sim_hr, cell, citizen, disease, map, rng).unwrap_or(self.state),
+            State::Exposed { at_hour } => disease_handler.on_exposed(at_hour, sim_hr, disease, rng).unwrap_or(self.state),
+            State::Infected { infection_day, severity } => {
+                disease_handler.on_infected(sim_hr, infection_day, severity, disease, rng).unwrap_or(self.state)
+            }
             state => state,
         }
     }
 
-    pub fn decease(&mut self, rng: &mut RandomWrapper, disease: &Disease) {
-        let state = self.state.at_end_of_the_day(disease, rng);
-        self.state = state;
+    pub fn decease<T: DiseaseHandler>(&mut self, rng: &mut RandomWrapper, disease: &Disease, disease_handler: &T) {
+        let state_op = disease_handler.on_routine_end(&self.state, disease, rng);
+        if let Some(state) = state_op {
+            self.state = state
+        };
     }
 
     pub fn is_susceptible(&self) -> bool {

@@ -35,7 +35,7 @@ use crate::interventions::Interventions;
 use crate::listeners::listener::Listeners;
 use crate::models::constants;
 use crate::models::events::Counts;
-use crate::state_machine::State;
+use crate::state_machine::{DiseaseHandler, State};
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
 
@@ -62,7 +62,7 @@ impl CitizenLocationMap {
         }
     }
 
-    pub fn simulate(
+    pub fn simulate<T: DiseaseHandler>(
         &mut self,
         csv_record: &mut Counts,
         simulation_hour: Hour,
@@ -75,12 +75,13 @@ impl CitizenLocationMap {
         publish_citizen_state: bool,
         travel_plan_config: Option<&TravelPlanConfig>,
         region_name: &String,
+        disease_handler: &T,
     ) {
         csv_record.clear();
         for (cell, agent) in self.current_locations.iter() {
             let mut current_agent: Citizen = agent.clone();
             let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, rng, disease);
+            let point = current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, rng, disease, disease_handler);
             let agent_option = self.upcoming_locations.get(&point);
             let new_location = match agent_option {
                 Some(_) => *cell, //occupied

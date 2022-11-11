@@ -41,7 +41,7 @@ use crate::allocation_map::CitizenLocationMap;
 use crate::disease_state_machine::DiseaseStateMachine;
 use crate::geography::{Area, Grid, Point};
 use crate::models::constants;
-use crate::state_machine::State;
+use crate::state_machine::{DiseaseHandler, State};
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
 
@@ -196,15 +196,16 @@ impl Citizen {
         self.isolated = state;
     }
 
-    fn update_infection_dynamics(
+    fn update_infection_dynamics<T: DiseaseHandler>(
         &mut self,
         cell: Point,
         map: &CitizenLocationMap,
         sim_hr: Hour,
         rng: &mut RandomWrapper,
         disease: &Disease,
+        disease_handler: &T,
     ) {
-        self.state_machine.state = self.state_machine.next(sim_hr, cell, self, disease, map, rng);
+        self.state_machine.state = self.state_machine.next(sim_hr, cell, self, disease, map, rng, disease_handler);
     }
 
     fn generate_disease_randomness_factor(rng: &mut RandomWrapper) -> i32 {
@@ -212,7 +213,7 @@ impl Citizen {
         *option.unwrap()
     }
 
-    pub fn perform_operation(
+    pub fn perform_operation<T: DiseaseHandler>(
         &mut self,
         cell: Point,
         simulation_hour: Hour,
@@ -220,11 +221,12 @@ impl Citizen {
         map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
         disease: &Disease,
+        disease_handler: &T,
     ) -> Point {
-        self.routine(cell, simulation_hour, grid, map, rng, disease)
+        self.routine(cell, simulation_hour, grid, map, rng, disease, disease_handler)
     }
 
-    fn routine(
+    fn routine<T: DiseaseHandler>(
         &mut self,
         cell: Point,
         simulation_hour: Hour,
@@ -232,6 +234,7 @@ impl Citizen {
         map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
         disease: &Disease,
+        disease_handler: &T,
     ) -> Point {
         let mut new_cell = cell;
 
@@ -246,15 +249,15 @@ impl Citizen {
                     self.current_area = self.home_location.clone();
                 }
             }
-            constants::ROUTINE_END_TIME => new_cell = self.deceased(map, cell, rng, disease),
+            constants::ROUTINE_END_TIME => new_cell = self.deceased(map, cell, rng, disease, disease_handler),
             _ => {
-                new_cell = self.perform_movements(cell, current_hour, simulation_hour, grid, map, rng, disease);
+                new_cell = self.perform_movements(cell, current_hour, simulation_hour, grid, map, rng, disease, disease_handler);
             }
         }
         new_cell
     }
 
-    fn perform_movements(
+    fn perform_movements<T: DiseaseHandler>(
         &mut self,
         cell: Point,
         hour_of_day: Hour,
@@ -263,6 +266,7 @@ impl Citizen {
         map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
         disease: &Disease,
+        disease_handler: &T,
     ) -> Point {
         let mut new_cell = cell;
         match self.work_status {
@@ -286,7 +290,7 @@ impl Citizen {
                     }
                     _ => new_cell = self.move_agent_from(map, cell, rng),
                 }
-                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease, disease_handler);
             }
 
             WorkStatus::HospitalStaff { work_start_at } => {
@@ -324,7 +328,7 @@ impl Citizen {
                         }
                     }
                 }
-                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease, disease_handler);
             }
 
             WorkStatus::NA => {
@@ -342,7 +346,7 @@ impl Citizen {
                         new_cell = self.move_agent_from(map, cell, rng);
                     }
                 }
-                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease, disease_handler);
             }
         }
         new_cell
@@ -388,9 +392,16 @@ impl Citizen {
         self.move_agent_from(map, cell, rng)
     }
 
-    fn deceased(&mut self, map: &CitizenLocationMap, cell: Point, rng: &mut RandomWrapper, disease: &Disease) -> Point {
+    fn deceased<T: DiseaseHandler>(
+        &mut self,
+        map: &CitizenLocationMap,
+        cell: Point,
+        rng: &mut RandomWrapper,
+        disease: &Disease,
+        disease_handler: &T,
+    ) -> Point {
         let mut new_cell = cell;
-        self.state_machine.decease(rng, disease);
+        self.state_machine.decease(rng, disease, disease_handler);
         if self.state_machine.state == State::Recovered {
             new_cell = map.move_agent(cell, self.home_location.get_random_point(rng));
         }

@@ -19,6 +19,7 @@
 
 use crate::epidemiology_simulation::Epidemiology;
 use crate::kafka::kafka_consumer::KafkaConsumer;
+use crate::state_machine::DiseaseHandler;
 use crate::RunMode;
 use common::config::Config;
 
@@ -27,15 +28,15 @@ pub const STANDALONE_SIM_ID: &str = "0";
 pub struct EngineApp;
 
 impl EngineApp {
-    pub async fn start_in_daemon(engine_id: &str, run_mode: &RunMode) {
+    pub async fn start_in_daemon<T: DiseaseHandler + Clone>(engine_id: &str, run_mode: &RunMode, dsh: T) {
         info!("Started in daemon mode");
         let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
-        consumer.listen_loop(run_mode).await;
+        consumer.listen_loop(run_mode, dsh).await;
         info!("Done");
     }
 
-    pub async fn start_standalone(config: Config, run_mode: &RunMode) {
-        let mut epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode);
+    pub async fn start_standalone<T: DiseaseHandler>(config: Config, run_mode: &RunMode, dsh: T) {
+        let mut epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode, dsh);
         epidemiology.run(run_mode).await;
         info!("Done");
     }

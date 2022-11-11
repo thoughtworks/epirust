@@ -24,6 +24,7 @@ extern crate serde_derive;
 extern crate log;
 
 use crate::engine_app::EngineApp;
+use crate::state_machine::DefaultDiseaseHandler;
 use clap::{App, Arg};
 use common::config::Config;
 
@@ -86,11 +87,11 @@ async fn main() {
     };
 
     if daemon {
-        EngineApp::start_in_daemon(engine_id, &run_mode).await;
+        EngineApp::start_in_daemon(engine_id, &run_mode, DefaultDiseaseHandler).await;
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
         let config = Config::read(config_file).expect("Failed to read config file");
-        EngineApp::start_standalone(config, &run_mode).await;
+        EngineApp::start_standalone(config, &run_mode, DefaultDiseaseHandler).await;
     }
 }
 

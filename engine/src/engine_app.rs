@@ -19,8 +19,8 @@
 
 use crate::epidemiology_simulation::Epidemiology;
 use crate::kafka::kafka_consumer::KafkaConsumer;
+use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
-use crate::RunMode;
 use common::config::Config;
 
 pub const STANDALONE_SIM_ID: &str = "0";

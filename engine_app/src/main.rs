@@ -18,31 +18,10 @@
  */
 
 extern crate clap;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate log;
 
-use crate::engine_app::EngineApp;
-use crate::state_machine::DefaultDiseaseHandler;
 use clap::{App, Arg};
 use common::config::Config;
-
-mod allocation_map;
-mod citizen;
-mod disease_state_machine;
-mod engine_app;
-mod epidemiology_simulation;
-mod geography;
-mod interventions;
-mod kafka;
-mod listeners;
-mod models;
-mod population;
-mod state_machine;
-mod tick;
-mod travel;
-mod utils;
+use epirust_engine::{DefaultDiseaseHandler, EngineApp, RunMode};
 
 #[tokio::main]
 async fn main() {
@@ -93,15 +72,4 @@ async fn main() {
         let config = Config::read(config_file).expect("Failed to read config file");
         EngineApp::start_standalone(config, &run_mode, DefaultDiseaseHandler).await;
     }
-}
-
-pub enum RunMode {
-    //run once and exit
-    Standalone,
-
-    //daemon mode, with only one engine
-    SingleDaemon,
-
-    //daemon mode, with multiple engines and an orchestrator
-    MultiEngine { engine_id: String },
 }

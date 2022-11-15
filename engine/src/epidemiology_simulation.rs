@@ -45,6 +45,7 @@ use crate::listeners::travel_counter::TravelCounter;
 use crate::models::constants;
 use crate::models::events::Counts;
 use crate::models::events::Tick;
+use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
 use crate::tick::{receive_tick, send_ack};
 use crate::travel::commute;
@@ -52,7 +53,6 @@ use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
 use crate::utils::util::{counts_at_start, output_file_format};
-use crate::RunMode;
 
 pub struct Epidemiology<T: DiseaseHandler> {
     pub citizen_location_map: CitizenLocationMap,

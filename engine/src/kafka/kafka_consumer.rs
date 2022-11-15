@@ -29,9 +29,9 @@ use rdkafka::message::Message;
 use rdkafka::ClientConfig;
 
 use crate::epidemiology_simulation::Epidemiology;
+use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
 use crate::utils::environment;
-use crate::RunMode;
 
 pub struct KafkaConsumer<'a> {
     engine_id: &'a str,

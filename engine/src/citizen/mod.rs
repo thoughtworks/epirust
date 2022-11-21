@@ -242,7 +242,7 @@ impl Citizen {
         match current_hour {
             constants::ROUTINE_START_TIME => {
                 self.state_machine.increment_infection_day();
-                new_cell = self.hospitalize(cell, &grid.hospital_area, map, disease);
+                new_cell = self.hospitalize(cell, &grid.hospital_area, map, disease, disease_handler);
             }
             constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {
                 if !self.is_hospital_staff() {
@@ -352,9 +352,16 @@ impl Citizen {
         new_cell
     }
 
-    fn hospitalize(&mut self, cell: Point, hospital: &Area, map: &CitizenLocationMap, disease: &Disease) -> Point {
+    fn hospitalize<T: DiseaseHandler>(
+        &mut self,
+        cell: Point,
+        hospital: &Area,
+        map: &CitizenLocationMap,
+        disease: &Disease,
+        disease_handler: &T,
+    ) -> Point {
         let mut new_cell = cell;
-        if !self.hospitalized && self.state_machine.state.is_to_be_hospitalize(disease, self.immunity) {
+        if !self.hospitalized && self.state_machine.is_to_be_hospitalized(disease, self.immunity, disease_handler) {
             let (is_hospitalized, new_location) = CitizenLocationMap::goto_hospital(map, hospital, cell, self);
             new_cell = new_location;
             self.hospitalized = is_hospitalized;

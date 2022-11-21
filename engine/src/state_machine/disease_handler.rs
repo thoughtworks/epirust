@@ -26,7 +26,14 @@ use common::models::custom_types::{Day, Hour};
 use common::utils::RandomWrapper;
 
 pub trait DiseaseHandler {
-    fn is_to_be_hospitalize(&self, current_state: &State, disease: &Disease, immunity: i32) -> bool;
+    fn is_to_be_hospitalize(&self, current_state: &State, disease: &Disease, immunity: i32) -> bool {
+        match current_state {
+            State::Infected { infection_day, severity: Severity::Severe } => {
+                disease.is_to_be_hospitalized((*infection_day as i32 + immunity) as Day)
+            }
+            _ => false,
+        }
+    }
 
     fn on_infected(
         &self,

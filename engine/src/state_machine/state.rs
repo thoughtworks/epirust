@@ -17,7 +17,6 @@
  *
  */
 
-use common::disease::Disease;
 use common::models::custom_types::{Day, Hour};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -65,15 +64,6 @@ impl State {
 
     pub fn expose(at_hour: Hour) -> State {
         State::Exposed { at_hour }
-    }
-
-    pub fn is_to_be_hospitalize(&self, disease: &Disease, immunity: i32) -> bool {
-        match self {
-            State::Infected { infection_day, severity: Severity::Severe } => {
-                disease.is_to_be_hospitalized((*infection_day as i32 + immunity) as Day)
-            }
-            _ => false,
-        }
     }
 
     pub fn update_infection_day(&mut self) {

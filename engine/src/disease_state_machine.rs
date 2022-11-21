@@ -78,6 +78,10 @@ impl DiseaseStateMachine {
         };
     }
 
+    pub(crate) fn is_to_be_hospitalized<T: DiseaseHandler>(&self, disease: &Disease, immunity: i32, disease_handler: &T) -> bool {
+        disease_handler.is_to_be_hospitalize(&self.state, disease, immunity)
+    }
+
     pub fn is_susceptible(&self) -> bool {
         matches!(self.state, State::Susceptible)
     }
@@ -135,6 +139,7 @@ impl DiseaseStateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::DefaultDiseaseHandler;
 
     #[test]
     fn should_initialize() {
@@ -181,7 +186,7 @@ mod tests {
     fn should_panic() {
         let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
         let machine = DiseaseStateMachine::new();
-        machine.state.is_to_be_hospitalize(&disease, 2);
+        machine.is_to_be_hospitalized(&disease, 2, &DefaultDiseaseHandler);
     }
 
     //Todo: move it into state_machine test

@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use common::disease::Disease;
 use common::models::custom_types::{Day, Hour};
 use common::utils::RandomWrapper;
 
@@ -56,30 +55,29 @@ impl DiseaseStateMachine {
         sim_hr: Hour,
         cell: Point,
         citizen: &Citizen,
-        disease: &Disease,
         map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
         disease_handler: &T,
     ) -> State {
         match self.state {
-            State::Susceptible => disease_handler.on_susceptible(sim_hr, cell, citizen, disease, map, rng).unwrap_or(self.state),
-            State::Exposed { at_hour } => disease_handler.on_exposed(at_hour, sim_hr, disease, rng).unwrap_or(self.state),
+            State::Susceptible => disease_handler.on_susceptible(sim_hr, cell, citizen, map, rng).unwrap_or(self.state),
+            State::Exposed { at_hour } => disease_handler.on_exposed(at_hour, sim_hr, rng).unwrap_or(self.state),
             State::Infected { infection_day, severity } => {
-                disease_handler.on_infected(sim_hr, infection_day, severity, disease, rng).unwrap_or(self.state)
+                disease_handler.on_infected(sim_hr, infection_day, severity, rng).unwrap_or(self.state)
             }
             state => state,
         }
     }
 
-    pub fn decease<T: DiseaseHandler>(&mut self, rng: &mut RandomWrapper, disease: &Disease, disease_handler: &T) {
-        let state_op = disease_handler.on_routine_end(&self.state, disease, rng);
+    pub fn decease<T: DiseaseHandler>(&mut self, rng: &mut RandomWrapper, disease_handler: &T) {
+        let state_op = disease_handler.on_routine_end(&self.state, rng);
         if let Some(state) = state_op {
             self.state = state
         };
     }
 
-    pub(crate) fn is_to_be_hospitalized<T: DiseaseHandler>(&self, disease: &Disease, immunity: i32, disease_handler: &T) -> bool {
-        disease_handler.is_to_be_hospitalize(&self.state, disease, immunity)
+    pub(crate) fn is_to_be_hospitalized<T: DiseaseHandler>(&self, immunity: i32, disease_handler: &T) -> bool {
+        disease_handler.is_to_be_hospitalize(&self.state, immunity)
     }
 
     pub fn is_susceptible(&self) -> bool {
@@ -139,7 +137,7 @@ impl DiseaseStateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::DefaultDiseaseHandler;
+    use common::disease::Disease;
 
     #[test]
     fn should_initialize() {
@@ -186,7 +184,7 @@ mod tests {
     fn should_panic() {
         let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
         let machine = DiseaseStateMachine::new();
-        machine.is_to_be_hospitalized(&disease, 2, &DefaultDiseaseHandler);
+        machine.is_to_be_hospitalized(2, &disease);
     }
 
     //Todo: move it into state_machine test

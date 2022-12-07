@@ -55,7 +55,7 @@ impl KafkaConsumer<'_> {
         KafkaConsumer { engine_id, consumer }
     }
 
-    pub async fn listen_loop<T: DiseaseHandler + Clone>(&self, run_mode: &RunMode, disease_handler: T) {
+    pub async fn listen_loop<T: DiseaseHandler + Clone>(&self, run_mode: &RunMode, disease_handler: Option<T>) {
         let mut message_stream: MessageStream = self.consumer.stream();
         debug!("Started the stream. Waiting for simulation request");
         while let Some(message) = message_stream.next().await {
@@ -78,11 +78,17 @@ impl KafkaConsumer<'_> {
         }
     }
 
-    async fn run_sim<T: DiseaseHandler>(&self, request: Request, run_mode: &RunMode, disease_handler: T) {
+    async fn run_sim<T: DiseaseHandler>(&self, request: Request, run_mode: &RunMode, disease_handler: Option<T>) {
         match request {
             Request::SimulationRequest(req) => {
-                let mut epidemiology = Epidemiology::new(req.config, None, req.sim_id, run_mode, disease_handler);
-                epidemiology.run(run_mode).await;
+                if disease_handler.is_none() {
+                    let disease = req.config.get_disease();
+                    let mut epidemiology = Epidemiology::new(req.config, None, req.sim_id, run_mode, disease);
+                    epidemiology.run(run_mode).await;
+                } else {
+                    let mut epidemiology = Epidemiology::new(req.config, None, req.sim_id, run_mode, disease_handler.unwrap());
+                    epidemiology.run(run_mode).await;
+                };
             }
             Request::MultiSimRequest(req) => {
                 let travel_plan_config = Some(req.travel_plan);
@@ -92,14 +98,22 @@ impl KafkaConsumer<'_> {
                         error!("Couldn't find any work for engine_id: {}", self.engine_id)
                     }
                     Some(req) => {
-                        let mut epidemiology = Epidemiology::new(
-                            req.config.config.clone(),
-                            travel_plan_config,
-                            req.engine_id.to_string(),
-                            run_mode,
-                            disease_handler,
-                        );
-                        epidemiology.run(run_mode).await;
+                        let config = req.config.config.clone();
+                        if disease_handler.is_none() {
+                            let disease = config.get_disease();
+                            let mut epidemiology =
+                                Epidemiology::new(config, travel_plan_config, req.engine_id.to_string(), run_mode, disease);
+                            epidemiology.run(run_mode).await;
+                        } else {
+                            let mut epidemiology = Epidemiology::new(
+                                config,
+                                travel_plan_config,
+                                req.engine_id.to_string(),
+                                run_mode,
+                                disease_handler.unwrap(),
+                            );
+                            epidemiology.run(run_mode).await;
+                        }
                     }
                 }
             }

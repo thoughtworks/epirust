@@ -20,7 +20,6 @@
 use std::collections::hash_map::IterMut;
 
 use common::config::{Config, TravelPlanConfig};
-use common::disease::Disease;
 use common::models::custom_types::{CoOrdinate, Count, Hour};
 use common::utils::RandomWrapper;
 use fnv::FnvHashMap;
@@ -68,7 +67,6 @@ impl CitizenLocationMap {
         simulation_hour: Hour,
         listeners: &mut Listeners,
         rng: &mut RandomWrapper,
-        disease: &Disease,
         percent_outgoing: f64,
         outgoing_migrators: &mut Vec<(Point, Migrator)>,
         outgoing_commuters: &mut Vec<(Point, Commuter)>,
@@ -81,7 +79,7 @@ impl CitizenLocationMap {
         for (cell, agent) in self.current_locations.iter() {
             let mut current_agent: Citizen = agent.clone();
             let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, rng, disease, disease_handler);
+            let point = current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, rng, disease_handler);
             let agent_option = self.upcoming_locations.get(&point);
             let new_location = match agent_option {
                 Some(_) => *cell, //occupied

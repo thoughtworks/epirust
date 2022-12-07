@@ -21,7 +21,8 @@ extern crate clap;
 
 use clap::{App, Arg};
 use common::config::Config;
-use epirust_engine::{DefaultDiseaseHandler, EngineApp, RunMode};
+use common::disease::Disease;
+use epirust_engine::{EngineApp, RunMode};
 
 #[tokio::main]
 async fn main() {
@@ -65,11 +66,12 @@ async fn main() {
         RunMode::Standalone
     };
 
+    let disease_handler: Option<Disease> = None;
     if daemon {
-        EngineApp::start_in_daemon(engine_id, &run_mode, DefaultDiseaseHandler).await;
+        EngineApp::start_in_daemon(engine_id, &run_mode, disease_handler).await;
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
         let config = Config::read(config_file).expect("Failed to read config file");
-        EngineApp::start_standalone(config, &run_mode, DefaultDiseaseHandler).await;
+        EngineApp::start_standalone(config, &run_mode, disease_handler).await;
     }
 }

@@ -27,7 +27,6 @@ mod citizen;
 mod disease_state_machine;
 mod engine_app;
 mod epidemiology_simulation;
-mod geography;
 mod interventions;
 mod kafka;
 mod listeners;
@@ -38,6 +37,8 @@ mod state_machine;
 mod tick;
 mod travel;
 mod utils;
+
+pub mod geography;
 
 pub use engine_app::EngineApp;
 pub use run_mode::RunMode;

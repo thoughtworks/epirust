@@ -17,10 +17,9 @@
  *
  */
 
-mod default_state_handler;
+mod default_disease_handler;
 mod disease_handler;
 mod state;
 
-pub use default_state_handler::DefaultDiseaseHandler;
 pub use disease_handler::DiseaseHandler;
 pub use state::*;

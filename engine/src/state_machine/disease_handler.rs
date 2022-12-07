@@ -21,40 +21,24 @@ use crate::allocation_map::CitizenLocationMap;
 use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::state_machine::{Severity, State};
-use common::disease::Disease;
 use common::models::custom_types::{Day, Hour};
 use common::utils::RandomWrapper;
 
 pub trait DiseaseHandler {
-    fn is_to_be_hospitalize(&self, current_state: &State, disease: &Disease, immunity: i32) -> bool {
-        match current_state {
-            State::Infected { infection_day, severity: Severity::Severe } => {
-                disease.is_to_be_hospitalized((*infection_day as i32 + immunity) as Day)
-            }
-            _ => false,
-        }
-    }
+    fn is_to_be_hospitalize(&self, current_state: &State, immunity: i32) -> bool;
 
-    fn on_infected(
-        &self,
-        sim_hr: Hour,
-        infection_day: Day,
-        severity: Severity,
-        disease: &Disease,
-        rng: &mut RandomWrapper,
-    ) -> Option<State>;
+    fn on_infected(&self, sim_hr: Hour, infection_day: Day, severity: Severity, rng: &mut RandomWrapper) -> Option<State>;
 
-    fn on_exposed(&self, at_hour: Hour, sim_hr: Hour, disease: &Disease, rng: &mut RandomWrapper) -> Option<State>;
+    fn on_exposed(&self, at_hour: Hour, sim_hr: Hour, rng: &mut RandomWrapper) -> Option<State>;
 
     fn on_susceptible(
         &self,
         sim_hr: Hour,
         cell: Point,
         citizen: &Citizen,
-        disease: &Disease,
         map: &CitizenLocationMap,
         rng: &mut RandomWrapper,
     ) -> Option<State>;
 
-    fn on_routine_end(&self, current_state: &State, disease: &Disease, rng: &mut RandomWrapper) -> Option<State>;
+    fn on_routine_end(&self, current_state: &State, rng: &mut RandomWrapper) -> Option<State>;
 }

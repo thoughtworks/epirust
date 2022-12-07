@@ -22,7 +22,6 @@ use std::borrow::Borrow;
 use std::time::Instant;
 
 use common::config::{Config, Population, TravelPlanConfig};
-use common::disease::Disease;
 use common::models::CommutePlan;
 use common::utils::RandomWrapper;
 use futures::join;
@@ -56,7 +55,6 @@ use crate::utils::util::{counts_at_start, output_file_format};
 
 pub struct Epidemiology<T: DiseaseHandler> {
     pub citizen_location_map: CitizenLocationMap,
-    pub disease: Disease,
     pub sim_id: String,
     pub travel_plan_config: Option<TravelPlanConfig>,
     pub config: Config,
@@ -76,7 +74,6 @@ impl<T: DiseaseHandler> Epidemiology<T> {
         disease_handler: T,
     ) -> Self {
         let start = Instant::now();
-        let disease = config.get_disease();
         let start_infections = config.get_starting_infections();
         let mut grid = geography::define_geography(config.get_grid_size(), sim_id.clone());
         let mut rng = RandomWrapper::new();
@@ -109,7 +106,6 @@ impl<T: DiseaseHandler> Epidemiology<T> {
             config,
             travel_plan_config,
             citizen_location_map,
-            disease,
             sim_id,
             rng,
             disease_handler,
@@ -198,7 +194,6 @@ impl<T: DiseaseHandler> Epidemiology<T> {
                 simulation_hour,
                 listeners,
                 rng,
-                &self.disease,
                 percent_outgoing,
                 &mut outgoing_migrators,
                 &mut outgoing_commuters,
@@ -310,8 +305,6 @@ impl<T: DiseaseHandler> Epidemiology<T> {
                 engine_migration_plan.set_current_population(population_before_travel);
             }
 
-            let disease = &self.disease;
-
             let mut percent_outgoing = 0.0;
             let mut outgoing: Vec<(Point, Migrator)> = Vec::new();
 
@@ -337,7 +330,6 @@ impl<T: DiseaseHandler> Epidemiology<T> {
                     simulation_hour,
                     listeners,
                     rng,
-                    disease,
                     percent_outgoing,
                     &mut outgoing,
                     &mut outgoing_commuters,
@@ -484,9 +476,9 @@ mod tests {
     use crate::engine_app::STANDALONE_SIM_ID;
     use crate::geography::Area;
     use crate::geography::Point;
-    use crate::state_machine::DefaultDiseaseHandler;
     use common::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use common::config::{AutoPopulation, GeographyParameters};
+    use common::disease::Disease;
 
     use super::*;
 
@@ -498,15 +490,15 @@ mod tests {
         let geography_parameters = GeographyParameters::new(100, 0.003);
         let config = Config::new(
             Population::Auto(pop),
-            disease,
+            Some(disease),
             geography_parameters,
             vec![],
             100,
             vec![InterventionConfig::Vaccinate(vac)],
             None,
         );
-        let epidemiology: Epidemiology<DefaultDiseaseHandler> =
-            Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), &RunMode::Standalone, DefaultDiseaseHandler);
+        let epidemiology: Epidemiology<_> =
+            Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), &RunMode::Standalone, disease);
         let expected_housing_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
 

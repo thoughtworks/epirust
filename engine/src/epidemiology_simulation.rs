@@ -19,15 +19,17 @@
 
 use core::borrow::BorrowMut;
 use std::borrow::Borrow;
+use std::task::Context;
 use std::time::Instant;
 
 use common::config::{Config, Population, TravelPlanConfig};
 use common::models::CommutePlan;
 use common::utils::RandomWrapper;
 use futures::join;
+use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
+use opentelemetry::{global, Context};
 
 use crate::allocation_map::CitizenLocationMap;
-use crate::geography;
 use crate::geography::Point;
 use crate::interventions::hospital::BuildNewHospital;
 use crate::interventions::lockdown::LockdownIntervention;
@@ -52,6 +54,7 @@ use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
 use crate::utils::util::{counts_at_start, output_file_format};
+use crate::{geography, KeyValue};
 
 pub struct Epidemiology<T: DiseaseHandler + Sync> {
     pub citizen_location_map: CitizenLocationMap,
@@ -165,7 +168,14 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
         self.listeners.grid_updated(&self.citizen_location_map.grid);
         match run_mode {
-            RunMode::MultiEngine { engine_id } => self.run_multi_engine(engine_id).await,
+            RunMode::MultiEngine { engine_id } => {
+                let tracer = global::tracer("epirust-trace");
+                let mut span = tracer.start(format!("multi-engine - {}", engine_id));
+                span.set_attribute(KeyValue::new("mode", "multiengine"));
+                span.set_attribute(KeyValue::new("engine_id", engine_id.to_string()));
+                let cx = Context::current_with_span(span);
+                self.run_multi_engine(engine_id).with_context(cx).await
+            }
             _ => self.run_single_engine(run_mode).await,
         }
     }
@@ -288,6 +298,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         let config = &self.config;
         for simulation_hour in 1..hours {
             let start_time = Instant::now();
+            let tracer = global::tracer("epirust-trace");
             let tick =
                 receive_tick(&run_mode, &mut ticks_stream, simulation_hour, is_commute_enabled, is_migration_enabled).await;
             if let Some(t) = tick {
@@ -377,12 +388,18 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 }
             };
 
-            let _ = join!(sim);
+            let mut span1 = tracer.start("simulation");
+            span1.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
+            let cx1 = Context::current_with_span(span1);
+            let _ = join!(sim).with_context(cx1);
 
             if is_commute_enabled {
                 let commute_start_time = Instant::now();
+                let mut span2 = tracer.start("receive_commuters");
+                span2.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
+                let cx2 = Context::current_with_span(span2);
                 let received_commuters = commute::receive_commuters(&commute_plan, tick, &mut commute_stream, engine_id);
-                let (mut incoming_commuters,) = join!(received_commuters);
+                let mut incoming_commuters = received_commuters.with_context(cx2).await;
                 total_receive_commute_sync_time += commute_start_time.elapsed().as_millis();
                 info!("total commute sync time as hour {} - is {}", simulation_hour, total_receive_commute_sync_time);
                 n_incoming += incoming_commuters.len();
@@ -394,7 +411,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
             if is_migration_enabled {
                 let migration_start_time = Instant::now();
-                let (mut incoming,) = join!(received_migrators.unwrap());
+                let (mut incoming, ) = join!(received_migrators.unwrap());
                 total_receive_migration_sync_time += migration_start_time.elapsed().as_millis();
                 n_incoming += incoming.len();
                 n_outgoing += outgoing.len();

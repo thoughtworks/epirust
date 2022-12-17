@@ -24,7 +24,14 @@ extern crate serde_derive;
 extern crate log;
 
 use clap::{App, Arg};
+use common::config::intervention_config::InterventionConfig::Vaccinate;
 use common::config::Config;
+use opentelemetry::sdk::trace::{config, Span};
+use opentelemetry::sdk::Resource;
+use opentelemetry::trace::{FutureExt, TraceContextExt, TraceError, Tracer};
+use opentelemetry::{global, sdk, Context, KeyValue};
+use opentelemetry_jaeger::Exporter;
+use std::error::Error;
 
 use crate::kafka::kafka_consumer::KafkaConsumer;
 
@@ -45,8 +52,18 @@ mod utils;
 
 const STANDALONE_SIM_ID: &str = "0";
 
+fn init_tracer() -> Result<sdk::trace::Tracer, TraceError> {
+    global::set_text_map_propagator(opentelemetry_jaeger::Propagator::new());
+    opentelemetry_jaeger::new_agent_pipeline()
+        .with_auto_split_batch(true)
+        .with_max_packet_size(9216)
+        .with_service_name("epirust-trace")
+        .with_trace_config(config().with_resource(Resource::new(vec![KeyValue::new("exporter", "otlp-jaeger")])))
+        .install_batch(opentelemetry::runtime::Tokio)
+}
+
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     env_logger::init();
     let matches = App::new("EpiRust")
         .version("0.1")
@@ -76,6 +93,11 @@ async fn main() {
         )
         .get_matches();
 
+    let _tracer = init_tracer()?;
+
+    let span: Span = _tracer.start("root");
+    let cx: Context = Context::current_with_span(span);
+
     let daemon = matches.is_present("daemon");
     let has_named_engine = matches.is_present("id");
     let engine_id = matches.value_of("id").unwrap_or("default_engine");
@@ -90,7 +112,7 @@ async fn main() {
     if daemon {
         info!("Started in daemon mode");
         let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
-        consumer.listen_loop(&run_mode).await;
+        consumer.listen_loop(&run_mode).with_context(cx).await;
         info!("Done");
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
@@ -101,6 +123,8 @@ async fn main() {
         epidemiology.run(&config, &run_mode).await;
         info!("Done");
     }
+    global::shutdown_tracer_provider(); // sending remaining spans
+    Ok(())
 }
 
 pub enum RunMode {

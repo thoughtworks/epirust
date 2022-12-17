@@ -34,6 +34,8 @@ rayon = "1.5"
 dashmap = { version = "5.4.0", features = ["rayon"] }
 copystr = { version = "0.0.5", features = [ "serde" ] }
 fxhash = "0.2.1"
+opentelemetry = { version = "0.18.0", features = ["rt-tokio"] }
+opentelemetry-jaeger = { version = "0.17.0", features = ["rt-tokio"] }
 
 [profile.release]
 opt-level = 3

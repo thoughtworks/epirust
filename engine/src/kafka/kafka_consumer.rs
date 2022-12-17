@@ -21,6 +21,8 @@ use std::error::Error;
 
 use common::config::request::Request;
 use futures::StreamExt;
+use opentelemetry::trace::{FutureExt, TraceContextExt, Tracer};
+use opentelemetry::{global, Context};
 use rdkafka::consumer::Consumer;
 use rdkafka::consumer::{MessageStream, StreamConsumer};
 use rdkafka::error::KafkaError;
@@ -93,7 +95,10 @@ impl KafkaConsumer<'_> {
                     Some(req) => {
                         let mut epidemiology =
                             Epidemiology::new(&req.config.config, travel_plan_config, req.engine_id.to_string());
-                        epidemiology.run(&req.config.config, run_mode).await;
+                        let tracer = global::tracer("epirust-trace");
+                        let span = tracer.start("run");
+                        let cx = Context::current_with_span(span);
+                        epidemiology.run(&req.config.config, run_mode).with_context(cx).await;
                     }
                 }
             }

@@ -1,0 +1,39 @@
+{
+  "output_file": "mumbai_baseline",
+  "population": {
+    "Auto": {
+      "public_transport_percentage": 0.8,
+      "number_of_agents": 12442373,
+      "working_percentage": 0.4095058378
+    }
+  },
+  "disease": {
+    "death_rate": 0.035,
+    "percentage_asymptomatic_population": 0.3,
+    "exposed_duration": 48,
+    "last_day": 26,
+    "asymptomatic_last_day": 9,
+    "mild_infected_last_day": 12,
+    "regular_transmission_rate": 0.25,
+    "pre_symptomatic_duration": 48,
+    "percentage_severe_infected_population": 0.3,
+    "high_transmission_start_day": 6,
+    "high_transmission_rate": 0.25,
+    "regular_transmission_start_day": 5
+  },
+  "geography_parameters": {
+    "grid_size": 8924,
+    "hospital_beds_percentage": 0.003
+  },
+  "hours": 3000,
+  "number_of_threads": 8,
+  "end_of_migration": 336,
+  "reduced_travel_percentage": 0.0005,
+  "starting_infections": {
+    "exposed": 1549,
+    "infected_mild_asymptomatic": 0,
+    "infected_mild_symptomatic": 0,
+    "infected_severe": 0
+  },
+  "interventions": []
+}

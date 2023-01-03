@@ -22,7 +22,7 @@ extern crate clap;
 use clap::{App, Arg};
 use common::config::Config;
 use common::disease::Disease;
-use epirust_engine::{EngineApp, RunMode};
+use engine::{EngineApp, RunMode};
 
 #[tokio::main]
 async fn main() {

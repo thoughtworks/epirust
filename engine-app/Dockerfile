@@ -10,11 +10,11 @@ RUN apt-get update && \
 
 # install toolchain
 RUN curl https://sh.rustup.rs -sSf | \
-    sh -s -- --default-toolchain stable -y
+    sh -s -- --default-toolchain nightly -y
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-RUN cargo install cargo-chef
+RUN cargo +nightly -Z sparse-registry install cargo-chef
 WORKDIR app
 
 FROM chef AS planner
@@ -23,9 +23,9 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
 COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN cargo +nightly chef cook -Z sparse-registry --release --recipe-path recipe.json
 COPY . .
-RUN cargo build --release
+RUN cargo +nightly -Z sparse-registry build --release
 
 FROM debian:stable-slim AS pre-builder
 RUN apt-get update && \
@@ -41,6 +41,6 @@ COPY --from=pre-builder /bin/chmod /bin/
 COPY --from=pre-builder /usr/bin/xargs /usr/bin/
 COPY --from=pre-builder /bin/ls /bin/
 COPY --from=pre-builder /bin/sh /bin/
-COPY --from=builder --chown=nonroot:nonroot /app/target/release/epirust-engine app/
+COPY --from=builder --chown=nonroot:nonroot /app/target/release/engine-app app/epirust-engine
 COPY --from=builder --chown=nonroot:nonroot /app/engine/config app/config/
 WORKDIR app/

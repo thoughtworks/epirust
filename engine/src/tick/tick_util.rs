@@ -25,9 +25,6 @@ use crate::models::events::{Counts, Tick, TickAck};
 use crate::RunMode;
 use common::models::custom_types::Hour;
 use futures::StreamExt;
-use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
-use opentelemetry::Value::String;
-use opentelemetry::{global, Context, KeyValue};
 use rdkafka::consumer::MessageStream;
 
 pub async fn extract_tick(message_stream: &mut MessageStream<'_>) -> Tick {
@@ -67,11 +64,7 @@ pub async fn receive_tick(
     let receive_tick_for_migration: bool = is_migration_enabled && is_migration_hour;
     if receive_tick_for_commute || receive_tick_for_migration {
         if let RunMode::MultiEngine { engine_id: _e } = run_mode {
-            let tracer = global::tracer("epirust-trace");
-            let mut span = tracer.start("tick_wait_time");
-            span.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
-            let cx = Context::current_with_span(span);
-            let t = get_tick(message_stream, simulation_hour).with_context(cx).await;
+            let t = get_tick(message_stream, simulation_hour).await;
             if t.hour() != simulation_hour {
                 panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
             }

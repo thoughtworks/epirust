@@ -124,13 +124,15 @@ impl Epidemiology {
         let hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        for (_, agent) in self.agent_location_map.iter_mut() {
-            agent.assign_essential_worker(essential_workers_population, rng);
-        }
+        self.agent_location_map.iter_mut().for_each(|mut r| {
+            (*r).assign_essential_worker(essential_workers_population, rng);
+        });
         Interventions { vaccinate: vaccinations, lockdown: lock_down_details, build_new_hospital: hospital_intervention }
     }
 
     pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
+        let number_of_threads = 4;
+        rayon::ThreadPoolBuilder::new().num_threads(number_of_threads as usize).build_global().unwrap();
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
         let mut counts_at_hr = counts_at_start(population, config.get_starting_infections());
@@ -491,16 +493,16 @@ mod tests {
             None,
         );
         let epidemiology: Epidemiology = Epidemiology::new(&config, None, STANDALONE_SIM_ID.to_string());
-        let expected_housing_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
+        let expected_housing_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.agent_location_map.grid.housing_area, expected_housing_area);
 
-        let expected_transport_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(40, 0), Point::new(59, 100));
+        let expected_transport_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(40, 0), Point::new(59, 100));
         assert_eq!(epidemiology.agent_location_map.grid.transport_area, expected_transport_area);
 
-        let expected_work_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(60, 0), Point::new(79, 100));
+        let expected_work_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(60, 0), Point::new(79, 100));
         assert_eq!(epidemiology.agent_location_map.grid.work_area, expected_work_area);
 
-        let expected_hospital_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(80, 0), Point::new(89, 0));
+        let expected_hospital_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(80, 0), Point::new(89, 0));
         assert_eq!(epidemiology.agent_location_map.grid.hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.agent_location_map.current_population(), 10);

@@ -44,7 +44,7 @@ use crate::models::constants;
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
 pub struct Citizen {
     pub id: Uuid,
     immunity: i32,
@@ -569,8 +569,8 @@ mod test {
     fn should_check_if_agent_is_working() {
         let engine_id = "engine1".to_string();
 
-        let home_location = Area::new(engine_id.clone(), Point::new(0, 0), Point::new(10, 10));
-        let work_location = Area::new(engine_id, Point::new(11, 0), Point::new(20, 20));
+        let home_location = Area::new(&engine_id, Point::new(0, 0), Point::new(10, 10));
+        let work_location = Area::new(&engine_id, Point::new(11, 0), Point::new(20, 20));
         let mut rng = RandomWrapper::new();
         let working_citizen =
             Citizen::new(home_location.clone(), work_location.clone(), Point::new(2, 2), false, WorkStatus::Normal, &mut rng);

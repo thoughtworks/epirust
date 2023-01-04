@@ -33,6 +33,7 @@ mod citizen;
 mod disease_state_machine;
 mod epidemiology_simulation;
 mod geography;
+mod helpers;
 mod interventions;
 mod kafka;
 mod listeners;

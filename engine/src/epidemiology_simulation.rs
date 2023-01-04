@@ -130,9 +130,8 @@ impl Epidemiology {
         Interventions { vaccinate: vaccinations, lockdown: lock_down_details, build_new_hospital: hospital_intervention }
     }
 
-    pub async fn run(&mut self, config: &Config, run_mode: &RunMode) {
-        let number_of_threads = 4;
-        rayon::ThreadPoolBuilder::new().num_threads(number_of_threads as usize).build_global().unwrap();
+    pub async fn run(&mut self, config: &Config, run_mode: &RunMode, threads: u32) {
+        rayon::ThreadPoolBuilder::new().num_threads(threads as usize).build_global().unwrap();
         let mut listeners = self.create_listeners(config, run_mode);
         let population = self.agent_location_map.current_population();
         let mut counts_at_hr = counts_at_start(population, config.get_starting_infections());

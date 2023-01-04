@@ -12,6 +12,8 @@ multiengineSim: true
 engine:
   fullname: "pune-engines-1"
 
+  number_of_threads: 1
+
   spec:
     # Specify the number of engines for which you are running simulation
     completions: 15

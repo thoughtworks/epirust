@@ -74,11 +74,20 @@ async fn main() {
                 )
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("threads")
+                .long("threads")
+                .short('t')
+                .help("Number of parallel threads for data parallelization")
+                .takes_value(true),
+        )
         .get_matches();
 
     let daemon = matches.is_present("daemon");
     let has_named_engine = matches.is_present("id");
     let engine_id = matches.value_of("id").unwrap_or("default_engine");
+    let threads: &str = matches.value_of("threads").unwrap_or("2");
+    let number_of_threads: u32 = threads.parse::<u32>().unwrap();
     let run_mode = if daemon && has_named_engine {
         RunMode::MultiEngine { engine_id: engine_id.to_string() }
     } else if daemon {
@@ -90,7 +99,7 @@ async fn main() {
     if daemon {
         info!("Started in daemon mode");
         let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
-        consumer.listen_loop(&run_mode).await;
+        consumer.listen_loop(&run_mode, number_of_threads).await;
         info!("Done");
     } else {
         let config_file = matches.value_of("config").unwrap_or("config/default.json");
@@ -98,7 +107,7 @@ async fn main() {
         let config = Config::read(config_file).expect("Failed to read config file");
 
         let mut epidemiology = epidemiology_simulation::Epidemiology::new(&config, None, STANDALONE_SIM_ID.to_string());
-        epidemiology.run(&config, &run_mode).await;
+        epidemiology.run(&config, &run_mode, number_of_threads).await;
         info!("Done");
     }
 }

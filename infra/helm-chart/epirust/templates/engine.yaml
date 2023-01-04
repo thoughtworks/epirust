@@ -34,9 +34,9 @@ spec:
           command: [ "/bin/sh", "-c" ]
           args:
           {{ if .Values.multiengineSim }}
-            [ "jq .travel_plan.regions[$(JOB_COMPLETION_INDEX)] {{ .Values.storage.volumeMounts.config.mountPath }}/{{ .Values.config }} | xargs ./epirust-engine -d  2> {{ .Values.storage.volumeMounts.output.mountPath }}/logs/$(JOB_COMPLETION_INDEX)_logs.txt -i" ]
+            [ "jq .travel_plan.regions[$(JOB_COMPLETION_INDEX)] {{ .Values.storage.volumeMounts.config.mountPath }}/{{ .Values.config }} | xargs ./epirust-engine -d  2> {{ .Values.storage.volumeMounts.output.mountPath }}/logs/$(JOB_COMPLETION_INDEX)_logs.txt -t {{ .Values.engine.number_of_threads }} -i" ]
           {{ else }}
-            [ "./epirust-engine -c config/{{ .Values.config }} 2> {{ .Values.storage.volumeMounts.output.mountPath }}/logs/{{ .Values.config }}_logs.txt" ]
+            [ "./epirust-engine -t {{ .Values.engine.number_of_threads }} -c config/{{ .Values.config }} 2> {{ .Values.storage.volumeMounts.output.mountPath }}/logs/{{ .Values.config }}_logs.txt" ]
           {{ end }}
           resources:
             requests:
@@ -70,4 +70,3 @@ spec:
         - name: {{ .Values.storage.volumes.name }}
           persistentVolumeClaim:
             claimName: {{ .Values.storage.volumes.claimName }}
-

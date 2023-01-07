@@ -18,11 +18,11 @@ Build the docker images for orchestrator
 ```sh
 docker build -t <image_repo:tag> -f orchestrator/dockerfile .
 ```
-Update the helm-chart/epirust/values.yaml with volume name, claim name, kafka url, config file etc.
+Update the `helm-chart/epirust/values.yaml` with volume name, claim name, kafka url, config file, resources etc.
 
 To start simulation
 ```sh
 helm install epirust helm-chart/epirust
 ```
 
-Output files will be stored at given output_path in values.yaml and Logs files would be stored at output_path/logs once the simulation is completed.  
+Output files will be stored at given `output_path` in `values.yaml` and Logs files would be stored at `output_path/logs` once the simulation is completed.  

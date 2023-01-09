@@ -26,6 +26,7 @@ use rand::Rng;
 use crate::citizen::work_status::WorkStatus;
 use crate::citizen::{Citizen, CitizensData};
 use crate::geography::Point;
+use crate::helpers::string_to_s16;
 
 pub fn citizen_factory(
     ctz_data: CitizensData,
@@ -101,7 +102,7 @@ fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, self_
 
     for (region, commuters) in total_commuters_by_region {
         working_agents.by_ref().take(commuters as usize).for_each(|working_agent| {
-            working_agent.work_location.location_id = region.to_string();
+            working_agent.work_location.location_id = string_to_s16(&region);
         });
         debug!("Updated {} commuters for region {}", region, commuters);
     }
@@ -142,13 +143,13 @@ mod tests {
         let mut rng = RandomWrapper::new();
         let engine_id = "engine1".to_string();
         let home_locations = vec![
-            Area::new(engine_id.clone(), Point::new(0, 0), Point::new(2, 2)),
-            Area::new(engine_id.clone(), Point::new(3, 0), Point::new(4, 2)),
+            Area::new(&engine_id, Point::new(0, 0), Point::new(2, 2)),
+            Area::new(&engine_id, Point::new(3, 0), Point::new(4, 2)),
         ];
 
         let work_locations = vec![
-            Area::new(engine_id.clone(), Point::new(5, 0), Point::new(6, 2)),
-            Area::new(engine_id, Point::new(7, 0), Point::new(8, 2)),
+            Area::new(&engine_id.clone(), Point::new(5, 0), Point::new(6, 2)),
+            Area::new(&engine_id, Point::new(7, 0), Point::new(8, 2)),
         ];
 
         let public_transport_location = vec![Point::new(5, 0), Point::new(5, 1), Point::new(5, 2), Point::new(5, 3)];
@@ -173,8 +174,8 @@ mod tests {
         let citizen_list = before_each();
         let engine_id = "engine1".to_string();
         let expected_home_locations = vec![
-            Area::new(engine_id.clone(), Point::new(0, 0), Point::new(2, 2)),
-            Area::new(engine_id, Point::new(3, 0), Point::new(4, 2)),
+            Area::new(&engine_id, Point::new(0, 0), Point::new(2, 2)),
+            Area::new(&engine_id, Point::new(3, 0), Point::new(4, 2)),
         ];
 
         assert_eq!(citizen_list.len(), 4);
@@ -188,8 +189,8 @@ mod tests {
     #[test]
     fn should_set_starting_infections() {
         let engine_id = "engine1".to_string();
-        let home_location = Area::new(engine_id.clone(), Point::new(0, 0), Point::new(10, 10));
-        let work_location = Area::new(engine_id, Point::new(11, 0), Point::new(20, 20));
+        let home_location = Area::new(&engine_id, Point::new(0, 0), Point::new(10, 10));
+        let work_location = Area::new(&engine_id, Point::new(11, 0), Point::new(20, 20));
         let mut citizens = Vec::new();
         let mut rng = RandomWrapper::new();
         for _i in 0..20 {

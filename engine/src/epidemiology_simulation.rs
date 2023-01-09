@@ -53,7 +53,7 @@ use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
 use crate::utils::util::{counts_at_start, output_file_format};
 
-pub struct Epidemiology<T: DiseaseHandler> {
+pub struct Epidemiology<T: DiseaseHandler + Sync> {
     pub citizen_location_map: CitizenLocationMap,
     pub sim_id: String,
     pub travel_plan_config: Option<TravelPlanConfig>,
@@ -65,7 +65,7 @@ pub struct Epidemiology<T: DiseaseHandler> {
     disease_handler: T,
 }
 
-impl<T: DiseaseHandler> Epidemiology<T> {
+impl<T: DiseaseHandler + Sync> Epidemiology<T> {
     pub fn new(
         config: Config,
         travel_plan_config: Option<TravelPlanConfig>,
@@ -154,13 +154,15 @@ impl<T: DiseaseHandler> Epidemiology<T> {
         let hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        for (_, agent) in citizen_location_map.iter_mut() {
-            agent.assign_essential_worker(essential_workers_population, rng);
-        }
+        citizen_location_map.iter_mut().for_each(|mut r| {
+            (*r).assign_essential_worker(essential_workers_population, rng);
+        });
         Interventions { vaccinate: vaccinations, lockdown: lock_down_details, build_new_hospital: hospital_intervention }
     }
 
-    pub async fn run(&mut self, run_mode: &RunMode) {
+    pub async fn run(&mut self, run_mode: &RunMode, threads: u32) {
+        rayon::ThreadPoolBuilder::new().num_threads(threads as usize).build_global().unwrap();
+
         self.listeners.grid_updated(&self.citizen_location_map.grid);
         match run_mode {
             RunMode::MultiEngine { engine_id } => self.run_multi_engine(engine_id).await,
@@ -276,7 +278,10 @@ impl<T: DiseaseHandler> Epidemiology<T> {
         counts_at_hr.log();
 
         let mut total_tick_sync_time = 0;
-        let mut total_commute_sync_time = 0;
+        let mut total_receive_commute_sync_time = 0;
+        let mut total_receive_migration_sync_time = 0;
+        let mut total_send_commuters_time = 0;
+        let mut total_send_migrator_time = 0;
         let run_mode = RunMode::MultiEngine { engine_id: engine_id.to_string() };
 
         let hours = self.config.get_hours();
@@ -360,11 +365,15 @@ impl<T: DiseaseHandler> Epidemiology<T> {
 
                 if is_migration_enabled {
                     debug!("{}: Send Migrators", engine_id);
+                    let send_migrator_start_time = Instant::now();
                     Self::send_migrators(tick, &mut producer, outgoing_migrators_by_region);
+                    total_send_migrator_time += send_migrator_start_time.elapsed().as_millis();
                 }
                 if is_commute_enabled {
                     debug!("{}: Send Commuters", engine_id);
+                    let send_commuter_start_time = Instant::now();
                     Self::send_commuters(tick, &mut producer, outgoing_commuters_by_region);
+                    total_send_commuters_time += send_commuter_start_time.elapsed().as_millis();
                 }
             };
 
@@ -374,8 +383,8 @@ impl<T: DiseaseHandler> Epidemiology<T> {
                 let commute_start_time = Instant::now();
                 let received_commuters = commute::receive_commuters(&commute_plan, tick, &mut commute_stream, engine_id);
                 let (mut incoming_commuters,) = join!(received_commuters);
-                total_commute_sync_time += commute_start_time.elapsed().as_millis();
-                info!("total commute sync time as hour {} - is {}", simulation_hour, total_commute_sync_time);
+                total_receive_commute_sync_time += commute_start_time.elapsed().as_millis();
+                info!("total commute sync time as hour {} - is {}", simulation_hour, total_receive_commute_sync_time);
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
                 self.citizen_location_map.remove_commuters(&outgoing_commuters, counts_at_hr);
@@ -384,7 +393,9 @@ impl<T: DiseaseHandler> Epidemiology<T> {
             }
 
             if is_migration_enabled {
+                let migration_start_time = Instant::now();
                 let (mut incoming,) = join!(received_migrators.unwrap());
+                total_receive_migration_sync_time += migration_start_time.elapsed().as_millis();
                 n_incoming += incoming.len();
                 n_outgoing += outgoing.len();
                 self.citizen_location_map.remove_migrators(&actual_outgoing, counts_at_hr);
@@ -438,7 +449,10 @@ impl<T: DiseaseHandler> Epidemiology<T> {
         info!("Number of iterations: {}, Total Time taken {} seconds", counts_at_hr.get_hour(), elapsed_time);
         info!("Iterations/sec: {}", counts_at_hr.get_hour() as f32 / elapsed_time);
         info!("total tick sync time: {}", total_tick_sync_time);
-        info!("total commute sync time: {}", total_commute_sync_time);
+        info!("total receive commute sync time: {}", total_receive_commute_sync_time);
+        info!("total receive migration sync time: {}", total_receive_migration_sync_time);
+        info!("total send commuters sync time: {}", total_send_commuters_time);
+        info!("total send migrators sync time: {}", total_send_migrator_time);
         self.listeners.simulation_ended();
     }
 
@@ -499,16 +513,16 @@ mod tests {
         );
         let epidemiology: Epidemiology<_> =
             Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), &RunMode::Standalone, disease);
-        let expected_housing_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
+        let expected_housing_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
 
-        let expected_transport_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(40, 0), Point::new(59, 100));
+        let expected_transport_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(40, 0), Point::new(59, 100));
         assert_eq!(epidemiology.citizen_location_map.grid.transport_area, expected_transport_area);
 
-        let expected_work_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(60, 0), Point::new(79, 100));
+        let expected_work_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(60, 0), Point::new(79, 100));
         assert_eq!(epidemiology.citizen_location_map.grid.work_area, expected_work_area);
 
-        let expected_hospital_area = Area::new(STANDALONE_SIM_ID.to_string(), Point::new(80, 0), Point::new(89, 0));
+        let expected_hospital_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(80, 0), Point::new(89, 0));
         assert_eq!(epidemiology.citizen_location_map.grid.hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.citizen_location_map.current_population(), 10);

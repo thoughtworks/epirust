@@ -28,21 +28,26 @@ pub const STANDALONE_SIM_ID: &str = "0";
 pub struct EngineApp;
 
 impl EngineApp {
-    pub async fn start_in_daemon<T: DiseaseHandler + Clone>(engine_id: &str, run_mode: &RunMode, dsh: Option<T>) {
+    pub async fn start_in_daemon<T: DiseaseHandler + Sync + Clone>(
+        engine_id: &str,
+        run_mode: &RunMode,
+        dsh: Option<T>,
+        threads: u32,
+    ) {
         info!("Started in daemon mode");
         let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
-        consumer.listen_loop(run_mode, dsh).await;
+        consumer.listen_loop(run_mode, dsh, threads).await;
         info!("Done");
     }
 
-    pub async fn start_standalone<T: DiseaseHandler>(config: Config, run_mode: &RunMode, dsh: Option<T>) {
+    pub async fn start_standalone<T: DiseaseHandler + Sync>(config: Config, run_mode: &RunMode, dsh: Option<T>, threads: u32) {
         if dsh.is_none() {
             let disease = config.get_disease();
             let mut epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode, disease);
-            epidemiology.run(run_mode).await;
+            epidemiology.run(run_mode, threads).await;
         } else {
             let mut epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode, dsh.unwrap());
-            epidemiology.run(run_mode).await;
+            epidemiology.run(run_mode, threads).await;
         }
         info!("Done");
     }

@@ -29,6 +29,10 @@ log = "0.4"
 env_logger = "0.10.0"
 uuid = { version = "1.1.2", features = ["serde", "v4"] }
 validator = { version = "0.16.0", features = ["derive"] }
+rayon = "1.5"
+dashmap = { version = "5.4.0", features = ["rayon"] }
+copystr = { version = "0.0.5", features = [ "serde" ] }
+fxhash = "0.2.1"
 
 [profile.release]
 opt-level = 3

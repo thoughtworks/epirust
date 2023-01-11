@@ -17,56 +17,42 @@
  *
  */
 
-extern crate clap;
-
-use clap::{App, Arg};
+use clap::Parser;
 use common::config::Config;
 use common::disease::Disease;
 use engine::{EngineApp, RunMode};
 
+#[derive(Parser)]
+#[command(author, version, about)]
+struct Args {
+    #[arg(short, long, value_name = "FILE", help = "Use a config file to run the simulation")]
+    config: Option<String>,
+
+    #[arg(short, long, default_value_t = false)]
+    #[arg(help = "Start the engine in daemon mode. It will wait for messages from Kafka. \
+            Specifying this flag will cause the config argument to be ignored")]
+    daemon: bool,
+
+    #[arg(short, long)]
+    #[arg(help = "An identifier for the engine. Needed in daemon mode when running a larger simulation \
+            distributed across multiple engines.")]
+    id: Option<String>,
+
+    #[arg(short, long, default_value_t = 4)]
+    #[arg(help = "Number of parallel threads for data parallelization")]
+    threads: u32,
+}
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    let matches = App::new("EpiRust")
-        .version("0.1")
-        .about("Epidemiology Simulations in Rust")
-        .arg(
-            Arg::with_name("config").long("config").short('c').value_name("FILE").help("Use a config file to run the simulation"),
-        )
-        .arg(
-            Arg::with_name("daemon")
-                .long("daemon")
-                .short('d')
-                .help(
-                    "Start the engine in daemon mode. It will wait for messages from Kafka. \
-            Specifying this flag will cause the config argument to be ignored",
-                )
-                .takes_value(false),
-        )
-        .arg(
-            Arg::with_name("id")
-                .long("id")
-                .short('i')
-                .help(
-                    "An identifier for the engine. Needed in daemon mode when running a larger simulation \
-            distributed across multiple engines.",
-                )
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("threads")
-                .long("threads")
-                .short('t')
-                .help("Number of parallel threads for data parallelization")
-                .takes_value(true),
-        )
-        .get_matches();
+    let args = Args::parse();
 
-    let daemon = matches.is_present("daemon");
-    let has_named_engine = matches.is_present("id");
-    let engine_id = matches.value_of("id").unwrap_or("default_engine");
-    let threads: &str = matches.value_of("threads").unwrap_or("2");
-    let number_of_threads: u32 = threads.parse::<u32>().unwrap();
+    let daemon = args.daemon;
+    let has_named_engine = args.id.is_some();
+    let default_engine_id = "default_engine".to_string();
+    let engine_id = args.id.unwrap_or(default_engine_id);
+    let number_of_threads = args.threads;
     let run_mode = if daemon && has_named_engine {
         RunMode::MultiEngine { engine_id: engine_id.to_string() }
     } else if daemon {
@@ -77,10 +63,11 @@ async fn main() {
 
     let disease_handler: Option<Disease> = None;
     if daemon {
-        EngineApp::start_in_daemon(engine_id, &run_mode, disease_handler, number_of_threads).await;
+        EngineApp::start_in_daemon(&engine_id, &run_mode, disease_handler, number_of_threads).await;
     } else {
-        let config_file = matches.value_of("config").unwrap_or("config/default.json");
-        let config = Config::read(config_file).expect("Failed to read config file");
+        let default_config_path = "config/default.json".to_string();
+        let config_file = args.config.unwrap_or(default_config_path);
+        let config = Config::read(&config_file).expect("Failed to read config file");
         EngineApp::start_standalone(config, &run_mode, disease_handler, number_of_threads).await;
     }
 }

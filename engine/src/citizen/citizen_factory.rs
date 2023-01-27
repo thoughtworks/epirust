@@ -19,19 +19,17 @@
 
 use common::config::{StartingInfections, TravelPlanConfig};
 use common::models::CommutePlan;
-use common::utils::RandomWrapper;
-use rand::seq::IteratorRandom;
-use rand::Rng;
+use common::utils::RandomUtil;
 
 use crate::citizen::work_status::WorkStatus;
 use crate::citizen::{Citizen, CitizensData};
 use crate::geography::Point;
 use crate::helpers::string_to_s16;
 
-pub fn citizen_factory(
+pub fn citizen_factory<R: RandomUtil>(
     ctz_data: CitizensData,
     travel_plan_config: &Option<TravelPlanConfig>,
-    rng: &mut RandomWrapper,
+    rng: &mut R,
 ) -> Vec<Citizen> {
     let total_home_locations = ctz_data.home_locations.len();
     let mut agent_list = Vec::with_capacity(total_home_locations);
@@ -55,20 +53,20 @@ pub fn citizen_factory(
     agent_list
 }
 
-fn create_citizen(
+fn create_citizen<R: RandomUtil>(
     number: usize,
     ctz_data: &CitizensData,
-    rng: &mut RandomWrapper,
+    rng: &mut R,
     current_number_of_public_transport_users: &mut usize,
 ) -> Citizen {
     let total_home_locations = ctz_data.home_locations.len();
     let total_work_locations = ctz_data.work_locations.len();
-    let is_a_working_citizen = rng.get().gen_bool(ctz_data.working_percentage);
+    let is_a_working_citizen = rng.gen_bool(ctz_data.working_percentage);
 
-    let home_location = ctz_data.home_locations[(number % total_home_locations)].clone();
-    let work_location = ctz_data.work_locations[(number % total_work_locations)].clone();
+    let home_location = ctz_data.home_locations[(number % total_home_locations)];
+    let work_location = ctz_data.work_locations[(number % total_work_locations)];
 
-    let uses_public_transport = rng.get().gen_bool(ctz_data.public_transport_percentage)
+    let uses_public_transport = rng.gen_bool(ctz_data.public_transport_percentage)
         && is_a_working_citizen
         && *current_number_of_public_transport_users < ctz_data.public_transport_locations.len();
 
@@ -81,7 +79,7 @@ fn create_citizen(
         *current_number_of_public_transport_users += 1
     };
 
-    let work_location = if is_a_working_citizen { work_location } else { home_location.clone() };
+    let work_location = if is_a_working_citizen { work_location } else { home_location };
     let work_status = Citizen::derive_work_status(is_a_working_citizen, rng);
 
     Citizen::new(home_location, work_location, public_transport_location, uses_public_transport, work_status, rng)
@@ -109,14 +107,15 @@ fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, self_
     debug!("updated the commuters");
 }
 
-pub fn set_starting_infections(agent_list: &mut [Citizen], start_infections: &StartingInfections, rng: &mut RandomWrapper) {
+pub fn set_starting_infections<R: RandomUtil>(agent_list: &mut [Citizen], start_infections: &StartingInfections, rng: &mut R) {
     if start_infections.total() as usize > agent_list.len() {
         panic!("There are {} people set to infect, but only {} agents available", start_infections.total(), agent_list.len())
     }
     if start_infections.total() == 0 {
         warn!("Simulation configured to start without any infected agents");
     }
-    let mut to_infect = agent_list.iter_mut().choose_multiple(rng.get(), start_infections.total() as usize);
+
+    let mut to_infect = rng.choose_multiple(agent_list.iter_mut(), start_infections.total() as usize);
     let mut citizens = to_infect.iter_mut();
 
     for _i in 0..start_infections.get_exposed() {
@@ -138,9 +137,10 @@ mod tests {
     use super::*;
     use crate::citizen::citizen_factory::{citizen_factory, set_starting_infections};
     use crate::geography::Area;
+    use common::utils::RandomWrapper;
 
     fn before_each() -> Vec<Citizen> {
-        let mut rng = RandomWrapper::new();
+        let mut rng = RandomWrapper::default();
         let engine_id = "engine1".to_string();
         let home_locations = vec![
             Area::new(&engine_id, Point::new(0, 0), Point::new(2, 2)),
@@ -192,7 +192,7 @@ mod tests {
         let home_location = Area::new(&engine_id, Point::new(0, 0), Point::new(10, 10));
         let work_location = Area::new(&engine_id, Point::new(11, 0), Point::new(20, 20));
         let mut citizens = Vec::new();
-        let mut rng = RandomWrapper::new();
+        let mut rng = RandomWrapper::default();
         for _i in 0..20 {
             let citizen =
                 Citizen::new(home_location.clone(), work_location.clone(), Point::new(2, 2), false, WorkStatus::Normal, &mut rng);

@@ -17,7 +17,7 @@
  *
  */
 use common::models::custom_types::{Day, Hour};
-use common::utils::RandomWrapper;
+use common::utils::RandomUtil;
 
 use crate::allocation_map::CitizenLocationMap;
 use crate::citizen::Citizen;
@@ -50,13 +50,13 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn next<T: DiseaseHandler>(
+    pub fn next<T: DiseaseHandler, R: RandomUtil>(
         &self,
         sim_hr: Hour,
         cell: Point,
         citizen: &Citizen,
         map: &CitizenLocationMap,
-        rng: &mut RandomWrapper,
+        rng: &mut R,
         disease_handler: &T,
     ) -> State {
         match self.state {
@@ -69,7 +69,7 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn decease<T: DiseaseHandler>(&mut self, rng: &mut RandomWrapper, disease_handler: &T) {
+    pub fn decease<T: DiseaseHandler, R: RandomUtil>(&mut self, rng: &mut R, disease_handler: &T) {
         let state_op = disease_handler.on_routine_end(&self.state, rng);
         if let Some(state) = state_op {
             self.state = state

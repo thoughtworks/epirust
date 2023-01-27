@@ -23,7 +23,7 @@ use std::time::Instant;
 
 use common::config::{Config, Population, TravelPlanConfig};
 use common::models::CommutePlan;
-use common::utils::RandomWrapper;
+use common::utils::RandomUtil;
 use futures::join;
 use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
 use opentelemetry::{global, Context, KeyValue};
@@ -55,7 +55,7 @@ use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion}
 use crate::utils::util::{counts_at_start, output_file_format};
 use crate::{geography};
 
-pub struct Epidemiology<T: DiseaseHandler + Sync> {
+pub struct Epidemiology<T: DiseaseHandler + Sync, R: RandomUtil> {
     pub citizen_location_map: CitizenLocationMap,
     pub sim_id: String,
     pub travel_plan_config: Option<TravelPlanConfig>,
@@ -63,22 +63,22 @@ pub struct Epidemiology<T: DiseaseHandler + Sync> {
     counts_at_hr: Counts,
     listeners: Listeners,
     interventions: Interventions,
-    rng: RandomWrapper,
+    rng: R,
     disease_handler: T,
 }
 
-impl<T: DiseaseHandler + Sync> Epidemiology<T> {
+impl<T: DiseaseHandler + Sync, R: RandomUtil> Epidemiology<T, R> {
     pub fn new(
         config: Config,
         travel_plan_config: Option<TravelPlanConfig>,
         sim_id: String,
         run_mode: &RunMode,
         disease_handler: T,
+        mut rng: R,
     ) -> Self {
         let start = Instant::now();
         let start_infections = config.get_starting_infections();
         let mut grid = geography::define_geography(config.get_grid_size(), sim_id.clone());
-        let mut rng = RandomWrapper::new();
         let (start_locations, agent_list) = match config.get_population() {
             Population::Csv(csv_pop) => grid.read_population(csv_pop, start_infections, &mut rng, &sim_id),
             Population::Auto(auto_pop) => {
@@ -146,11 +146,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         Listeners::from(listeners_vec)
     }
 
-    fn init_interventions(
-        config: &Config,
-        citizen_location_map: &mut CitizenLocationMap,
-        rng: &mut RandomWrapper,
-    ) -> Interventions {
+    fn init_interventions(config: &Config, citizen_location_map: &mut CitizenLocationMap, rng: &mut R) -> Interventions {
         let vaccinations = VaccinateIntervention::init(config);
         let lock_down_details = LockdownIntervention::init(config);
         let hospital_intervention = BuildNewHospital::init(config);
@@ -509,6 +505,7 @@ mod tests {
     use common::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use common::config::{AutoPopulation, GeographyParameters};
     use common::disease::Disease;
+    use common::utils::RandomWrapper;
 
     use super::*;
 
@@ -527,8 +524,14 @@ mod tests {
             vec![InterventionConfig::Vaccinate(vac)],
             None,
         );
-        let epidemiology: Epidemiology<_> =
-            Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), &RunMode::Standalone, disease);
+        let epidemiology: Epidemiology<_, _> = Epidemiology::new(
+            config,
+            None,
+            STANDALONE_SIM_ID.to_string(),
+            &RunMode::Standalone,
+            disease,
+            RandomWrapper::default(),
+        );
         let expected_housing_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
 

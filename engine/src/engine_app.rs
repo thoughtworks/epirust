@@ -22,6 +22,7 @@ use crate::kafka::kafka_consumer::KafkaConsumer;
 use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
 use common::config::Config;
+use common::utils::RandomWrapper;
 
 pub const STANDALONE_SIM_ID: &str = "0";
 
@@ -43,10 +44,12 @@ impl EngineApp {
     pub async fn start_standalone<T: DiseaseHandler + Sync>(config: Config, run_mode: &RunMode, dsh: Option<T>, threads: u32) {
         if dsh.is_none() {
             let disease = config.get_disease();
-            let mut epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode, disease);
+            let mut epidemiology =
+                Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode, disease, RandomWrapper::default());
             epidemiology.run(run_mode, threads).await;
         } else {
-            let mut epidemiology = Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode, dsh.unwrap());
+            let mut epidemiology =
+                Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode, dsh.unwrap(), RandomWrapper::default());
             epidemiology.run(run_mode, threads).await;
         }
         info!("Done");

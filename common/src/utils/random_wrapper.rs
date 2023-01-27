@@ -18,18 +18,45 @@
  */
 
 use rand::rngs::ThreadRng;
-use rand::thread_rng;
+use rand::seq::IteratorRandom;
+use rand::{thread_rng, Rng};
+
+pub trait RandomUtil {
+    fn gen_bool(&mut self, probability: f64) -> bool;
+    fn choose<I>(&mut self, from: I) -> Option<I::Item>
+    where
+        I: Iterator + Sized;
+    fn choose_multiple<I>(&mut self, from: I, amount: usize) -> Vec<I::Item>
+    where
+        I: Iterator + Sized;
+}
 
 pub struct RandomWrapper {
     rng: ThreadRng,
 }
 
-impl RandomWrapper {
-    pub fn new() -> RandomWrapper {
-        RandomWrapper { rng: thread_rng() }
+impl RandomUtil for RandomWrapper {
+    fn gen_bool(&mut self, probability: f64) -> bool {
+        self.rng.gen_bool(probability)
     }
 
-    pub fn get(&mut self) -> &mut ThreadRng {
-        &mut self.rng
+    fn choose<I>(&mut self, from: I) -> Option<I::Item>
+    where
+        I: Iterator + Sized,
+    {
+        from.choose(&mut self.rng)
+    }
+
+    fn choose_multiple<I>(&mut self, from: I, amount: usize) -> Vec<I::Item>
+    where
+        I: Iterator + Sized,
+    {
+        from.choose_multiple(&mut self.rng, amount)
+    }
+}
+
+impl Default for RandomWrapper {
+    fn default() -> Self {
+        RandomWrapper { rng: thread_rng() }
     }
 }

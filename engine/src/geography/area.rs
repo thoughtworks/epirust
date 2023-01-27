@@ -19,10 +19,8 @@
 
 use crate::helpers::*;
 use common::models::custom_types::Count;
-use common::utils::RandomWrapper;
+use common::utils::RandomUtil;
 use copystr::s16;
-use rand::seq::IteratorRandom;
-use rand::Rng;
 use std::hash::{Hash, Hasher};
 
 use crate::geography::Point;
@@ -49,7 +47,7 @@ impl Hash for Area {
 }
 
 impl Area {
-    pub fn new(location_id: &String, start_offset: Point, end_offset: Point) -> Area {
+    pub fn new(location_id: &str, start_offset: Point, end_offset: Point) -> Area {
         Area { location_id: string_to_s16(location_id), start_offset, end_offset }
     }
 
@@ -58,13 +56,13 @@ impl Area {
     }
 
     pub fn iter(&self) -> AreaIterator {
-        AreaIterator::new(self.clone())
+        AreaIterator::new(*self)
     }
 
-    pub fn random_points(&self, number_of_points: usize, rng: &mut RandomWrapper) -> Vec<Point> {
+    pub fn random_points<R: RandomUtil>(&self, number_of_points: usize, rng: &mut R) -> Vec<Point> {
         let nx = (number_of_points as f32).sqrt().ceil() as usize;
-        let rand_xs = (self.start_offset.x..=self.end_offset.x).into_iter().choose_multiple(rng.get(), nx);
-        let rand_ys = (self.start_offset.y..=self.end_offset.y).into_iter().choose_multiple(rng.get(), nx);
+        let rand_xs = rng.choose_multiple((self.start_offset.x..=self.end_offset.x).into_iter(), nx);
+        let rand_ys = rng.choose_multiple((self.start_offset.y..=self.end_offset.y).into_iter(), nx);
 
         rand_xs
             .iter()
@@ -73,9 +71,9 @@ impl Area {
             .collect()
     }
 
-    pub fn get_random_point(&self, rng: &mut RandomWrapper) -> Point {
-        let rand_x = rng.get().gen_range(self.start_offset.x..=self.end_offset.x);
-        let rand_y = rng.get().gen_range(self.start_offset.y..=self.end_offset.y);
+    pub fn get_random_point<R: RandomUtil>(&self, rng: &mut R) -> Point {
+        let rand_x = rng.choose(self.start_offset.x..=self.end_offset.x).unwrap();
+        let rand_y = rng.choose(self.start_offset.y..=self.end_offset.y).unwrap();
 
         Point::new(rand_x, rand_y)
     }
@@ -148,6 +146,7 @@ impl Iterator for AreaIterator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use common::utils::RandomWrapper;
 
     fn get_area() -> Area {
         Area::new(&"engine1".to_string(), Point { x: 0, y: 0 }, Point { x: 5, y: 5 })
@@ -156,7 +155,7 @@ mod tests {
     #[test]
     fn generate_points() {
         let area = get_area();
-        let points: Vec<Point> = area.random_points(36, &mut RandomWrapper::new());
+        let points: Vec<Point> = area.random_points(36, &mut RandomWrapper::default());
 
         assert_eq!(points.len(), 36);
     }
@@ -253,7 +252,7 @@ mod tests {
     fn should_get_random_point() {
         let area = get_area();
 
-        let random_point = area.get_random_point(&mut RandomWrapper::new());
+        let random_point = area.get_random_point(&mut RandomWrapper::default());
         assert_eq!(area.contains(&random_point), true);
     }
 

@@ -22,23 +22,23 @@ use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::state_machine::{Severity, State};
 use common::models::custom_types::{Day, Hour};
-use common::utils::RandomWrapper;
+use common::utils::RandomUtil;
 
 pub trait DiseaseHandler {
     fn is_to_be_hospitalize(&self, current_state: &State, immunity: i32) -> bool;
 
-    fn on_infected(&self, sim_hr: Hour, infection_day: Day, severity: Severity, rng: &mut RandomWrapper) -> Option<State>;
+    fn on_infected<R: RandomUtil>(&self, sim_hr: Hour, infection_day: Day, severity: Severity, rng: &mut R) -> Option<State>;
 
-    fn on_exposed(&self, at_hour: Hour, sim_hr: Hour, rng: &mut RandomWrapper) -> Option<State>;
+    fn on_exposed<R: RandomUtil>(&self, at_hour: Hour, sim_hr: Hour, rng: &mut R) -> Option<State>;
 
-    fn on_susceptible(
+    fn on_susceptible<R: RandomUtil>(
         &self,
         sim_hr: Hour,
         cell: Point,
         citizen: &Citizen,
         map: &CitizenLocationMap,
-        rng: &mut RandomWrapper,
+        rng: &mut R,
     ) -> Option<State>;
 
-    fn on_routine_end(&self, current_state: &State, rng: &mut RandomWrapper) -> Option<State>;
+    fn on_routine_end<R: RandomUtil>(&self, current_state: &State, rng: &mut R) -> Option<State>;
 }

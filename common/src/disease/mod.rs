@@ -17,11 +17,10 @@
  *
  */
 
-use rand::Rng;
 use validator::Validate;
 
 use crate::models::custom_types::{validate_percentage, Day, Hour, Percentage};
-use crate::utils::RandomWrapper;
+use crate::utils::RandomUtil;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Validate)]
 pub struct Disease {
@@ -102,8 +101,11 @@ impl Disease {
         self.last_day
     }
 
-    pub fn is_to_be_deceased(&self, rng: &mut RandomWrapper) -> bool {
-        rng.get().gen_bool(self.death_rate)
+    pub fn is_to_be_deceased<R>(&self, rng: &mut R) -> bool
+    where
+        R: RandomUtil,
+    {
+        rng.gen_bool(self.death_rate)
     }
 
     pub fn get_percentage_asymptomatic_population(&self) -> Percentage {

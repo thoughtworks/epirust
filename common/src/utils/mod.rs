@@ -19,4 +19,4 @@
 
 mod random_wrapper;
 
-pub use random_wrapper::RandomWrapper;
+pub use random_wrapper::{RandomUtil, RandomWrapper};

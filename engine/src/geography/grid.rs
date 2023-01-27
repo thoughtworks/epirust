@@ -19,7 +19,7 @@
 
 use common::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
 use common::models::custom_types::{CoOrdinate, Count, Size};
-use common::utils::RandomWrapper;
+use common::utils::RandomUtil;
 use plotters::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
@@ -46,11 +46,11 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn generate_population(
+    pub fn generate_population<R: RandomUtil>(
         &mut self,
         auto_pop: &AutoPopulation,
         start_infections: &StartingInfections,
-        rng: &mut RandomWrapper,
+        rng: &mut R,
         travel_plan_config: &Option<TravelPlanConfig>,
         region: String,
     ) -> (Vec<Point>, Vec<Citizen>) {
@@ -87,9 +87,9 @@ impl Grid {
         (home_loc, agents_in_order)
     }
 
-    fn set_start_locations_and_occupancies(
+    fn set_start_locations_and_occupancies<R: RandomUtil>(
         &mut self,
-        rng: &mut RandomWrapper,
+        rng: &mut R,
         agent_list: &Vec<Citizen>,
         region_name: &String,
     ) -> (Vec<Point>, Vec<Citizen>) {
@@ -107,10 +107,10 @@ impl Grid {
             }
 
             let mut random_points_within_home = home.random_points(agents.len(), rng);
-            self.houses_occupancy.insert(home.clone(), agents.len() as u32);
+            self.houses_occupancy.insert(*home, agents.len() as u32);
 
             for agent in agents {
-                agents_in_order.push(agent.clone());
+                agents_in_order.push(*agent);
             }
             home_loc.append(&mut random_points_within_home);
         }
@@ -136,7 +136,7 @@ impl Grid {
     }
 
     fn draw(&self, home_locations: &Vec<Point>, homes: &Vec<Area>, offices: &Vec<Area>) {
-        let mut draw_backend = BitMapBackend::new("grid.png", (self.grid_size as u32, self.grid_size as u32));
+        let mut draw_backend = BitMapBackend::new("grid.png", (self.grid_size, self.grid_size));
         Grid::draw_rect(&mut draw_backend, &self.housing_area, &YELLOW);
         Grid::draw_rect(&mut draw_backend, &self.transport_area, &RGBColor(121, 121, 121));
         Grid::draw_rect(&mut draw_backend, &self.work_area, &BLUE);
@@ -148,25 +148,19 @@ impl Grid {
             Grid::draw_rect(&mut draw_backend, office, &RGBColor(51, 153, 255));
         }
         for home in home_locations {
-            draw_backend.draw_pixel((home.x as i32, home.y as i32), BLACK.to_backend_color()).unwrap();
+            draw_backend.draw_pixel((home.x, home.y), BLACK.to_backend_color()).unwrap();
         }
     }
 
     fn draw_rect(svg: &mut impl DrawingBackend, area: &Area, style: &RGBColor) {
-        svg.draw_rect(
-            (area.start_offset.x as i32, area.start_offset.y as i32),
-            (area.end_offset.x as i32, area.end_offset.y as i32),
-            style,
-            true,
-        )
-        .unwrap();
+        svg.draw_rect((area.start_offset.x, area.start_offset.y), (area.end_offset.x, area.end_offset.y), style, true).unwrap();
     }
 
-    pub fn read_population(
+    pub fn read_population<R: RandomUtil>(
         &mut self,
         csv_pop: &CsvPopulation,
         starting_infections: &StartingInfections,
-        rng: &mut RandomWrapper,
+        rng: &mut R,
         region_name: &String,
     ) -> (Vec<Point>, Vec<Citizen>) {
         let file = File::open(&csv_pop.file).expect("Could not read population file");
@@ -181,7 +175,7 @@ impl Grid {
             //TODO seems like transport point isn't being used on the routine() function
             let home = homes_iter.next().unwrap();
             let office = offices_iter.next().unwrap();
-            let citizen = Citizen::from_record(record, home.clone(), office.clone(), home.get_random_point(rng), rng);
+            let citizen = Citizen::from_record(record, *home, *office, home.get_random_point(rng), rng);
             citizens.push(citizen);
         }
         let house_capacity = (constants::HOME_SIZE * constants::HOME_SIZE) as usize;
@@ -230,35 +224,35 @@ impl Grid {
     pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen], region_name: &String) -> HashMap<Area, u32> {
         let mut occupancy = HashMap::new();
         self.offices.iter().for_each(|office| {
-            occupancy.insert(office.clone(), 0);
+            occupancy.insert(*office, 0);
         });
         citizens.iter().filter(|citizen| citizen.is_working() && citizen.work_location.location_id == *region_name).for_each(
             |worker| {
-                let office = worker.work_location.clone();
+                let office = worker.work_location;
                 *occupancy.get_mut(&office).expect("Unknown office! Doesn't exist in grid") += 1;
             },
         );
         occupancy
     }
 
-    pub fn choose_house_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
+    pub fn choose_house_with_free_space<R: RandomUtil>(&self, _rng: &mut R) -> Area {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
-        self.houses_occupancy
+        *self
+            .houses_occupancy
             .iter()
             .find(|(_house, occupants)| **occupants < house_capacity)
             .expect("Couldn't find any house with free space!")
             .0
-            .clone()
     }
 
-    pub fn choose_office_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
+    pub fn choose_office_with_free_space<R: RandomUtil>(&self, _rng: &mut R) -> Area {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
-        self.offices_occupancy
+        *self
+            .offices_occupancy
             .iter()
             .find(|(_office, occupants)| **occupants < office_capacity)
             .expect("Couldn't find any offices with free space!")
             .0
-            .clone()
     }
 
     pub fn add_house_occupant(&mut self, house: &Area) {
@@ -282,10 +276,11 @@ impl Grid {
 mod tests {
     use super::*;
     use crate::geography::define_geography;
+    use common::utils::RandomWrapper;
 
     #[test]
     fn should_generate_population() {
-        let mut rng = RandomWrapper::new();
+        let mut rng = RandomWrapper::default();
 
         let mut grid = define_geography(100, "engine1".to_string());
         let housing_area = grid.housing_area.clone();

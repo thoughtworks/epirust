@@ -19,8 +19,8 @@
 use common::models::custom_types::Hour;
 use std::any::Any;
 
-use crate::disease_state_machine::State;
 use crate::listeners::listener::Listener;
+use crate::state_machine::State;
 use crate::travel::migration::MigratorsByRegion;
 use crate::utils::environment;
 
@@ -94,7 +94,7 @@ impl Listener for TravelCounter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::disease_state_machine::InfectionSeverity;
+    use crate::state_machine::State;
     use crate::travel::migration::Migrator;
     use std::env;
 
@@ -127,19 +127,19 @@ mod tests {
         let mut travellers = MigratorsByRegion::create(&region.to_string());
         for _i in 0..2 {
             let mut s = Migrator::new();
-            s.state_machine.state = State::Susceptible {};
+            s.state_machine.state = State::Susceptible;
             travellers.alloc_citizen(s);
 
             let mut e = Migrator::new();
-            e.state_machine.state = State::Exposed { at_hour: 10 };
+            e.state_machine.state = State::expose(10);
             travellers.alloc_citizen(e);
 
             let mut i = Migrator::new();
-            i.state_machine.state = State::Infected { symptoms: true, severity: InfectionSeverity::Mild {} };
+            i.state_machine.state = State::mild_infected(0);
             travellers.alloc_citizen(i);
 
             let mut r = Migrator::new();
-            r.state_machine.state = State::Recovered {};
+            r.state_machine.state = State::Recovered;
             travellers.alloc_citizen(r);
         }
 

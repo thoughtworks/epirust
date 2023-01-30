@@ -29,8 +29,9 @@ use rdkafka::message::Message;
 use rdkafka::ClientConfig;
 
 use crate::epidemiology_simulation::Epidemiology;
+use crate::run_mode::RunMode;
+use crate::state_machine::DiseaseHandler;
 use crate::utils::environment;
-use crate::RunMode;
 
 pub struct KafkaConsumer<'a> {
     engine_id: &'a str,
@@ -54,7 +55,12 @@ impl KafkaConsumer<'_> {
         KafkaConsumer { engine_id, consumer }
     }
 
-    pub async fn listen_loop(&self, run_mode: &RunMode, threads: u32) {
+    pub async fn listen_loop<T: DiseaseHandler + Sync + Clone>(
+        &self,
+        run_mode: &RunMode,
+        disease_handler: Option<T>,
+        threads: u32,
+    ) {
         let mut message_stream: MessageStream = self.consumer.stream();
         debug!("Started the stream. Waiting for simulation request");
         while let Some(message) = message_stream.next().await {
@@ -68,7 +74,7 @@ impl KafkaConsumer<'_> {
                     );
                 }
                 Ok(request) => {
-                    self.run_sim(request, run_mode, threads).await;
+                    self.run_sim(request, run_mode, disease_handler.clone(), threads).await;
                     if let RunMode::MultiEngine { engine_id: _e } = run_mode {
                         return;
                     }
@@ -77,11 +83,23 @@ impl KafkaConsumer<'_> {
         }
     }
 
-    async fn run_sim(&self, request: Request, run_mode: &RunMode, threads: u32) {
+    async fn run_sim<T: DiseaseHandler + Sync>(
+        &self,
+        request: Request,
+        run_mode: &RunMode,
+        disease_handler: Option<T>,
+        threads: u32,
+    ) {
         match request {
             Request::SimulationRequest(req) => {
-                let mut epidemiology = Epidemiology::new(&req.config, None, req.sim_id);
-                epidemiology.run(&req.config, run_mode, threads).await;
+                if disease_handler.is_none() {
+                    let disease = req.config.get_disease();
+                    let mut epidemiology = Epidemiology::new(req.config, None, req.sim_id, run_mode, disease);
+                    epidemiology.run(run_mode, threads).await;
+                } else {
+                    let mut epidemiology = Epidemiology::new(req.config, None, req.sim_id, run_mode, disease_handler.unwrap());
+                    epidemiology.run(run_mode, threads).await;
+                };
             }
             Request::MultiSimRequest(req) => {
                 let travel_plan_config = Some(req.travel_plan);
@@ -91,9 +109,22 @@ impl KafkaConsumer<'_> {
                         error!("Couldn't find any work for engine_id: {}", self.engine_id)
                     }
                     Some(req) => {
-                        let mut epidemiology =
-                            Epidemiology::new(&req.config.config, travel_plan_config, req.engine_id.to_string());
-                        epidemiology.run(&req.config.config, run_mode, threads).await;
+                        let config = req.config.config.clone();
+                        if disease_handler.is_none() {
+                            let disease = config.get_disease();
+                            let mut epidemiology =
+                                Epidemiology::new(config, travel_plan_config, req.engine_id.to_string(), run_mode, disease);
+                            epidemiology.run(run_mode, threads).await;
+                        } else {
+                            let mut epidemiology = Epidemiology::new(
+                                config,
+                                travel_plan_config,
+                                req.engine_id.to_string(),
+                                run_mode,
+                                disease_handler.unwrap(),
+                            );
+                            epidemiology.run(run_mode, threads).await;
+                        }
                     }
                 }
             }

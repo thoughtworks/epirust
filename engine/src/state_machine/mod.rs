@@ -17,8 +17,9 @@
  *
  */
 
-use copystr::s16;
+mod default_disease_handler;
+mod disease_handler;
+mod state;
 
-pub fn string_to_s16(string: &str) -> s16 {
-    s16::new(string).expect("can't convert to s16")
-}
+pub use disease_handler::DiseaseHandler;
+pub use state::*;

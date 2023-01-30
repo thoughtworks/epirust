@@ -26,7 +26,7 @@ extern crate serde_derive;
 use std::ops::Range;
 use std::string::String;
 
-use clap::{App, Arg};
+use clap::Parser;
 use common::config::TravelPlanConfig;
 use rdkafka::admin::{AdminClient, AdminOptions, NewTopic, TopicReplication};
 use rdkafka::client::DefaultClientContext;
@@ -43,31 +43,28 @@ mod kafka_producer;
 mod ticks;
 mod utils;
 
+#[derive(Parser)]
+#[command(author, version, about)]
+struct Args {
+    #[arg(short, long, value_name = "FILE", help = "Use a config file to run the simulation")]
+    config: Option<String>,
+}
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
 
-    let matches = App::new("EpiRust Orchestrator")
-        .version("0.1")
-        .about("Epidemiology Simulations in Rust")
-        .arg(
-            Arg::with_name("config")
-                .long("config")
-                .short('c')
-                .value_name("FILE")
-                .default_value("config/simulation.json")
-                .help("Use a config file to run the simulation"),
-        )
-        .get_matches();
+    let args = Args::parse();
 
-    let config_path = matches.value_of("config").unwrap_or("config/simulation.json");
+    let default_config_path = "config/simulation.json".to_string();
+    let config_path = args.config.unwrap_or(default_config_path);
 
-    let config = Configuration::read(config_path).expect("Error while reading config");
-    let sim_conf = utils::read_simulation_conf(config_path);
+    let config = Configuration::read(&config_path).expect("Error while reading config");
+    let sim_conf = utils::read_simulation_conf(&config_path);
     let travel_plan = config.get_travel_plan();
 
     //TODO: use already read config instead of passing config path and reading file again
-    let hours = 1..get_hours(config_path);
+    let hours = 1..get_hours(&config_path);
 
     config.validate();
     cleanup(&travel_plan.get_regions()).await;

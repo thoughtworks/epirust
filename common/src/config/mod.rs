@@ -39,10 +39,10 @@ use crate::disease::{Disease, DiseaseOverride};
 use crate::models::custom_types::{Hour, Size};
 use intervention_config::InterventionConfig;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Validate)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Validate, Clone)]
 pub struct Config {
     population: Population,
-    disease: Disease,
+    disease: Option<Disease>,
     #[serde(default)]
     disease_overrides: Vec<DiseaseOverride>,
     geography_parameters: GeographyParameters,
@@ -58,7 +58,7 @@ pub struct Config {
 impl Config {
     pub fn new(
         population: Population,
-        disease: Disease,
+        disease: Option<Disease>,
         geography_parameters: GeographyParameters,
         disease_overrides: Vec<DiseaseOverride>,
         hours: Hour,
@@ -79,7 +79,7 @@ impl Config {
     }
 
     pub fn get_disease(&self) -> Disease {
-        self.disease
+        self.disease.unwrap()
     }
 
     pub fn get_starting_infections(&self) -> &StartingInfections {
@@ -146,7 +146,7 @@ mod tests {
 
         let expected_config = Config {
             population,
-            disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
+            disease: Some(Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48)),
             disease_overrides: vec![disease_override],
             geography_parameters: GeographyParameters::new(5660, 0.003),
             hours: 10000,
@@ -173,7 +173,7 @@ mod tests {
 
         let expected_config = Config {
             population,
-            disease: Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48),
+            disease: Some(Disease::new(5, 20, 40, 9, 12, 0.025, 0.25, 0.035, 0.3, 0.3, 48, 48)),
             disease_overrides: vec![],
             geography_parameters: GeographyParameters::new(250, 0.003),
             hours: 10000,

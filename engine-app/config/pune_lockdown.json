@@ -1,0 +1,45 @@
+{
+  "output_file": "pune_lockdown",
+  "population": {
+    "Auto": {
+      "number_of_agents": 3137224,
+      "public_transport_percentage": 0.8,
+      "working_percentage": 0.7
+    }
+  },
+  "disease": {
+    "death_rate": 0.035,
+    "percentage_asymptomatic_population": 0.3,
+    "exposed_duration": 48,
+    "last_day": 26,
+    "asymptomatic_last_day": 9,
+    "mild_infected_last_day": 12,
+    "regular_transmission_rate": 0.35,
+    "pre_symptomatic_duration": 48,
+    "percentage_severe_infected_population": 0.3,
+    "high_transmission_start_day": 6,
+    "high_transmission_rate": 0.35,
+    "regular_transmission_start_day": 5
+  },
+  "geography_parameters": {
+    "grid_size": 5660,
+    "hospital_beds_percentage": 0.003
+  },
+  "end_of_migration": 336,
+  "reduced_travel_percentage": 0.0005,
+  "hours": 10000,
+  "interventions": [
+    {
+      "Lockdown": {
+        "at_number_of_infections": 100,
+        "essential_workers_population": 0.1
+      }
+    }
+  ],
+  "starting_infections": {
+    "exposed": 32645,
+    "infected_mild_asymptomatic": 0,
+    "infected_mild_symptomatic": 0,
+    "infected_severe": 0
+  }
+}

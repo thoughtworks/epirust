@@ -20,7 +20,6 @@
 use std::hash::BuildHasherDefault;
 
 use common::config::{Config, TravelPlanConfig};
-use common::disease::Disease;
 use common::models::custom_types::{CoOrdinate, Count, Hour};
 use common::utils::RandomWrapper;
 use dashmap::mapref::one::Ref;
@@ -32,7 +31,6 @@ use rand::Rng;
 use rayon::prelude::*;
 
 use crate::citizen::Citizen;
-use crate::disease_state_machine::State;
 
 use crate::geography::Point;
 use crate::geography::{Area, Grid};
@@ -41,6 +39,7 @@ use crate::interventions::Interventions;
 use crate::listeners::listener::Listeners;
 use crate::models::constants;
 use crate::models::events::Counts;
+use crate::state_machine::{DiseaseHandler, State};
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
 
@@ -67,26 +66,27 @@ impl CitizenLocationMap {
         }
     }
 
-    pub fn simulate(
+    pub fn simulate<T: DiseaseHandler + Sync>(
         &mut self,
         csv_record: &mut Counts,
         simulation_hour: Hour,
         listeners: &mut Listeners,
         rng: &mut RandomWrapper,
-        disease: &Disease,
         percent_outgoing: f64,
         outgoing_migrators: &mut Vec<(Point, Migrator)>,
         outgoing_commuters: &mut Vec<(Point, Commuter)>,
         publish_citizen_state: bool,
         travel_plan_config: Option<&TravelPlanConfig>,
         region_name: &String,
+        disease_handler: &T,
     ) {
         csv_record.clear();
         self.par_iter().for_each(|refmulti| {
             let mut rng_thread = RandomWrapper::new();
             let cell = refmulti.key();
             let mut current_agent = *refmulti.value();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, &mut rng_thread, disease);
+            let point =
+                current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, &mut rng_thread, disease_handler);
             let agent_in_cell = *self.upcoming_locations.entry(point).or_insert(current_agent);
             if agent_in_cell.id != current_agent.id {
                 self.upcoming_locations.insert(*cell, current_agent);

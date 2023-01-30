@@ -1,6 +1,6 @@
 /*
  * EpiRust
- * Copyright (c) 2022  ThoughtWorks, Inc.
+ * Copyright (c) 2020  ThoughtWorks, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,8 +17,13 @@
  *
  */
 
-use copystr::s16;
+pub enum RunMode {
+    //run once and exit
+    Standalone,
 
-pub fn string_to_s16(string: &str) -> s16 {
-    s16::new(string).expect("can't convert to s16")
+    //daemon mode, with only one engine
+    SingleDaemon,
+
+    //daemon mode, with multiple engines and an orchestrator
+    MultiEngine { engine_id: String },
 }

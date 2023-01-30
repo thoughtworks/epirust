@@ -18,7 +18,7 @@
  */
 
 use crate::citizen::Citizen;
-use crate::disease_state_machine::State;
+use crate::state_machine::State;
 use common::models::custom_types::{Count, Hour};
 use log::info;
 

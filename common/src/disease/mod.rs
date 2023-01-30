@@ -98,7 +98,7 @@ impl Disease {
         self.get_current_transmission_rate(infection_day) >= self.high_transmission_rate
     }
 
-    pub fn get_disease_last_day(&self) -> Day {
+    pub fn get_last_day(&self) -> Day {
         self.last_day
     }
 

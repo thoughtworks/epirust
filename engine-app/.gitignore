@@ -1,0 +1,16 @@
+/target
+**/*.rs.bk
+.vscode/
+
+# intellij
+.idea/
+!.idea/copyright/
+!.idea/codeStyleSettings.xml
+bin/
+*.iml
+
+grid.svg
+grid.png
+simulation_*.csv
+simulation_*.json
+output/

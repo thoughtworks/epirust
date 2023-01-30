@@ -1,6 +1,6 @@
 /*
  * EpiRust
- * Copyright (c) 2022  ThoughtWorks, Inc.
+ * Copyright (c) 2020  ThoughtWorks, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,8 +17,30 @@
  *
  */
 
-use copystr::s16;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate log;
 
-pub fn string_to_s16(string: &str) -> s16 {
-    s16::new(string).expect("can't convert to s16")
-}
+mod allocation_map;
+mod citizen;
+mod disease_state_machine;
+mod engine_app;
+mod epidemiology_simulation;
+mod helpers;
+mod interventions;
+mod kafka;
+mod listeners;
+mod models;
+mod population;
+mod run_mode;
+mod state_machine;
+mod tick;
+mod travel;
+mod utils;
+
+pub mod geography;
+
+pub use engine_app::EngineApp;
+pub use run_mode::RunMode;
+pub use state_machine::*;

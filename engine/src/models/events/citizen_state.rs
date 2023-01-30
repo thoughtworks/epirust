@@ -20,8 +20,8 @@ use common::models::custom_types::Hour;
 use uuid::Uuid;
 
 use crate::citizen::Citizen;
-use crate::disease_state_machine::State;
 use crate::geography::Point;
+use crate::state_machine::State;
 
 #[derive(Serialize)]
 pub struct CitizenState {

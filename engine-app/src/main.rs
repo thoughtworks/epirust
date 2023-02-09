@@ -25,7 +25,6 @@ use opentelemetry::sdk::trace::{config, Span};
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::{FutureExt, TraceContextExt, TraceError, Tracer};
 use opentelemetry::{global, sdk, Context, KeyValue};
-use opentelemetry_jaeger::Exporter;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -78,7 +77,7 @@ async fn main() {
 
     let disease_handler: Option<Disease> = None;
 
-    let _tracer = init_tracer()?;
+    let _tracer = init_tracer().unwrap();
 
     let span: Span = _tracer.start("root");
     let cx: Context = Context::current_with_span(span);

@@ -18,12 +18,11 @@
  */
 
 use std::error::Error;
-use std::task::Context;
 
 use common::config::request::Request;
 use futures::StreamExt;
 use opentelemetry::trace::{FutureExt, TraceContextExt, Tracer};
-use opentelemetry::{global, Context};
+use opentelemetry::{Context, global};
 use rdkafka::consumer::Consumer;
 use rdkafka::consumer::{MessageStream, StreamConsumer};
 use rdkafka::error::KafkaError;

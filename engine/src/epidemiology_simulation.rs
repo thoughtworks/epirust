@@ -19,7 +19,6 @@
 
 use core::borrow::BorrowMut;
 use std::borrow::Borrow;
-use std::task::Context;
 use std::time::Instant;
 
 use common::config::{Config, Population, TravelPlanConfig};
@@ -27,7 +26,7 @@ use common::models::CommutePlan;
 use common::utils::RandomWrapper;
 use futures::join;
 use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
-use opentelemetry::{global, Context};
+use opentelemetry::{global, Context, KeyValue};
 
 use crate::allocation_map::CitizenLocationMap;
 use crate::geography::Point;
@@ -54,7 +53,7 @@ use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
 use crate::utils::util::{counts_at_start, output_file_format};
-use crate::{geography, KeyValue};
+use crate::{geography};
 
 pub struct Epidemiology<T: DiseaseHandler + Sync> {
     pub citizen_location_map: CitizenLocationMap,
@@ -117,12 +116,12 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
     fn create_listeners(engine_id: &str, current_pop: usize, run_mode: &RunMode, config: &Config) -> Listeners {
         let output_file_format = output_file_format(config, run_mode);
-        let counts_file_name = format!("{}.csv", output_file_format);
+        let counts_file_name = format!("{output_file_format}.csv");
 
         let csv_listener = CsvListener::new(counts_file_name);
 
         let hotspot_tracker = Hotspot::new();
-        let intervention_reporter = InterventionReporter::new(format!("{}_interventions.json", output_file_format));
+        let intervention_reporter = InterventionReporter::new(format!("{output_file_format}_interventions.json" ));
         let mut listeners_vec: Vec<Box<dyn Listener>> =
             vec![Box::new(csv_listener), Box::new(hotspot_tracker), Box::new(intervention_reporter)];
 
@@ -134,7 +133,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 listeners_vec.push(Box::new(kafka_listener));
             }
             RunMode::MultiEngine { .. } => {
-                let travels_file_name = format!("{}_outgoing_travels.csv", output_file_format);
+                let travels_file_name = format!("{output_file_format}_outgoing_travels.csv");
                 let travel_counter = TravelCounter::new(travels_file_name);
                 listeners_vec.push(Box::new(travel_counter));
 
@@ -170,8 +169,8 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         match run_mode {
             RunMode::MultiEngine { engine_id } => {
                 let tracer = global::tracer("epirust-trace");
-                let mut span = tracer.start(format!("multi-engine - {}", engine_id));
-                span.set_attribute(KeyValue::new("mode", "multiengine"));
+                let mut span = tracer.start(format!("multi-engine - {engine_id}"));
+                span.set_attribute(KeyValue::new("mode", "multi-engine"));
                 span.set_attribute(KeyValue::new("engine_id", engine_id.to_string()));
                 let cx = Context::current_with_span(span);
                 self.run_multi_engine(engine_id).with_context(cx).await
@@ -261,7 +260,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
             EngineMigrationPlan::new(engine_id.clone(), migration_plan, self.citizen_location_map.current_population());
 
         debug!("{}: Start Migrator Consumer", engine_id);
-        let migrators_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", MIGRATION_TOPIC, engine_id)], "migrate");
+        let migrators_consumer = travel_consumer::start(engine_id, &[&*format!("{MIGRATION_TOPIC}{engine_id}")], "migrate");
         let mut migration_stream = migrators_consumer.stream();
 
         let commute_plan = if is_commute_enabled {
@@ -271,7 +270,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         };
 
         debug!("{}: Start Commuter Consumer", engine_id);
-        let commute_consumer = travel_consumer::start(engine_id, &[&*format!("{}{}", COMMUTE_TOPIC, engine_id)], "commute");
+        let commute_consumer = travel_consumer::start(engine_id, &[&*format!("{COMMUTE_TOPIC}{engine_id}")], "commute");
         let mut commute_stream = commute_consumer.stream();
 
         let ticks_consumer = ticks_consumer::start(engine_id);

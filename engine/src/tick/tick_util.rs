@@ -26,7 +26,6 @@ use crate::run_mode::RunMode;
 use common::models::custom_types::Hour;
 use futures::StreamExt;
 use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
-use opentelemetry::Value::String;
 use opentelemetry::{global, Context, KeyValue};
 use rdkafka::consumer::MessageStream;
 

@@ -19,7 +19,6 @@
 
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{BaseRecord, DefaultProducerContext, ThreadedProducer};
-use std::time::Instant;
 
 pub type SendResult<'a> = Result<(), (KafkaError, BaseRecord<'a, String, String>)>;
 

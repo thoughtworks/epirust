@@ -65,7 +65,7 @@ Create the name of the service account to use
 {{- define "helpers.list-engine-env-variables"}}
 {{- range $key, $val := .Values.engine.env }}
     - name: {{ $key }}
-      value: {{ $val }}
+      value: {{ $val | quote }}
 {{- end}}
 {{- end }}
 

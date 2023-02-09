@@ -38,6 +38,9 @@ engine:
   env:
     # Replace with your kafka service url
     EPI_KAFKA_URL: "kafka-cp-kafka:9092"
+    # Replace with jaeger host and port for tracing
+    OTEL_EXPORTER_JAEGER_AGENT_PORT: "6831"
+    OTEL_EXPORTER_JAEGER_AGENT_HOST: "jaeger"
     EPI_OUTPUT_DIR: "/home/nonroot/app/output"
 
     RUST_LOG: info

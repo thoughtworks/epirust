@@ -17,14 +17,12 @@
  *
  */
 
-use std::hash::BuildHasherDefault;
+use std::collections::hash_map::{Iter, IterMut};
 
 use common::config::{Config, TravelPlanConfig};
 use common::models::custom_types::{CoOrdinate, Count, Hour};
 use common::utils::RandomWrapper;
-use dashmap::mapref::one::Ref;
-use dashmap::DashMap;
-use fxhash::{FxBuildHasher, FxHasher};
+use fnv::FnvHashMap;
 
 use rand::seq::IteratorRandom;
 use rand::Rng;
@@ -46,14 +44,14 @@ use crate::travel::migration::Migrator;
 #[derive(Clone)]
 pub struct CitizenLocationMap {
     pub grid: Grid,
-    current_locations: DashMap<Point, Citizen, FxBuildHasher>,
-    upcoming_locations: DashMap<Point, Citizen, FxBuildHasher>,
+    current_locations: FnvHashMap<Point, Citizen>,
+    upcoming_locations: FnvHashMap<Point, Citizen>,
 }
 
 impl CitizenLocationMap {
     pub fn new(grid: Grid, agent_list: &[Citizen], points: &[Point]) -> Self {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
-        let map: DashMap<Point, Citizen, FxBuildHasher> = DashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
+        let mut map: FnvHashMap<Point, Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
         agent_list.iter().enumerate().for_each(|(i, _)| {
             map.insert(points[i], agent_list[i].clone());
         });
@@ -62,7 +60,7 @@ impl CitizenLocationMap {
         CitizenLocationMap {
             grid,
             current_locations: map,
-            upcoming_locations: DashMap::with_capacity_and_hasher(capacity, Default::default()),
+            upcoming_locations: FnvHashMap::with_capacity_and_hasher(capacity, Default::default()),
         }
     }
 
@@ -81,43 +79,44 @@ impl CitizenLocationMap {
         disease_handler: &T,
     ) {
         csv_record.clear();
-        self.par_iter().for_each(|refmulti| {
+        let updates: Vec<((Point, Point), Citizen, bool)> = self.par_iter().map(|(cell, agent)| {
             let mut rng_thread = RandomWrapper::new();
-            let cell = refmulti.key();
-            let mut current_agent = *refmulti.value();
-            let point =
-                current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, &mut rng_thread, disease_handler);
-            let agent_in_cell = *self.upcoming_locations.entry(point).or_insert(current_agent);
-            if agent_in_cell.id != current_agent.id {
-                self.upcoming_locations.insert(*cell, current_agent);
+            let mut current_agent = *agent;
+            let infection_status = current_agent.state_machine.is_infected();
+            let point = current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, &mut rng_thread, disease_handler);
+            ((*cell, point), current_agent, infection_status)
+        }).collect();
+        updates.iter().for_each(|pair| {
+            let old_cell = pair.0.0;
+            let new_cell = pair.0.1;
+            let agent = pair.1;
+            let mut new_location = &new_cell;
+            let agent_at_new_cell = *self.upcoming_locations.entry(new_cell).or_insert(agent);
+            if agent_at_new_cell.id != agent.id {
+                self.upcoming_locations.insert(old_cell, agent);
+                new_location = &old_cell;
             }
-        });
-        debug!("done with par iter");
-        self.iter_upcoming_locations().for_each(|refmulti| {
-            let current_agent = *refmulti.value();
-            let new_location = refmulti.key();
-            Counts::update_counts(csv_record, &current_agent);
-
+            Counts::update_counts(csv_record, &agent);
             if let Some(travel_plan) = travel_plan_config {
                 let is_migration_enabled = travel_plan.migration.enabled;
                 let is_commute_enabled = travel_plan.commute.enabled;
 
                 if is_migration_enabled
-                    && current_agent.can_migrate(region_name, simulation_hour, travel_plan)
+                    && agent.can_migrate(region_name, simulation_hour, travel_plan)
                     && rng.get().gen_bool(percent_outgoing)
                 {
-                    let migrator = Migrator::from(&current_agent);
+                    let migrator = Migrator::from(&agent);
                     outgoing_migrators.push((*new_location, migrator));
                 }
 
-                if is_commute_enabled && current_agent.is_commuter(region_name, simulation_hour) {
-                    let commuter = Commuter::from(&current_agent);
+                if is_commute_enabled && agent.is_commuter(region_name, simulation_hour) {
+                    let commuter = Commuter::from(&agent);
                     outgoing_commuters.push((*new_location, commuter));
                 }
             }
 
             if publish_citizen_state {
-                listeners.citizen_state_updated(simulation_hour, &current_agent, new_location);
+                listeners.citizen_state_updated(simulation_hour, &agent, new_location);
             }
         });
         debug!("done with iter upcoming");
@@ -146,7 +145,7 @@ impl CitizenLocationMap {
         }
     }
 
-    pub fn get_agent_for(&self, cell: &Point) -> Option<Ref<Point, Citizen, FxBuildHasher>> {
+    pub fn get_agent_for(&self, cell: &Point) -> Option<&Citizen> {
         self.current_locations.get(cell)
     }
 
@@ -174,9 +173,9 @@ impl CitizenLocationMap {
                     )
                 }
                 Some(citizen) => {
-                    self.grid.remove_house_occupant(&citizen.1.home_location);
-                    if citizen.1.is_working() {
-                        self.grid.remove_office_occupant(&citizen.1.work_location);
+                    self.grid.remove_house_occupant(&citizen.home_location);
+                    if citizen.is_working() {
+                        self.grid.remove_office_occupant(&citizen.work_location);
                     }
                 }
             }
@@ -347,7 +346,7 @@ impl CitizenLocationMap {
 
     pub fn lock_city(&mut self, hr: Hour) {
         info!("Locking the city. Hour: {}", hr);
-        self.iter_mut().for_each(|mut r| {
+        self.iter_mut().for_each(|(_,  r)| {
             if !r.is_essential_worker() {
                 (*r).set_isolation(true);
             }
@@ -356,7 +355,7 @@ impl CitizenLocationMap {
 
     pub fn unlock_city(&mut self, hr: Hour) {
         info!("Unlocking city. Hour: {}", hr);
-        self.iter_mut().for_each(|mut r| {
+        self.iter_mut().for_each(|(_,  r)| {
             if r.is_isolated() {
                 (*r).set_isolation(false);
             }
@@ -378,7 +377,7 @@ impl CitizenLocationMap {
     }
 
     pub(crate) fn vaccinate(&mut self, vaccination_percentage: f64, rng: &mut RandomWrapper) {
-        self.iter_mut().for_each(|mut r| {
+        self.iter_mut().for_each(|( _,  r)| {
             if r.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
                 (*r).set_vaccination(true);
             }
@@ -391,15 +390,15 @@ impl CitizenLocationMap {
 
     pub fn iter_upcoming_locations(
         &self,
-    ) -> dashmap::iter::Iter<Point, Citizen, FxBuildHasher, DashMap<Point, Citizen, FxBuildHasher>> {
+    ) -> Iter<'_, Point, Citizen> {
         self.upcoming_locations.iter()
     }
 
-    pub fn par_iter(&self) -> dashmap::rayon::map::Iter<Point, Citizen, BuildHasherDefault<FxHasher>> {
+    pub fn par_iter(&self) -> rayon::collections::hash_map::Iter<Point, Citizen> {
         self.current_locations.par_iter()
     }
 
-    pub fn iter_mut(&mut self) -> dashmap::iter::IterMut<Point, Citizen, FxBuildHasher, DashMap<Point, Citizen, FxBuildHasher>> {
+    pub fn iter_mut(&mut self) -> IterMut<'_, Point, Citizen> {
         self.current_locations.iter_mut()
     }
 }

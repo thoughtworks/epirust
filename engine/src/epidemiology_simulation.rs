@@ -156,8 +156,8 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         let hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        citizen_location_map.iter_mut().for_each(|mut r| {
-            (*r).assign_essential_worker(essential_workers_population, rng);
+        citizen_location_map.iter_mut().for_each(| r| {
+            (*r.1).assign_essential_worker(essential_workers_population, rng);
         });
         Interventions { vaccinate: vaccinations, lockdown: lock_down_details, build_new_hospital: hospital_intervention }
     }

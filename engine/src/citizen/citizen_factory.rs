@@ -19,14 +19,14 @@
 
 use common::config::{StartingInfections, TravelPlanConfig};
 use common::models::CommutePlan;
-use common::utils::RandomUtil;
+use common::utils::Random;
 
 use crate::citizen::work_status::WorkStatus;
 use crate::citizen::{Citizen, CitizensData};
 use crate::geography::Point;
 use crate::helpers::string_to_s16;
 
-pub fn citizen_factory<R: RandomUtil>(
+pub fn citizen_factory<R: Random>(
     ctz_data: CitizensData,
     travel_plan_config: &Option<TravelPlanConfig>,
     rng: &mut R,
@@ -47,13 +47,13 @@ pub fn citizen_factory<R: RandomUtil>(
     set_starting_infections(&mut agent_list, ctz_data.starting_infections, rng);
 
     if let Some(cp) = commute_plan {
-        update_commuters(&mut agent_list, cp, ctz_data.region);
+        update_commuters(&mut agent_list, cp, &ctz_data.region);
     }
 
     agent_list
 }
 
-fn create_citizen<R: RandomUtil>(
+fn create_citizen<R: Random>(
     number: usize,
     ctz_data: &CitizensData,
     rng: &mut R,
@@ -85,15 +85,13 @@ fn create_citizen<R: RandomUtil>(
     Citizen::new(home_location, work_location, public_transport_location, uses_public_transport, work_status, rng)
 }
 
-fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, self_region: String) {
+fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, self_region: &str) {
     debug!("Start updating commuters");
-    let total_commuters_by_region: Vec<(String, u32)> = commute_plan.get_total_commuters_by_region(self_region.clone());
+    let total_commuters_by_region: Vec<(String, u32)> = commute_plan.get_total_commuters_by_region(self_region);
 
     let mut working_agents = agent_list
         .iter_mut()
-        .filter(|agent| {
-            agent.is_working() && agent.work_location.location_id == self_region.clone() && agent.uses_public_transport
-        })
+        .filter(|agent| agent.is_working() && agent.work_location.location_id == self_region && agent.uses_public_transport)
         .take(total_commuters_by_region.iter().map(|(_, n)| *n as usize).sum());
 
     debug!("Got all working agents");
@@ -107,7 +105,7 @@ fn update_commuters(agent_list: &mut [Citizen], commute_plan: CommutePlan, self_
     debug!("updated the commuters");
 }
 
-pub fn set_starting_infections<R: RandomUtil>(agent_list: &mut [Citizen], start_infections: &StartingInfections, rng: &mut R) {
+pub fn set_starting_infections<R: Random>(agent_list: &mut [Citizen], start_infections: &StartingInfections, rng: &mut R) {
     if start_infections.total() as usize > agent_list.len() {
         panic!("There are {} people set to infect, but only {} agents available", start_infections.total(), agent_list.len())
     }

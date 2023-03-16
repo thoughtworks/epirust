@@ -19,7 +19,7 @@
 
 use crate::helpers::*;
 use common::models::custom_types::Count;
-use common::utils::RandomUtil;
+use common::utils::Random;
 use copystr::s16;
 use std::hash::{Hash, Hasher};
 
@@ -59,10 +59,10 @@ impl Area {
         AreaIterator::new(*self)
     }
 
-    pub fn random_points<R: RandomUtil>(&self, number_of_points: usize, rng: &mut R) -> Vec<Point> {
+    pub fn random_points<R: Random>(&self, number_of_points: usize, rng: &mut R) -> Vec<Point> {
         let nx = (number_of_points as f32).sqrt().ceil() as usize;
-        let rand_xs = rng.choose_multiple((self.start_offset.x..=self.end_offset.x).into_iter(), nx);
-        let rand_ys = rng.choose_multiple((self.start_offset.y..=self.end_offset.y).into_iter(), nx);
+        let rand_xs = rng.choose_multiple(self.start_offset.x..=self.end_offset.x, nx);
+        let rand_ys = rng.choose_multiple(self.start_offset.y..=self.end_offset.y, nx);
 
         rand_xs
             .iter()
@@ -71,7 +71,7 @@ impl Area {
             .collect()
     }
 
-    pub fn get_random_point<R: RandomUtil>(&self, rng: &mut R) -> Point {
+    pub fn get_random_point<R: Random>(&self, rng: &mut R) -> Point {
         let rand_x = rng.choose(self.start_offset.x..=self.end_offset.x).unwrap();
         let rand_y = rng.choose(self.start_offset.y..=self.end_offset.y).unwrap();
 

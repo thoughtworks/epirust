@@ -17,11 +17,11 @@
  *
  */
 
-use rand::rngs::ThreadRng;
+use rand::rngs::StdRng;
 use rand::seq::IteratorRandom;
-use rand::{thread_rng, Rng};
+use rand::{Rng, SeedableRng};
 
-pub trait RandomUtil {
+pub trait Random {
     fn gen_bool(&mut self, probability: f64) -> bool;
     fn choose<I>(&mut self, from: I) -> Option<I::Item>
     where
@@ -31,11 +31,12 @@ pub trait RandomUtil {
         I: Iterator + Sized;
 }
 
+#[derive(Clone)]
 pub struct RandomWrapper {
-    rng: ThreadRng,
+    rng: StdRng,
 }
 
-impl RandomUtil for RandomWrapper {
+impl Random for RandomWrapper {
     fn gen_bool(&mut self, probability: f64) -> bool {
         self.rng.gen_bool(probability)
     }
@@ -57,6 +58,6 @@ impl RandomUtil for RandomWrapper {
 
 impl Default for RandomWrapper {
     fn default() -> Self {
-        RandomWrapper { rng: thread_rng() }
+        RandomWrapper { rng: SeedableRng::from_entropy() }
     }
 }

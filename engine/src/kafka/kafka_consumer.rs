@@ -18,8 +18,10 @@
  */
 
 use std::error::Error;
+use std::sync::{Arc, Mutex};
 
 use common::config::request::Request;
+use common::disease::RichDisease;
 use common::utils::RandomWrapper;
 use futures::StreamExt;
 use opentelemetry::trace::{FutureExt, TraceContextExt, Tracer};
@@ -58,7 +60,7 @@ impl KafkaConsumer<'_> {
         KafkaConsumer { engine_id, consumer }
     }
 
-    pub async fn listen_loop<T: DiseaseHandler + Sync + Clone>(
+    pub async fn listen_loop<T: DiseaseHandler + Sync + Send + Clone>(
         &self,
         run_mode: &RunMode,
         disease_handler: Option<T>,
@@ -86,7 +88,7 @@ impl KafkaConsumer<'_> {
         }
     }
 
-    async fn run_sim<T: DiseaseHandler + Sync>(
+    async fn run_sim<T: DiseaseHandler + Sync + Send>(
         &self,
         request: Request,
         run_mode: &RunMode,
@@ -96,9 +98,15 @@ impl KafkaConsumer<'_> {
         match request {
             Request::SimulationRequest(req) => {
                 if disease_handler.is_none() {
-                    let disease = req.config.get_disease();
-                    let mut epidemiology =
-                        Epidemiology::new(req.config, None, req.sim_id, run_mode, disease, RandomWrapper::default());
+                    let disease = RichDisease::new(req.config.get_disease(), RandomWrapper::default());
+                    let mut epidemiology = Epidemiology::new(
+                        req.config,
+                        None,
+                        req.sim_id,
+                        run_mode,
+                        Arc::new(Mutex::new(disease)),
+                        RandomWrapper::default(),
+                    );
                     epidemiology.run(run_mode, threads).await;
                 } else {
                     let mut epidemiology = Epidemiology::new(
@@ -106,7 +114,7 @@ impl KafkaConsumer<'_> {
                         None,
                         req.sim_id,
                         run_mode,
-                        disease_handler.unwrap(),
+                        Arc::new(Mutex::new(disease_handler.unwrap())),
                         RandomWrapper::default(),
                     );
                     epidemiology.run(run_mode, threads).await;
@@ -123,12 +131,13 @@ impl KafkaConsumer<'_> {
                         let config = req.config.config.clone();
                         if disease_handler.is_none() {
                             let disease = config.get_disease();
+                            let disease = RichDisease::new(disease, RandomWrapper::default());
                             let mut epidemiology = Epidemiology::new(
                                 config,
                                 travel_plan_config,
                                 req.engine_id.to_string(),
                                 run_mode,
-                                disease,
+                                Arc::new(Mutex::new(disease)),
                                 RandomWrapper::default(),
                             );
                             epidemiology.run(run_mode, threads).await;
@@ -138,7 +147,7 @@ impl KafkaConsumer<'_> {
                                 travel_plan_config,
                                 req.engine_id.to_string(),
                                 run_mode,
-                                disease_handler.unwrap(),
+                                Arc::new(Mutex::new(disease_handler.unwrap())),
                                 RandomWrapper::default(),
                             );
                             let tracer = global::tracer("epirust-trace");

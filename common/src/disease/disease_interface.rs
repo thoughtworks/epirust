@@ -1,6 +1,6 @@
 /*
  * EpiRust
- * Copyright (c) 2022  ThoughtWorks, Inc.
+ * Copyright (c) 2023  ThoughtWorks, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,7 +17,15 @@
  *
  */
 
-mod random_wrapper;
-pub mod test_utils;
+use crate::models::custom_types::{Day, Hour, Percentage};
 
-pub use random_wrapper::{Random, RandomWrapper};
+pub trait DiseaseInterface {
+    fn get_current_transmission_rate(&self, infection_day: Day) -> Percentage;
+    fn is_to_be_hospitalized(&self, infection_day: Day) -> bool;
+    fn get_last_day(&self) -> Day;
+    fn deceased(&mut self) -> bool;
+    fn get_percentage_asymptomatic_population(&self) -> Percentage;
+    fn get_percentage_severe_infected_population(&self) -> Percentage;
+    fn get_exposed_duration(&self) -> Hour;
+    fn get_pre_symptomatic_duration(&self) -> Hour;
+}

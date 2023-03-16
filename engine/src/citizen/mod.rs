@@ -25,12 +25,13 @@ mod work_status;
 pub use citizen_data::CitizensData;
 pub use citizen_factory::{citizen_factory, set_starting_infections};
 pub use population_record::PopulationRecord;
+use std::ops::DerefMut;
+use std::sync::{Arc, Mutex};
 pub use work_status::WorkStatus;
 
 use common::config::TravelPlanConfig;
-use common::disease::Disease;
-use common::models::custom_types::{Day, Hour, Percentage};
-use common::utils::RandomUtil;
+use common::models::custom_types::{Day, Hour};
+use common::utils::Random;
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -60,7 +61,7 @@ pub struct Citizen {
 }
 
 impl Citizen {
-    pub fn new<R: RandomUtil>(
+    pub fn new<R: Random>(
         home_location: Area,
         work_location: Area,
         transport_location: Point,
@@ -79,7 +80,7 @@ impl Citizen {
         )
     }
 
-    pub fn new_with_id<R: RandomUtil>(
+    pub fn new_with_id<R: Random>(
         id: Uuid,
         home_location: Area,
         work_location: Area,
@@ -149,7 +150,7 @@ impl Citizen {
         }
     }
 
-    pub fn from_record<R: RandomUtil>(
+    pub fn from_record<R: Random>(
         record: PopulationRecord,
         home_location: Area,
         work_location: Area,
@@ -176,9 +177,8 @@ impl Citizen {
         }
     }
 
-    pub fn get_infection_transmission_rate(&self, disease: &Disease) -> Percentage {
-        // why is there addition of infection day and immunity
-        disease.get_current_transmission_rate((self.state_machine.get_infection_day() as i32 + self.immunity) as Day)
+    pub fn get_max_resistance_day(&self) -> Day {
+        (self.state_machine.get_infection_day() as i32 + self.immunity) as Day
     }
 
     pub fn get_immunity(&self) -> i32 {
@@ -193,42 +193,41 @@ impl Citizen {
         self.isolated = state;
     }
 
-    fn update_infection_dynamics<T: DiseaseHandler, R: RandomUtil>(
+    fn update_infection_dynamics<T: DiseaseHandler>(
         &mut self,
         cell: Point,
         map: &CitizenLocationMap,
         sim_hr: Hour,
-        rng: &mut R,
-        disease_handler: &T,
+        disease_handler: &mut T,
     ) {
-        self.state_machine.state = self.state_machine.next(sim_hr, cell, self, map, rng, disease_handler);
+        self.state_machine.state = self.state_machine.next(sim_hr, cell, self, map, disease_handler);
     }
 
-    fn generate_disease_randomness_factor<R: RandomUtil>(rng: &mut R) -> i32 {
+    fn generate_disease_randomness_factor<R: Random>(rng: &mut R) -> i32 {
         let option = rng.choose(constants::IMMUNITY_RANGE.iter());
         *option.unwrap()
     }
 
-    pub fn perform_operation<T: DiseaseHandler, R: RandomUtil>(
+    pub fn perform_operation<T: DiseaseHandler, R: Random>(
         &mut self,
         cell: Point,
         simulation_hour: Hour,
         grid: &Grid,
         map: &CitizenLocationMap,
         rng: &mut R,
-        disease_handler: &T,
+        disease_handler: Arc<Mutex<T>>,
     ) -> Point {
-        self.routine(cell, simulation_hour, grid, map, rng, disease_handler)
+        self.routine(cell, simulation_hour, grid, map, rng, disease_handler.lock().unwrap().deref_mut())
     }
 
-    fn routine<T: DiseaseHandler, R: RandomUtil>(
+    fn routine<T: DiseaseHandler, R: Random>(
         &mut self,
         cell: Point,
         simulation_hour: Hour,
         grid: &Grid,
         map: &CitizenLocationMap,
         rng: &mut R,
-        disease_handler: &T,
+        disease_handler: &mut T,
     ) -> Point {
         let mut new_cell = cell;
 
@@ -251,7 +250,7 @@ impl Citizen {
         new_cell
     }
 
-    fn perform_movements<T: DiseaseHandler, R: RandomUtil>(
+    fn perform_movements<T: DiseaseHandler, R: Random>(
         &mut self,
         cell: Point,
         hour_of_day: Hour,
@@ -259,7 +258,7 @@ impl Citizen {
         grid: &Grid,
         map: &CitizenLocationMap,
         rng: &mut R,
-        disease_handler: &T,
+        disease_handler: &mut T,
     ) -> Point {
         let mut new_cell = cell;
         match self.work_status {
@@ -283,7 +282,7 @@ impl Citizen {
                     }
                     _ => new_cell = self.move_agent_from(map, cell, rng),
                 }
-                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease_handler);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, disease_handler);
             }
 
             WorkStatus::HospitalStaff { work_start_at } => {
@@ -321,7 +320,7 @@ impl Citizen {
                         }
                     }
                 }
-                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease_handler);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, disease_handler);
             }
 
             WorkStatus::NA => {
@@ -339,7 +338,7 @@ impl Citizen {
                         new_cell = self.move_agent_from(map, cell, rng);
                     }
                 }
-                self.update_infection_dynamics(new_cell, map, simulation_hr, rng, disease_handler);
+                self.update_infection_dynamics(new_cell, map, simulation_hr, disease_handler);
             }
         }
         new_cell
@@ -361,7 +360,7 @@ impl Citizen {
         new_cell
     }
 
-    fn goto_area<R: RandomUtil>(&self, target_area: Area, map: &CitizenLocationMap, cell: Point, rng: &mut R) -> Point {
+    fn goto_area<R: Random>(&self, target_area: Area, map: &CitizenLocationMap, cell: Point, rng: &mut R) -> Point {
         //TODO: Refactor - Jayanta
         // If agent is working and current_area is work, target area is home and symptomatic then allow movement
         let mut override_movement = false;
@@ -391,15 +390,15 @@ impl Citizen {
         self.move_agent_from(map, cell, rng)
     }
 
-    fn deceased<T: DiseaseHandler, R: RandomUtil>(
+    fn deceased<T: DiseaseHandler, R: Random>(
         &mut self,
         map: &CitizenLocationMap,
         cell: Point,
         rng: &mut R,
-        disease_handler: &T,
+        disease_handler: &mut T,
     ) -> Point {
         let mut new_cell = cell;
-        self.state_machine.decease(rng, disease_handler);
+        self.state_machine.decease(disease_handler);
         if self.state_machine.state == State::Recovered {
             new_cell = map.move_agent(cell, self.home_location.get_random_point(rng));
         }
@@ -409,7 +408,7 @@ impl Citizen {
         new_cell
     }
 
-    fn move_agent_from<R: RandomUtil>(&self, map: &CitizenLocationMap, cell: Point, rng: &mut R) -> Point {
+    fn move_agent_from<R: Random>(&self, map: &CitizenLocationMap, cell: Point, rng: &mut R) -> Point {
         if !self.can_move() {
             return cell;
         }
@@ -429,7 +428,7 @@ impl Citizen {
         map.move_agent(cell, new_cell)
     }
 
-    pub fn assign_essential_worker<R: RandomUtil>(&mut self, essential_workers_percentage: f64, rng: &mut R) {
+    pub fn assign_essential_worker<R: Random>(&mut self, essential_workers_percentage: f64, rng: &mut R) {
         if let WorkStatus::Normal = self.work_status {
             if rng.gen_bool(essential_workers_percentage) {
                 self.work_status = WorkStatus::Essential;
@@ -437,7 +436,7 @@ impl Citizen {
         }
     }
 
-    fn derive_work_status<R: RandomUtil>(is_working: bool, rng: &mut R) -> WorkStatus {
+    fn derive_work_status<R: Random>(is_working: bool, rng: &mut R) -> WorkStatus {
         if is_working {
             if rng.gen_bool(constants::HOSPITAL_STAFF_PERCENTAGE) {
                 return WorkStatus::HospitalStaff { work_start_at: constants::ROUTINE_WORK_TIME };
@@ -451,15 +450,15 @@ impl Citizen {
         !(self.state_machine.is_symptomatic() || self.hospitalized || self.state_machine.is_deceased() || self.isolated)
     }
 
-    pub fn can_migrate(&self, region_id: &String, simulation_hour: Hour, travel_plan: &TravelPlanConfig) -> bool {
+    pub fn can_migrate(&self, region_id: &str, simulation_hour: Hour, travel_plan: &TravelPlanConfig) -> bool {
         let start_migration_hour = travel_plan.get_start_migration_hour();
         let end_migration_hour = travel_plan.get_end_migration_hour();
 
         simulation_hour % 24 == 0
             && simulation_hour > start_migration_hour
             && simulation_hour < end_migration_hour
-            && self.work_location.location_id == *region_id
-            && self.home_location.location_id == *region_id
+            && self.work_location.location_id == region_id
+            && self.home_location.location_id == region_id
             && self.can_move()
     }
 
@@ -483,13 +482,13 @@ impl Citizen {
         matches!(self.work_status, WorkStatus::Essential)
     }
 
-    pub fn is_commuter(&self, region_id: &String, simulation_hour: Hour) -> bool {
+    pub fn is_commuter(&self, region_id: &str, simulation_hour: Hour) -> bool {
         (simulation_hour % 24 == constants::ROUTINE_TRAVEL_START_TIME
             && self.can_move()
-            && self.work_location.location_id != *region_id)
+            && self.work_location.location_id != region_id)
             || (simulation_hour % 24 == constants::ROUTINE_TRAVEL_END_TIME
                 && self.can_move()
-                && self.home_location.location_id != *region_id)
+                && self.home_location.location_id != region_id)
     }
 
     pub fn is_hospitalized(&self) -> bool {
@@ -535,6 +534,7 @@ mod test {
             Citizen::new(home_location.clone(), work_location.clone(), Point::new(2, 2), false, WorkStatus::Normal, &mut rng);
         let non_working_citizen = Citizen::new(home_location, work_location, Point::new(2, 2), false, WorkStatus::NA, &mut rng);
 
+        // working_citizen.can_move()
         assert_eq!(working_citizen.is_working(), true);
         assert_eq!(non_working_citizen.is_working(), false);
     }

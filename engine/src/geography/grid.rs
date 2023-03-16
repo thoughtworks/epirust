@@ -19,7 +19,7 @@
 
 use common::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
 use common::models::custom_types::{CoOrdinate, Count, Size};
-use common::utils::RandomUtil;
+use common::utils::Random;
 use plotters::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
@@ -46,7 +46,7 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn generate_population<R: RandomUtil>(
+    pub fn generate_population<R: Random>(
         &mut self,
         auto_pop: &AutoPopulation,
         start_infections: &StartingInfections,
@@ -87,11 +87,11 @@ impl Grid {
         (home_loc, agents_in_order)
     }
 
-    fn set_start_locations_and_occupancies<R: RandomUtil>(
+    fn set_start_locations_and_occupancies<R: Random>(
         &mut self,
         rng: &mut R,
         agent_list: &Vec<Citizen>,
-        region_name: &String,
+        region_name: &str,
     ) -> (Vec<Point>, Vec<Citizen>) {
         let mut home_loc: Vec<Point> = Vec::new();
         let agents_by_home_locations = Grid::group_agents_by_home_locations(agent_list);
@@ -156,12 +156,12 @@ impl Grid {
         svg.draw_rect((area.start_offset.x, area.start_offset.y), (area.end_offset.x, area.end_offset.y), style, true).unwrap();
     }
 
-    pub fn read_population<R: RandomUtil>(
+    pub fn read_population<R: Random>(
         &mut self,
         csv_pop: &CsvPopulation,
         starting_infections: &StartingInfections,
         rng: &mut R,
-        region_name: &String,
+        region_name: &str,
     ) -> (Vec<Point>, Vec<Citizen>) {
         let file = File::open(&csv_pop.file).expect("Could not read population file");
         let mut rdr = csv::Reader::from_reader(file);
@@ -221,12 +221,12 @@ impl Grid {
         }
     }
 
-    pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen], region_name: &String) -> HashMap<Area, u32> {
+    pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen], region_name: &str) -> HashMap<Area, u32> {
         let mut occupancy = HashMap::new();
         self.offices.iter().for_each(|office| {
             occupancy.insert(*office, 0);
         });
-        citizens.iter().filter(|citizen| citizen.is_working() && citizen.work_location.location_id == *region_name).for_each(
+        citizens.iter().filter(|citizen| citizen.is_working() && citizen.work_location.location_id == region_name).for_each(
             |worker| {
                 let office = worker.work_location;
                 *occupancy.get_mut(&office).expect("Unknown office! Doesn't exist in grid") += 1;
@@ -235,7 +235,7 @@ impl Grid {
         occupancy
     }
 
-    pub fn choose_house_with_free_space<R: RandomUtil>(&self, _rng: &mut R) -> Area {
+    pub fn choose_house_with_free_space<R: Random>(&self, _rng: &mut R) -> Area {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
         *self
             .houses_occupancy
@@ -245,7 +245,7 @@ impl Grid {
             .0
     }
 
-    pub fn choose_office_with_free_space<R: RandomUtil>(&self, _rng: &mut R) -> Area {
+    pub fn choose_office_with_free_space<R: Random>(&self, _rng: &mut R) -> Area {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
         *self
             .offices_occupancy

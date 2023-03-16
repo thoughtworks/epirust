@@ -22,11 +22,11 @@ use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::models::constants;
 use crate::state_machine::{DiseaseHandler, Severity, State};
-use common::disease::Disease;
+use common::disease::{DiseaseInterface, RichDisease};
 use common::models::custom_types::{Day, Hour};
-use common::utils::RandomUtil;
+use common::utils::Random;
 
-impl DiseaseHandler for Disease {
+impl<R: Random> DiseaseHandler for RichDisease<R> {
     fn is_to_be_hospitalize(&self, current_state: &State, immunity: i32) -> bool {
         match current_state {
             State::Infected { infection_day, severity: Severity::Severe } => {
@@ -36,10 +36,10 @@ impl DiseaseHandler for Disease {
         }
     }
 
-    fn on_infected<R: RandomUtil>(&self, sim_hr: Hour, infection_day: Day, severity: Severity, rng: &mut R) -> Option<State> {
+    fn on_infected(&mut self, sim_hr: Hour, infection_day: Day, severity: Severity) -> Option<State> {
         match severity {
             Severity::Pre { at_hour } if sim_hr - at_hour >= self.get_pre_symptomatic_duration() => {
-                let is_severe = rng.gen_bool(self.get_percentage_severe_infected_population());
+                let is_severe = self.rng.gen_bool(self.get_percentage_severe_infected_population());
                 let severity = if is_severe { Severity::Severe } else { Severity::Mild };
                 Some(State::Infected { infection_day, severity })
             }
@@ -47,11 +47,11 @@ impl DiseaseHandler for Disease {
         }
     }
 
-    fn on_exposed<R: RandomUtil>(&self, at_hour: Hour, sim_hr: Hour, rng: &mut R) -> Option<State> {
-        let option = rng.choose(constants::RANGE_FOR_EXPOSED.iter());
+    fn on_exposed(&mut self, at_hour: Hour, sim_hr: Hour) -> Option<State> {
+        let option = self.rng.choose(constants::RANGE_FOR_EXPOSED.iter());
         let random_factor = *option.unwrap();
         if sim_hr - at_hour >= (self.get_exposed_duration() as i32 + random_factor) as Hour {
-            let symptoms = rng.gen_bool(1.0 - self.get_percentage_asymptomatic_population());
+            let symptoms = self.rng.gen_bool(1.0 - self.get_percentage_asymptomatic_population());
             let severity = if !symptoms { Severity::Asymptomatic } else { Severity::Pre { at_hour: sim_hr } };
             Some(State::Infected { infection_day: 0, severity })
         } else {
@@ -59,14 +59,7 @@ impl DiseaseHandler for Disease {
         }
     }
 
-    fn on_susceptible<R: RandomUtil>(
-        &self,
-        sim_hr: Hour,
-        cell: Point,
-        citizen: &Citizen,
-        map: &CitizenLocationMap,
-        rng: &mut R,
-    ) -> Option<State> {
+    fn on_susceptible(&mut self, sim_hr: Hour, cell: Point, citizen: &Citizen, map: &CitizenLocationMap) -> Option<State> {
         if !citizen.work_quarantined && !citizen.is_vaccinated() {
             let neighbours = citizen.current_area.get_neighbors_of(cell);
 
@@ -74,7 +67,7 @@ impl DiseaseHandler for Disease {
                 .filter(|p| map.is_point_in_grid(p))
                 .filter_map(|cell| map.get_agent_for(&cell))
                 .filter(|agent| agent.state_machine.is_infected() && !agent.is_hospitalized())
-                .find(|neighbor| rng.gen_bool(neighbor.get_infection_transmission_rate(&self)));
+                .find(|neighbor| self.rng.gen_bool(self.get_current_transmission_rate(neighbor.get_max_resistance_day())));
 
             if neighbor_that_spreads_infection.is_some() {
                 return Some(State::Exposed { at_hour: sim_hr });
@@ -83,13 +76,13 @@ impl DiseaseHandler for Disease {
         None
     }
 
-    fn on_routine_end<R: RandomUtil>(&self, current_state: &State, rng: &mut R) -> Option<State> {
+    fn on_routine_end(&mut self, current_state: &State) -> Option<State> {
         if let State::Infected { infection_day, severity } = current_state {
             match severity {
                 Severity::Asymptomatic if *infection_day == constants::ASYMPTOMATIC_LAST_DAY => Some(State::Recovered),
                 Severity::Mild if *infection_day == constants::MILD_INFECTED_LAST_DAY => Some(State::Recovered),
                 Severity::Severe if *infection_day == self.get_last_day() => {
-                    let state = if self.is_to_be_deceased(rng) { State::Deceased } else { State::Recovered };
+                    let state = if self.deceased() { State::Deceased } else { State::Recovered };
                     Some(state)
                 }
                 _ => None,

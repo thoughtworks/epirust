@@ -17,7 +17,6 @@
  *
  */
 use common::models::custom_types::{Day, Hour};
-use common::utils::RandomUtil;
 
 use crate::allocation_map::CitizenLocationMap;
 use crate::citizen::Citizen;
@@ -50,27 +49,26 @@ impl DiseaseStateMachine {
         }
     }
 
-    pub fn next<T: DiseaseHandler, R: RandomUtil>(
+    pub fn next<T: DiseaseHandler>(
         &self,
         sim_hr: Hour,
         cell: Point,
         citizen: &Citizen,
         map: &CitizenLocationMap,
-        rng: &mut R,
-        disease_handler: &T,
+        disease_handler: &mut T,
     ) -> State {
         match self.state {
-            State::Susceptible => disease_handler.on_susceptible(sim_hr, cell, citizen, map, rng).unwrap_or(self.state),
-            State::Exposed { at_hour } => disease_handler.on_exposed(at_hour, sim_hr, rng).unwrap_or(self.state),
+            State::Susceptible => disease_handler.on_susceptible(sim_hr, cell, citizen, map).unwrap_or(self.state),
+            State::Exposed { at_hour } => disease_handler.on_exposed(at_hour, sim_hr).unwrap_or(self.state),
             State::Infected { infection_day, severity } => {
-                disease_handler.on_infected(sim_hr, infection_day, severity, rng).unwrap_or(self.state)
+                disease_handler.on_infected(sim_hr, infection_day, severity).unwrap_or(self.state)
             }
             state => state,
         }
     }
 
-    pub fn decease<T: DiseaseHandler, R: RandomUtil>(&mut self, rng: &mut R, disease_handler: &T) {
-        let state_op = disease_handler.on_routine_end(&self.state, rng);
+    pub fn decease<T: DiseaseHandler>(&mut self, disease_handler: &mut T) {
+        let state_op = disease_handler.on_routine_end(&self.state);
         if let Some(state) = state_op {
             self.state = state
         };
@@ -137,7 +135,8 @@ impl DiseaseStateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common::disease::Disease;
+    use common::disease::{Disease, RichDisease};
+    use common::utils::RandomWrapper;
 
     #[test]
     fn should_initialize() {
@@ -183,6 +182,7 @@ mod tests {
     #[should_panic]
     fn should_panic() {
         let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
+        let disease = RichDisease::new(disease, RandomWrapper::default());
         let machine = DiseaseStateMachine::new();
         machine.is_to_be_hospitalized(2, &disease);
     }

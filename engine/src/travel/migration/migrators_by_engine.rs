@@ -31,7 +31,7 @@ pub struct MigratorsByRegion {
 impl MigratorsByRegion {
     /// Since the actual outgoing count doesn't exactly match the travel plan, we pick a proportion
     /// of the actual outgoing count
-    fn actual_outgoing_count(&self, travel_plan: &MigrationPlan, total_outgoing: i32, engine_id: &String) -> i32 {
+    fn actual_outgoing_count(&self, travel_plan: &MigrationPlan, total_outgoing: i32, engine_id: &str) -> i32 {
         let planned_outgoing_for_region = travel_plan.get_outgoing(engine_id, &self.to_engine_id);
         let planned_total_outgoing = travel_plan.get_total_outgoing(engine_id);
         let percent_outgoing = planned_outgoing_for_region as f64 / planned_total_outgoing as f64;
@@ -43,7 +43,7 @@ impl MigratorsByRegion {
         &mut self,
         citizens: &mut Vec<Migrator>,
         travel_plan: &MigrationPlan,
-        engine_id: &String,
+        engine_id: &str,
         total_outgoing: i32,
     ) {
         let mut count = self.actual_outgoing_count(travel_plan, total_outgoing, engine_id) as usize;

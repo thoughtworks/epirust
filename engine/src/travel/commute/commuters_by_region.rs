@@ -42,7 +42,7 @@ impl CommutersByRegion {
 
     pub(crate) async fn receive_commuters_from_region(
         message_stream: &mut MessageStream<'_>,
-        engine_id: &String,
+        engine_id: &str,
     ) -> Option<CommutersByRegion> {
         let msg = message_stream.next().await;
         let mut maybe_commuters = travel_consumer::read_commuters(msg);

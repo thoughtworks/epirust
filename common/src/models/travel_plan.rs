@@ -20,27 +20,31 @@
 pub trait TravelPlan {
     fn get_regions(&self) -> &Vec<String>;
     fn get_matrix(&self) -> &Vec<Vec<u32>>;
-    fn get_position(&self, engine_id: &String) -> usize {
-        self.get_regions().iter().position(|i| i.eq(engine_id)).expect("Could not find region with specified name")
+
+    fn get_position(&self, engine_id: &str) -> usize {
+        self.get_regions()
+            .iter()
+            .position(|i| i.eq(engine_id))
+            .unwrap_or_else(|| panic!("Could not find region with name {}", engine_id))
     }
 
-    fn incoming_regions_count(&self, engine_id: &String) -> u32 {
+    fn incoming_regions_count(&self, engine_id: &str) -> u32 {
         let index = self.get_position(engine_id);
         self.get_matrix().iter().map(move |row| *row.get(index).unwrap()).filter(|val| *val > 0).count() as u32
     }
 
-    fn get_total_incoming(&self, region_id: &String) -> u32 {
+    fn get_total_incoming(&self, region_id: &str) -> u32 {
         let region_index = self.get_position(region_id);
         self.get_matrix().iter().map(move |row| *row.get(region_index).unwrap()).sum()
     }
 
-    fn get_total_outgoing(&self, region_id: &String) -> u32 {
+    fn get_total_outgoing(&self, region_id: &str) -> u32 {
         let from_index = self.get_position(region_id);
         let row = self.get_matrix().get(from_index).unwrap();
         row.iter().sum()
     }
 
-    fn get_outgoing(&self, from_region: &String, to_region: &String) -> u32 {
+    fn get_outgoing(&self, from_region: &str, to_region: &str) -> u32 {
         let from_index = self.get_position(from_region);
         let to_index = self.get_position(to_region);
 

@@ -32,3 +32,16 @@ impl GeographyParameters {
         GeographyParameters { grid_size, hospital_beds_percentage }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::config::GeographyParameters;
+
+    #[test]
+    fn should_create_geography_parameters_with_given_grid_size_and_hospital_beds_percentage() {
+        let grid_size = 5;
+        let hospital_beds_percentage = 0.5;
+        let actual_res = GeographyParameters::new(grid_size, hospital_beds_percentage);
+        assert_eq!(actual_res, GeographyParameters { grid_size, hospital_beds_percentage })
+    }
+}

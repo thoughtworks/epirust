@@ -22,14 +22,16 @@ use crate::kafka::kafka_consumer::KafkaConsumer;
 use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
 use common::config::Config;
+use common::disease::RichDisease;
 use common::utils::RandomWrapper;
+use std::sync::{Arc, Mutex};
 
 pub const STANDALONE_SIM_ID: &str = "0";
 
 pub struct EngineApp;
 
 impl EngineApp {
-    pub async fn start_in_daemon<T: DiseaseHandler + Sync + Clone>(
+    pub async fn start_in_daemon<T: DiseaseHandler + Sync + Send + Clone>(
         engine_id: &str,
         run_mode: &RunMode,
         dsh: Option<T>,
@@ -41,15 +43,33 @@ impl EngineApp {
         info!("Done");
     }
 
-    pub async fn start_standalone<T: DiseaseHandler + Sync>(config: Config, run_mode: &RunMode, dsh: Option<T>, threads: u32) {
+    pub async fn start_standalone<T: DiseaseHandler + Sync + Send>(
+        config: Config,
+        run_mode: &RunMode,
+        dsh: Option<T>,
+        threads: u32,
+    ) {
         if dsh.is_none() {
             let disease = config.get_disease();
-            let mut epidemiology =
-                Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode, disease, RandomWrapper::default());
+            let disease = RichDisease::new(disease, RandomWrapper::default());
+            let mut epidemiology = Epidemiology::new(
+                config,
+                None,
+                STANDALONE_SIM_ID.to_string(),
+                run_mode,
+                Arc::new(Mutex::new(disease)),
+                RandomWrapper::default(),
+            );
             epidemiology.run(run_mode, threads).await;
         } else {
-            let mut epidemiology =
-                Epidemiology::new(config, None, STANDALONE_SIM_ID.to_string(), run_mode, dsh.unwrap(), RandomWrapper::default());
+            let mut epidemiology = Epidemiology::new(
+                config,
+                None,
+                STANDALONE_SIM_ID.to_string(),
+                run_mode,
+                Arc::new(Mutex::new(dsh.unwrap())),
+                RandomWrapper::default(),
+            );
             epidemiology.run(run_mode, threads).await;
         }
         info!("Done");

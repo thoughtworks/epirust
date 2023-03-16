@@ -64,7 +64,7 @@ impl Config {
         hours: Hour,
         interventions: Vec<InterventionConfig>,
         output_file: Option<String>,
-    ) -> Config {
+    ) -> Self {
         Config {
             population,
             disease,
@@ -114,9 +114,9 @@ impl Config {
         &self.geography_parameters
     }
 
-    pub fn read(filename: &str) -> Result<Config, Box<dyn Error>> {
+    pub fn read(filename: &str) -> Result<Self, Box<dyn Error>> {
         let reader = File::open(filename)?;
-        let v: Config = serde_json::from_reader(reader)?;
+        let v = serde_json::from_reader(reader)?;
         Ok(v)
     }
 }

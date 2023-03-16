@@ -42,7 +42,7 @@ impl StartingInfections {
     }
 
     pub fn total_infected(&self) -> Count {
-        self.infected_mild_asymptomatic + self.infected_mild_symptomatic + self.infected_severe
+        self.get_infected_mild_asymptomatic() + self.get_infected_mild_symptomatic() + self.get_infected_severe()
     }
 
     pub fn get_infected_mild_asymptomatic(&self) -> Count {
@@ -65,5 +65,39 @@ impl StartingInfections {
 impl Default for StartingInfections {
     fn default() -> Self {
         StartingInfections { infected_mild_asymptomatic: 0, infected_mild_symptomatic: 0, infected_severe: 0, exposed: 1 }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::config::StartingInfections;
+    use crate::models::custom_types::Count;
+    use crate::utils::test_utils;
+
+    #[test]
+    fn test_default() {
+        let actual_res = StartingInfections::default();
+        assert_eq!(actual_res.infected_mild_symptomatic, 0);
+        assert_eq!(actual_res.infected_mild_asymptomatic, 0);
+        assert_eq!(actual_res.infected_severe, 0);
+        assert_eq!(actual_res.exposed, 1);
+    }
+
+    #[test]
+    fn test_getters() {
+        let infected_mild_asymptomatic: Count = test_utils::random_number(0, 100000);
+        let infected_mild_symptomatic: Count = test_utils::random_number(0, 100000);
+        let infected_severe: Count = test_utils::random_number(0, 100000);
+        let exposed: Count = test_utils::random_number(0, 100000);
+        let infections = StartingInfections::new(infected_mild_asymptomatic, infected_mild_symptomatic, infected_severe, exposed);
+        assert_eq!(infections.get_infected_mild_asymptomatic(), infected_mild_asymptomatic);
+        assert_eq!(infections.get_infected_mild_symptomatic(), infected_mild_symptomatic);
+        assert_eq!(infections.get_infected_severe(), infected_severe);
+        assert_eq!(infections.get_exposed(), exposed);
+
+        let expected_total_infected: Count = infected_mild_asymptomatic + infected_mild_symptomatic + infected_severe;
+        assert_eq!(infections.total_infected(), expected_total_infected);
+
+        assert_eq!(infections.total(), expected_total_infected + exposed)
     }
 }

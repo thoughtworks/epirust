@@ -34,7 +34,7 @@ pub(crate) async fn receive_commuters(
     commute_plan: &CommutePlan,
     tick: Option<Tick>,
     message_stream: &mut MessageStream<'_>,
-    engine_id: &String,
+    engine_id: &str,
 ) -> Vec<Commuter> {
     if tick.is_some() {
         let mut incoming: Vec<Commuter> = Vec::new();

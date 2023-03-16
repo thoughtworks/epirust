@@ -22,23 +22,39 @@ use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::state_machine::{Severity, State};
 use common::models::custom_types::{Day, Hour};
-use common::utils::RandomUtil;
+use mockall::*;
+
+pub struct B;
+
+#[automock(type Key=B; type Value=i32;)]
+pub trait A {
+    type Key;
+    type Value;
+    fn foo(&self, k: Self::Key) -> Self::Value;
+}
 
 pub trait DiseaseHandler {
     fn is_to_be_hospitalize(&self, current_state: &State, immunity: i32) -> bool;
 
-    fn on_infected<R: RandomUtil>(&self, sim_hr: Hour, infection_day: Day, severity: Severity, rng: &mut R) -> Option<State>;
+    fn on_infected(&mut self, sim_hr: Hour, infection_day: Day, severity: Severity) -> Option<State>;
 
-    fn on_exposed<R: RandomUtil>(&self, at_hour: Hour, sim_hr: Hour, rng: &mut R) -> Option<State>;
+    fn on_exposed(&mut self, at_hour: Hour, sim_hr: Hour) -> Option<State>;
 
-    fn on_susceptible<R: RandomUtil>(
-        &self,
-        sim_hr: Hour,
-        cell: Point,
-        citizen: &Citizen,
-        map: &CitizenLocationMap,
-        rng: &mut R,
-    ) -> Option<State>;
+    fn on_susceptible(&mut self, sim_hr: Hour, cell: Point, citizen: &Citizen, map: &CitizenLocationMap) -> Option<State>;
 
-    fn on_routine_end<R: RandomUtil>(&self, current_state: &State, rng: &mut R) -> Option<State>;
+    fn on_routine_end(&mut self, current_state: &State) -> Option<State>;
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn bb() {
+        let mut mock_a = MockA::new();
+
+        mock_a.expect_foo().returning(|x: B| 2);
+        assert_eq!(4, mock_a.foo(B));
+    }
 }

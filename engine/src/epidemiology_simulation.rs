@@ -18,12 +18,13 @@
  */
 
 use core::borrow::BorrowMut;
-use std::borrow::Borrow;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use common::config::{Config, Population, TravelPlanConfig};
+use common::models::travel_plan::TravelPlan;
 use common::models::CommutePlan;
-use common::utils::RandomUtil;
+use common::utils::Random;
 use futures::join;
 use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
 use opentelemetry::{global, Context, KeyValue};
@@ -55,7 +56,7 @@ use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion}
 use crate::utils::util::{counts_at_start, output_file_format};
 use crate::{geography};
 
-pub struct Epidemiology<T: DiseaseHandler + Sync, R: RandomUtil> {
+pub struct Epidemiology<T: DiseaseHandler + Sync, R: Random> {
     pub citizen_location_map: CitizenLocationMap,
     pub sim_id: String,
     pub travel_plan_config: Option<TravelPlanConfig>,
@@ -64,16 +65,16 @@ pub struct Epidemiology<T: DiseaseHandler + Sync, R: RandomUtil> {
     listeners: Listeners,
     interventions: Interventions,
     rng: R,
-    disease_handler: T,
+    disease_handler: Arc<Mutex<T>>,
 }
 
-impl<T: DiseaseHandler + Sync, R: RandomUtil> Epidemiology<T, R> {
+impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
     pub fn new(
         config: Config,
         travel_plan_config: Option<TravelPlanConfig>,
         sim_id: String,
         run_mode: &RunMode,
-        disease_handler: T,
+        disease_handler: Arc<Mutex<T>>,
         mut rng: R,
     ) -> Self {
         let start = Instant::now();
@@ -207,7 +208,7 @@ impl<T: DiseaseHandler + Sync, R: RandomUtil> Epidemiology<T, R> {
                 self.config.enable_citizen_state_messages(),
                 None,
                 &self.sim_id,
-                &self.disease_handler,
+                self.disease_handler.clone(),
             );
 
             listeners.counts_updated(*counts_at_hr);
@@ -240,7 +241,7 @@ impl<T: DiseaseHandler + Sync, R: RandomUtil> Epidemiology<T, R> {
         listeners.simulation_ended();
     }
 
-    pub async fn run_multi_engine(&mut self, engine_id: &String) {
+    pub async fn run_multi_engine(&mut self, engine_id: &str) {
         let start_time = Instant::now();
         let mut producer = KafkaProducer::new();
 
@@ -253,17 +254,14 @@ impl<T: DiseaseHandler + Sync, R: RandomUtil> Epidemiology<T, R> {
         let migration_plan = if is_migration_enabled { Some(travel_plan_config.migration_plan()) } else { None };
 
         let mut engine_migration_plan =
-            EngineMigrationPlan::new(engine_id.clone(), migration_plan, self.citizen_location_map.current_population());
+            EngineMigrationPlan::new(engine_id.to_string(), migration_plan, self.citizen_location_map.current_population());
 
         debug!("{}: Start Migrator Consumer", engine_id);
         let migrators_consumer = travel_consumer::start(engine_id, &[&*format!("{MIGRATION_TOPIC}{engine_id}")], "migrate");
         let mut migration_stream = migrators_consumer.stream();
 
-        let commute_plan = if is_commute_enabled {
-            travel_plan_config.commute_plan()
-        } else {
-            CommutePlan { regions: Vec::new(), matrix: Vec::new() }
-        };
+        let commute_plan =
+            if is_commute_enabled { travel_plan_config.commute_plan() } else { CommutePlan::new(Vec::new(), Vec::new()) };
 
         debug!("{}: Start Commuter Consumer", engine_id);
         let commute_consumer = travel_consumer::start(engine_id, &[&*format!("{COMMUTE_TOPIC}{engine_id}")], "commute");
@@ -278,7 +276,7 @@ impl<T: DiseaseHandler + Sync, R: RandomUtil> Epidemiology<T, R> {
         let counts_at_hr = self.counts_at_hr.borrow_mut();
         let interventions = self.interventions.borrow_mut();
         let rng = self.rng.borrow_mut();
-        let disease_handler = self.disease_handler.borrow();
+        let disease_handler = self.disease_handler.clone();
 
         counts_at_hr.log();
 
@@ -347,7 +345,7 @@ impl<T: DiseaseHandler + Sync, R: RandomUtil> Epidemiology<T, R> {
                     config.enable_citizen_state_messages(),
                     Some(travel_plan_config),
                     engine_id,
-                    disease_handler,
+                    disease_handler.clone(),
                 );
                 debug!("{}: Simulation finished for hour: {}", engine_id, simulation_hour);
 
@@ -364,7 +362,7 @@ impl<T: DiseaseHandler + Sync, R: RandomUtil> Epidemiology<T, R> {
                 }
 
                 let outgoing_commuters_by_region = if is_commute_enabled {
-                    CommutersByRegion::get_commuters_by_region(&commute_plan.regions, &outgoing_commuters, simulation_hour)
+                    CommutersByRegion::get_commuters_by_region(commute_plan.get_regions(), &outgoing_commuters, simulation_hour)
                 } else {
                     Vec::new()
                 };
@@ -504,7 +502,7 @@ mod tests {
     use crate::geography::Point;
     use common::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use common::config::{AutoPopulation, GeographyParameters};
-    use common::disease::Disease;
+    use common::disease::{Disease, RichDisease};
     use common::utils::RandomWrapper;
 
     use super::*;
@@ -524,12 +522,13 @@ mod tests {
             vec![InterventionConfig::Vaccinate(vac)],
             None,
         );
+        let disease = RichDisease::new(disease, RandomWrapper::default());
         let epidemiology: Epidemiology<_, _> = Epidemiology::new(
             config,
             None,
             STANDALONE_SIM_ID.to_string(),
             &RunMode::Standalone,
-            disease,
+            Arc::new(Mutex::new(disease)),
             RandomWrapper::default(),
         );
         let expected_housing_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));

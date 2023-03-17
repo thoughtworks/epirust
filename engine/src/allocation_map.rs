@@ -18,18 +18,16 @@
  */
 
 use std::collections::hash_map::{Iter, IterMut};
+use std::sync::{Arc, Mutex};
+
+use fnv::FnvHashMap;
+use rayon::prelude::*;
 
 use common::config::{Config, TravelPlanConfig};
 use common::models::custom_types::{CoOrdinate, Count, Hour};
-use common::utils::RandomWrapper;
-use fnv::FnvHashMap;
+use common::utils::{Random, RandomWrapper};
 
-use rand::seq::IteratorRandom;
-use rand::Rng;
-use rayon::prelude::*;
-
-use crate::citizen::Citizen;
-
+use crate::citizen::{Citizen, CitizenI, RichCitizen};
 use crate::geography::Point;
 use crate::geography::{Area, Grid};
 use crate::interventions::vaccination::VaccinateIntervention;
@@ -48,45 +46,98 @@ pub struct CitizenLocationMap {
     upcoming_locations: FnvHashMap<Point, Citizen>,
 }
 
-impl CitizenLocationMap {
-    pub fn new(grid: Grid, agent_list: &[Citizen], points: &[Point]) -> Self {
-        debug!("{} agents and {} starting points", agent_list.len(), points.len());
-        let mut map: FnvHashMap<Point, Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
-        agent_list.iter().enumerate().for_each(|(i, _)| {
-            map.insert(points[i], agent_list[i].clone());
-        });
+pub struct CitizenLocationMapExt<T: DiseaseHandler, R: Random> {
+    citizen_loc_map: CitizenLocationMap,
+    disease_handler: Arc<Mutex<T>>,
+    rng: Arc<Mutex<R>>,
+}
 
-        let capacity = grid.grid_size as usize;
-        CitizenLocationMap {
-            grid,
-            current_locations: map,
-            upcoming_locations: FnvHashMap::with_capacity_and_hasher(capacity, Default::default()),
+impl<T: DiseaseHandler, R: Random> CitizenLocationMapExt<T, R> {
+    pub fn new(citizen_loc_map: CitizenLocationMap, disease_handler: T, rng: R) -> Self {
+        CitizenLocationMapExt::<T, R> {
+            citizen_loc_map,
+            disease_handler: Arc::new(Mutex::new(disease_handler)),
+            rng: Arc::new(Mutex::new(rng)),
         }
     }
+}
 
-    pub fn simulate<T: DiseaseHandler + Sync>(
+pub trait CitizenLocationMapI {
+    fn current_population(&self) -> Count;
+    fn get_grid(&self) -> &Grid;
+
+    fn simulate(
         &mut self,
         csv_record: &mut Counts,
         simulation_hour: Hour,
         listeners: &mut Listeners,
-        rng: &mut RandomWrapper,
         percent_outgoing: f64,
         outgoing_migrators: &mut Vec<(Point, Migrator)>,
         outgoing_commuters: &mut Vec<(Point, Commuter)>,
         publish_citizen_state: bool,
         travel_plan_config: Option<&TravelPlanConfig>,
-        region_name: &String,
-        disease_handler: &T,
+        region_name: &str,
+    );
+
+    fn assimilate_migrators(&mut self, incoming: &mut Vec<Migrator>, counts: &mut Counts);
+
+    fn assimilate_commuters(&mut self, incoming: &mut Vec<Commuter>, counts: &mut Counts, simulation_hour: Hour);
+
+    fn process_interventions(
+        &mut self,
+        interventions: &mut Interventions,
+        counts_at_hr: &Counts,
+        listeners: &mut Listeners,
+        config: &Config,
+        engine_id: &str,
+    );
+
+    fn select_starting_points(&self, area: &Area, no_of_incoming: usize) -> Vec<Point>;
+
+    fn apply_vaccination_intervention(
+        &mut self,
+        vaccinations: &VaccinateIntervention,
+        counts: &Counts,
+        listeners: &mut Listeners,
+    );
+
+    fn vaccinate(&mut self, vaccination_percentage: f64);
+    fn remove_migrators(&mut self, outgoing: &Vec<(Point, Migrator)>, counts: &mut Counts);
+
+    fn remove_commuters(&mut self, outgoing: &Vec<(Point, Commuter)>, counts: &mut Counts);
+}
+
+impl<T: DiseaseHandler + Send + Sync, R: Random + Send + Sync> CitizenLocationMapI for CitizenLocationMapExt<T, R> {
+    fn current_population(&self) -> Count {
+        self.citizen_loc_map.current_population()
+    }
+
+    fn get_grid(&self) -> &Grid {
+        &self.citizen_loc_map.grid
+    }
+
+    fn simulate(
+        &mut self,
+        csv_record: &mut Counts,
+        simulation_hour: Hour,
+        listeners: &mut Listeners,
+        percent_outgoing: f64,
+        outgoing_migrators: &mut Vec<(Point, Migrator)>,
+        outgoing_commuters: &mut Vec<(Point, Commuter)>,
+        publish_citizen_state: bool,
+        travel_plan_config: Option<&TravelPlanConfig>,
+        region_name: &str,
     ) {
         csv_record.clear();
         let updates: Vec<((Point, Point), Citizen, bool)> = self
+            .citizen_loc_map
             .par_iter()
             .map(|(cell, agent)| {
-                let mut rng_thread = RandomWrapper::new();
                 let mut current_agent = *agent;
                 let infection_status = current_agent.state_machine.is_infected();
-                let point =
-                    current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, &mut rng_thread, disease_handler);
+                let mut citizen = RichCitizen::new(&mut current_agent, self.disease_handler.clone(), self.rng.clone());
+
+                let point = citizen.perform_operation(*cell, simulation_hour, &self.citizen_loc_map.grid, &self.citizen_loc_map);
                 ((*cell, point), current_agent, infection_status)
             })
             .collect();
@@ -95,9 +146,9 @@ impl CitizenLocationMap {
             let new_cell = pair.0 .1;
             let agent = pair.1;
             let mut new_location = &new_cell;
-            let agent_at_new_cell = *self.upcoming_locations.entry(new_cell).or_insert(agent);
+            let agent_at_new_cell = *self.citizen_loc_map.upcoming_locations.entry(new_cell).or_insert(agent);
             if agent_at_new_cell.id != agent.id {
-                self.upcoming_locations.insert(old_cell, agent);
+                self.citizen_loc_map.upcoming_locations.insert(old_cell, agent);
                 new_location = &old_cell;
             }
             Counts::update_counts(csv_record, &agent);
@@ -107,7 +158,7 @@ impl CitizenLocationMap {
 
                 if is_migration_enabled
                     && agent.can_migrate(region_name, simulation_hour, travel_plan)
-                    && rng.get().gen_bool(percent_outgoing)
+                    && self.rng.lock().unwrap().gen_bool(percent_outgoing)
                 {
                     let migrator = Migrator::from(&agent);
                     outgoing_migrators.push((*new_location, migrator));
@@ -124,8 +175,200 @@ impl CitizenLocationMap {
             }
         });
         debug!("done with iter upcoming");
-        self.swap();
+        self.citizen_loc_map.swap();
         assert_eq!(csv_record.total(), self.current_population());
+    }
+
+    fn assimilate_migrators(&mut self, incoming: &mut Vec<Migrator>, counts: &mut Counts) {
+        if incoming.is_empty() {
+            return;
+        }
+        debug!("Assimilating {} incoming migrators", incoming.len());
+
+        let migration_locations = self.select_starting_points(&self.citizen_loc_map.grid.housing_area, incoming.len());
+        if migration_locations.len() < incoming.len() {
+            panic!("Not enough housing locations are available for migrators")
+        };
+
+        for (migrator, migration_location) in incoming.iter().zip(migration_locations) {
+            let house = self.citizen_loc_map.grid.choose_house_with_free_space();
+            let office = if migrator.working { self.citizen_loc_map.grid.choose_office_with_free_space() } else { house.clone() };
+            let citizen = Citizen::from_migrator(
+                migrator,
+                house.clone(),
+                office.clone(),
+                migration_location,
+                self.citizen_loc_map.grid.housing_area.clone(),
+            );
+            self.citizen_loc_map.grid.add_house_occupant(&house.clone());
+            if migrator.working {
+                self.citizen_loc_map.grid.add_office_occupant(&office.clone())
+            }
+
+            CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
+            let result = self.citizen_loc_map.current_locations.insert(migration_location, citizen);
+            assert!(result.is_none());
+        }
+    }
+
+    fn assimilate_commuters(&mut self, incoming: &mut Vec<Commuter>, counts: &mut Counts, simulation_hour: Hour) {
+        if incoming.is_empty() {
+            return;
+        }
+        debug!("Assimilating {} incoming commuters", incoming.len());
+
+        let transport_locations = self.select_starting_points(&self.citizen_loc_map.grid.transport_area, incoming.len());
+        if transport_locations.len() < incoming.len() {
+            panic!("Not enough transport location are available for commuters")
+        };
+
+        for (commuter, transport_location) in incoming.iter().zip(transport_locations) {
+            let work_area: Option<Area> = if simulation_hour == constants::ROUTINE_TRAVEL_START_TIME {
+                trace!("inside if of simulation hour");
+                let office = self.citizen_loc_map.grid.choose_office_with_free_space();
+                trace!("got the office space - {:?}", office.clone());
+                self.citizen_loc_map.grid.add_office_occupant(&office.clone());
+                trace!("added the office occupant");
+                Some(office)
+            } else {
+                None
+            };
+
+            let citizen = Citizen::from_commuter(commuter, transport_location, self.citizen_loc_map.grid.housing_area, work_area);
+
+            CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
+
+            let result = self.citizen_loc_map.current_locations.insert(citizen.transport_location, citizen);
+            trace!("citizen inserted");
+            assert!(result.is_none());
+            trace!("assert passes");
+        }
+
+        debug!("For loop ended");
+    }
+
+    fn process_interventions(
+        &mut self,
+        interventions: &mut Interventions,
+        counts_at_hr: &Counts,
+        listeners: &mut Listeners,
+        config: &Config,
+        engine_id: &str,
+    ) {
+        self.apply_vaccination_intervention(&interventions.vaccinate, counts_at_hr, listeners);
+
+        if interventions.lockdown.should_apply(counts_at_hr) {
+            interventions.lockdown.apply();
+            self.citizen_loc_map.lock_city(counts_at_hr.get_hour());
+            listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
+        }
+        if interventions.lockdown.should_unlock(counts_at_hr) {
+            self.citizen_loc_map.unlock_city(counts_at_hr.get_hour());
+            interventions.lockdown.unapply();
+            listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
+        }
+
+        interventions.build_new_hospital.counts_updated(counts_at_hr);
+        if interventions.build_new_hospital.should_apply(counts_at_hr) {
+            info!("Increasing the hospital size");
+            self.citizen_loc_map.grid.increase_hospital_size(config.get_grid_size(), engine_id.to_owned());
+            interventions.build_new_hospital.apply();
+
+            listeners.grid_updated(&self.citizen_loc_map.grid);
+            listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.build_new_hospital);
+        }
+    }
+
+    fn select_starting_points(&self, area: &Area, no_of_incoming: usize) -> Vec<Point> {
+        let empty_spaces = (area.start_offset.x..area.end_offset.x)
+            .flat_map(move |x| (area.start_offset.y..area.end_offset.y).map(move |y| Point { x, y }))
+            .filter(|z| !self.citizen_loc_map.current_locations.contains_key(z));
+
+        self.rng.lock().unwrap().choose_multiple(empty_spaces, no_of_incoming)
+    }
+
+    fn apply_vaccination_intervention(
+        &mut self,
+        vaccinations: &VaccinateIntervention,
+        counts: &Counts,
+        listeners: &mut Listeners,
+    ) {
+        if let Some(vac_percent) = vaccinations.get_vaccination_percentage(counts) {
+            info!("Vaccination");
+            self.vaccinate(*vac_percent);
+            listeners.intervention_applied(counts.get_hour(), vaccinations)
+        };
+    }
+
+    fn vaccinate(&mut self, vaccination_percentage: f64) {
+        let mut rng = self.rng.lock().unwrap();
+        self.citizen_loc_map.iter_mut().for_each(|(_, r)| {
+            if r.state_machine.is_susceptible() && rng.gen_bool(vaccination_percentage) {
+                (*r).set_vaccination(true);
+            }
+        });
+    }
+
+    fn remove_migrators(&mut self, outgoing: &Vec<(Point, Migrator)>, counts: &mut Counts) {
+        if outgoing.is_empty() {
+            return;
+        }
+        debug!("Removing {} outgoing travellers", outgoing.len());
+        for (point, migrator) in outgoing {
+            CitizenLocationMap::decrement_counts(&migrator.state_machine.state, counts);
+            match self.citizen_loc_map.current_locations.remove(point) {
+                None => {
+                    panic!(
+                        "Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
+                        migrator.id, point
+                    )
+                }
+                Some(citizen) => {
+                    self.citizen_loc_map.grid.remove_house_occupant(&citizen.home_location);
+                    if citizen.is_working() {
+                        self.citizen_loc_map.grid.remove_office_occupant(&citizen.work_location);
+                    }
+                }
+            }
+        }
+    }
+
+    fn remove_commuters(&mut self, outgoing: &Vec<(Point, Commuter)>, counts: &mut Counts) {
+        if outgoing.is_empty() {
+            return;
+        }
+        debug!("Removing {} outgoing commuters", outgoing.len());
+        for (point, commuter) in outgoing {
+            CitizenLocationMap::decrement_counts(&commuter.state_machine.state, counts);
+            match self.citizen_loc_map.current_locations.remove(point) {
+                None => {
+                    panic!(
+                        "Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
+                        commuter.id, point
+                    )
+                }
+                Some(citizen) => {
+                    trace!("removed the commuter successfully {:?}", citizen);
+                }
+            }
+        }
+    }
+}
+
+impl CitizenLocationMap {
+    pub fn new(grid: Grid, agent_list: &[Citizen], points: &[Point]) -> Self {
+        debug!("{} agents and {} starting points", agent_list.len(), points.len());
+        let mut map: FnvHashMap<Point, Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
+        agent_list.iter().enumerate().for_each(|(i, _)| {
+            map.insert(points[i], agent_list[i].clone());
+        });
+
+        let capacity = grid.grid_size as usize;
+        CitizenLocationMap {
+            grid,
+            current_locations: map,
+            upcoming_locations: FnvHashMap::with_capacity_and_hasher(capacity, Default::default()),
+        }
     }
 
     fn swap(&mut self) {
@@ -145,7 +388,7 @@ impl CitizenLocationMap {
         let vacant_hospital_cell = hospital_area.iter().find(|cell| self.is_cell_vacant(cell));
         match vacant_hospital_cell {
             Some(x) => (true, self.move_agent(cell, x)),
-            None => (false, self.move_agent(cell, citizen.home_location.get_random_point(&mut RandomWrapper::new()))),
+            None => (false, self.move_agent(cell, citizen.home_location.get_random_point(&mut RandomWrapper::default()))),
         }
     }
 
@@ -160,125 +403,6 @@ impl CitizenLocationMap {
 
     pub fn is_cell_vacant(&self, cell: &Point) -> bool {
         !self.current_locations.contains_key(cell)
-    }
-
-    pub fn remove_migrators(&mut self, outgoing: &Vec<(Point, Migrator)>, counts: &mut Counts) {
-        if outgoing.is_empty() {
-            return;
-        }
-        debug!("Removing {} outgoing travellers", outgoing.len());
-        for (point, migrator) in outgoing {
-            CitizenLocationMap::decrement_counts(&migrator.state_machine.state, counts);
-            match self.current_locations.remove(point) {
-                None => {
-                    panic!(
-                        "Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
-                        migrator.id, point
-                    )
-                }
-                Some(citizen) => {
-                    self.grid.remove_house_occupant(&citizen.home_location);
-                    if citizen.is_working() {
-                        self.grid.remove_office_occupant(&citizen.work_location);
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn remove_commuters(&mut self, outgoing: &Vec<(Point, Commuter)>, counts: &mut Counts) {
-        if outgoing.is_empty() {
-            return;
-        }
-        debug!("Removing {} outgoing commuters", outgoing.len());
-        for (point, commuter) in outgoing {
-            CitizenLocationMap::decrement_counts(&commuter.state_machine.state, counts);
-            match self.current_locations.remove(point) {
-                None => {
-                    panic!(
-                        "Trying to remove citizen {:?} from location {:?}, but no citizen is present at this location!",
-                        commuter.id, point
-                    )
-                }
-                Some(citizen) => {
-                    trace!("removed the commuter successfully {:?}", citizen);
-                }
-            }
-        }
-    }
-
-    pub fn assimilate_migrators(&mut self, incoming: &mut Vec<Migrator>, counts: &mut Counts, rng: &mut RandomWrapper) {
-        if incoming.is_empty() {
-            return;
-        }
-        debug!("Assimilating {} incoming migrators", incoming.len());
-
-        let migration_locations = self.select_starting_points(&self.grid.housing_area, incoming.len(), rng);
-        if migration_locations.len() < incoming.len() {
-            panic!("Not enough housing locations are available for migrators")
-        };
-
-        for (migrator, migration_location) in incoming.iter().zip(migration_locations) {
-            let house = self.grid.choose_house_with_free_space(rng);
-            let office = if migrator.working { self.grid.choose_office_with_free_space(rng) } else { house.clone() };
-            let citizen = Citizen::from_migrator(
-                migrator,
-                house.clone(),
-                office.clone(),
-                migration_location,
-                self.grid.housing_area.clone(),
-            );
-            self.grid.add_house_occupant(&house.clone());
-            if migrator.working {
-                self.grid.add_office_occupant(&office.clone())
-            }
-
-            CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
-            let result = self.current_locations.insert(migration_location, citizen);
-            assert!(result.is_none());
-        }
-    }
-
-    pub fn assimilate_commuters(
-        &mut self,
-        incoming: &mut Vec<Commuter>,
-        counts: &mut Counts,
-        rng: &mut RandomWrapper,
-        simulation_hour: Hour,
-    ) {
-        if incoming.is_empty() {
-            return;
-        }
-        debug!("Assimilating {} incoming commuters", incoming.len());
-
-        let transport_locations = self.select_starting_points(&self.grid.transport_area, incoming.len(), rng);
-        if transport_locations.len() < incoming.len() {
-            panic!("Not enough transport location are available for commuters")
-        };
-
-        for (commuter, transport_location) in incoming.iter().zip(transport_locations) {
-            let work_area: Option<Area> = if simulation_hour == constants::ROUTINE_TRAVEL_START_TIME {
-                trace!("inside if of simulation hour");
-                let office = self.grid.choose_office_with_free_space(rng);
-                trace!("got the office space - {:?}", office.clone());
-                self.grid.add_office_occupant(&office.clone());
-                trace!("added the office occupant");
-                Some(office.clone())
-            } else {
-                None
-            };
-
-            let citizen = Citizen::from_commuter(commuter, transport_location, self.grid.housing_area.clone(), work_area);
-
-            CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
-
-            let result = self.current_locations.insert(citizen.transport_location, citizen);
-            trace!("citizen inserted");
-            assert!(result.is_none());
-            trace!("assert passes");
-        }
-
-        debug!("For loop ended");
     }
 
     fn increment_counts(state: &State, counts: &mut Counts) {
@@ -305,49 +429,6 @@ impl CitizenLocationMap {
         }
     }
 
-    pub fn process_interventions(
-        &mut self,
-        interventions: &mut Interventions,
-        counts_at_hr: &Counts,
-        listeners: &mut Listeners,
-        rng: &mut RandomWrapper,
-        config: &Config,
-        engine_id: &String,
-    ) {
-        self.apply_vaccination_intervention(&interventions.vaccinate, counts_at_hr, rng, listeners);
-
-        if interventions.lockdown.should_apply(counts_at_hr) {
-            interventions.lockdown.apply();
-            self.lock_city(counts_at_hr.get_hour());
-            listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
-        }
-        if interventions.lockdown.should_unlock(counts_at_hr) {
-            self.unlock_city(counts_at_hr.get_hour());
-            interventions.lockdown.unapply();
-            listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.lockdown)
-        }
-
-        interventions.build_new_hospital.counts_updated(counts_at_hr);
-        if interventions.build_new_hospital.should_apply(counts_at_hr) {
-            info!("Increasing the hospital size");
-            self.grid.increase_hospital_size(config.get_grid_size(), engine_id.to_owned());
-            interventions.build_new_hospital.apply();
-
-            listeners.grid_updated(&self.grid);
-            listeners.intervention_applied(counts_at_hr.get_hour(), &interventions.build_new_hospital);
-        }
-    }
-
-    fn select_starting_points(&self, area: &Area, no_of_incoming: usize, rng: &mut RandomWrapper) -> Vec<Point> {
-        let empty_spaces = (area.start_offset.x..area.end_offset.x).flat_map(|x| {
-            (area.start_offset.y..area.end_offset.y)
-                .map(move |y| Point { x, y })
-                .filter(|z| !self.current_locations.contains_key(z))
-        });
-
-        empty_spaces.choose_multiple(rng.get(), no_of_incoming)
-    }
-
     pub fn lock_city(&mut self, hr: Hour) {
         info!("Locking the city. Hour: {}", hr);
         self.iter_mut().for_each(|(_, r)| {
@@ -362,28 +443,6 @@ impl CitizenLocationMap {
         self.iter_mut().for_each(|(_, r)| {
             if r.is_isolated() {
                 (*r).set_isolation(false);
-            }
-        });
-    }
-
-    pub fn apply_vaccination_intervention(
-        &mut self,
-        vaccinations: &VaccinateIntervention,
-        counts: &Counts,
-        rng: &mut RandomWrapper,
-        listeners: &mut Listeners,
-    ) {
-        if let Some(vac_percent) = vaccinations.get_vaccination_percentage(counts) {
-            info!("Vaccination");
-            self.vaccinate(*vac_percent, rng);
-            listeners.intervention_applied(counts.get_hour(), vaccinations)
-        };
-    }
-
-    pub(crate) fn vaccinate(&mut self, vaccination_percentage: f64, rng: &mut RandomWrapper) {
-        self.iter_mut().for_each(|(_, r)| {
-            if r.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
-                (*r).set_vaccination(true);
             }
         });
     }
@@ -413,7 +472,7 @@ mod tests {
     use super::*;
 
     fn before_each() -> CitizenLocationMap {
-        let mut rng = RandomWrapper::new();
+        let mut rng = RandomWrapper::default();
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
         let engine_id = "engine1".to_string();
         let home_locations = vec![
@@ -445,7 +504,7 @@ mod tests {
 
     #[test]
     fn should_goto_hospital() {
-        let mut rng = RandomWrapper::new();
+        let mut rng = RandomWrapper::default();
         let points = vec![Point { x: 0, y: 1 }, Point { x: 1, y: 0 }];
         let working = WorkStatus::NA;
         let non_working = WorkStatus::Normal;
@@ -474,7 +533,7 @@ mod tests {
 
     #[test]
     fn should_goto_home_location_when_hospital_full() {
-        let mut rng = RandomWrapper::new();
+        let mut rng = RandomWrapper::default();
         let engine_id = "engine1".to_string();
         let points = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, 0), Point::new(1, 1)];
         let home = Area::new(&engine_id.clone(), Point::new(0, 0), Point::new(2, 2));

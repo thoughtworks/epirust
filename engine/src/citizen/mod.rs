@@ -23,14 +23,15 @@ mod population_record;
 mod work_status;
 
 pub use citizen_data::CitizensData;
-pub use citizen_factory::{citizen_factory, set_starting_infections};
+pub use citizen_factory::{set_starting_infections, CitizenFactory, CitizenFactoryI};
 pub use population_record::PopulationRecord;
-use std::ops::DerefMut;
+use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
 pub use work_status::WorkStatus;
 
 use common::config::TravelPlanConfig;
-use common::models::custom_types::{Day, Hour};
+use common::disease::Disease;
+use common::models::custom_types::{Day, Hour, Percentage};
 use common::utils::Random;
 use serde::Deserialize;
 use uuid::Uuid;
@@ -58,6 +59,245 @@ pub struct Citizen {
     pub current_area: Area,
     work_status: WorkStatus,
     pub work_quarantined: bool,
+}
+
+// #[derive(Clone)]
+pub struct RichCitizen<'a, T: DiseaseHandler, R: Random> {
+    citizen: &'a mut Citizen,
+    disease_handler: Arc<Mutex<T>>,
+    rng: Arc<Mutex<R>>,
+}
+
+impl<'a, T: DiseaseHandler, R: Random> RichCitizen<'a, T, R> {
+    pub fn new(citizen: &'a mut Citizen, disease_handler: Arc<Mutex<T>>, rng: Arc<Mutex<R>>) -> Self {
+        RichCitizen { citizen, disease_handler, rng }
+    }
+}
+
+pub trait CitizenI {
+    fn update_infection_dynamics(&mut self, cell: Point, map: &CitizenLocationMap, sim_hr: Hour);
+    fn perform_operation(&mut self, cell: Point, simulation_hour: Hour, grid: &Grid, map: &CitizenLocationMap) -> Point;
+    fn routine(&mut self, cell: Point, simulation_hour: Hour, grid: &Grid, map: &CitizenLocationMap) -> Point;
+    fn perform_movements(
+        &mut self,
+        cell: Point,
+        hour_of_day: Hour,
+        simulation_hr: Hour,
+        grid: &Grid,
+        map: &CitizenLocationMap,
+    ) -> Point;
+    fn hospitalize(&mut self, cell: Point, hospital: &Area, map: &CitizenLocationMap) -> Point;
+    fn goto_area(&self, target_area: Area, map: &CitizenLocationMap, cell: Point) -> Point;
+    fn deceased(&mut self, map: &CitizenLocationMap, cell: Point) -> Point;
+    fn move_agent_from(&self, map: &CitizenLocationMap, cell: Point) -> Point;
+}
+
+impl<'a, T: DiseaseHandler, R: Random> CitizenI for RichCitizen<'a, T, R> {
+    fn update_infection_dynamics(&mut self, cell: Point, map: &CitizenLocationMap, sim_hr: Hour) {
+        self.citizen.state_machine.state =
+            self.citizen.state_machine.next(sim_hr, cell, &self.citizen, map, self.disease_handler.lock().unwrap().deref_mut());
+    }
+
+    fn perform_operation(&mut self, cell: Point, simulation_hour: Hour, grid: &Grid, map: &CitizenLocationMap) -> Point {
+        self.routine(cell, simulation_hour, grid, map)
+    }
+
+    fn routine(&mut self, cell: Point, simulation_hour: Hour, grid: &Grid, map: &CitizenLocationMap) -> Point {
+        let mut new_cell = cell;
+
+        let current_hour = simulation_hour % constants::NUMBER_OF_HOURS;
+        match current_hour {
+            constants::ROUTINE_START_TIME => {
+                self.citizen.state_machine.increment_infection_day();
+                new_cell = self.hospitalize(cell, &grid.hospital_area, map);
+            }
+            constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {
+                if !self.citizen.is_hospital_staff() {
+                    self.citizen.current_area = self.citizen.home_location;
+                }
+            }
+            constants::ROUTINE_END_TIME => new_cell = self.deceased(map, cell),
+            _ => {
+                new_cell = self.perform_movements(cell, current_hour, simulation_hour, grid, map);
+            }
+        }
+        new_cell
+    }
+
+    fn perform_movements(
+        &mut self,
+        cell: Point,
+        hour_of_day: Hour,
+        simulation_hr: Hour,
+        grid: &Grid,
+        map: &CitizenLocationMap,
+    ) -> Point {
+        let mut new_cell = cell;
+        match self.citizen.work_status {
+            WorkStatus::Normal | WorkStatus::Essential => {
+                match hour_of_day {
+                    constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
+                        if self.citizen.uses_public_transport {
+                            new_cell = self.goto_area(grid.transport_area, map, cell);
+                            self.citizen.current_area = grid.transport_area;
+                        } else {
+                            new_cell = self.move_agent_from(map, cell);
+                        }
+                    }
+                    constants::ROUTINE_WORK_TIME => {
+                        new_cell = self.goto_area(self.citizen.work_location, map, cell);
+                        self.citizen.current_area = self.citizen.work_location;
+                    }
+                    constants::ROUTINE_WORK_END_TIME => {
+                        new_cell = self.goto_area(self.citizen.home_location, map, cell);
+                        self.citizen.current_area = self.citizen.home_location;
+                    }
+                    _ => new_cell = self.move_agent_from(map, cell),
+                }
+                self.update_infection_dynamics(new_cell, map, simulation_hr);
+            }
+
+            WorkStatus::HospitalStaff { work_start_at } => {
+                // info!("simulation_hr : {}, works_starts_at: {}", simulation_hr, work_start_at);
+                // why we are subtracting work start hour
+                if simulation_hr.saturating_sub(work_start_at) == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) {
+                    self.citizen.work_quarantined = true;
+                    return new_cell;
+                }
+
+                if simulation_hr.saturating_sub(work_start_at) == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS * 2) {
+                    new_cell = self.goto_area(self.citizen.home_location, map, cell);
+                    self.citizen.current_area = self.citizen.home_location;
+                    self.citizen.work_status = WorkStatus::HospitalStaff {
+                        work_start_at: (simulation_hr + constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS),
+                    };
+                    return new_cell;
+                }
+
+                match hour_of_day {
+                    constants::ROUTINE_WORK_TIME => {
+                        if self.citizen.current_area != grid.hospital_area && work_start_at <= simulation_hr {
+                            new_cell = self.goto_area(grid.hospital_area, map, cell);
+                            self.citizen.current_area = grid.hospital_area;
+                            self.citizen.work_status = WorkStatus::HospitalStaff { work_start_at: simulation_hr };
+                        }
+                        self.citizen.work_quarantined = false;
+                    }
+                    constants::ROUTINE_WORK_END_TIME => {
+                        self.citizen.work_quarantined = true;
+                    }
+                    _ => {
+                        if !self.citizen.work_quarantined && self.citizen.can_move() {
+                            new_cell = self.move_agent_from(map, cell);
+                        }
+                    }
+                }
+                self.update_infection_dynamics(new_cell, map, simulation_hr);
+            }
+
+            WorkStatus::NA => {
+                match hour_of_day {
+                    constants::ROUTINE_WORK_TIME => {
+                        new_cell = self.goto_area(grid.housing_area, map, cell);
+                        self.citizen.current_area = grid.housing_area;
+                    }
+                    constants::NON_WORKING_TRAVEL_END_TIME => {
+                        new_cell = self.goto_area(self.citizen.home_location, map, cell);
+                        self.citizen.current_area = self.citizen.home_location;
+                    }
+
+                    _ => {
+                        new_cell = self.move_agent_from(map, cell);
+                    }
+                }
+                self.update_infection_dynamics(new_cell, map, simulation_hr);
+            }
+        }
+        new_cell
+    }
+
+    fn hospitalize(&mut self, cell: Point, hospital: &Area, map: &CitizenLocationMap) -> Point {
+        let mut new_cell = cell;
+        if !self.citizen.hospitalized
+            && self
+                .citizen
+                .state_machine
+                .is_to_be_hospitalized(self.citizen.immunity, self.disease_handler.lock().unwrap().deref())
+        {
+            let (is_hospitalized, new_location) = CitizenLocationMap::goto_hospital(map, hospital, cell, &mut self.citizen);
+            new_cell = new_location;
+            self.citizen.hospitalized = is_hospitalized;
+        }
+        new_cell
+    }
+
+    fn goto_area(&self, target_area: Area, map: &CitizenLocationMap, cell: Point) -> Point {
+        //TODO: Refactor - Jayanta
+        // If agent is working and current_area is work, target area is home and symptomatic then allow movement
+        let mut override_movement = false;
+
+        match self.citizen.work_status {
+            WorkStatus::Normal | WorkStatus::Essential => {
+                if self.citizen.work_location.contains(&cell)
+                    && target_area == self.citizen.home_location
+                    && (self.citizen.state_machine.is_mild_symptomatic() || self.citizen.state_machine.is_infected_severe())
+                {
+                    override_movement = true;
+                }
+            }
+            _ => {}
+        }
+        if !self.citizen.can_move() && !override_movement {
+            return cell;
+        }
+        if self.citizen.is_working() {
+            let mut new_cell: Point = target_area.get_random_point(self.rng.lock().unwrap().deref_mut());
+            if !map.is_cell_vacant(&new_cell) {
+                new_cell = cell;
+            }
+
+            return map.move_agent(cell, new_cell);
+        }
+        self.move_agent_from(map, cell)
+    }
+
+    fn deceased(&mut self, map: &CitizenLocationMap, cell: Point) -> Point {
+        let mut new_cell = cell;
+        self.citizen.state_machine.decease(self.disease_handler.lock().unwrap().deref_mut());
+        if self.citizen.state_machine.state == State::Recovered {
+            new_cell = map.move_agent(cell, self.citizen.home_location.get_random_point(self.rng.lock().unwrap().deref_mut()));
+        }
+        if (self.citizen.state_machine.state == State::Recovered || self.citizen.state_machine.state == State::Deceased)
+            && self.citizen.hospitalized
+        {
+            self.citizen.hospitalized = false;
+        }
+        new_cell
+    }
+
+    fn move_agent_from(&self, map: &CitizenLocationMap, cell: Point) -> Point {
+        if !self.citizen.can_move() {
+            return cell;
+        }
+        let mut current_location = cell;
+        if !self.citizen.current_area.contains(&cell) {
+            current_location = self.citizen.current_area.get_random_point(self.rng.lock().unwrap().deref_mut());
+        }
+
+        let new_cell = self
+            .rng
+            .lock()
+            .unwrap()
+            .choose(
+                self.citizen
+                    .current_area
+                    .get_neighbors_of(current_location)
+                    .filter(|p| map.is_point_in_grid(p))
+                    .filter(|p| map.is_cell_vacant(p)),
+            )
+            .unwrap_or(cell);
+        map.move_agent(cell, new_cell)
+    }
 }
 
 impl Citizen {
@@ -177,6 +417,11 @@ impl Citizen {
         }
     }
 
+    pub fn get_infection_transmission_rate(&self, disease: &Disease) -> Percentage {
+        // why is there addition of infection day and immunity
+        disease.get_current_transmission_rate((self.state_machine.get_infection_day() as i32 + self.immunity) as Day)
+    }
+
     pub fn get_max_resistance_day(&self) -> Day {
         (self.state_machine.get_infection_day() as i32 + self.immunity) as Day
     }
@@ -189,251 +434,21 @@ impl Citizen {
         self.vaccinated = vaccinated;
     }
 
-    pub fn set_isolation(&mut self, state: bool) {
-        self.isolated = state;
-    }
-
-    fn update_infection_dynamics<T: DiseaseHandler>(
-        &mut self,
-        cell: Point,
-        map: &CitizenLocationMap,
-        sim_hr: Hour,
-        disease_handler: &mut T,
-    ) {
-        self.state_machine.state = self.state_machine.next(sim_hr, cell, self, map, disease_handler);
-    }
-
-    fn generate_disease_randomness_factor<R: Random>(rng: &mut R) -> i32 {
-        let option = rng.choose(constants::IMMUNITY_RANGE.iter());
-        *option.unwrap()
-    }
-
-    pub fn perform_operation<T: DiseaseHandler, R: Random>(
-        &mut self,
-        cell: Point,
-        simulation_hour: Hour,
-        grid: &Grid,
-        map: &CitizenLocationMap,
-        rng: &mut R,
-        disease_handler: Arc<Mutex<T>>,
-    ) -> Point {
-        self.routine(cell, simulation_hour, grid, map, rng, disease_handler.lock().unwrap().deref_mut())
-    }
-
-    fn routine<T: DiseaseHandler, R: Random>(
-        &mut self,
-        cell: Point,
-        simulation_hour: Hour,
-        grid: &Grid,
-        map: &CitizenLocationMap,
-        rng: &mut R,
-        disease_handler: &mut T,
-    ) -> Point {
-        let mut new_cell = cell;
-
-        let current_hour = simulation_hour % constants::NUMBER_OF_HOURS;
-        match current_hour {
-            constants::ROUTINE_START_TIME => {
-                self.state_machine.increment_infection_day();
-                new_cell = self.hospitalize(cell, &grid.hospital_area, map, disease_handler);
-            }
-            constants::SLEEP_START_TIME..=constants::SLEEP_END_TIME => {
-                if !self.is_hospital_staff() {
-                    self.current_area = self.home_location;
-                }
-            }
-            constants::ROUTINE_END_TIME => new_cell = self.deceased(map, cell, rng, disease_handler),
-            _ => {
-                new_cell = self.perform_movements(cell, current_hour, simulation_hour, grid, map, rng, disease_handler);
-            }
-        }
-        new_cell
-    }
-
-    fn perform_movements<T: DiseaseHandler, R: Random>(
-        &mut self,
-        cell: Point,
-        hour_of_day: Hour,
-        simulation_hr: Hour,
-        grid: &Grid,
-        map: &CitizenLocationMap,
-        rng: &mut R,
-        disease_handler: &mut T,
-    ) -> Point {
-        let mut new_cell = cell;
-        match self.work_status {
-            WorkStatus::Normal | WorkStatus::Essential => {
-                match hour_of_day {
-                    constants::ROUTINE_TRAVEL_START_TIME | constants::ROUTINE_TRAVEL_END_TIME => {
-                        if self.uses_public_transport {
-                            new_cell = self.goto_area(grid.transport_area, map, cell, rng);
-                            self.current_area = grid.transport_area;
-                        } else {
-                            new_cell = self.move_agent_from(map, cell, rng);
-                        }
-                    }
-                    constants::ROUTINE_WORK_TIME => {
-                        new_cell = self.goto_area(self.work_location, map, cell, rng);
-                        self.current_area = self.work_location;
-                    }
-                    constants::ROUTINE_WORK_END_TIME => {
-                        new_cell = self.goto_area(self.home_location, map, cell, rng);
-                        self.current_area = self.home_location;
-                    }
-                    _ => new_cell = self.move_agent_from(map, cell, rng),
-                }
-                self.update_infection_dynamics(new_cell, map, simulation_hr, disease_handler);
-            }
-
-            WorkStatus::HospitalStaff { work_start_at } => {
-                // info!("simulation_hr : {}, works_starts_at: {}", simulation_hr, work_start_at);
-                // why we are subtracting work start hour
-                if simulation_hr.saturating_sub(work_start_at) == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS) {
-                    self.work_quarantined = true;
-                    return new_cell;
-                }
-
-                if simulation_hr.saturating_sub(work_start_at) == (constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS * 2) {
-                    new_cell = self.goto_area(self.home_location, map, cell, rng);
-                    self.current_area = self.home_location;
-                    self.work_status = WorkStatus::HospitalStaff {
-                        work_start_at: (simulation_hr + constants::HOURS_IN_A_DAY * constants::QUARANTINE_DAYS),
-                    };
-                    return new_cell;
-                }
-
-                match hour_of_day {
-                    constants::ROUTINE_WORK_TIME => {
-                        if self.current_area != grid.hospital_area && work_start_at <= simulation_hr {
-                            new_cell = self.goto_area(grid.hospital_area, map, cell, rng);
-                            self.current_area = grid.hospital_area;
-                            self.work_status = WorkStatus::HospitalStaff { work_start_at: simulation_hr };
-                        }
-                        self.work_quarantined = false;
-                    }
-                    constants::ROUTINE_WORK_END_TIME => {
-                        self.work_quarantined = true;
-                    }
-                    _ => {
-                        if !self.work_quarantined && self.can_move() {
-                            new_cell = self.move_agent_from(map, cell, rng);
-                        }
-                    }
-                }
-                self.update_infection_dynamics(new_cell, map, simulation_hr, disease_handler);
-            }
-
-            WorkStatus::NA => {
-                match hour_of_day {
-                    constants::ROUTINE_WORK_TIME => {
-                        new_cell = self.goto_area(grid.housing_area, map, cell, rng);
-                        self.current_area = grid.housing_area;
-                    }
-                    constants::NON_WORKING_TRAVEL_END_TIME => {
-                        new_cell = self.goto_area(self.home_location, map, cell, rng);
-                        self.current_area = self.home_location;
-                    }
-
-                    _ => {
-                        new_cell = self.move_agent_from(map, cell, rng);
-                    }
-                }
-                self.update_infection_dynamics(new_cell, map, simulation_hr, disease_handler);
-            }
-        }
-        new_cell
-    }
-
-    fn hospitalize<T: DiseaseHandler>(
-        &mut self,
-        cell: Point,
-        hospital: &Area,
-        map: &CitizenLocationMap,
-        disease_handler: &T,
-    ) -> Point {
-        let mut new_cell = cell;
-        if !self.hospitalized && self.state_machine.is_to_be_hospitalized(self.immunity, disease_handler) {
-            let (is_hospitalized, new_location) = CitizenLocationMap::goto_hospital(map, hospital, cell, self);
-            new_cell = new_location;
-            self.hospitalized = is_hospitalized;
-        }
-        new_cell
-    }
-
-    fn goto_area<R: Random>(&self, target_area: Area, map: &CitizenLocationMap, cell: Point, rng: &mut R) -> Point {
-        //TODO: Refactor - Jayanta
-        // If agent is working and current_area is work, target area is home and symptomatic then allow movement
-        let mut override_movement = false;
-
-        match self.work_status {
-            WorkStatus::Normal | WorkStatus::Essential => {
-                if self.work_location.contains(&cell)
-                    && target_area == self.home_location
-                    && (self.state_machine.is_mild_symptomatic() || self.state_machine.is_infected_severe())
-                {
-                    override_movement = true;
-                }
-            }
-            _ => {}
-        }
-        if !self.can_move() && !override_movement {
-            return cell;
-        }
-        if self.is_working() {
-            let mut new_cell: Point = target_area.get_random_point(rng);
-            if !map.is_cell_vacant(&new_cell) {
-                new_cell = cell;
-            }
-
-            return map.move_agent(cell, new_cell);
-        }
-        self.move_agent_from(map, cell, rng)
-    }
-
-    fn deceased<T: DiseaseHandler, R: Random>(
-        &mut self,
-        map: &CitizenLocationMap,
-        cell: Point,
-        rng: &mut R,
-        disease_handler: &mut T,
-    ) -> Point {
-        let mut new_cell = cell;
-        self.state_machine.decease(disease_handler);
-        if self.state_machine.state == State::Recovered {
-            new_cell = map.move_agent(cell, self.home_location.get_random_point(rng));
-        }
-        if (self.state_machine.state == State::Recovered || self.state_machine.state == State::Deceased) && self.hospitalized {
-            self.hospitalized = false;
-        }
-        new_cell
-    }
-
-    fn move_agent_from<R: Random>(&self, map: &CitizenLocationMap, cell: Point, rng: &mut R) -> Point {
-        if !self.can_move() {
-            return cell;
-        }
-        let mut current_location = cell;
-        if !self.current_area.contains(&cell) {
-            current_location = self.current_area.get_random_point(rng);
-        }
-
-        let new_cell = rng
-            .choose(
-                self.current_area
-                    .get_neighbors_of(current_location)
-                    .filter(|p| map.is_point_in_grid(p))
-                    .filter(|p| map.is_cell_vacant(p)),
-            )
-            .unwrap_or(cell);
-        map.move_agent(cell, new_cell)
-    }
-
-    pub fn assign_essential_worker<R: Random>(&mut self, essential_workers_percentage: f64, rng: &mut R) {
+    pub(crate) fn assign_essential_worker<R: Random>(&mut self, essential_workers_percentage: f64, rng: &mut R) {
         if let WorkStatus::Normal = self.work_status {
             if rng.gen_bool(essential_workers_percentage) {
                 self.work_status = WorkStatus::Essential;
             }
         }
+    }
+
+    pub fn set_isolation(&mut self, state: bool) {
+        self.isolated = state;
+    }
+
+    fn generate_disease_randomness_factor<R: Random>(rng: &mut R) -> i32 {
+        let option = rng.choose(constants::IMMUNITY_RANGE.iter());
+        *option.unwrap()
     }
 
     fn derive_work_status<R: Random>(is_working: bool, rng: &mut R) -> WorkStatus {
@@ -534,7 +549,6 @@ mod test {
             Citizen::new(home_location.clone(), work_location.clone(), Point::new(2, 2), false, WorkStatus::Normal, &mut rng);
         let non_working_citizen = Citizen::new(home_location, work_location, Point::new(2, 2), false, WorkStatus::NA, &mut rng);
 
-        // working_citizen.can_move()
         assert_eq!(working_citizen.is_working(), true);
         assert_eq!(non_working_citizen.is_working(), false);
     }

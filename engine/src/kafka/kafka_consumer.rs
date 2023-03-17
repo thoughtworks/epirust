@@ -18,14 +18,15 @@
  */
 
 use std::error::Error;
-use std::sync::{Arc, Mutex};
 
+use crate::allocation_map::CitizenLocationMapExt;
+use crate::citizen::CitizenFactory;
 use common::config::request::Request;
 use common::disease::RichDisease;
 use common::utils::RandomWrapper;
 use futures::StreamExt;
 use opentelemetry::trace::{FutureExt, TraceContextExt, Tracer};
-use opentelemetry::{Context, global};
+use opentelemetry::{global, Context};
 use rdkafka::consumer::Consumer;
 use rdkafka::consumer::{MessageStream, StreamConsumer};
 use rdkafka::error::KafkaError;
@@ -88,7 +89,7 @@ impl KafkaConsumer<'_> {
         }
     }
 
-    async fn run_sim<T: DiseaseHandler + Sync + Send>(
+    async fn run_sim<T: DiseaseHandler + Sync + Send + Clone>(
         &self,
         request: Request,
         run_mode: &RunMode,
@@ -104,8 +105,10 @@ impl KafkaConsumer<'_> {
                         None,
                         req.sim_id,
                         run_mode,
-                        Arc::new(Mutex::new(disease)),
+                        disease,
                         RandomWrapper::default(),
+                        CitizenFactory::new(RandomWrapper::default()),
+                        |x, y, z| CitizenLocationMapExt::new(x, y, z),
                     );
                     epidemiology.run(run_mode, threads).await;
                 } else {
@@ -114,8 +117,10 @@ impl KafkaConsumer<'_> {
                         None,
                         req.sim_id,
                         run_mode,
-                        Arc::new(Mutex::new(disease_handler.unwrap())),
+                        disease_handler.unwrap(),
                         RandomWrapper::default(),
+                        CitizenFactory::new(RandomWrapper::default()),
+                        |x, y, z| CitizenLocationMapExt::new(x, y, z),
                     );
                     epidemiology.run(run_mode, threads).await;
                 };
@@ -137,8 +142,10 @@ impl KafkaConsumer<'_> {
                                 travel_plan_config,
                                 req.engine_id.to_string(),
                                 run_mode,
-                                Arc::new(Mutex::new(disease)),
+                                disease,
                                 RandomWrapper::default(),
+                                CitizenFactory::new(RandomWrapper::default()),
+                                |x, y, z| CitizenLocationMapExt::new(x, y, z),
                             );
                             epidemiology.run(run_mode, threads).await;
                         } else {
@@ -147,8 +154,10 @@ impl KafkaConsumer<'_> {
                                 travel_plan_config,
                                 req.engine_id.to_string(),
                                 run_mode,
-                                Arc::new(Mutex::new(disease_handler.unwrap())),
+                                disease_handler.unwrap(),
                                 RandomWrapper::default(),
+                                CitizenFactory::new(RandomWrapper::default()),
+                                |x, y, z| CitizenLocationMapExt::new(x, y, z),
                             );
                             let tracer = global::tracer("epirust-trace");
                             let span = tracer.start("run");

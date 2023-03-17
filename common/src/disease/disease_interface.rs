@@ -20,7 +20,6 @@
 use crate::models::custom_types::{Day, Hour, Percentage};
 
 pub trait DiseaseInterface {
-    fn get_current_transmission_rate(&self, infection_day: Day) -> Percentage;
     fn is_to_be_hospitalized(&self, infection_day: Day) -> bool;
     fn get_last_day(&self) -> Day;
     fn deceased(&mut self) -> bool;

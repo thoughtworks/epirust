@@ -17,6 +17,8 @@
  *
  */
 
+use crate::allocation_map::CitizenLocationMapExt;
+use crate::citizen::CitizenFactory;
 use crate::epidemiology_simulation::Epidemiology;
 use crate::kafka::kafka_consumer::KafkaConsumer;
 use crate::run_mode::RunMode;
@@ -24,7 +26,6 @@ use crate::state_machine::DiseaseHandler;
 use common::config::Config;
 use common::disease::RichDisease;
 use common::utils::RandomWrapper;
-use std::sync::{Arc, Mutex};
 
 pub const STANDALONE_SIM_ID: &str = "0";
 
@@ -43,7 +44,7 @@ impl EngineApp {
         info!("Done");
     }
 
-    pub async fn start_standalone<T: DiseaseHandler + Sync + Send>(
+    pub async fn start_standalone<T: DiseaseHandler + Sync + Send + Clone>(
         config: Config,
         run_mode: &RunMode,
         dsh: Option<T>,
@@ -57,8 +58,10 @@ impl EngineApp {
                 None,
                 STANDALONE_SIM_ID.to_string(),
                 run_mode,
-                Arc::new(Mutex::new(disease)),
+                disease,
                 RandomWrapper::default(),
+                CitizenFactory::new(RandomWrapper::default()),
+                |x, y, z| CitizenLocationMapExt::new(x, y, z),
             );
             epidemiology.run(run_mode, threads).await;
         } else {
@@ -67,8 +70,10 @@ impl EngineApp {
                 None,
                 STANDALONE_SIM_ID.to_string(),
                 run_mode,
-                Arc::new(Mutex::new(dsh.unwrap())),
+                dsh.unwrap(),
                 RandomWrapper::default(),
+                CitizenFactory::new(RandomWrapper::default()),
+                |x, y, z| CitizenLocationMapExt::new(x, y, z),
             );
             epidemiology.run(run_mode, threads).await;
         }

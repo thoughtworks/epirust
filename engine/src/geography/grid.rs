@@ -25,7 +25,7 @@ use std::collections::HashMap;
 use std::fs::File;
 
 use crate::citizen;
-use crate::citizen::{Citizen, CitizensData, PopulationRecord};
+use crate::citizen::{Citizen, CitizenFactoryI, CitizensData, PopulationRecord};
 use crate::geography::{Area, Point};
 use crate::models::constants;
 
@@ -46,13 +46,14 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn generate_population<R: Random>(
+    pub fn generate_population<R: Random, C: CitizenFactoryI>(
         &mut self,
         auto_pop: &AutoPopulation,
         start_infections: &StartingInfections,
         rng: &mut R,
         travel_plan_config: &Option<TravelPlanConfig>,
         region: String,
+        citizen_factory: &mut C,
     ) -> (Vec<Point>, Vec<Citizen>) {
         debug!("Generating Population");
         let number_of_agents = auto_pop.number_of_agents;
@@ -77,7 +78,7 @@ impl Grid {
             start_infections,
         );
 
-        let agent_list = citizen::citizen_factory(ctz_data, travel_plan_config, rng);
+        let agent_list = citizen_factory.create_citizens(ctz_data, travel_plan_config);
         // info!("agent list - {:?} ", agent_list);
         debug!("Finished creating agent list");
 
@@ -235,7 +236,7 @@ impl Grid {
         occupancy
     }
 
-    pub fn choose_house_with_free_space<R: Random>(&self, _rng: &mut R) -> Area {
+    pub fn choose_house_with_free_space(&self) -> Area {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
         *self
             .houses_occupancy
@@ -245,7 +246,7 @@ impl Grid {
             .0
     }
 
-    pub fn choose_office_with_free_space<R: Random>(&self, _rng: &mut R) -> Area {
+    pub fn choose_office_with_free_space(&self) -> Area {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
         *self
             .offices_occupancy
@@ -275,6 +276,7 @@ impl Grid {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::citizen::CitizenFactory;
     use crate::geography::define_geography;
     use common::utils::RandomWrapper;
 
@@ -289,8 +291,10 @@ mod tests {
 
         let pop = AutoPopulation { number_of_agents: 10, public_transport_percentage: 0.2, working_percentage: 0.2 };
         let start_infections = StartingInfections::new(0, 0, 0, 1);
+
+        let mut citizen_factory = CitizenFactory::new(RandomWrapper::default());
         let (home_locations, agent_list) =
-            grid.generate_population(&pop, &start_infections, &mut rng, &None, "engine1".to_string());
+            grid.generate_population(&pop, &start_infections, &mut rng, &None, "engine1".to_string(), &mut citizen_factory);
 
         assert_eq!(home_locations.len(), 10);
         assert_eq!(agent_list.len(), 10);

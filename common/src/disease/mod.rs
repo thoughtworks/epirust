@@ -62,19 +62,8 @@ impl<R: Random> RichDisease<R> {
 }
 
 impl<R: Random> DiseaseInterface for RichDisease<R> {
-    fn get_current_transmission_rate(&self, infection_day: Day) -> Percentage {
-        if self.disease.regular_transmission_start_day < infection_day
-            && infection_day <= self.disease.high_transmission_start_day
-        {
-            return self.disease.regular_transmission_rate;
-        } else if self.disease.high_transmission_start_day < infection_day && infection_day <= self.disease.last_day {
-            return self.disease.high_transmission_rate;
-        }
-        0.0
-    }
-
     fn is_to_be_hospitalized(&self, infection_day: Day) -> bool {
-        self.get_current_transmission_rate(infection_day) >= self.disease.high_transmission_rate
+        self.disease.get_current_transmission_rate(infection_day) >= self.disease.high_transmission_rate
     }
 
     fn get_last_day(&self) -> Day {
@@ -142,6 +131,15 @@ impl Disease {
             pre_symptomatic_duration,
         }
     }
+
+    pub fn get_current_transmission_rate(&self, infection_day: Day) -> Percentage {
+        if self.regular_transmission_start_day < infection_day && infection_day <= self.high_transmission_start_day {
+            return self.regular_transmission_rate;
+        } else if self.high_transmission_start_day < infection_day && infection_day <= self.last_day {
+            return self.high_transmission_rate;
+        }
+        0.0
+    }
 }
 
 /// Override disease parameters for a specific population trait
@@ -168,7 +166,6 @@ mod tests {
     #[test]
     fn get_current_transmission_rate() {
         let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
-        let disease = RichDisease::new(disease, RandomWrapper::default());
         let infection_rate = disease.get_current_transmission_rate(12);
         assert_eq!(infection_rate, 0.05);
 

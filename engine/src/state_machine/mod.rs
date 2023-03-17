@@ -21,5 +21,5 @@ mod default_disease_handler;
 mod disease_handler;
 mod state;
 
-pub use disease_handler::DiseaseHandler;
+pub use disease_handler::{DiseaseHandler, MockDiseaseHandler};
 pub use state::*;

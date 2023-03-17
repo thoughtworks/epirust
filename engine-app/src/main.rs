@@ -19,7 +19,8 @@
 
 use clap::Parser;
 use common::config::Config;
-use common::disease::Disease;
+use common::disease::RichDisease;
+use common::utils::RandomWrapper;
 use engine::{EngineApp, RunMode};
 use opentelemetry::sdk::trace::{config, Span};
 use opentelemetry::sdk::Resource;
@@ -75,7 +76,7 @@ async fn main() {
         RunMode::Standalone
     };
 
-    let disease_handler: Option<Disease> = None;
+    let disease_handler: Option<RichDisease<RandomWrapper>> = None;
 
     let _tracer = init_tracer().unwrap();
 

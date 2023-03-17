@@ -22,17 +22,9 @@ use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::state_machine::{Severity, State};
 use common::models::custom_types::{Day, Hour};
-use mockall::*;
+use mockall::automock;
 
-pub struct B;
-
-#[automock(type Key=B; type Value=i32;)]
-pub trait A {
-    type Key;
-    type Value;
-    fn foo(&self, k: Self::Key) -> Self::Value;
-}
-
+#[automock]
 pub trait DiseaseHandler {
     fn is_to_be_hospitalize(&self, current_state: &State, immunity: i32) -> bool;
 
@@ -51,10 +43,5 @@ mod tests {
     use super::*;
 
     #[test]
-    fn bb() {
-        let mut mock_a = MockA::new();
-
-        mock_a.expect_foo().returning(|x: B| 2);
-        assert_eq!(4, mock_a.foo(B));
-    }
+    fn bb() {}
 }

@@ -67,7 +67,9 @@ impl<R: Random> DiseaseHandler for RichDisease<R> {
                 .filter(|p| map.is_point_in_grid(p))
                 .filter_map(|cell| map.get_agent_for(&cell))
                 .filter(|agent| agent.state_machine.is_infected() && !agent.is_hospitalized())
-                .find(|neighbor| self.rng.gen_bool(self.get_current_transmission_rate(neighbor.get_max_resistance_day())));
+                .find(|neighbor| {
+                    self.rng.gen_bool(self.disease.get_current_transmission_rate((**neighbor).get_max_resistance_day()))
+                });
 
             if neighbor_that_spreads_infection.is_some() {
                 return Some(State::Exposed { at_hour: sim_hr });

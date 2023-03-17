@@ -18,7 +18,6 @@
  */
 
 use core::borrow::BorrowMut;
-use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use common::config::{Config, Population, TravelPlanConfig};
@@ -29,7 +28,9 @@ use futures::join;
 use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
 use opentelemetry::{global, Context, KeyValue};
 
-use crate::allocation_map::CitizenLocationMap;
+use crate::allocation_map::{CitizenLocationMap, CitizenLocationMapI};
+use crate::citizen::CitizenFactoryI;
+use crate::geography;
 use crate::geography::Point;
 use crate::interventions::hospital::BuildNewHospital;
 use crate::interventions::lockdown::LockdownIntervention;
@@ -54,37 +55,41 @@ use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
 use crate::utils::util::{counts_at_start, output_file_format};
-use crate::{geography};
 
-pub struct Epidemiology<T: DiseaseHandler + Sync, R: Random> {
-    pub citizen_location_map: CitizenLocationMap,
+pub struct Epidemiology<C: CitizenLocationMapI> {
+    pub citizen_location_map: C,
     pub sim_id: String,
     pub travel_plan_config: Option<TravelPlanConfig>,
     pub config: Config,
     counts_at_hr: Counts,
     listeners: Listeners,
     interventions: Interventions,
-    rng: R,
-    disease_handler: Arc<Mutex<T>>,
 }
 
-impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
-    pub fn new(
+impl<C: CitizenLocationMapI> Epidemiology<C> {
+    pub fn new<T: DiseaseHandler + Sync + Send, R: Random + Clone, K: CitizenFactoryI>(
         config: Config,
         travel_plan_config: Option<TravelPlanConfig>,
         sim_id: String,
         run_mode: &RunMode,
-        disease_handler: Arc<Mutex<T>>,
+        disease_handler: T,
         mut rng: R,
+        mut ctz_factory: K,
+        ct_map_factory: fn(CitizenLocationMap, T, R) -> C,
     ) -> Self {
         let start = Instant::now();
         let start_infections = config.get_starting_infections();
         let mut grid = geography::define_geography(config.get_grid_size(), sim_id.clone());
         let (start_locations, agent_list) = match config.get_population() {
             Population::Csv(csv_pop) => grid.read_population(csv_pop, start_infections, &mut rng, &sim_id),
-            Population::Auto(auto_pop) => {
-                grid.generate_population(auto_pop, start_infections, &mut rng, &travel_plan_config, sim_id.clone())
-            }
+            Population::Auto(auto_pop) => grid.generate_population(
+                auto_pop,
+                start_infections,
+                &mut rng,
+                &travel_plan_config,
+                sim_id.clone(),
+                &mut ctz_factory,
+            ),
         };
         grid.resize_hospital(
             agent_list.len() as i32,
@@ -108,10 +113,8 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
             listeners,
             config,
             travel_plan_config,
-            citizen_location_map,
+            citizen_location_map: ct_map_factory(citizen_location_map, disease_handler, rng),
             sim_id,
-            rng,
-            disease_handler,
         }
     }
 
@@ -122,7 +125,7 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
         let csv_listener = CsvListener::new(counts_file_name);
 
         let hotspot_tracker = Hotspot::new();
-        let intervention_reporter = InterventionReporter::new(format!("{output_file_format}_interventions.json" ));
+        let intervention_reporter = InterventionReporter::new(format!("{output_file_format}_interventions.json"));
         let mut listeners_vec: Vec<Box<dyn Listener>> =
             vec![Box::new(csv_listener), Box::new(hotspot_tracker), Box::new(intervention_reporter)];
 
@@ -147,13 +150,17 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
         Listeners::from(listeners_vec)
     }
 
-    fn init_interventions(config: &Config, citizen_location_map: &mut CitizenLocationMap, rng: &mut R) -> Interventions {
+    fn init_interventions<R: Random>(
+        config: &Config,
+        citizen_location_map: &mut CitizenLocationMap,
+        rng: &mut R,
+    ) -> Interventions {
         let vaccinations = VaccinateIntervention::init(config);
         let lock_down_details = LockdownIntervention::init(config);
         let hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        citizen_location_map.iter_mut().for_each(| r| {
+        citizen_location_map.iter_mut().for_each(|r| {
             (*r.1).assign_essential_worker(essential_workers_population, rng);
         });
         Interventions { vaccinate: vaccinations, lockdown: lock_down_details, build_new_hospital: hospital_intervention }
@@ -162,7 +169,7 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
     pub async fn run(&mut self, run_mode: &RunMode, threads: u32) {
         rayon::ThreadPoolBuilder::new().num_threads(threads as usize).build_global().unwrap();
 
-        self.listeners.grid_updated(&self.citizen_location_map.grid);
+        self.listeners.grid_updated(&self.citizen_location_map.get_grid());
         match run_mode {
             RunMode::MultiEngine { engine_id } => {
                 let tracer = global::tracer("epirust-trace");
@@ -184,7 +191,6 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
 
         let counts_at_hr = self.counts_at_hr.borrow_mut();
         let interventions = self.interventions.borrow_mut();
-        let rng = self.rng.borrow_mut();
 
         counts_at_hr.log();
         let listeners = self.listeners.borrow_mut();
@@ -201,25 +207,16 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
                 counts_at_hr,
                 simulation_hour,
                 listeners,
-                rng,
                 percent_outgoing,
                 &mut outgoing_migrators,
                 &mut outgoing_commuters,
                 self.config.enable_citizen_state_messages(),
                 None,
                 &self.sim_id,
-                self.disease_handler.clone(),
             );
 
             listeners.counts_updated(*counts_at_hr);
-            self.citizen_location_map.process_interventions(
-                interventions,
-                counts_at_hr,
-                listeners,
-                rng,
-                &self.config,
-                &self.sim_id,
-            );
+            self.citizen_location_map.process_interventions(interventions, counts_at_hr, listeners, &self.config, &self.sim_id);
 
             if Self::stop_simulation(&mut interventions.lockdown, run_mode, *counts_at_hr) {
                 break;
@@ -275,8 +272,6 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
 
         let counts_at_hr = self.counts_at_hr.borrow_mut();
         let interventions = self.interventions.borrow_mut();
-        let rng = self.rng.borrow_mut();
-        let disease_handler = self.disease_handler.clone();
 
         counts_at_hr.log();
 
@@ -338,14 +333,12 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
                     counts_at_hr,
                     simulation_hour,
                     listeners,
-                    rng,
                     percent_outgoing,
                     &mut outgoing,
                     &mut outgoing_commuters,
                     config.enable_citizen_state_messages(),
                     Some(travel_plan_config),
                     engine_id,
-                    disease_handler.clone(),
                 );
                 debug!("{}: Simulation finished for hour: {}", engine_id, simulation_hour);
 
@@ -398,18 +391,18 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
                 self.citizen_location_map.remove_commuters(&outgoing_commuters, counts_at_hr);
-                self.citizen_location_map.assimilate_commuters(&mut incoming_commuters, counts_at_hr, rng, simulation_hour);
+                self.citizen_location_map.assimilate_commuters(&mut incoming_commuters, counts_at_hr, simulation_hour);
                 debug!("{}: assimilated the commuters", engine_id);
             }
 
             if is_migration_enabled {
                 let migration_start_time = Instant::now();
-                let (mut incoming, ) = join!(received_migrators.unwrap());
+                let (mut incoming,) = join!(received_migrators.unwrap());
                 total_receive_migration_sync_time += migration_start_time.elapsed().as_millis();
                 n_incoming += incoming.len();
                 n_outgoing += outgoing.len();
                 self.citizen_location_map.remove_migrators(&actual_outgoing, counts_at_hr);
-                self.citizen_location_map.assimilate_migrators(&mut incoming, counts_at_hr, rng);
+                self.citizen_location_map.assimilate_migrators(&mut incoming, counts_at_hr);
                 debug!("{}: assimilated the migrators", engine_id);
             }
 
@@ -418,7 +411,6 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
                 interventions,
                 counts_at_hr,
                 &mut self.listeners,
-                rng,
                 &self.config,
                 engine_id,
             );
@@ -497,6 +489,8 @@ impl<T: DiseaseHandler + Sync + Send, R: Random> Epidemiology<T, R> {
 
 #[cfg(test)]
 mod tests {
+    use crate::allocation_map::CitizenLocationMapExt;
+    use crate::citizen::CitizenFactory;
     use crate::engine_app::STANDALONE_SIM_ID;
     use crate::geography::Area;
     use crate::geography::Point;
@@ -523,25 +517,27 @@ mod tests {
             None,
         );
         let disease = RichDisease::new(disease, RandomWrapper::default());
-        let epidemiology: Epidemiology<_, _> = Epidemiology::new(
+        let epidemiology: Epidemiology<_> = Epidemiology::new(
             config,
             None,
             STANDALONE_SIM_ID.to_string(),
             &RunMode::Standalone,
-            Arc::new(Mutex::new(disease)),
+            disease,
             RandomWrapper::default(),
+            CitizenFactory::new(RandomWrapper::default()),
+            |x, y, z| CitizenLocationMapExt::new(x, y, z),
         );
         let expected_housing_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(0, 0), Point::new(39, 100));
-        assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
+        assert_eq!(epidemiology.citizen_location_map.get_grid().housing_area, expected_housing_area);
 
         let expected_transport_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(40, 0), Point::new(59, 100));
-        assert_eq!(epidemiology.citizen_location_map.grid.transport_area, expected_transport_area);
+        assert_eq!(epidemiology.citizen_location_map.get_grid().transport_area, expected_transport_area);
 
         let expected_work_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(60, 0), Point::new(79, 100));
-        assert_eq!(epidemiology.citizen_location_map.grid.work_area, expected_work_area);
+        assert_eq!(epidemiology.citizen_location_map.get_grid().work_area, expected_work_area);
 
         let expected_hospital_area = Area::new(&STANDALONE_SIM_ID.to_string(), Point::new(80, 0), Point::new(89, 0));
-        assert_eq!(epidemiology.citizen_location_map.grid.hospital_area, expected_hospital_area);
+        assert_eq!(epidemiology.citizen_location_map.get_grid().hospital_area, expected_hospital_area);
 
         assert_eq!(epidemiology.citizen_location_map.current_population(), 10);
     }

@@ -26,38 +26,51 @@ use crate::citizen::{Citizen, CitizensData};
 use crate::geography::Point;
 use crate::helpers::string_to_s16;
 
-pub fn citizen_factory<R: Random>(
-    ctz_data: CitizensData,
-    travel_plan_config: &Option<TravelPlanConfig>,
-    rng: &mut R,
-) -> Vec<Citizen> {
-    let total_home_locations = ctz_data.home_locations.len();
-    let mut agent_list = Vec::with_capacity(total_home_locations);
+pub struct CitizenFactory<R: Random> {
+    rng: R,
+}
 
-    let commute_plan = travel_plan_config.as_ref().filter(|t_conf| t_conf.commute.enabled).map(|t_conf| t_conf.commute_plan());
-
-    let mut current_number_of_public_transport_users = 0;
-    for i in 0..ctz_data.number_of_agents as usize {
-        let agent = create_citizen(i, &ctz_data, rng, &mut current_number_of_public_transport_users);
-        agent_list.push(agent);
+impl<R: Random> CitizenFactory<R> {
+    pub fn new(rng: R) -> Self {
+        CitizenFactory { rng }
     }
-    debug!("all working agents: {}", agent_list.iter().filter(|a| { a.work_status != WorkStatus::NA }).count());
-    debug!("agents with public transport percentage: {}", agent_list.iter().filter(|a| { a.uses_public_transport }).count());
+}
 
-    set_starting_infections(&mut agent_list, ctz_data.starting_infections, rng);
+pub trait CitizenFactoryI {
+    fn create_citizens(&mut self, ctz_data: CitizensData, travel_plan_config: &Option<TravelPlanConfig>) -> Vec<Citizen>;
+}
 
-    if let Some(cp) = commute_plan {
-        update_commuters(&mut agent_list, cp, &ctz_data.region);
+impl<R: Random> CitizenFactoryI for CitizenFactory<R> {
+    fn create_citizens(&mut self, ctz_data: CitizensData, travel_plan_config: &Option<TravelPlanConfig>) -> Vec<Citizen> {
+        let total_home_locations = ctz_data.home_locations.len();
+        let mut agent_list = Vec::with_capacity(total_home_locations);
+
+        let commute_plan =
+            travel_plan_config.as_ref().filter(|t_conf| t_conf.commute.enabled).map(|t_conf| t_conf.commute_plan());
+
+        let mut current_number_of_public_transport_users = 0;
+        for i in 0..ctz_data.number_of_agents as usize {
+            let agent = create_citizen(i, &ctz_data, &mut current_number_of_public_transport_users, &mut self.rng);
+            agent_list.push(agent);
+        }
+        debug!("all working agents: {}", agent_list.iter().filter(|a| { a.work_status != WorkStatus::NA }).count());
+        debug!("agents with public transport percentage: {}", agent_list.iter().filter(|a| { a.uses_public_transport }).count());
+
+        set_starting_infections(&mut agent_list, ctz_data.starting_infections, &mut self.rng);
+
+        if let Some(cp) = commute_plan {
+            update_commuters(&mut agent_list, cp, &ctz_data.region);
+        }
+
+        agent_list
     }
-
-    agent_list
 }
 
 fn create_citizen<R: Random>(
     number: usize,
     ctz_data: &CitizensData,
-    rng: &mut R,
     current_number_of_public_transport_users: &mut usize,
+    rng: &mut R,
 ) -> Citizen {
     let total_home_locations = ctz_data.home_locations.len();
     let total_work_locations = ctz_data.work_locations.len();
@@ -133,12 +146,12 @@ pub fn set_starting_infections<R: Random>(agent_list: &mut [Citizen], start_infe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::citizen::citizen_factory::{citizen_factory, set_starting_infections};
+    use crate::citizen::citizen_factory::set_starting_infections;
     use crate::geography::Area;
     use common::utils::RandomWrapper;
 
     fn before_each() -> Vec<Citizen> {
-        let mut rng = RandomWrapper::default();
+        let rng = RandomWrapper::default();
         let engine_id = "engine1".to_string();
         let home_locations = vec![
             Area::new(&engine_id, Point::new(0, 0), Point::new(2, 2)),
@@ -164,7 +177,9 @@ mod tests {
             &start_infections,
         );
 
-        citizen_factory(ctz_data, &None, &mut rng)
+        let mut citizen_factory = CitizenFactory::new(rng);
+
+        citizen_factory.create_citizens(ctz_data, &None)
     }
 
     #[test]

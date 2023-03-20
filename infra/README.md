@@ -12,7 +12,7 @@ Create PV and PVC in order to use that storage. You can refer the sample pv and 
 
 Build the docker images for engine
 ```sh
-docker build -t <image_repo:tag> -f engine/dockerfile .
+docker build -t <image_repo:tag> -f engine-app/dockerfile .
 ```
 Build the docker images for orchestrator
 ```sh

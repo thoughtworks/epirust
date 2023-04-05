@@ -18,12 +18,10 @@
  */
 
 use crate::geography::Point;
-use crate::kafka::travel_consumer;
 use crate::models::constants;
 use crate::travel::commute::Commuter;
-use common::models::custom_types::Hour;
-use futures::StreamExt;
-use rdkafka::consumer::MessageStream;
+use crate::models::custom_types::Hour;
+use mpi::traits::Equivalence;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct CommutersByRegion {
@@ -41,19 +39,21 @@ impl CommutersByRegion {
     }
 
     pub(crate) async fn receive_commuters_from_region(
-        message_stream: &mut MessageStream<'_>,
         engine_id: &String,
     ) -> Option<CommutersByRegion> {
-        let msg = message_stream.next().await;
-        let mut maybe_commuters = travel_consumer::read_commuters(msg);
-        while maybe_commuters.is_none()
-            || (maybe_commuters.as_ref().unwrap().commuters.is_empty()
-                && maybe_commuters.as_ref().unwrap().to_engine_id() == engine_id)
-        {
-            let next_msg = message_stream.next().await;
-            maybe_commuters = travel_consumer::read_commuters(next_msg);
-        }
-        maybe_commuters
+        //TODO: need to implement
+
+        // let msg = message_stream.next().await;
+        // let mut maybe_commuters = travel_consumer::read_commuters(msg);
+        // while maybe_commuters.is_none()
+        //     || (maybe_commuters.as_ref().unwrap().commuters.is_empty()
+        //         && maybe_commuters.as_ref().unwrap().to_engine_id() == engine_id)
+        // {
+        //     let next_msg = message_stream.next().await;
+        //     maybe_commuters = travel_consumer::read_commuters(next_msg);
+        // }
+        // maybe_commuters
+        Option::from(CommutersByRegion { to_engine_id: "".to_string(), commuters: vec![] })
     }
 
     pub fn get_commuters_by_region(

@@ -21,8 +21,8 @@ use crate::allocation_map::CitizenLocationMap;
 use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::state_machine::{Severity, State};
-use common::models::custom_types::{Day, Hour};
-use common::utils::RandomWrapper;
+use crate::models::custom_types::{Day, Hour};
+use crate::utils::random_wrapper::RandomWrapper;
 
 pub trait DiseaseHandler {
     fn is_to_be_hospitalize(&self, current_state: &State, immunity: i32) -> bool;

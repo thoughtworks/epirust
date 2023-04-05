@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use common::models::custom_types::Hour;
+use crate::models::custom_types::Hour;
 use uuid::Uuid;
 
 use crate::citizen::Citizen;
@@ -71,7 +71,7 @@ impl CitizenStatesAtHr {
 mod tests {
     use crate::citizen::WorkStatus;
     use crate::geography::Area;
-    use common::utils::RandomWrapper;
+    use crate::utils::random_wrapper::RandomWrapper;
 
     use super::*;
 

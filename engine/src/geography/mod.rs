@@ -27,7 +27,7 @@ pub use area::Area;
 pub use grid::Grid;
 pub use point::Point;
 
-use common::models::custom_types::{CoOrdinate, Size};
+use crate::models::custom_types::{CoOrdinate, Size};
 use std::collections::HashMap;
 
 pub fn define_geography(grid_size: Size, engine_id: String) -> Grid {

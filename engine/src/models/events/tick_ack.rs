@@ -18,7 +18,7 @@
  */
 
 use crate::models::events::Counts;
-use common::models::custom_types::Hour;
+use crate::models::custom_types::Hour;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TickAck {

@@ -17,9 +17,9 @@
  *
  */
 
-use common::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
-use common::models::custom_types::{CoOrdinate, Count, Size};
-use common::utils::RandomWrapper;
+use crate::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
+use crate::models::custom_types::{CoOrdinate, Count, Size};
+use crate::utils::random_wrapper::RandomWrapper;
 use plotters::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
@@ -212,7 +212,7 @@ impl Grid {
         number_of_agents: i32,
         hospital_staff_percentage: f64,
         hospital_beds_percentage: f64,
-        sim_id: String,
+        engine_id: String,
     ) {
         let hospital_bed_count = (number_of_agents as f64 * hospital_beds_percentage
             + number_of_agents as f64 * hospital_staff_percentage)
@@ -222,7 +222,7 @@ impl Grid {
             let hospital_end_y: CoOrdinate =
                 (hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x) as u32) as CoOrdinate;
             self.hospital_area =
-                Area::new(&sim_id, self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
+                Area::new(&engine_id, self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
             info!("Hospital capacity {}: ", hospital_bed_count);
         }
     }

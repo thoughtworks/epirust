@@ -19,43 +19,42 @@
 mod commuter;
 mod commuters_by_region;
 
-use common::models::travel_plan::TravelPlan;
-use common::models::CommutePlan;
-use rdkafka::consumer::MessageStream;
-use common::models::custom_types::Hour;
-
+use bincode::deserialize;
+use mpi::topology::{SystemCommunicator};
+use mpi::traits::{Communicator, Source};
+use crate::models::travel_plan::TravelPlan;
+use crate::models::custom_types::Hour;
 use crate::models::constants;
-use crate::models::events::Tick;
 
 pub use commuter::Commuter;
 pub use commuters_by_region::CommutersByRegion;
+use crate::models::commute_plan::CommutePlan;
 
 pub(crate) async fn receive_commuters(
     commute_plan: &CommutePlan,
-    tick: Option<Tick>,
-    message_stream: &mut MessageStream<'_>,
+    simulation_hour: Hour,
     engine_id: &String,
+    world: SystemCommunicator,
 ) -> Vec<Commuter> {
-    if tick.is_some() {
-        let mut incoming: Vec<Commuter> = Vec::new();
-        let hour = tick.unwrap().hour() % 24;
-        if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
-            let expected_incoming_regions = commute_plan.incoming_regions_count(engine_id);
-            let mut received_incoming_regions = 0;
-            debug!("Receiving commuters from {} regions", expected_incoming_regions);
-            while expected_incoming_regions != received_incoming_regions {
-                let maybe_msg = CommutersByRegion::receive_commuters_from_region(message_stream, engine_id).await;
-                if let Some(region_incoming) = maybe_msg {
-                    trace_commuters(&region_incoming, hour);
-                    incoming.extend(region_incoming.get_commuters());
-                    received_incoming_regions += 1;
-                }
-            }
+    let mut incoming: Vec<Commuter> = Vec::new();
+    let hour = simulation_hour % 24;
+    if hour == constants::ROUTINE_TRAVEL_START_TIME || hour == constants::ROUTINE_TRAVEL_END_TIME {
+        let expected_incoming_regions = commute_plan.incoming_regions_count(engine_id);
+        let mut received_incoming_regions = 0;
+        debug!("Receiving commuters from {} regions", expected_incoming_regions);
+        while expected_incoming_regions != received_incoming_regions {
+            let my_rank = world.rank();
+            let mut buffer = vec![0u8; 1024];
+            let status = world.any_process().receive_into(&mut buffer[..]);
+            let received: CommutersByRegion = deserialize(&buffer[..]).unwrap();
+            info!("rank - {:?}, simulation_hour - {}, {:?}, {:?}", my_rank, simulation_hour, received, status);
+            // info!("received commuters: {:?}", received);
+            trace_commuters(&received, hour);
+            incoming.extend(received.get_commuters());
+            received_incoming_regions += 1;
         }
-        incoming
-    } else {
-        Vec::new()
     }
+    incoming
 }
 
 fn trace_commuters(commuters_by_region: &CommutersByRegion, hour: Hour) {

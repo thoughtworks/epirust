@@ -17,15 +17,12 @@
  *
  */
 
-use common::models::custom_types::Count;
-use common::models::travel_plan::TravelPlan;
-use common::models::MigrationPlan;
-use futures::StreamExt;
-use rdkafka::consumer::MessageStream;
+use crate::models::custom_types::{Count, Hour};
+use crate::models::travel_plan::TravelPlan;
 
 use crate::geography::Point;
-use crate::kafka::travel_consumer;
 use crate::models::events::Tick;
+use crate::models::migration_plan::MigrationPlan;
 use crate::travel::migration::{Migrator, MigratorsByRegion};
 
 /// Travel plan in the context of the current engine
@@ -91,18 +88,19 @@ impl EngineMigrationPlan {
         self.current_total_population = val;
     }
 
-    pub async fn receive_migrators(&self, tick: Option<Tick>, message_stream: &mut MessageStream<'_>) -> Vec<Migrator> {
-        if tick.is_some() && tick.unwrap().hour() % 24 == 0 {
+    pub async fn receive_migrators(&self, hour: Hour) -> Vec<Migrator> {
+        if hour % 24 == 0 {
             let expected_incoming_regions = self.incoming_regions_count();
             let mut received_incoming_regions = 0;
             debug!("Receiving migrators from {} regions", expected_incoming_regions);
             let mut incoming: Vec<Migrator> = Vec::new();
             while expected_incoming_regions != received_incoming_regions {
-                let maybe_msg = travel_consumer::read_migrators(message_stream.next().await);
-                if let Some(region_incoming) = maybe_msg {
-                    incoming.extend(region_incoming.get_migrators());
-                    received_incoming_regions += 1;
-                }
+                // let maybe_msg = travel_consumer::read_migrators(message_stream.next().await);
+                //                 let mut received_payload: Vec<u8> = Vec::new();
+                //                 world.any_process().receive_into(&mut received_payload);
+                //                 let region_incoming: MigratorsByRegion = bincode::deserialize(&received_payload).unwrap();
+                //                 incoming.extend(region_incoming.get_migrators());
+                //                 received_incoming_regions += 1;
             }
             incoming
         } else {
@@ -114,7 +112,6 @@ impl EngineMigrationPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common::models::MigrationPlan;
 
     #[test]
     fn should_calc_outgoing_percent() {

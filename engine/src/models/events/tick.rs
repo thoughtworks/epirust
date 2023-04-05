@@ -17,12 +17,12 @@
  *
  */
 
-use common::models::custom_types::Hour;
+use crate::models::custom_types::Hour;
 
 #[derive(Debug, Copy, Deserialize, PartialEq, Eq, Clone)]
 pub struct Tick {
-    hour: Hour,
-    terminate: bool,
+    pub(crate) hour: Hour,
+    pub(crate) terminate: bool,
 }
 
 impl Tick {

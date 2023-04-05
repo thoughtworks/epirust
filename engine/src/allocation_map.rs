@@ -19,9 +19,8 @@
 
 use std::collections::hash_map::{Iter, IterMut};
 
-use common::config::{Config, TravelPlanConfig};
-use common::models::custom_types::{CoOrdinate, Count, Hour};
-use common::utils::RandomWrapper;
+use crate::config::{Config, TravelPlanConfig};
+use crate::models::custom_types::{CoOrdinate, Count, Hour};
 use fnv::FnvHashMap;
 
 use rand::seq::IteratorRandom;
@@ -40,6 +39,7 @@ use crate::models::events::Counts;
 use crate::state_machine::{DiseaseHandler, State};
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
+use crate::utils::random_wrapper::RandomWrapper;
 
 #[derive(Clone)]
 pub struct CitizenLocationMap {
@@ -75,7 +75,7 @@ impl CitizenLocationMap {
         outgoing_commuters: &mut Vec<(Point, Commuter)>,
         publish_citizen_state: bool,
         travel_plan_config: Option<&TravelPlanConfig>,
-        region_name: &String,
+        engine_id: &String,
         disease_handler: &T,
     ) {
         csv_record.clear();
@@ -102,14 +102,14 @@ impl CitizenLocationMap {
                 let is_commute_enabled = travel_plan.commute.enabled;
 
                 if is_migration_enabled
-                    && agent.can_migrate(region_name, simulation_hour, travel_plan)
+                    && agent.can_migrate(engine_id, simulation_hour, travel_plan)
                     && rng.get().gen_bool(percent_outgoing)
                 {
                     let migrator = Migrator::from(&agent);
                     outgoing_migrators.push((*new_location, migrator));
                 }
 
-                if is_commute_enabled && agent.is_commuter(region_name, simulation_hour) {
+                if is_commute_enabled && agent.is_commuter(engine_id, simulation_hour) {
                     let commuter = Commuter::from(&agent);
                     outgoing_commuters.push((*new_location, commuter));
                 }

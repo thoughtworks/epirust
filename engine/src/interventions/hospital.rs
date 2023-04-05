@@ -17,9 +17,9 @@
  *
  */
 
-use common::config::intervention_config::{BuildNewHospitalConfig, InterventionConfig};
-use common::config::Config;
-use common::models::custom_types::Count;
+use crate::config::intervention_config::{BuildNewHospitalConfig, InterventionConfig};
+use crate::config::Config;
+use crate::models::custom_types::Count;
 
 use crate::interventions::intervention_type::InterventionType;
 use crate::models::events::Counts;

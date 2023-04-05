@@ -18,13 +18,17 @@
  */
 
 use clap::Parser;
-use common::config::Config;
-use common::disease::Disease;
+use mpi::traits::Communicator;
+use engine::config::{Config, TravelPlanConfig};
+use engine::disease::Disease;
 use engine::{EngineApp, RunMode};
 use opentelemetry::sdk::trace::{config, Span};
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::{FutureExt, TraceContextExt, TraceError, Tracer};
-use opentelemetry::{global, sdk, Context, KeyValue};
+use opentelemetry::{Context, global, KeyValue, sdk};
+use engine::config::configuration::{Configuration, EngineConfig};
+
+const STANDALONE_ENGINE_ID: &str = "standalone";
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -35,12 +39,7 @@ struct Args {
     #[arg(short, long, default_value_t = false)]
     #[arg(help = "Start the engine in daemon mode. It will wait for messages from Kafka. \
             Specifying this flag will cause the config argument to be ignored")]
-    daemon: bool,
-
-    #[arg(short, long)]
-    #[arg(help = "An identifier for the engine. Needed in daemon mode when running a larger simulation \
-            distributed across multiple engines.")]
-    id: Option<String>,
+    standalone: bool,
 
     #[arg(short, long, default_value_t = 4)]
     #[arg(help = "Number of parallel threads for data parallelization")]
@@ -61,19 +60,8 @@ fn init_tracer() -> Result<sdk::trace::Tracer, TraceError> {
 async fn main() {
     env_logger::init();
     let args = Args::parse();
-
-    let daemon = args.daemon;
-    let has_named_engine = args.id.is_some();
-    let default_engine_id = "default_engine".to_string();
-    let engine_id = args.id.unwrap_or(default_engine_id);
     let number_of_threads = args.threads;
-    let run_mode = if daemon && has_named_engine {
-        RunMode::MultiEngine { engine_id: engine_id.to_string() }
-    } else if daemon {
-        RunMode::SingleDaemon
-    } else {
-        RunMode::Standalone
-    };
+    let standalone = args.standalone;
 
     let disease_handler: Option<Disease> = None;
 
@@ -82,12 +70,33 @@ async fn main() {
     let span: Span = _tracer.start("root");
     let cx: Context = Context::current_with_span(span);
 
-    if daemon {
-        EngineApp::start_in_daemon(&engine_id, &run_mode, disease_handler, number_of_threads).with_context(cx).await;
+    println!("println logging is working");
+
+    if standalone {
+        println!("its here in standalone");
+        let default_config_path = "engine/config/default.json".to_string();
+        let config_path = args.config.unwrap_or(default_config_path);
+        let engine_config = Config::read(&config_path).expect("Failed to read config file");
+        let run_mode = RunMode::Standalone;
+        EngineApp::start(STANDALONE_ENGINE_ID.to_string(), engine_config, &run_mode, None, disease_handler, number_of_threads).with_context(cx).await;
     } else {
-        let default_config_path = "config/default.json".to_string();
-        let config_file = args.config.unwrap_or(default_config_path);
-        let config = Config::read(&config_file).expect("Failed to read config file");
-        EngineApp::start_standalone(config, &run_mode, disease_handler, number_of_threads).await;
+        println!("in multi-engine mode");
+        let universe = mpi::initialize().unwrap();
+        let world = universe.world();
+        let rank = world.rank();
+            let default_config_path = "engine/config/simulation.json".to_string();
+            let config_path = args.config.unwrap_or(default_config_path);
+            println!("config - {}", config_path);
+            let config = Configuration::read(&config_path).expect("Error while reading config");
+            config.validate();
+            let config_per_engine = config.get_engine_configs();
+            let index: usize = (rank) as usize;
+            let self_config: &EngineConfig = config_per_engine.get(index).unwrap();
+            let travel_plan: &TravelPlanConfig = config.get_travel_plan();
+            let engine_config = &self_config.config;
+            let engine_id = String::from(&self_config.engine_id);
+            println!("engine_id - {}, rank - {} , config - {:?}", engine_id, rank, &self_config);
+            let run_mode = RunMode::MultiEngine;
+            EngineApp::start(engine_id.clone(), engine_config.clone(), &run_mode, Some(travel_plan.clone()), disease_handler, number_of_threads).with_context(cx).await;
     }
 }

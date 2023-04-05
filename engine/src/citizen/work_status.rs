@@ -17,7 +17,7 @@
  *
  */
 
-use common::models::custom_types::Hour;
+use crate::models::custom_types::Hour;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum WorkStatus {

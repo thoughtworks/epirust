@@ -29,7 +29,6 @@ mod engine_app;
 mod epidemiology_simulation;
 mod helpers;
 mod interventions;
-mod kafka;
 mod listeners;
 mod models;
 mod population;
@@ -40,6 +39,8 @@ mod travel;
 mod utils;
 
 pub mod geography;
+pub mod disease;
+pub mod config;
 
 pub use engine_app::EngineApp;
 pub use run_mode::RunMode;

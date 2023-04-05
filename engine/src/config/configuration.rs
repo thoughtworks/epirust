@@ -1,6 +1,6 @@
 /*
  * EpiRust
- * Copyright (c) 2020  ThoughtWorks, Inc.
+ * Copyright (c) 2023  ThoughtWorks, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,12 +18,13 @@
  */
 
 use std::error::Error;
+use serde_json::Value;
 use std::fs::File;
 
-use common::config::Population::Auto;
-use common::config::{Config, TravelPlanConfig};
-use common::models::custom_types::Percentage;
-use common::models::travel_plan::TravelPlan;
+use crate::config::Population::Auto;
+use crate::config::{Config, TravelPlanConfig};
+use crate::models::custom_types::Percentage;
+use crate::models::travel_plan::TravelPlan;
 
 pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;
 
@@ -40,6 +41,10 @@ impl Configuration {
 
     pub fn get_engine_ids(&self) -> Vec<String> {
         self.engine_configs.iter().map(|s| s.engine_id.clone()).collect()
+    }
+
+    pub fn get_engine_configs(&self) -> &Vec<EngineConfig> {
+        &self.engine_configs
     }
 
     pub fn read(filename: &str) -> Result<Configuration, Box<dyn Error>> {
@@ -113,36 +118,24 @@ impl Configuration {
 }
 
 // just a struct for easier parsing
-#[derive(Deserialize, Serialize)]
-struct EngineConfig {
-    engine_id: String,
-    config: Config,
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EngineConfig {
+    pub engine_id: String,
+    pub config: Config,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::get_hours;
-    use crate::utils::read_simulation_conf;
-
-    #[test]
-    fn should_read_config() {
-        let config = Configuration::read("config/test/travel_plan.json").unwrap();
-        let travel_plan = config.get_travel_plan();
-
-        assert_eq!(&travel_plan.get_regions(), &vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()]);
-        assert_eq!(config.get_engine_ids(), vec!["engine1".to_string(), "engine2".to_string(), "engine3".to_string()])
-    }
-
-    #[test]
-    fn should_read_config_for_engines() {
-        let config_for_engines = read_simulation_conf("config/test/travel_plan.json");
-        assert!(!config_for_engines.is_empty())
-    }
-
-    #[test]
-    fn should_read_hours() {
-        let hours = get_hours("config/test/travel_plan.json");
-        assert_eq!(hours, 10000);
-    }
+pub fn read_simulation_conf(filename: &str) -> String {
+    let reader = File::open(filename).unwrap();
+    let config: Value = serde_json::from_reader(reader).unwrap();
+    let sim = config.as_object().unwrap();
+    serde_json::to_string(sim).unwrap()
 }
+
+pub fn get_hours(filename: &str) -> i64 {
+    let reader = File::open(filename).unwrap();
+    let config: Value = serde_json::from_reader(reader).unwrap();
+    let sim = config.get("engine_configs").unwrap().as_array().unwrap();
+    let hours = sim[0].get("config").unwrap().get("hours");
+    hours.unwrap().as_i64().unwrap()
+}
+

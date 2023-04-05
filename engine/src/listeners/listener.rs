@@ -17,7 +17,7 @@
  *
  */
 
-use common::models::custom_types::Hour;
+use crate::models::custom_types::Hour;
 use std::any::Any;
 
 use crate::citizen::Citizen;

@@ -18,12 +18,15 @@
  */
 
 use crate::helpers::*;
-use common::models::custom_types::Count;
-use common::utils::RandomWrapper;
+use crate::models::custom_types::Count;
+use crate::utils::random_wrapper::RandomWrapper;
 use copystr::s16;
 use rand::seq::IteratorRandom;
 use rand::Rng;
 use std::hash::{Hash, Hasher};
+use std::io::Read;
+use mpi::traits::Equivalence;
+
 
 use crate::geography::Point;
 
@@ -63,8 +66,8 @@ impl Area {
 
     pub fn random_points(&self, number_of_points: usize, rng: &mut RandomWrapper) -> Vec<Point> {
         let nx = (number_of_points as f32).sqrt().ceil() as usize;
-        let rand_xs = (self.start_offset.x..=self.end_offset.x).into_iter().choose_multiple(rng.get(), nx);
-        let rand_ys = (self.start_offset.y..=self.end_offset.y).into_iter().choose_multiple(rng.get(), nx);
+        let rand_xs = (self.start_offset.x..=self.end_offset.x).choose_multiple(rng.get(), nx);
+        let rand_ys = (self.start_offset.y..=self.end_offset.y).choose_multiple(rng.get(), nx);
 
         rand_xs
             .iter()

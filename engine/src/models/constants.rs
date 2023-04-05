@@ -17,7 +17,7 @@
  *
  */
 
-use common::models::custom_types::{Day, Hour, Percentage, Size};
+use crate::models::custom_types::{Day, Hour, Percentage, Size};
 
 pub const HOUSE_AREA_RELATIVE_SIZE: Percentage = 0.4;
 pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;

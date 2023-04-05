@@ -16,13 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use common::models::custom_types::{Day, Hour};
-use common::utils::RandomWrapper;
+use mpi::traits::Equivalence;
+use crate::models::custom_types::{Day, Hour};
 
 use crate::allocation_map::CitizenLocationMap;
 use crate::citizen::Citizen;
 use crate::geography::Point;
 use crate::state_machine::{DiseaseHandler, State};
+use crate::utils::random_wrapper::RandomWrapper;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiseaseStateMachine {
@@ -137,7 +138,7 @@ impl DiseaseStateMachine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common::disease::Disease;
+    use crate::disease::Disease;
 
     #[test]
     fn should_initialize() {

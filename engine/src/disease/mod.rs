@@ -21,7 +21,7 @@ use rand::Rng;
 use validator::Validate;
 
 use crate::models::custom_types::{validate_percentage, Day, Hour, Percentage};
-use crate::utils::RandomWrapper;
+use crate::utils::random_wrapper::RandomWrapper;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Validate)]
 pub struct Disease {

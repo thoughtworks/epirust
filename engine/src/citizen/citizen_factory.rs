@@ -17,9 +17,7 @@
  *
  */
 
-use common::config::{StartingInfections, TravelPlanConfig};
-use common::models::CommutePlan;
-use common::utils::RandomWrapper;
+use crate::config::{StartingInfections, TravelPlanConfig};
 use rand::seq::IteratorRandom;
 use rand::Rng;
 
@@ -27,6 +25,8 @@ use crate::citizen::work_status::WorkStatus;
 use crate::citizen::{Citizen, CitizensData};
 use crate::geography::Point;
 use crate::helpers::string_to_s16;
+use crate::models::commute_plan::CommutePlan;
+use crate::utils::random_wrapper::RandomWrapper;
 
 pub fn citizen_factory(
     ctz_data: CitizensData,

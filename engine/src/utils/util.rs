@@ -19,15 +19,15 @@
 
 use crate::models::events::Counts;
 use crate::run_mode::RunMode;
-use common::config::{Config, StartingInfections};
-use common::models::custom_types::Count;
+use crate::config::{Config, StartingInfections};
+use crate::models::custom_types::Count;
 use time::OffsetDateTime;
 
-pub fn output_file_format(config: &Config, run_mode: &RunMode) -> String {
+pub fn output_file_format(config: &Config, run_mode: &RunMode, engine_id: String) -> String {
     let format = time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]").unwrap();
     let now = OffsetDateTime::now_utc();
     let mut output_file_prefix = config.get_output_file().unwrap_or_else(|| "simulation".to_string());
-    if let RunMode::MultiEngine { engine_id } = run_mode {
+    if let RunMode::MultiEngine = run_mode {
         output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
     }
     format!("{}_{}", output_file_prefix, now.format(&format).unwrap())

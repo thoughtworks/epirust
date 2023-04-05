@@ -19,7 +19,7 @@
 
 use crate::citizen::Citizen;
 use crate::state_machine::State;
-use common::models::custom_types::{Count, Hour};
+use crate::models::custom_types::{Count, Hour};
 use log::info;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]

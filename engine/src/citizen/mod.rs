@@ -27,10 +27,9 @@ pub use citizen_factory::{citizen_factory, set_starting_infections};
 pub use population_record::PopulationRecord;
 pub use work_status::WorkStatus;
 
-use common::config::TravelPlanConfig;
-use common::disease::Disease;
-use common::models::custom_types::{Day, Hour, Percentage};
-use common::utils::RandomWrapper;
+use crate::config::TravelPlanConfig;
+use crate::disease::Disease;
+use crate::models::custom_types::{Day, Hour, Percentage};
 use rand::seq::IteratorRandom;
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -44,6 +43,7 @@ use crate::models::constants;
 use crate::state_machine::{DiseaseHandler, State};
 use crate::travel::commute::Commuter;
 use crate::travel::migration::Migrator;
+use crate::utils::random_wrapper::RandomWrapper;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Copy)]
 pub struct Citizen {
@@ -453,15 +453,15 @@ impl Citizen {
         !(self.state_machine.is_symptomatic() || self.hospitalized || self.state_machine.is_deceased() || self.isolated)
     }
 
-    pub fn can_migrate(&self, region_id: &String, simulation_hour: Hour, travel_plan: &TravelPlanConfig) -> bool {
+    pub fn can_migrate(&self, engine_id: &String, simulation_hour: Hour, travel_plan: &TravelPlanConfig) -> bool {
         let start_migration_hour = travel_plan.get_start_migration_hour();
         let end_migration_hour = travel_plan.get_end_migration_hour();
 
         simulation_hour % 24 == 0
             && simulation_hour > start_migration_hour
             && simulation_hour < end_migration_hour
-            && self.work_location.location_id == *region_id
-            && self.home_location.location_id == *region_id
+            && self.work_location.location_id == *engine_id
+            && self.home_location.location_id == *engine_id
             && self.can_move()
     }
 
@@ -524,7 +524,7 @@ mod test {
     use crate::citizen::work_status::WorkStatus;
     use crate::citizen::Citizen;
     use crate::geography::{Area, Point};
-    use common::utils::RandomWrapper;
+    use crate::utils::random_wrapper::RandomWrapper;
 
     #[test]
     fn should_check_if_agent_is_working() {

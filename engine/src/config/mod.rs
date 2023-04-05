@@ -23,7 +23,7 @@ mod starting_infections;
 mod travel_plan_config;
 
 pub mod intervention_config;
-pub mod request;
+pub mod configuration;
 
 pub use travel_plan_config::TravelPlanConfig;
 

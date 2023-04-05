@@ -17,9 +17,9 @@
  *
  */
 
-use common::config::intervention_config::InterventionConfig;
-use common::config::Config;
-use common::models::custom_types::{Hour, Percentage};
+use crate::config::intervention_config::InterventionConfig;
+use crate::config::Config;
+use crate::models::custom_types::{Hour, Percentage};
 use std::collections::HashMap;
 
 use crate::interventions::intervention_type::InterventionType;

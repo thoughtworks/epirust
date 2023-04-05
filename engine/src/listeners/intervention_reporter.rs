@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use common::models::custom_types::Hour;
+use crate::models::custom_types::Hour;
 use serde_json::Value;
 use std::any::Any;
 use std::fs::File;

@@ -17,7 +17,7 @@
  *
  */
 
-use common::models::custom_types::{Day, Hour};
+use crate::models::custom_types::{Day, Hour};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Severity {

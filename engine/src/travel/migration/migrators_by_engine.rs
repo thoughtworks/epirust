@@ -17,8 +17,8 @@
  *
  */
 
-use common::models::travel_plan::TravelPlan;
-use common::models::MigrationPlan;
+use crate::models::migration_plan::MigrationPlan;
+use crate::models::travel_plan::TravelPlan;
 
 use crate::travel::migration::Migrator;
 

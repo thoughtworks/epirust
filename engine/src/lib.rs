@@ -34,7 +34,6 @@ mod models;
 mod population;
 mod run_mode;
 mod state_machine;
-mod tick;
 mod travel;
 mod utils;
 

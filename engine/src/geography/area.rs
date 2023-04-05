@@ -24,8 +24,6 @@ use copystr::s16;
 use rand::seq::IteratorRandom;
 use rand::Rng;
 use std::hash::{Hash, Hasher};
-use std::io::Read;
-use mpi::traits::Equivalence;
 
 
 use crate::geography::Point;

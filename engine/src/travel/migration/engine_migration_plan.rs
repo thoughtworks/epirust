@@ -26,7 +26,6 @@ use crate::models::custom_types::{Count, Hour};
 use crate::models::travel_plan::TravelPlan;
 
 use crate::geography::Point;
-use crate::models::events::Tick;
 use crate::models::migration_plan::MigrationPlan;
 use crate::travel::migration::{Migrator, MigratorsByRegion};
 

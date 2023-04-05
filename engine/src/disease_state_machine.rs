@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use mpi::traits::Equivalence;
 use crate::models::custom_types::{Day, Hour};
 
 use crate::allocation_map::CitizenLocationMap;

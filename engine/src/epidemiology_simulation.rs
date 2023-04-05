@@ -44,10 +44,8 @@ use crate::listeners::listener::{Listener, Listeners};
 use crate::listeners::travel_counter::TravelCounter;
 use crate::models::constants;
 use crate::models::events::Counts;
-use crate::models::events::Tick;
 use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
-use crate::tick::{receive_tick, send_ack};
 use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
@@ -99,7 +97,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         let current_population = citizen_location_map.current_population();
-        let listeners = Self::create_listeners(&engine_id, current_population as usize, run_mode, &config);
+        let listeners = Self::create_listeners(&engine_id, run_mode, &config);
         let counts_at_hr = counts_at_start(current_population, config.get_starting_infections());
 
         let interventions = Self::init_interventions(&config, &mut citizen_location_map, &mut rng);
@@ -117,7 +115,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         }
     }
 
-    fn create_listeners(engine_id: &str, current_pop: usize, run_mode: &RunMode, config: &Config) -> Listeners {
+    fn create_listeners(engine_id: &str, run_mode: &RunMode, config: &Config) -> Listeners {
         let output_file_format = output_file_format(config, run_mode, engine_id.to_string());
         let counts_file_name = format!("{output_file_format}.csv");
 
@@ -134,10 +132,6 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 let travels_file_name = format!("{output_file_format}_outgoing_travels.csv");
                 let travel_counter = TravelCounter::new(travels_file_name);
                 listeners_vec.push(Box::new(travel_counter));
-
-                // let kafka_listener =
-                //     EventsKafkaProducer::new(engine_id.to_string(), current_pop, config.enable_citizen_state_messages());
-                // listeners_vec.push(Box::new(kafka_listener));
             }
         }
 
@@ -407,14 +401,6 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 break;
             }
 
-            send_ack(
-                *counts_at_hr,
-                simulation_hour,
-                &interventions.lockdown,
-                is_commute_enabled,
-                is_migration_enabled,
-            );
-
             if simulation_hour % 100 == 0 {
                 info!(
                     "Throughput: {} iterations/sec; simulation hour {} of {}",
@@ -442,7 +428,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
     fn send_migrators(hour: Hour, outgoing: Vec<MigratorsByRegion>, engine_ranks: &HashMap<String, Rank>, world: SystemCommunicator) {
         if hour % 24 == 0 {
             for out_region in outgoing.iter() {
-                let rank: &Rank = engine_ranks.iter().find(|(x, y)| { *x == out_region.to_engine_id() }).unwrap().1;
+                let rank: &Rank = engine_ranks.iter().find(|(x, _)| { *x == out_region.to_engine_id() }).unwrap().1;
                 let serialized = serialize(&out_region).unwrap();
                 world.process_at_rank(*rank).send(&serialized[..]);
                 debug!("sent migrators");
@@ -454,7 +440,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         let h = hour % 24;
         if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
             for out_region in outgoing.iter() {
-                let rank: &Rank = engine_ranks.iter().find(|(x, y)| { *x == out_region.to_engine_id() }).unwrap().1;
+                let rank: &Rank = engine_ranks.iter().find(|(x, _)| { *x == out_region.to_engine_id() }).unwrap().1;
                 let serialized = serialize(&out_region).unwrap();
                 world.process_at_rank(*rank).send(&serialized[..]);
                 info!("sent commuters");

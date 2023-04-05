@@ -25,7 +25,7 @@ use crate::citizen::work_status::WorkStatus;
 use crate::citizen::{Citizen, CitizensData};
 use crate::geography::Point;
 use crate::helpers::string_to_s16;
-use crate::models::commute_plan::CommutePlan;
+use crate::travel::commute::commute_plan::CommutePlan;
 use crate::utils::random_wrapper::RandomWrapper;
 
 pub fn citizen_factory(

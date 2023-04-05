@@ -17,7 +17,7 @@
  *
  */
 
-use crate::models::travel_plan::TravelPlan;
+use crate::travel::travel_plan::TravelPlan;
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct MigrationPlan {
@@ -43,8 +43,8 @@ impl MigrationPlan {
 
 #[cfg(test)]
 mod test {
-    use crate::models::migration_plan::MigrationPlan;
-    use crate::models::travel_plan::TravelPlan;
+    use crate::travel::migration::migration_plan::MigrationPlan;
+    use crate::travel::travel_plan::TravelPlan;
 
     #[test]
     fn should_get_total_outgoing() {

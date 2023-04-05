@@ -18,25 +18,27 @@
  */
 mod commuter;
 mod commuters_by_region;
+pub mod commute_plan;
 
 use bincode::deserialize;
 use mpi::Rank;
-use mpi::topology::{SystemCommunicator};
+use mpi::topology::SystemCommunicator;
 use mpi::traits::{Communicator, Source};
-use crate::models::travel_plan::TravelPlan;
+
 use crate::models::custom_types::Hour;
 use crate::models::constants;
 
 pub use commuter::Commuter;
 pub use commuters_by_region::CommutersByRegion;
-use crate::models::commute_plan::CommutePlan;
+use commute_plan::CommutePlan;
+use crate::travel::travel_plan::TravelPlan;
 
 pub(crate) async fn receive_commuters(
     commute_plan: &CommutePlan,
     simulation_hour: Hour,
     engine_id: &String,
     world: SystemCommunicator,
-    engine_ranks: &Vec<Rank>,
+    engine_ranks: &[Rank],
 ) -> Vec<Commuter> {
     let mut incoming: Vec<Commuter> = Vec::new();
     let hour = simulation_hour % 24;
@@ -45,12 +47,10 @@ pub(crate) async fn receive_commuters(
         debug!("Receiving commuters from {} regions", expected_incoming_regions);
         let my_rank = world.rank();
         let mut buffer = vec![0u8; 1024];
-        // let mut buffer: Vec<u8> = vec![];
         for rank in engine_ranks.iter() {
             let status = world.process_at_rank(*rank).receive_into(&mut buffer[..]);
             let received: CommutersByRegion = deserialize(&buffer[..]).unwrap();
             info!("rank - {:?}, simulation_hour - {}, {:?}, {:?}", my_rank, simulation_hour, received, status);
-            // info!("received commuters: {:?}", received);
             trace_commuters(&received, hour);
             incoming.extend(received.get_commuters());
         }

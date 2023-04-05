@@ -17,10 +17,10 @@
  *
  */
 
-use crate::models::migration_plan::MigrationPlan;
-use crate::models::travel_plan::TravelPlan;
+use crate::travel::migration::migration_plan::MigrationPlan;
 
 use crate::travel::migration::Migrator;
+use crate::travel::travel_plan::TravelPlan;
 
 #[derive(Serialize, Deserialize)]
 pub struct MigratorsByRegion {

@@ -18,3 +18,4 @@
  */
 pub mod commute;
 pub mod migration;
+pub mod travel_plan;

@@ -17,7 +17,8 @@
  *
  */
 
-use crate::models::travel_plan::TravelPlan;
+
+use crate::travel::travel_plan::TravelPlan;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct CommutePlan {

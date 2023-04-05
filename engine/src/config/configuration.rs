@@ -24,7 +24,7 @@ use std::fs::File;
 use crate::config::Population::Auto;
 use crate::config::{Config, TravelPlanConfig};
 use crate::models::custom_types::Percentage;
-use crate::models::travel_plan::TravelPlan;
+use crate::travel::travel_plan::TravelPlan;
 
 pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;
 

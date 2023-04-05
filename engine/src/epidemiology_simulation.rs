@@ -51,7 +51,7 @@ use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
 use crate::utils::util::{counts_at_start, output_file_format};
 use crate::{geography};
-use crate::models::commute_plan::CommutePlan;
+use crate::travel::commute::commute_plan::CommutePlan;
 use crate::models::custom_types::Hour;
 use crate::travel::commute;
 use crate::utils::random_wrapper::RandomWrapper;
@@ -394,7 +394,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 &mut self.listeners,
                 rng,
                 &self.config,
-                &engine_id,
+                engine_id,
             );
 
             if Self::stop_simulation(&mut interventions.lockdown, &RunMode::MultiEngine, *counts_at_hr) {

@@ -19,7 +19,4 @@
 
 pub mod constants;
 pub mod events;
-pub mod commute_plan;
 pub mod custom_types;
-pub mod migration_plan;
-pub mod travel_plan;

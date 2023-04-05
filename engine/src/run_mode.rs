@@ -18,8 +18,6 @@
  */
 
 pub enum RunMode {
-    //run once and exit
     Standalone,
-
     MultiEngine,
 }

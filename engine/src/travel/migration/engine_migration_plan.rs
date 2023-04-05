@@ -23,11 +23,11 @@ use mpi::Rank;
 use mpi::topology::SystemCommunicator;
 use mpi::traits::Communicator;
 use crate::models::custom_types::{Count, Hour};
-use crate::models::travel_plan::TravelPlan;
 
 use crate::geography::Point;
-use crate::models::migration_plan::MigrationPlan;
+use crate::travel::migration::migration_plan::MigrationPlan;
 use crate::travel::migration::{Migrator, MigratorsByRegion};
+use crate::travel::travel_plan::TravelPlan;
 
 /// Travel plan in the context of the current engine
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]

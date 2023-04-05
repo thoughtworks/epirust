@@ -19,6 +19,7 @@
 mod engine_migration_plan;
 mod migrator;
 mod migrators_by_engine;
+pub mod migration_plan;
 
 pub use engine_migration_plan::EngineMigrationPlan;
 pub use migrator::Migrator;

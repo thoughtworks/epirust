@@ -368,7 +368,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 }
                 if is_commute_enabled {
                     debug!("{}: Send Commuters", engine_id);
-                    Self::send_commuters(simulation_hour,outgoing_commuters_by_region, &engine_ranks, world);
+                    Self::send_commuters(simulation_hour, outgoing_commuters_by_region, &engine_ranks, world);
                 }
             };
 
@@ -381,7 +381,8 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 let mut span2 = tracer.start("receive_commuters");
                 span2.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
                 let cx2 = Context::current_with_span(span2);
-                let received_commuters = commute::receive_commuters(&commute_plan, simulation_hour, engine_id, world);
+                let ranks = engine_ranks.values().cloned().collect::<Vec<Rank>>();
+                let received_commuters = commute::receive_commuters(&commute_plan, simulation_hour, engine_id, world, &ranks);
                 let mut incoming_commuters = received_commuters.with_context(cx2).await;
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
@@ -461,69 +462,69 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
     fn send_commuters(hour: Hour, outgoing: Vec<CommutersByRegion>, engine_ranks: &HashMap<String, Rank>, world: SystemCommunicator) {
         let h = hour % 24;
         if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
-                for out_region in outgoing.iter() {
-                    let rank: &Rank = engine_ranks.iter().find(|(x, y)| { *x == out_region.to_engine_id() }).unwrap().1;
-                    let serialized = serialize(&out_region).unwrap();
-                    world.process_at_rank(*rank).send(&serialized[..]);
-                    info!("sent commuters");
-                }
-            }
-        }
-
-        fn stop_simulation(lock_down_details: &mut LockdownIntervention, run_mode: &RunMode, row: Counts) -> bool {
-            let zero_active_cases = row.get_exposed() == 0 && row.get_infected() == 0 && row.get_hospitalized() == 0;
-            match run_mode {
-                RunMode::MultiEngine => {
-                    if lock_down_details.is_locked_down() && zero_active_cases {
-                        lock_down_details.set_zero_infection_hour(row.get_hour());
-                    }
-                    false
-                }
-                _ => zero_active_cases,
+            for out_region in outgoing.iter() {
+                let rank: &Rank = engine_ranks.iter().find(|(x, y)| { *x == out_region.to_engine_id() }).unwrap().1;
+                let serialized = serialize(&out_region).unwrap();
+                world.process_at_rank(*rank).send(&serialized[..]);
+                info!("sent commuters");
             }
         }
     }
 
-    #[cfg(test)]
-    mod tests {
-        use crate::geography::Area;
-        use crate::geography::Point;
-        use crate::config::intervention_config::{InterventionConfig, VaccinateConfig};
-        use crate::config::{AutoPopulation, GeographyParameters};
-        use crate::disease::Disease;
-
-        use super::*;
-
-        #[test]
-        fn should_init() {
-            let pop = AutoPopulation { number_of_agents: 10, public_transport_percentage: 1.0, working_percentage: 1.0 };
-            let disease = Disease::new(0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0);
-            let vac = VaccinateConfig { at_hour: 5000, percent: 0.2 };
-            let geography_parameters = GeographyParameters::new(100, 0.003);
-            let config = Config::new(
-                Population::Auto(pop),
-                Some(disease),
-                geography_parameters,
-                vec![],
-                100,
-                vec![InterventionConfig::Vaccinate(vac)],
-                None,
-            );
-            let engine_id = "some_id";
-            let epidemiology: Epidemiology<_> =
-                Epidemiology::new(config, None, engine_id.to_string(), &RunMode::Standalone, disease);
-            let expected_housing_area = Area::new(&engine_id.to_string(), Point::new(0, 0), Point::new(39, 100));
-            assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
-
-            let expected_transport_area = Area::new(&engine_id.to_string(), Point::new(40, 0), Point::new(59, 100));
-            assert_eq!(epidemiology.citizen_location_map.grid.transport_area, expected_transport_area);
-
-            let expected_work_area = Area::new(&engine_id.to_string(), Point::new(60, 0), Point::new(79, 100));
-            assert_eq!(epidemiology.citizen_location_map.grid.work_area, expected_work_area);
-
-            let expected_hospital_area = Area::new(&engine_id.to_string(), Point::new(80, 0), Point::new(89, 0));
-            assert_eq!(epidemiology.citizen_location_map.grid.hospital_area, expected_hospital_area);
-
-            assert_eq!(epidemiology.citizen_location_map.current_population(), 10);
+    fn stop_simulation(lock_down_details: &mut LockdownIntervention, run_mode: &RunMode, row: Counts) -> bool {
+        let zero_active_cases = row.get_exposed() == 0 && row.get_infected() == 0 && row.get_hospitalized() == 0;
+        match run_mode {
+            RunMode::MultiEngine => {
+                if lock_down_details.is_locked_down() && zero_active_cases {
+                    lock_down_details.set_zero_infection_hour(row.get_hour());
+                }
+                false
+            }
+            _ => zero_active_cases,
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::geography::Area;
+    use crate::geography::Point;
+    use crate::config::intervention_config::{InterventionConfig, VaccinateConfig};
+    use crate::config::{AutoPopulation, GeographyParameters};
+    use crate::disease::Disease;
+
+    use super::*;
+
+    #[test]
+    fn should_init() {
+        let pop = AutoPopulation { number_of_agents: 10, public_transport_percentage: 1.0, working_percentage: 1.0 };
+        let disease = Disease::new(0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0);
+        let vac = VaccinateConfig { at_hour: 5000, percent: 0.2 };
+        let geography_parameters = GeographyParameters::new(100, 0.003);
+        let config = Config::new(
+            Population::Auto(pop),
+            Some(disease),
+            geography_parameters,
+            vec![],
+            100,
+            vec![InterventionConfig::Vaccinate(vac)],
+            None,
+        );
+        let engine_id = "some_id";
+        let epidemiology: Epidemiology<_> =
+            Epidemiology::new(config, None, engine_id.to_string(), &RunMode::Standalone, disease);
+        let expected_housing_area = Area::new(&engine_id.to_string(), Point::new(0, 0), Point::new(39, 100));
+        assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
+
+        let expected_transport_area = Area::new(&engine_id.to_string(), Point::new(40, 0), Point::new(59, 100));
+        assert_eq!(epidemiology.citizen_location_map.grid.transport_area, expected_transport_area);
+
+        let expected_work_area = Area::new(&engine_id.to_string(), Point::new(60, 0), Point::new(79, 100));
+        assert_eq!(epidemiology.citizen_location_map.grid.work_area, expected_work_area);
+
+        let expected_hospital_area = Area::new(&engine_id.to_string(), Point::new(80, 0), Point::new(89, 0));
+        assert_eq!(epidemiology.citizen_location_map.grid.hospital_area, expected_hospital_area);
+
+        assert_eq!(epidemiology.citizen_location_map.current_population(), 10);
+    }
+}

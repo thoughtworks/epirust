@@ -17,6 +17,11 @@
  *
  */
 
+use bincode::deserialize;
+use mpi::point_to_point::Source;
+use mpi::Rank;
+use mpi::topology::SystemCommunicator;
+use mpi::traits::Communicator;
 use crate::models::custom_types::{Count, Hour};
 use crate::models::travel_plan::TravelPlan;
 
@@ -88,24 +93,24 @@ impl EngineMigrationPlan {
         self.current_total_population = val;
     }
 
-    pub async fn receive_migrators(&self, hour: Hour) -> Vec<Migrator> {
+    pub async fn receive_migrators(&self, hour: Hour, world: SystemCommunicator, engine_ranks: &Vec<Rank>) -> Vec<Migrator> {
+        let mut incoming: Vec<Migrator> = Vec::new();
         if hour % 24 == 0 {
             let expected_incoming_regions = self.incoming_regions_count();
-            let mut received_incoming_regions = 0;
+            info!("inside receive migrator");
             debug!("Receiving migrators from {} regions", expected_incoming_regions);
-            let mut incoming: Vec<Migrator> = Vec::new();
-            while expected_incoming_regions != received_incoming_regions {
-                // let maybe_msg = travel_consumer::read_migrators(message_stream.next().await);
-                //                 let mut received_payload: Vec<u8> = Vec::new();
-                //                 world.any_process().receive_into(&mut received_payload);
-                //                 let region_incoming: MigratorsByRegion = bincode::deserialize(&received_payload).unwrap();
-                //                 incoming.extend(region_incoming.get_migrators());
-                //                 received_incoming_regions += 1;
+            let my_rank = world.rank();
+            let mut buffer = vec![0u8; 1024];
+            let receiving_ranks : Vec<_>  = engine_ranks.iter().filter(|&r|{*r != my_rank}).collect();
+            info!("my rank - {}, receiving ranks - {:?}", my_rank, receiving_ranks);
+            for &rank in receiving_ranks.iter() {
+                let status = world.process_at_rank(*rank).receive_into(&mut buffer[..]);
+                let received: MigratorsByRegion = deserialize(&buffer[..]).unwrap();
+                info!("rank - {:?}, simulation_hour - {}, {}, {:?}", my_rank, hour, received.migrators.len(), status);
+                incoming.extend(received.get_migrators());
             }
-            incoming
-        } else {
-            Vec::new()
         }
+        incoming
     }
 }
 

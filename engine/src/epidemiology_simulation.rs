@@ -255,6 +255,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         for (i, engine) in travel_plan_config.regions.iter().enumerate() {
             engine_ranks.insert(engine.clone(), Rank::from(i as u8));
         }
+        let ranks = engine_ranks.values().cloned().collect::<Vec<Rank>>();
         info!("engine ranks - {:?}", engine_ranks);
         info!("rank in the engine app - {}", rank);
 
@@ -288,14 +289,6 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         for simulation_hour in 1..hours {
             let start_time = Instant::now();
             let tracer = global::tracer("epirust-trace");
-            // let tick =
-            //     receive_tick(simulation_hour, is_commute_enabled, is_migration_enabled).await;
-            // if let Some(t) = tick {
-            //     if t.terminate() {
-            //         info!("received tick {:?}", t);
-            //         break;
-            //     }
-            // }
 
             counts_at_hr.increment_hour();
 
@@ -318,7 +311,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
             let received_migrators = if is_migration_enabled {
                 debug!("{}: Received Migrators | Simulation hour: {}", engine_id, simulation_hour);
-                Some(engine_migration_plan.receive_migrators(simulation_hour))
+                Some(engine_migration_plan.receive_migrators(simulation_hour, world, &ranks))
             } else {
                 None
             };
@@ -364,7 +357,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
                 if is_migration_enabled {
                     debug!("{}: Send Migrators", engine_id);
-                    // Self::send_migrators(simulation_hour, outgoing_migrators_by_region, &engine_ranks, world);
+                    Self::send_migrators(simulation_hour, outgoing_migrators_by_region, &engine_ranks, world);
                 }
                 if is_commute_enabled {
                     debug!("{}: Send Commuters", engine_id);
@@ -381,7 +374,6 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 let mut span2 = tracer.start("receive_commuters");
                 span2.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
                 let cx2 = Context::current_with_span(span2);
-                let ranks = engine_ranks.values().cloned().collect::<Vec<Rank>>();
                 let received_commuters = commute::receive_commuters(&commute_plan, simulation_hour, engine_id, world, &ranks);
                 let mut incoming_commuters = received_commuters.with_context(cx2).await;
                 n_incoming += incoming_commuters.len();
@@ -392,12 +384,12 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
             }
 
             if is_migration_enabled {
-                // let migration_start_time = Instant::now();
-                // let (mut incoming, ) = join!(received_migrators.unwrap());
-                // n_incoming += incoming.len();
-                // n_outgoing += outgoing.len();
-                // self.citizen_location_map.remove_migrators(&actual_outgoing, counts_at_hr);
-                // self.citizen_location_map.assimilate_migrators(&mut incoming, counts_at_hr, rng);
+                let (mut incoming, ) = join!(received_migrators.unwrap());
+                info!("receive migrator call is done for hour - {}", simulation_hour);
+                n_incoming += incoming.len();
+                n_outgoing += outgoing.len();
+                self.citizen_location_map.remove_migrators(&actual_outgoing, counts_at_hr);
+                self.citizen_location_map.assimilate_migrators(&mut incoming, counts_at_hr, rng);
                 debug!("{}: assimilated the migrators", engine_id);
             }
 
@@ -451,9 +443,8 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         if hour % 24 == 0 {
             for out_region in outgoing.iter() {
                 let rank: &Rank = engine_ranks.iter().find(|(x, y)| { *x == out_region.to_engine_id() }).unwrap().1;
-                let payload = serde_json::to_string(out_region).unwrap();
-                let abc = payload.as_bytes();
-                world.process_at_rank(*rank).send(abc);
+                let serialized = serialize(&out_region).unwrap();
+                world.process_at_rank(*rank).send(&serialized[..]);
                 debug!("sent migrators");
             };
         }

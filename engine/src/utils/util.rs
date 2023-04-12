@@ -17,10 +17,10 @@
  *
  */
 
-use crate::models::events::Counts;
-use crate::run_mode::RunMode;
 use crate::config::{Config, StartingInfections};
 use crate::models::custom_types::Count;
+use crate::models::events::Counts;
+use crate::run_mode::RunMode;
 use time::OffsetDateTime;
 
 pub fn output_file_format(config: &Config, run_mode: &RunMode, engine_id: String) -> String {

@@ -18,7 +18,7 @@
  */
 
 pub mod environment;
-pub(crate) mod util;
 pub mod random_wrapper;
+pub(crate) mod util;
 
 pub use util::{counts_at_start, output_file_format};

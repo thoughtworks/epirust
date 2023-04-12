@@ -17,8 +17,8 @@
  *
  */
 
-use crate::geography::{Area, Point};
 use crate::config::StartingInfections;
+use crate::geography::{Area, Point};
 use crate::models::custom_types::{Count, Percentage};
 
 pub struct CitizensData<'a> {

@@ -17,15 +17,22 @@
  *
  */
 
+use crate::config::{Config, TravelPlanConfig};
 use crate::epidemiology_simulation::Epidemiology;
 use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
-use crate::config::{Config, TravelPlanConfig};
 
 pub struct EngineApp;
 
 impl EngineApp {
-    pub async fn start <T: DiseaseHandler + Sync>(engine_id : String, config: Config, run_mode: &RunMode, travel_plan_config: Option<TravelPlanConfig>, dsh: Option<T>, threads: u32) {
+    pub async fn start<T: DiseaseHandler + Sync>(
+        engine_id: String,
+        config: Config,
+        run_mode: &RunMode,
+        travel_plan_config: Option<TravelPlanConfig>,
+        dsh: Option<T>,
+        threads: u32,
+    ) {
         if dsh.is_none() {
             let disease = config.get_disease();
             let mut epidemiology = Epidemiology::new(config, travel_plan_config, engine_id, run_mode, disease);

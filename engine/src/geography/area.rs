@@ -25,7 +25,6 @@ use rand::seq::IteratorRandom;
 use rand::Rng;
 use std::hash::{Hash, Hasher};
 
-
 use crate::geography::Point;
 
 #[derive(Clone, Copy, Eq, Debug, Serialize, Deserialize)]

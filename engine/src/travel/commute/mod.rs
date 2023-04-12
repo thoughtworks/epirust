@@ -16,22 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+pub mod commute_plan;
 mod commuter;
 mod commuters_by_region;
-pub mod commute_plan;
 
 use bincode::deserialize;
-use mpi::Rank;
 use mpi::topology::SystemCommunicator;
 use mpi::traits::{Communicator, Source};
+use mpi::Rank;
 
-use crate::models::custom_types::Hour;
 use crate::models::constants;
+use crate::models::custom_types::Hour;
 
+use crate::travel::travel_plan::TravelPlan;
+use commute_plan::CommutePlan;
 pub use commuter::Commuter;
 pub use commuters_by_region::CommutersByRegion;
-use commute_plan::CommutePlan;
-use crate::travel::travel_plan::TravelPlan;
 
 pub(crate) async fn receive_commuters(
     commute_plan: &CommutePlan,
@@ -46,11 +46,29 @@ pub(crate) async fn receive_commuters(
         let expected_incoming_regions = commute_plan.incoming_regions_count(engine_id);
         debug!("Receiving commuters from {} regions", expected_incoming_regions);
         let my_rank = world.rank();
-        let mut buffer = vec![0u8; 1024];
+        let mut buffer = vec![0u8; 6144];
         for rank in engine_ranks.iter() {
-            let status = world.process_at_rank(*rank).receive_into(&mut buffer[..]);
+            mpi::request::scope(|scope| {
+                let p = world.process_at_rank(*rank);
+                debug!("inside the scope");
+                let status = p.immediate_receive_into(scope, &mut buffer[..]);
+                debug!("immediate send is done");
+                // loop {
+                // debug!("inside loop");
+                match status.test() {
+                    Ok(_) => {
+                        debug!("successfully received the commuters, engine {}", world.rank());
+                        // break;
+                    }
+                    Err(req) => {
+                        debug!("inside the error while receiving commuters for engine: {}", world.rank());
+                        // break;
+                    }
+                }
+                // }
+            });
             let received: CommutersByRegion = deserialize(&buffer[..]).unwrap();
-            info!("rank - {:?}, simulation_hour - {}, {:?}, {:?}", my_rank, simulation_hour, received, status);
+            info!("rank - {:?}, simulation_hour - {}, {:?}", my_rank, simulation_hour, received);
             trace_commuters(&received, hour);
             incoming.extend(received.get_commuters());
         }

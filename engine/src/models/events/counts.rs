@@ -18,8 +18,8 @@
  */
 
 use crate::citizen::Citizen;
-use crate::state_machine::State;
 use crate::models::custom_types::{Count, Hour};
+use crate::state_machine::State;
 use log::info;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]

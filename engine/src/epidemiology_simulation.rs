@@ -17,21 +17,23 @@
  *
  */
 
+use bincode::{deserialize, serialize};
 use core::borrow::BorrowMut;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::time::Instant;
-use bincode::serialize;
 
 use crate::config::{Config, Population, TravelPlanConfig};
 use futures::join;
-use mpi::Rank;
+use mpi::request::{LocalScope, Request, RequestCollection};
 use mpi::topology::SystemCommunicator;
-use mpi::traits::{Communicator, Destination};
+use mpi::traits::{Communicator, Destination, Source};
+use mpi::Rank;
 use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
 use opentelemetry::{global, Context, KeyValue};
 
 use crate::allocation_map::CitizenLocationMap;
+use crate::geography;
 use crate::geography::Point;
 use crate::interventions::hospital::BuildNewHospital;
 use crate::interventions::lockdown::LockdownIntervention;
@@ -43,18 +45,17 @@ use crate::listeners::intervention_reporter::InterventionReporter;
 use crate::listeners::listener::{Listener, Listeners};
 use crate::listeners::travel_counter::TravelCounter;
 use crate::models::constants;
+use crate::models::custom_types::Hour;
 use crate::models::events::Counts;
 use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
+use crate::travel::commute;
+use crate::travel::commute::commute_plan::CommutePlan;
 use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
-use crate::utils::util::{counts_at_start, output_file_format};
-use crate::{geography};
-use crate::travel::commute::commute_plan::CommutePlan;
-use crate::models::custom_types::Hour;
-use crate::travel::commute;
 use crate::utils::random_wrapper::RandomWrapper;
+use crate::utils::util::{counts_at_start, output_file_format};
 
 pub struct Epidemiology<T: DiseaseHandler + Sync> {
     pub citizen_location_map: CitizenLocationMap,
@@ -311,6 +312,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
             };
 
             let mut outgoing_commuters: Vec<(Point, Commuter)> = Vec::new();
+            let mut incoming_commuters: Vec<Commuter> = Vec::new();
             let location_map = self.citizen_location_map.borrow_mut();
             let listeners = self.listeners.borrow_mut();
             let engine_id = &engine_id;
@@ -355,7 +357,8 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 }
                 if is_commute_enabled {
                     debug!("{}: Send Commuters", engine_id);
-                    Self::send_commuters(simulation_hour, outgoing_commuters_by_region, &engine_ranks, world);
+                    incoming_commuters =
+                        Self::send_recv_commuters(simulation_hour, outgoing_commuters_by_region, &engine_ranks, world);
                 }
             };
 
@@ -368,8 +371,8 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 let mut span2 = tracer.start("receive_commuters");
                 span2.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
                 let cx2 = Context::current_with_span(span2);
-                let received_commuters = commute::receive_commuters(&commute_plan, simulation_hour, engine_id, world, &ranks);
-                let mut incoming_commuters = received_commuters.with_context(cx2).await;
+                // let received_commuters = commute::receive_commuters(&commute_plan, simulation_hour, engine_id, world, &ranks);
+                // let mut incoming_commuters = received_commuters.with_context(cx2).await;
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
                 self.citizen_location_map.remove_commuters(&outgoing_commuters, counts_at_hr);
@@ -378,7 +381,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
             }
 
             if is_migration_enabled {
-                let (mut incoming, ) = join!(received_migrators.unwrap());
+                let (mut incoming,) = join!(received_migrators.unwrap());
                 info!("receive migrator call is done for hour - {}", simulation_hour);
                 n_incoming += incoming.len();
                 n_outgoing += outgoing.len();
@@ -425,27 +428,94 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         self.listeners.simulation_ended();
     }
 
-    fn send_migrators(hour: Hour, outgoing: Vec<MigratorsByRegion>, engine_ranks: &HashMap<String, Rank>, world: SystemCommunicator) {
+    fn send_migrators(
+        hour: Hour,
+        outgoing: Vec<MigratorsByRegion>,
+        engine_ranks: &HashMap<String, Rank>,
+        world: SystemCommunicator,
+    ) {
         if hour % 24 == 0 {
             for out_region in outgoing.iter() {
-                let rank: &Rank = engine_ranks.iter().find(|(x, _)| { *x == out_region.to_engine_id() }).unwrap().1;
+                let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == out_region.to_engine_id()).unwrap().1;
                 let serialized = serialize(&out_region).unwrap();
                 world.process_at_rank(*rank).send(&serialized[..]);
                 debug!("sent migrators");
-            };
+            }
         }
     }
 
-    fn send_commuters(hour: Hour, outgoing: Vec<CommutersByRegion>, engine_ranks: &HashMap<String, Rank>, world: SystemCommunicator) {
+    fn send_commuters(
+        hour: Hour,
+        outgoing: Vec<CommutersByRegion>,
+        engine_ranks: &HashMap<String, Rank>,
+        world: SystemCommunicator,
+    ) {
         let h = hour % 24;
         if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
             for out_region in outgoing.iter() {
-                let rank: &Rank = engine_ranks.iter().find(|(x, _)| { *x == out_region.to_engine_id() }).unwrap().1;
+                let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == out_region.to_engine_id()).unwrap().1;
                 let serialized = serialize(&out_region).unwrap();
                 world.process_at_rank(*rank).send(&serialized[..]);
                 info!("sent commuters");
             }
         }
+    }
+
+    fn send_recv_commuters(
+        hour: Hour,
+        outgoing: Vec<CommutersByRegion>,
+        engine_ranks: &HashMap<String, Rank>,
+        world: SystemCommunicator,
+    ) -> Vec<Commuter> {
+        let mut incoming: Vec<Commuter> = Vec::new();
+        let h = hour % 24;
+        let total_count = engine_ranks.iter().len();
+        let rank = world.rank();
+        assert_eq!(outgoing.len(), total_count);
+        let serialized_commuters: Vec<(&Rank, Vec<u8>)> = outgoing
+            .iter()
+            .map(|s| {
+                let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == s.to_engine_id()).unwrap().1;
+                let serialized: Vec<u8> = serialize(&s).unwrap();
+                (rank, serialized)
+            })
+            .collect();
+        let buffer = vec![0u8; 6144];
+        let mut result = vec![buffer; total_count];
+
+        if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
+            mpi::request::multiple_scope(2 * total_count, |scope, coll: &mut RequestCollection<[u8]>| {
+                for (&rank, data) in serialized_commuters.iter() {
+                    let p = world.process_at_rank(rank);
+                    let sreq = p.immediate_send(scope, &data[..]);
+                    coll.add(sreq);
+                }
+                for (index, value) in result.iter_mut().enumerate() {
+                    let rank = Rank::from(index as u8);
+                    let p = world.process_at_rank(rank);
+                    let status = p.immediate_receive_into(scope, &mut value[..]);
+                    coll.add(status);
+                }
+                let mut send_count = 0;
+                let mut recv_count = 0;
+                while coll.incomplete() > 0 {
+                    let (_u, s, r) = coll.wait_any().unwrap();
+                    if s.source_rank() == rank {
+                        let sent: CommutersByRegion = deserialize(r).unwrap();
+                        info!("engine_id: {}, hour: {}, sent_commuters - {:?}", rank, hour, sent);
+                        send_count += 1;
+                    } else {
+                        let received: CommutersByRegion = deserialize(r).unwrap();
+                        info!("engine_id: {}, hour: {}, received_commuters - {:?}", rank, hour, received);
+                        incoming.extend(received.get_commuters());
+                        recv_count += 1;
+                    }
+                }
+                assert_eq!(send_count, total_count);
+                assert_eq!(recv_count, total_count);
+            });
+        }
+        incoming
     }
 
     fn stop_simulation(lock_down_details: &mut LockdownIntervention, run_mode: &RunMode, row: Counts) -> bool {
@@ -464,11 +534,11 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::geography::Area;
-    use crate::geography::Point;
     use crate::config::intervention_config::{InterventionConfig, VaccinateConfig};
     use crate::config::{AutoPopulation, GeographyParameters};
     use crate::disease::Disease;
+    use crate::geography::Area;
+    use crate::geography::Point;
 
     use super::*;
 
@@ -488,8 +558,7 @@ mod tests {
             None,
         );
         let engine_id = "some_id";
-        let epidemiology: Epidemiology<_> =
-            Epidemiology::new(config, None, engine_id.to_string(), &RunMode::Standalone, disease);
+        let epidemiology: Epidemiology<_> = Epidemiology::new(config, None, engine_id.to_string(), &RunMode::Standalone, disease);
         let expected_housing_area = Area::new(&engine_id.to_string(), Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
 

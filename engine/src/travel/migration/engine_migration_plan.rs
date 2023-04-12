@@ -17,12 +17,12 @@
  *
  */
 
+use crate::models::custom_types::{Count, Hour};
 use bincode::deserialize;
 use mpi::point_to_point::Source;
-use mpi::Rank;
 use mpi::topology::SystemCommunicator;
 use mpi::traits::Communicator;
-use crate::models::custom_types::{Count, Hour};
+use mpi::Rank;
 
 use crate::geography::Point;
 use crate::travel::migration::migration_plan::MigrationPlan;
@@ -100,7 +100,7 @@ impl EngineMigrationPlan {
             debug!("Receiving migrators from {} regions", expected_incoming_regions);
             let my_rank = world.rank();
             let mut buffer = vec![0u8; 1024];
-            let receiving_ranks : Vec<_>  = engine_ranks.iter().filter(|&r|{*r != my_rank}).collect();
+            let receiving_ranks: Vec<_> = engine_ranks.iter().filter(|&r| *r != my_rank).collect();
             info!("my rank - {}, receiving ranks - {:?}", my_rank, receiving_ranks);
             for &rank in receiving_ranks.iter() {
                 let status = world.process_at_rank(*rank).receive_into(&mut buffer[..]);

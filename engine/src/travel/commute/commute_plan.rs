@@ -17,7 +17,6 @@
  *
  */
 
-
 use crate::travel::travel_plan::TravelPlan;
 
 #[derive(Clone, Debug, Deserialize)]

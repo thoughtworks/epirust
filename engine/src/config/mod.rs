@@ -22,8 +22,8 @@ mod population;
 mod starting_infections;
 mod travel_plan_config;
 
-pub mod intervention_config;
 pub mod configuration;
+pub mod intervention_config;
 
 pub use travel_plan_config::TravelPlanConfig;
 

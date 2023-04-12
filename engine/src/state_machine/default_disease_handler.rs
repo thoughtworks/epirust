@@ -19,11 +19,11 @@
 
 use crate::allocation_map::CitizenLocationMap;
 use crate::citizen::Citizen;
+use crate::disease::Disease;
 use crate::geography::Point;
 use crate::models::constants;
-use crate::state_machine::{DiseaseHandler, Severity, State};
-use crate::disease::Disease;
 use crate::models::custom_types::{Day, Hour};
+use crate::state_machine::{DiseaseHandler, Severity, State};
 use crate::utils::random_wrapper::RandomWrapper;
 use rand::prelude::SliceRandom;
 use rand::Rng;

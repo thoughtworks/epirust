@@ -18,5 +18,5 @@
  */
 
 pub mod constants;
-pub mod events;
 pub mod custom_types;
+pub mod events;

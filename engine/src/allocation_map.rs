@@ -79,16 +79,20 @@ impl CitizenLocationMap {
         disease_handler: &T,
     ) {
         csv_record.clear();
-        let updates: Vec<((Point, Point), Citizen, bool)> = self.par_iter().map(|(cell, agent)| {
-            let mut rng_thread = RandomWrapper::new();
-            let mut current_agent = *agent;
-            let infection_status = current_agent.state_machine.is_infected();
-            let point = current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, &mut rng_thread, disease_handler);
-            ((*cell, point), current_agent, infection_status)
-        }).collect();
+        let updates: Vec<((Point, Point), Citizen, bool)> = self
+            .par_iter()
+            .map(|(cell, agent)| {
+                let mut rng_thread = RandomWrapper::new();
+                let mut current_agent = *agent;
+                let infection_status = current_agent.state_machine.is_infected();
+                let point =
+                    current_agent.perform_operation(*cell, simulation_hour, &self.grid, self, &mut rng_thread, disease_handler);
+                ((*cell, point), current_agent, infection_status)
+            })
+            .collect();
         updates.iter().for_each(|pair| {
-            let old_cell = pair.0.0;
-            let new_cell = pair.0.1;
+            let old_cell = pair.0 .0;
+            let new_cell = pair.0 .1;
             let agent = pair.1;
             let mut new_location = &new_cell;
             let agent_at_new_cell = *self.upcoming_locations.entry(new_cell).or_insert(agent);
@@ -346,7 +350,7 @@ impl CitizenLocationMap {
 
     pub fn lock_city(&mut self, hr: Hour) {
         info!("Locking the city. Hour: {}", hr);
-        self.iter_mut().for_each(|(_,  r)| {
+        self.iter_mut().for_each(|(_, r)| {
             if !r.is_essential_worker() {
                 (*r).set_isolation(true);
             }
@@ -355,7 +359,7 @@ impl CitizenLocationMap {
 
     pub fn unlock_city(&mut self, hr: Hour) {
         info!("Unlocking city. Hour: {}", hr);
-        self.iter_mut().for_each(|(_,  r)| {
+        self.iter_mut().for_each(|(_, r)| {
             if r.is_isolated() {
                 (*r).set_isolation(false);
             }
@@ -377,7 +381,7 @@ impl CitizenLocationMap {
     }
 
     pub(crate) fn vaccinate(&mut self, vaccination_percentage: f64, rng: &mut RandomWrapper) {
-        self.iter_mut().for_each(|( _,  r)| {
+        self.iter_mut().for_each(|(_, r)| {
             if r.state_machine.is_susceptible() && rng.get().gen_bool(vaccination_percentage) {
                 (*r).set_vaccination(true);
             }
@@ -388,9 +392,7 @@ impl CitizenLocationMap {
         self.current_locations.len() as Count
     }
 
-    pub fn iter_upcoming_locations(
-        &self,
-    ) -> Iter<'_, Point, Citizen> {
+    pub fn iter_upcoming_locations(&self) -> Iter<'_, Point, Citizen> {
         self.upcoming_locations.iter()
     }
 

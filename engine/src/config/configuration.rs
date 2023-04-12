@@ -17,8 +17,8 @@
  *
  */
 
-use std::error::Error;
 use serde_json::Value;
+use std::error::Error;
 use std::fs::File;
 
 use crate::config::Population::Auto;
@@ -138,4 +138,3 @@ pub fn get_hours(filename: &str) -> i64 {
     let hours = sim[0].get("config").unwrap().get("hours");
     hours.unwrap().as_i64().unwrap()
 }
-

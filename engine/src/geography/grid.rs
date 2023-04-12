@@ -221,8 +221,11 @@ impl Grid {
         if hospital_bed_count <= self.hospital_area.get_number_of_cells() {
             let hospital_end_y: CoOrdinate =
                 (hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x) as u32) as CoOrdinate;
-            self.hospital_area =
-                Area::new(&engine_id, self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
+            self.hospital_area = Area::new(
+                &engine_id,
+                self.hospital_area.start_offset,
+                Point::new(self.hospital_area.end_offset.x, hospital_end_y),
+            );
             info!("Hospital capacity {}: ", hospital_bed_count);
         }
     }

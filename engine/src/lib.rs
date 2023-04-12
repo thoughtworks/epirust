@@ -37,9 +37,9 @@ mod state_machine;
 mod travel;
 mod utils;
 
-pub mod geography;
-pub mod disease;
 pub mod config;
+pub mod disease;
+pub mod geography;
 
 pub use engine_app::EngineApp;
 pub use run_mode::RunMode;

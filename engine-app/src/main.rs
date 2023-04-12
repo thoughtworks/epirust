@@ -18,15 +18,15 @@
  */
 
 use clap::Parser;
-use mpi::traits::Communicator;
+use engine::config::configuration::{Configuration, EngineConfig};
 use engine::config::{Config, TravelPlanConfig};
 use engine::disease::Disease;
 use engine::{EngineApp, RunMode};
+use mpi::traits::Communicator;
 use opentelemetry::sdk::trace::{config, Span};
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::{FutureExt, TraceContextExt, TraceError, Tracer};
-use opentelemetry::{Context, global, KeyValue, sdk};
-use engine::config::configuration::{Configuration, EngineConfig};
+use opentelemetry::{global, sdk, Context, KeyValue};
 
 const STANDALONE_ENGINE_ID: &str = "standalone";
 
@@ -78,25 +78,36 @@ async fn main() {
         let config_path = args.config.unwrap_or(default_config_path);
         let engine_config = Config::read(&config_path).expect("Failed to read config file");
         let run_mode = RunMode::Standalone;
-        EngineApp::start(STANDALONE_ENGINE_ID.to_string(), engine_config, &run_mode, None, disease_handler, number_of_threads).with_context(cx).await;
+        EngineApp::start(STANDALONE_ENGINE_ID.to_string(), engine_config, &run_mode, None, disease_handler, number_of_threads)
+            .with_context(cx)
+            .await;
     } else {
         println!("in multi-engine mode");
         let universe = mpi::initialize().unwrap();
         let world = universe.world();
         let rank = world.rank();
-            let default_config_path = "engine/config/simulation.json".to_string();
-            let config_path = args.config.unwrap_or(default_config_path);
-            println!("config - {}", config_path);
-            let config = Configuration::read(&config_path).expect("Error while reading config");
-            config.validate();
-            let config_per_engine = config.get_engine_configs();
-            let index: usize = (rank) as usize;
-            let self_config: &EngineConfig = config_per_engine.get(index).unwrap();
-            let travel_plan: &TravelPlanConfig = config.get_travel_plan();
-            let engine_config = &self_config.config;
-            let engine_id = String::from(&self_config.engine_id);
-            println!("engine_id - {}, rank - {} , config - {:?}", engine_id, rank, &self_config);
-            let run_mode = RunMode::MultiEngine;
-            EngineApp::start(engine_id.clone(), engine_config.clone(), &run_mode, Some(travel_plan.clone()), disease_handler, number_of_threads).with_context(cx).await;
+        let default_config_path = "engine/config/simulation.json".to_string();
+        let config_path = args.config.unwrap_or(default_config_path);
+        println!("config - {}", config_path);
+        let config = Configuration::read(&config_path).expect("Error while reading config");
+        config.validate();
+        let config_per_engine = config.get_engine_configs();
+        let index: usize = (rank) as usize;
+        let self_config: &EngineConfig = config_per_engine.get(index).unwrap();
+        let travel_plan: &TravelPlanConfig = config.get_travel_plan();
+        let engine_config = &self_config.config;
+        let engine_id = String::from(&self_config.engine_id);
+        println!("engine_id - {}, rank - {} , config - {:?}", engine_id, rank, &self_config);
+        let run_mode = RunMode::MultiEngine;
+        EngineApp::start(
+            engine_id.clone(),
+            engine_config.clone(),
+            &run_mode,
+            Some(travel_plan.clone()),
+            disease_handler,
+            number_of_threads,
+        )
+        .with_context(cx)
+        .await;
     }
 }

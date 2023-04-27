@@ -21,6 +21,7 @@
 extern crate serde_derive;
 #[macro_use]
 extern crate log;
+extern crate core;
 
 mod allocation_map;
 mod citizen;

@@ -53,7 +53,9 @@ impl CommutersByRegion {
                     commuters_for_region.push(commuter.clone())
                 }
             }
+            // if !commuters_for_region.is_empty() {
             commuters_by_region.push(CommutersByRegion { to_engine_id: region.clone(), commuters: commuters_for_region })
+            // }
         }
         commuters_by_region
     }

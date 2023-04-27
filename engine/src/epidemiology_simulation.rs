@@ -21,16 +21,20 @@ use bincode::{deserialize, serialize};
 use core::borrow::BorrowMut;
 use std::borrow::Borrow;
 use std::collections::HashMap;
+use std::io::Read;
 use std::time::Instant;
 
 use crate::config::{Config, Population, TravelPlanConfig};
-use futures::join;
-use mpi::request::{LocalScope, Request, RequestCollection};
+use futures::{join, TryFutureExt};
+use mpi::request::{LocalScope, Request, RequestCollection, WaitGuard};
 use mpi::topology::SystemCommunicator;
 use mpi::traits::{Communicator, Destination, Source};
 use mpi::Rank;
 use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
 use opentelemetry::{global, Context, KeyValue};
+use snap::raw::{decompress_len, Decoder, Encoder};
+use snap::read::{FrameDecoder, FrameEncoder};
+use snap::{read, write};
 
 use crate::allocation_map::CitizenLocationMap;
 use crate::geography;
@@ -467,51 +471,66 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         engine_ranks: &HashMap<String, Rank>,
         world: SystemCommunicator,
     ) -> Vec<Commuter> {
-        let mut incoming: Vec<Commuter> = Vec::new();
         let h = hour % 24;
-        let total_count = engine_ranks.iter().len();
-        let rank = world.rank();
-        assert_eq!(outgoing.len(), total_count);
-        let serialized_commuters: Vec<(&Rank, Vec<u8>)> = outgoing
-            .iter()
-            .map(|s| {
-                let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == s.to_engine_id()).unwrap().1;
-                let serialized: Vec<u8> = serialize(&s).unwrap();
-                (rank, serialized)
-            })
-            .collect();
-        let buffer = vec![0u8; 6144];
-        let mut result = vec![buffer; total_count];
+        let mut incoming: Vec<Commuter> = Vec::new();
 
         if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
-            mpi::request::multiple_scope(2 * total_count, |scope, coll: &mut RequestCollection<[u8]>| {
+            let total_count = engine_ranks.iter().len();
+            let self_rank = world.rank();
+            assert_eq!(outgoing.len(), total_count);
+
+            let serialized_commuters: Vec<(&Rank, Vec<u8>)> = outgoing
+                .iter()
+                .map(|s| {
+                    let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == s.to_engine_id()).unwrap().1;
+                    let serialized: Vec<u8> = serialize(&s).unwrap();
+                    let compressed: Vec<u8> = Encoder::new().compress_vec(&serialized[..]).unwrap();
+                    let length_of_buffer = compressed.len();
+                    let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
+                    compressed_data_with_length.extend(compressed);
+                    (rank, compressed_data_with_length)
+                })
+                .collect();
+            let buffer = vec![0u8; 512];
+            let mut result = vec![buffer; total_count];
+
+            mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
                 for (&rank, data) in serialized_commuters.iter() {
                     let p = world.process_at_rank(rank);
-                    let sreq = p.immediate_send(scope, &data[..]);
+                    let sreq = p.immediate_ready_send_with_tag(scope, &data[..], world.rank());
                     coll.add(sreq);
                 }
+                let mut send_count = 0;
+                while coll.incomplete() > 0 {
+                    let (_u, s, r) = coll.wait_any().unwrap();
+                    send_count += 1;
+                }
+                assert_eq!(send_count, total_count);
+            });
+
+            mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
                 for (index, value) in result.iter_mut().enumerate() {
                     let rank = Rank::from(index as u8);
                     let p = world.process_at_rank(rank);
-                    let status = p.immediate_receive_into(scope, &mut value[..]);
-                    coll.add(status);
+                    let rreq = p.immediate_receive_into_with_tag(scope, &mut value[..], rank);
+                    coll.add(rreq);
                 }
-                let mut send_count = 0;
                 let mut recv_count = 0;
                 while coll.incomplete() > 0 {
                     let (_u, s, r) = coll.wait_any().unwrap();
-                    if s.source_rank() == rank {
-                        let sent: CommutersByRegion = deserialize(r).unwrap();
-                        info!("engine_id: {}, hour: {}, sent_commuters - {:?}", rank, hour, sent);
-                        send_count += 1;
-                    } else {
-                        let received: CommutersByRegion = deserialize(r).unwrap();
-                        info!("engine_id: {}, hour: {}, received_commuters - {:?}", rank, hour, received);
-                        incoming.extend(received.get_commuters());
-                        recv_count += 1;
-                    }
+                    let length_of_msg: usize = deserialize::<u32>(&r[0..7]).unwrap() as usize;
+                    let decompressed = Decoder::new().decompress_vec(&r[8..length_of_msg + 8]).unwrap();
+                    let received: CommutersByRegion = deserialize(&decompressed[..]).unwrap();
+                    info!(
+                        "engine rank: {}, hour: {}, from_rank: {}, received_commuters - {:?}",
+                        self_rank,
+                        hour,
+                        s.source_rank(),
+                        received
+                    );
+                    incoming.extend(received.get_commuters());
+                    recv_count += 1;
                 }
-                assert_eq!(send_count, total_count);
                 assert_eq!(recv_count, total_count);
             });
         }

@@ -65,8 +65,8 @@ fn create_citizen(
     let total_work_locations = ctz_data.work_locations.len();
     let is_a_working_citizen = rng.get().gen_bool(ctz_data.working_percentage);
 
-    let home_location = ctz_data.home_locations[(number % total_home_locations)].clone();
-    let work_location = ctz_data.work_locations[(number % total_work_locations)].clone();
+    let home_location = ctz_data.home_locations[number % total_home_locations].clone();
+    let work_location = ctz_data.work_locations[number % total_work_locations].clone();
 
     let uses_public_transport = rng.get().gen_bool(ctz_data.public_transport_percentage)
         && is_a_working_citizen

@@ -21,20 +21,17 @@ use bincode::{deserialize, serialize};
 use core::borrow::BorrowMut;
 use std::borrow::Borrow;
 use std::collections::HashMap;
-use std::io::Read;
 use std::time::Instant;
 
 use crate::config::{Config, Population, TravelPlanConfig};
-use futures::{join, TryFutureExt};
-use mpi::request::{LocalScope, Request, RequestCollection, WaitGuard};
+use futures::join;
+use mpi::request::RequestCollection;
 use mpi::topology::SystemCommunicator;
 use mpi::traits::{Communicator, Destination, Source};
 use mpi::Rank;
 use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
 use opentelemetry::{global, Context, KeyValue};
-use snap::raw::{decompress_len, Decoder, Encoder};
-use snap::read::{FrameDecoder, FrameEncoder};
-use snap::{read, write};
+use snap::raw::{Decoder, Encoder};
 
 use crate::allocation_map::CitizenLocationMap;
 use crate::geography;
@@ -53,7 +50,6 @@ use crate::models::custom_types::Hour;
 use crate::models::events::Counts;
 use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
-use crate::travel::commute;
 use crate::travel::commute::commute_plan::CommutePlan;
 use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
@@ -316,7 +312,6 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
             };
 
             let mut outgoing_commuters: Vec<(Point, Commuter)> = Vec::new();
-            let mut incoming_commuters: Vec<Commuter> = Vec::new();
             let location_map = self.citizen_location_map.borrow_mut();
             let listeners = self.listeners.borrow_mut();
             let engine_id = &engine_id;
@@ -361,8 +356,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 }
                 if is_commute_enabled {
                     debug!("{}: Send Commuters", engine_id);
-                    incoming_commuters =
-                        Self::send_recv_commuters(simulation_hour, outgoing_commuters_by_region, &engine_ranks, world);
+                    Self::send_commuters(simulation_hour, outgoing_commuters_by_region, &engine_ranks, world);
                 }
             };
 
@@ -375,8 +369,9 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 let mut span2 = tracer.start("receive_commuters");
                 span2.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
                 let cx2 = Context::current_with_span(span2);
-                // let received_commuters = commute::receive_commuters(&commute_plan, simulation_hour, engine_id, world, &ranks);
-                // let mut incoming_commuters = received_commuters.with_context(cx2).await;
+                let incoming_commuters = Self::recv_commuters(simulation_hour, &engine_ranks, world);
+                let mut incoming_commuters = incoming_commuters.with_context(cx2).await;
+                debug!("start receiving commuters");
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
                 self.citizen_location_map.remove_commuters(&outgoing_commuters, counts_at_hr);
@@ -455,29 +450,11 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         world: SystemCommunicator,
     ) {
         let h = hour % 24;
-        if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
-            for out_region in outgoing.iter() {
-                let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == out_region.to_engine_id()).unwrap().1;
-                let serialized = serialize(&out_region).unwrap();
-                world.process_at_rank(*rank).send(&serialized[..]);
-                info!("sent commuters");
-            }
-        }
-    }
-
-    fn send_recv_commuters(
-        hour: Hour,
-        outgoing: Vec<CommutersByRegion>,
-        engine_ranks: &HashMap<String, Rank>,
-        world: SystemCommunicator,
-    ) -> Vec<Commuter> {
-        let h = hour % 24;
-        let mut incoming: Vec<Commuter> = Vec::new();
 
         if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
             let total_count = engine_ranks.iter().len();
-            let self_rank = world.rank();
             assert_eq!(outgoing.len(), total_count);
+            info!("total commuters to send {}", total_count);
 
             let serialized_commuters: Vec<(&Rank, Vec<u8>)> = outgoing
                 .iter()
@@ -485,14 +462,13 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                     let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == s.to_engine_id()).unwrap().1;
                     let serialized: Vec<u8> = serialize(&s).unwrap();
                     let compressed: Vec<u8> = Encoder::new().compress_vec(&serialized[..]).unwrap();
-                    let length_of_buffer = compressed.len();
+                    let length_of_buffer = compressed.len() as u32;
                     let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
+                    info!("this is send dl: {}, {:?}", length_of_buffer, compressed_data_with_length);
                     compressed_data_with_length.extend(compressed);
                     (rank, compressed_data_with_length)
                 })
                 .collect();
-            let buffer = vec![0u8; 512];
-            let mut result = vec![buffer; total_count];
 
             mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
                 for (&rank, data) in serialized_commuters.iter() {
@@ -502,11 +478,24 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 }
                 let mut send_count = 0;
                 while coll.incomplete() > 0 {
-                    let (_u, s, r) = coll.wait_any().unwrap();
+                    let (_u, _s, _r) = coll.wait_any().unwrap();
                     send_count += 1;
                 }
                 assert_eq!(send_count, total_count);
             });
+        }
+    }
+
+    async fn recv_commuters(hour: Hour, engine_ranks: &HashMap<String, Rank>, world: SystemCommunicator) -> Vec<Commuter> {
+        let mut incoming: Vec<Commuter> = Vec::new();
+
+        let h = hour % 24;
+        if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
+            let total_count = engine_ranks.iter().len();
+            info!("total commuters to receive {}", total_count);
+            let self_rank = world.rank();
+            let buffer = vec![0u8; 10240];
+            let mut result = vec![buffer; total_count];
 
             mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
                 for (index, value) in result.iter_mut().enumerate() {
@@ -518,8 +507,9 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 let mut recv_count = 0;
                 while coll.incomplete() > 0 {
                     let (_u, s, r) = coll.wait_any().unwrap();
-                    let length_of_msg: usize = deserialize::<u32>(&r[0..7]).unwrap() as usize;
-                    let decompressed = Decoder::new().decompress_vec(&r[8..length_of_msg + 8]).unwrap();
+                    let length_of_msg: usize = deserialize::<u32>(&r[0..=4]).unwrap() as usize;
+                    info!("this is receive dl: {:?}", length_of_msg);
+                    let decompressed = Decoder::new().decompress_vec(&r[4..length_of_msg + 4]).unwrap();
                     let received: CommutersByRegion = deserialize(&decompressed[..]).unwrap();
                     info!(
                         "engine rank: {}, hour: {}, from_rank: {}, received_commuters - {:?}",

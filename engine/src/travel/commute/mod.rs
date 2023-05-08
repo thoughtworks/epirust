@@ -60,7 +60,7 @@ pub(crate) async fn receive_commuters(
                         debug!("successfully received the commuters, engine {}", world.rank());
                         // break;
                     }
-                    Err(req) => {
+                    Err(_req) => {
                         debug!("inside the error while receiving commuters for engine: {}", world.rank());
                         // break;
                     }

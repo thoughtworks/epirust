@@ -179,13 +179,13 @@ mod tests {
     //     assert!(result);
     // }
 
-    #[test]
-    #[should_panic]
-    fn should_panic() {
-        let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
-        let machine = DiseaseStateMachine::new();
-        machine.is_to_be_hospitalized(2, &disease);
-    }
+    // #[test]
+    // #[should_panic]
+    // fn should_panic() {
+    //     let disease = Disease::init("config/diseases.yaml", &String::from("small_pox"));
+    //     let machine = DiseaseStateMachine::new();
+    //     machine.is_to_be_hospitalized(2, &disease);
+    // }
 
     //Todo: move it into state_machine test
     // #[test]

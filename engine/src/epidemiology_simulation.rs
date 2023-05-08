@@ -464,7 +464,6 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                     let compressed: Vec<u8> = Encoder::new().compress_vec(&serialized[..]).unwrap();
                     let length_of_buffer = compressed.len() as u32;
                     let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
-                    info!("this is send dl: {}, {:?}", length_of_buffer, compressed_data_with_length);
                     compressed_data_with_length.extend(compressed);
                     (rank, compressed_data_with_length)
                 })
@@ -508,10 +507,16 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 while coll.incomplete() > 0 {
                     let (_u, s, r) = coll.wait_any().unwrap();
                     let length_of_msg: usize = deserialize::<u32>(&r[0..=4]).unwrap() as usize;
-                    info!("this is receive dl: {:?}", length_of_msg);
                     let decompressed = Decoder::new().decompress_vec(&r[4..length_of_msg + 4]).unwrap();
                     let received: CommutersByRegion = deserialize(&decompressed[..]).unwrap();
                     info!(
+                        "engine rank: {}, hour: {}, from_rank: {}, no_of_commuters - {}",
+                        self_rank,
+                        hour,
+                        s.source_rank(),
+                        received.commuters.len()
+                    );
+                    debug!(
                         "engine rank: {}, hour: {}, from_rank: {}, received_commuters - {:?}",
                         self_rank,
                         hour,

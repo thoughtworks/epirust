@@ -96,7 +96,6 @@ impl EngineMigrationPlan {
         let mut incoming: Vec<Migrator> = Vec::new();
         if hour % 24 == 0 {
             let expected_incoming_regions = self.incoming_regions_count();
-            info!("inside receive migrator");
             debug!("Receiving migrators from {} regions", expected_incoming_regions);
             let my_rank = world.rank();
             let mut buffer = vec![0u8; 1024];

@@ -351,12 +351,14 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 };
 
                 if is_migration_enabled {
-                    debug!("{}: Send Migrators", engine_id);
+                    debug!("{}: Initiated: Send Migrators", engine_id);
                     Self::send_migrators(simulation_hour, outgoing_migrators_by_region, &engine_ranks, world);
+                    debug!("{}: Finished: Send Migrators", engine_id);
                 }
                 if is_commute_enabled {
-                    debug!("{}: Send Commuters", engine_id);
+                    debug!("{}: Initiated: Send Commuters", engine_id);
                     Self::send_commuters(simulation_hour, outgoing_commuters_by_region, &engine_ranks, world);
+                    debug!("{}: Finished: Send Commuters", engine_id);
                 }
             };
 
@@ -454,7 +456,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
             let total_count = engine_ranks.iter().len();
             assert_eq!(outgoing.len(), total_count);
-            info!("total commuters to send {}", total_count);
+            debug!("total commuters to send {}", total_count);
 
             let serialized_commuters: Vec<(&Rank, Vec<u8>)> = outgoing
                 .iter()
@@ -464,6 +466,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                     let compressed: Vec<u8> = Encoder::new().compress_vec(&serialized[..]).unwrap();
                     let length_of_buffer = compressed.len() as u32;
                     let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
+                    info!("this is send dl: {}", length_of_buffer);
                     compressed_data_with_length.extend(compressed);
                     (rank, compressed_data_with_length)
                 })
@@ -491,9 +494,9 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         let h = hour % 24;
         if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
             let total_count = engine_ranks.iter().len();
-            info!("total commuters to receive {}", total_count);
+            debug!("total commuters to receive {}", total_count);
             let self_rank = world.rank();
-            let buffer = vec![0u8; 120240];
+            let buffer = vec![0u8; 60000];
             let mut result = vec![buffer; total_count];
 
             mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
@@ -507,6 +510,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 while coll.incomplete() > 0 {
                     let (_u, s, r) = coll.wait_any().unwrap();
                     let length_of_msg: usize = deserialize::<u32>(&r[0..=4]).unwrap() as usize;
+                    info!("this is receive dl: {}", length_of_msg);
                     let decompressed = Decoder::new().decompress_vec(&r[4..length_of_msg + 4]).unwrap();
                     let received: CommutersByRegion = deserialize(&decompressed[..]).unwrap();
                     info!(
@@ -528,6 +532,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 }
                 assert_eq!(recv_count, total_count);
             });
+            debug!("successfully received commuters {}", total_count);
         }
         incoming
     }

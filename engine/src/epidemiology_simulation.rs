@@ -311,6 +311,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 None
             };
 
+            let mut incoming_commuters: Vec<Commuter> = Vec::new();
             let mut outgoing_commuters: Vec<(Point, Commuter)> = Vec::new();
             let location_map = self.citizen_location_map.borrow_mut();
             let listeners = self.listeners.borrow_mut();
@@ -357,7 +358,8 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 }
                 if is_commute_enabled {
                     debug!("{}: Initiated: Send Commuters", engine_id);
-                    Self::send_commuters(simulation_hour, outgoing_commuters_by_region, &engine_ranks, world);
+                    incoming_commuters =
+                        Self::send_recv_commuters(simulation_hour, outgoing_commuters_by_region, &engine_ranks, world);
                     debug!("{}: Finished: Send Commuters", engine_id);
                 }
             };
@@ -371,8 +373,8 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                 let mut span2 = tracer.start("receive_commuters");
                 span2.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
                 let cx2 = Context::current_with_span(span2);
-                let incoming_commuters = Self::recv_commuters(simulation_hour, &engine_ranks, world);
-                let mut incoming_commuters = incoming_commuters.with_context(cx2).await;
+                // let incoming_commuters = Self::recv_commuters(simulation_hour, &engine_ranks, world);
+                // let mut incoming_commuters = incoming_commuters.with_context(cx2).await;
                 debug!("start receiving commuters");
                 n_incoming += incoming_commuters.len();
                 n_outgoing += outgoing_commuters.len();
@@ -445,47 +447,61 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         }
     }
 
-    fn send_commuters(
+    fn send_recv_commuters(
         hour: Hour,
         outgoing: Vec<CommutersByRegion>,
         engine_ranks: &HashMap<String, Rank>,
         world: SystemCommunicator,
-    ) {
+    ) -> Vec<Commuter> {
+        let mut incoming: Vec<Commuter> = Vec::new();
         let h = hour % 24;
+        let total_count = engine_ranks.iter().len();
+        let rank = world.rank();
+        assert_eq!(outgoing.len(), total_count);
+        let serialized_commuters: Vec<(&Rank, Vec<u8>)> = outgoing
+            .iter()
+            .map(|s| {
+                let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == s.to_engine_id()).unwrap().1;
+                let serialized: Vec<u8> = serialize(&s).unwrap();
+                (rank, serialized)
+            })
+            .collect();
+        let buffer = vec![0u8; 20000];
+        let mut result = vec![buffer; total_count];
 
         if h == constants::ROUTINE_TRAVEL_START_TIME || h == constants::ROUTINE_TRAVEL_END_TIME {
-            let total_count = engine_ranks.iter().len();
-            assert_eq!(outgoing.len(), total_count);
-            debug!("total commuters to send {}", total_count);
-
-            let serialized_commuters: Vec<(&Rank, Vec<u8>)> = outgoing
-                .iter()
-                .map(|s| {
-                    let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == s.to_engine_id()).unwrap().1;
-                    let serialized: Vec<u8> = serialize(&s).unwrap();
-                    let compressed: Vec<u8> = Encoder::new().compress_vec(&serialized[..]).unwrap();
-                    let length_of_buffer = compressed.len() as u32;
-                    let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
-                    info!("this is send dl: {}", length_of_buffer);
-                    compressed_data_with_length.extend(compressed);
-                    (rank, compressed_data_with_length)
-                })
-                .collect();
-
-            mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
+            mpi::request::multiple_scope(2 * total_count, |scope, coll: &mut RequestCollection<[u8]>| {
                 for (&rank, data) in serialized_commuters.iter() {
                     let p = world.process_at_rank(rank);
-                    let sreq = p.immediate_ready_send_with_tag(scope, &data[..], world.rank());
+                    let sreq = p.immediate_send(scope, &data[..]);
                     coll.add(sreq);
                 }
+                for (index, value) in result.iter_mut().enumerate() {
+                    let rank = Rank::from(index as u8);
+                    let p = world.process_at_rank(rank);
+                    let status = p.immediate_receive_into(scope, &mut value[..]);
+                    coll.add(status);
+                }
                 let mut send_count = 0;
+                let mut recv_count = 0;
                 while coll.incomplete() > 0 {
-                    let (_u, _s, _r) = coll.wait_any().unwrap();
-                    send_count += 1;
+                    let (_u, s, r) = coll.wait_any().unwrap();
+                    if s.source_rank() == rank {
+                        let sent: CommutersByRegion = deserialize(r).unwrap();
+                        info!("engine_id: {}, hour: {}, sent_commuters - {:?}", rank, hour, sent);
+                        send_count += 1;
+                    } else {
+                        let received: CommutersByRegion = deserialize(r).unwrap();
+                        info!("engine_id: {}, hour: {}, received_commuters - {:?}", rank, hour, received);
+                        incoming.extend(received.get_commuters());
+                        recv_count += 1;
+                    }
                 }
                 assert_eq!(send_count, total_count);
+                assert_eq!(recv_count, total_count);
             });
         }
+        incoming
     }
 
     async fn recv_commuters(hour: Hour, engine_ranks: &HashMap<String, Rank>, world: SystemCommunicator) -> Vec<Commuter> {

@@ -18,15 +18,19 @@
  */
 
 use clap::Parser;
-use engine::config::configuration::{Configuration, EngineConfig};
-use engine::config::{Config, TravelPlanConfig};
-use engine::disease::Disease;
-use engine::{EngineApp, RunMode};
 use mpi::traits::Communicator;
 use opentelemetry::sdk::trace::{config, Span};
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::{FutureExt, TraceContextExt, TraceError, Tracer};
 use opentelemetry::{global, sdk, Context, KeyValue};
+
+use crate::file_logger::FileLogger;
+use engine::config::configuration::{Configuration, EngineConfig};
+use engine::config::{Config, TravelPlanConfig};
+use engine::disease::Disease;
+use engine::{EngineApp, RunMode};
+
+mod file_logger;
 
 const STANDALONE_ENGINE_ID: &str = "standalone";
 
@@ -58,7 +62,8 @@ fn init_tracer() -> Result<sdk::trace::Tracer, TraceError> {
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
+    // env_logger::init();
+
     let args = Args::parse();
     let number_of_threads = args.threads;
     let standalone = args.standalone;
@@ -76,11 +81,11 @@ async fn main() {
         println!("its here in standalone");
         let default_config_path = "engine/config/default.json".to_string();
         let config_path = args.config.unwrap_or(default_config_path);
-        let engine_config = Config::read(&config_path).expect("Failed to read config file");
+        let engine_config: Config = Config::read(&config_path).expect("Failed to read config file");
         let run_mode = RunMode::Standalone;
-        EngineApp::start(STANDALONE_ENGINE_ID.to_string(), engine_config, &run_mode, None, disease_handler, number_of_threads)
-            .with_context(cx)
-            .await;
+        let engine_id = STANDALONE_ENGINE_ID.to_string();
+        FileLogger::init(engine_id.to_string()).unwrap();
+        EngineApp::start(engine_id, engine_config, &run_mode, None, disease_handler, number_of_threads).with_context(cx).await;
     } else {
         println!("in multi-engine mode");
         let universe = mpi::initialize().unwrap();
@@ -97,6 +102,7 @@ async fn main() {
         let travel_plan: &TravelPlanConfig = config.get_travel_plan();
         let engine_config = &self_config.config;
         let engine_id = String::from(&self_config.engine_id);
+        FileLogger::init(engine_id.to_string()).unwrap();
         println!("engine_id - {}, rank - {} , config - {:?}", engine_id, rank, &self_config);
         let run_mode = RunMode::MultiEngine;
         EngineApp::start(

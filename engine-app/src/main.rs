@@ -33,6 +33,7 @@ use engine::{EngineApp, RunMode};
 mod file_logger;
 
 const STANDALONE_ENGINE_ID: &str = "standalone";
+const BUFFER_SIZE: usize = 10 * 1024 * 1024;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -88,7 +89,16 @@ async fn main() {
         EngineApp::start(engine_id, engine_config, &run_mode, None, disease_handler, number_of_threads).with_context(cx).await;
     } else {
         println!("in multi-engine mode");
-        let universe = mpi::initialize().unwrap();
+        let mut universe = mpi::initialize().unwrap();
+        // Try to attach a buffer.
+        universe.set_buffer_size(BUFFER_SIZE);
+        // Check buffer size matches.
+        assert_eq!(universe.buffer_size(), BUFFER_SIZE);
+        // Try to detach the buffer.
+        universe.detach_buffer();
+        // Attach another buffer.
+        universe.set_buffer_size(BUFFER_SIZE);
+
         let world = universe.world();
         let rank = world.rank();
         let default_config_path = "engine/config/simulation.json".to_string();

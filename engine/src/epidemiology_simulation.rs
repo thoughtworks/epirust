@@ -471,25 +471,28 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                     let length_of_buffer = compressed.len();
                     let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
                     compressed_data_with_length.extend(compressed);
+                    debug!("Rank {self_rank}: to {} this much {}", rank, length_of_buffer);
                     (rank, compressed_data_with_length)
                 })
                 .collect();
-            let buffer = vec![0u8; 60000];
+            let buffer = vec![0u8; 120000];
             let mut result = vec![buffer; total_count];
 
-            mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
-                for (&rank, data) in serialized_commuters.iter() {
-                    let p = world.process_at_rank(rank);
-                    let sreq = p.immediate_ready_send_with_tag(scope, &data[..], world.rank());
-                    coll.add(sreq);
-                }
-                let mut send_count = 0;
-                while coll.incomplete() > 0 {
-                    let (_u, s, r) = coll.wait_any().unwrap();
-                    send_count += 1;
-                }
-                assert_eq!(send_count, total_count);
-            });
+            // mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
+            // debug!("serialized_commuters {:?}", serialized_commuters.iter().map(|x| (x.0, x.1.len())));
+            for (&rank, data) in serialized_commuters.iter() {
+                let p = world.process_at_rank(rank);
+                let sreq = p.buffered_send_with_tag(&data[..], world.rank());
+                // coll.add(sreq);
+            }
+            // let mut send_count = 0;
+            // while coll.incomplete() > 0 {
+            //     let (_u, s, r) = coll.wait_any().unwrap();
+            //     send_count += 1;
+            //     info!("rank = {}, send commuter= {:?}, incomplete = {}", self_rank,s, coll.incomplete());
+            // }
+            // assert_eq!(send_count, total_count);
+            // });
 
             mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
                 for (index, value) in result.iter_mut().enumerate() {

@@ -92,18 +92,12 @@ async fn main() {
         let mut universe = mpi::initialize().unwrap();
         // Try to attach a buffer.
         universe.set_buffer_size(BUFFER_SIZE);
-        // Check buffer size matches.
         assert_eq!(universe.buffer_size(), BUFFER_SIZE);
-        // Try to detach the buffer.
-        universe.detach_buffer();
-        // Attach another buffer.
-        universe.set_buffer_size(BUFFER_SIZE);
 
         let world = universe.world();
         let rank = world.rank();
         let default_config_path = "engine/config/simulation.json".to_string();
         let config_path = args.config.unwrap_or(default_config_path);
-        println!("config - {}", config_path);
         let config = Configuration::read(&config_path).expect("Error while reading config");
         config.validate();
         let config_per_engine = config.get_engine_configs();
@@ -113,7 +107,6 @@ async fn main() {
         let engine_config = &self_config.config;
         let engine_id = String::from(&self_config.engine_id);
         FileLogger::init(engine_id.to_string()).unwrap();
-        println!("engine_id - {}, rank - {} , config - {:?}", engine_id, rank, &self_config);
         let run_mode = RunMode::MultiEngine;
         EngineApp::start(
             engine_id.clone(),

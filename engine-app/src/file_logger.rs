@@ -51,7 +51,7 @@ impl FileLogger {
         // and the programmatically specified level to stderr.
         let config = log4rs::config::Config::builder()
             .appender(Appender::builder().build("logfile", Box::new(logfile)))
-            .build(Root::builder().appender("logfile").build(LevelFilter::Trace))
+            .build(Root::builder().appender("logfile").build(LevelFilter::Debug))
             .unwrap();
 
         log4rs::init_config(config)

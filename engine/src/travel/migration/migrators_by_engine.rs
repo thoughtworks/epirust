@@ -22,7 +22,7 @@ use crate::travel::migration::migration_plan::MigrationPlan;
 use crate::travel::migration::Migrator;
 use crate::travel::travel_plan::TravelPlan;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MigratorsByRegion {
     to_engine_id: String,
     pub migrators: Vec<Migrator>,

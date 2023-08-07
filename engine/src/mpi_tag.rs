@@ -1,6 +1,6 @@
 /*
  * EpiRust
- * Copyright (c) 2020  ThoughtWorks, Inc.
+ * Copyright (c) 2023  ThoughtWorks, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,32 +17,18 @@
  *
  */
 
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate log;
-extern crate core;
+use mpi::Tag;
 
-mod allocation_map;
-mod citizen;
-mod disease_state_machine;
-mod engine_app;
-mod epidemiology_simulation;
-mod helpers;
-mod interventions;
-mod listeners;
-mod models;
-mod population;
-mod run_mode;
-mod state_machine;
-mod travel;
-mod utils;
+pub enum MpiTag {
+    CommuterTag,
+    MigratorTag,
+}
 
-pub mod config;
-pub mod disease;
-pub mod geography;
-mod mpi_tag;
-
-pub use engine_app::EngineApp;
-pub use run_mode::RunMode;
-pub use state_machine::*;
+impl Into<Tag> for MpiTag {
+    fn into(self) -> Tag {
+        match self {
+            MpiTag::CommuterTag => 12,
+            MpiTag::MigratorTag => 15,
+        }
+    }
+}

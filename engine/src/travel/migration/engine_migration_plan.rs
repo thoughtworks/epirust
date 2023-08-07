@@ -17,14 +17,17 @@
  *
  */
 
-use crate::models::custom_types::{Count, Hour};
 use bincode::deserialize;
 use mpi::point_to_point::Source;
+use mpi::request::RequestCollection;
 use mpi::topology::SystemCommunicator;
 use mpi::traits::Communicator;
 use mpi::Rank;
+use snap::raw::Decoder;
 
 use crate::geography::Point;
+use crate::models::custom_types::{Count, Hour};
+use crate::mpi_tag::MpiTag;
 use crate::travel::migration::migration_plan::MigrationPlan;
 use crate::travel::migration::{Migrator, MigratorsByRegion};
 use crate::travel::travel_plan::TravelPlan;
@@ -94,19 +97,41 @@ impl EngineMigrationPlan {
 
     pub async fn receive_migrators(&self, hour: Hour, world: SystemCommunicator, engine_ranks: &Vec<Rank>) -> Vec<Migrator> {
         let mut incoming: Vec<Migrator> = Vec::new();
+
         if hour % 24 == 0 {
-            let expected_incoming_regions = self.incoming_regions_count();
-            debug!("Receiving migrators from {} regions", expected_incoming_regions);
-            let my_rank = world.rank();
-            let mut buffer = vec![0u8; 1024];
-            let receiving_ranks: Vec<_> = engine_ranks.iter().filter(|&r| *r != my_rank).collect();
-            info!("my rank - {}, receiving ranks - {:?}", my_rank, receiving_ranks);
-            for &rank in receiving_ranks.iter() {
-                let status = world.process_at_rank(*rank).receive_into(&mut buffer[..]);
-                let received: MigratorsByRegion = deserialize(&buffer[..]).unwrap();
-                info!("rank - {:?}, simulation_hour - {}, {}, {:?}", my_rank, hour, received.migrators.len(), status);
-                incoming.extend(received.get_migrators());
-            }
+            let total_count = engine_ranks.iter().len();
+            let self_rank = world.rank();
+
+            let buffer = vec![0u8; 120000];
+            let mut result = vec![buffer; total_count];
+
+            mpi::request::multiple_scope(total_count - 1, |scope, coll: &mut RequestCollection<[u8]>| {
+                for (index, value) in result.iter_mut().enumerate().filter(|r| r.0 != (self_rank as usize)) {
+                    let rank = Rank::from(index as u8);
+                    let p = world.process_at_rank(rank);
+                    let rreq = p.immediate_receive_into_with_tag(scope, &mut value[..], MpiTag::MigratorTag.into());
+                    coll.add(rreq);
+                }
+                let mut recv_count = 0;
+                while coll.incomplete() > 0 {
+                    let (_u, s, r) = coll.wait_any().unwrap();
+                    let length_of_msg: usize = deserialize::<u32>(&r[0..7]).unwrap() as usize;
+                    let decompressed = Decoder::new().decompress_vec(&r[8..length_of_msg + 8]).unwrap();
+                    let received: MigratorsByRegion = deserialize(&decompressed[..]).unwrap();
+                    trace!(
+                        "engine rank: {}, hour: {}, from_rank: {}, received_commuters - {:?}",
+                        self_rank,
+                        hour,
+                        s.source_rank(),
+                        received
+                    );
+                    let vec1 = received.get_migrators();
+                    info!("current rank : {}, source: {}, migrators received: {}", self_rank, s.source_rank(), vec1.len());
+                    incoming.extend(vec1);
+                    recv_count += 1;
+                }
+                assert_eq!(recv_count, total_count - 1);
+            });
         }
         incoming
     }

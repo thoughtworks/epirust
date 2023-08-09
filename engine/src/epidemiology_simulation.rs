@@ -426,38 +426,6 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         self.listeners.simulation_ended();
     }
 
-    async fn send_migrators(
-        hour: Hour,
-        outgoing: Vec<MigratorsByRegion>,
-        engine_ranks: &HashMap<String, Rank>,
-        world: SystemCommunicator,
-    ) {
-        if hour % 24 == 0 {
-            let total_count = engine_ranks.iter().len() - 1;
-            let self_rank = world.rank();
-            assert_eq!(outgoing.len(), total_count);
-
-            let serialized_migrators: Vec<(&Rank, Vec<u8>)> = outgoing
-                .iter()
-                .map(|s| {
-                    let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == s.to_engine_id()).unwrap().1;
-                    let serialized: Vec<u8> = serialize(&s).unwrap();
-                    let compressed: Vec<u8> = Encoder::new().compress_vec(&serialized[..]).unwrap();
-                    let length_of_buffer = compressed.len();
-                    let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
-                    compressed_data_with_length.extend(compressed);
-                    debug!("Rank {self_rank}: to {} this much {}", rank, length_of_buffer);
-                    (rank, compressed_data_with_length)
-                })
-                .collect();
-
-            for (&rank, data) in serialized_migrators.iter() {
-                let p = world.process_at_rank(rank);
-                p.buffered_send_with_tag(&data[..], MpiTag::MigratorTag.into());
-            }
-        }
-    }
-
     async fn receive_commuters(hour: Hour, engine_ranks: &HashMap<String, Rank>, world: SystemCommunicator) -> Vec<Commuter> {
         let h = hour % 24;
         let mut incoming: Vec<Commuter> = Vec::new();
@@ -498,6 +466,38 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
             });
         }
         incoming
+    }
+
+    async fn send_migrators(
+        hour: Hour,
+        outgoing: Vec<MigratorsByRegion>,
+        engine_ranks: &HashMap<String, Rank>,
+        world: SystemCommunicator,
+    ) {
+        if hour % 24 == 0 {
+            let total_count = engine_ranks.iter().len() - 1;
+            let self_rank = world.rank();
+            assert_eq!(outgoing.len(), total_count);
+
+            let serialized_migrators: Vec<(&Rank, Vec<u8>)> = outgoing
+                .iter()
+                .map(|s| {
+                    let rank: &Rank = engine_ranks.iter().find(|(x, _)| *x == s.to_engine_id()).unwrap().1;
+                    let serialized: Vec<u8> = serialize(&s).unwrap();
+                    let compressed: Vec<u8> = Encoder::new().compress_vec(&serialized[..]).unwrap();
+                    let length_of_buffer = compressed.len();
+                    let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
+                    compressed_data_with_length.extend(compressed);
+                    debug!("Rank {self_rank}: to {} this much {}", rank, length_of_buffer);
+                    (rank, compressed_data_with_length)
+                })
+                .collect();
+
+            for (&rank, data) in serialized_migrators.iter() {
+                let p = world.process_at_rank(rank);
+                p.buffered_send_with_tag(&data[..], MpiTag::MigratorTag.into());
+            }
+        }
     }
 
     async fn send_commuters(

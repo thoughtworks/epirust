@@ -102,7 +102,7 @@ impl EngineMigrationPlan {
             let total_count = engine_ranks.iter().len();
             let self_rank = world.rank();
 
-            let buffer = vec![0u8; 120000];
+            let buffer = vec![0u8; 1200000];
             let mut result = vec![buffer; total_count];
 
             mpi::request::multiple_scope(total_count - 1, |scope, coll: &mut RequestCollection<[u8]>| {

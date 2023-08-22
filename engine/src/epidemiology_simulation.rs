@@ -248,7 +248,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         let rank = world.rank();
         let mut engine_ranks: HashMap<String, Rank> = HashMap::new();
         for (i, engine) in travel_plan_config.regions.iter().enumerate() {
-            engine_ranks.insert(engine.clone(), Rank::from(i as u8));
+            engine_ranks.insert(engine.clone(), Rank::from(i as i32));
         }
         let ranks = engine_ranks.values().cloned().collect::<Vec<Rank>>();
         info!("engine ranks - {:?}", engine_ranks);

@@ -488,7 +488,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                     let length_of_buffer = compressed.len();
                     let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
                     compressed_data_with_length.extend(compressed);
-                    debug!("Rank {self_rank}: to {} this much {}", rank, length_of_buffer);
+                    debug!("Rank {self_rank}: migrate to {} this much {}", rank, length_of_buffer);
                     (rank, compressed_data_with_length)
                 })
                 .collect();
@@ -521,7 +521,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
                     let length_of_buffer = compressed.len();
                     let mut compressed_data_with_length = serialize(&length_of_buffer).unwrap();
                     compressed_data_with_length.extend(compressed);
-                    debug!("Rank {self_rank}: to {} this much {}", rank, length_of_buffer);
+                    debug!("Rank {self_rank}: commute to {} this much {}", rank, length_of_buffer);
                     (rank, compressed_data_with_length)
                 })
                 .collect();

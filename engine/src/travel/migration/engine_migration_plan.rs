@@ -107,7 +107,7 @@ impl EngineMigrationPlan {
 
             mpi::request::multiple_scope(total_count - 1, |scope, coll: &mut RequestCollection<[u8]>| {
                 for (index, value) in result.iter_mut().enumerate().filter(|r| r.0 != (self_rank as usize)) {
-                    let rank = Rank::from(index as u8);
+                    let rank = Rank::from(index as i32);
                     let p = world.process_at_rank(rank);
                     let rreq = p.immediate_receive_into_with_tag(scope, &mut value[..], MpiTag::MigratorTag.into());
                     coll.add(rreq);

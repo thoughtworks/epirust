@@ -439,7 +439,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
             mpi::request::multiple_scope(total_count, |scope, coll: &mut RequestCollection<[u8]>| {
                 for (index, value) in result.iter_mut().enumerate() {
-                    let rank = Rank::from(index as u8);
+                    let rank = Rank::from(index as i32);
                     let p = world.process_at_rank(rank);
                     let rreq = p.immediate_receive_into_with_tag(scope, &mut value[..], MpiTag::CommuterTag.into());
                     coll.add(rreq);

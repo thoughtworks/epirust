@@ -19,6 +19,7 @@
 
 use core::borrow::BorrowMut;
 use std::collections::HashMap;
+use std::path::Path;
 use std::time::Instant;
 
 use bincode::{deserialize, serialize};
@@ -76,6 +77,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         engine_id: String,
         run_mode: &RunMode,
         disease_handler: T,
+        output_dir_path: &Path,
     ) -> Self {
         let start = Instant::now();
         let start_infections = config.get_starting_infections();
@@ -98,7 +100,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         let current_population = citizen_location_map.current_population();
-        let listeners = Self::create_listeners(&engine_id, run_mode, &config);
+        let listeners = Self::create_listeners(&engine_id, run_mode, output_dir_path);
         let counts_at_hr = counts_at_start(current_population, config.get_starting_infections());
 
         let interventions = Self::init_interventions(&config, &mut citizen_location_map, &mut rng);
@@ -116,8 +118,8 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         }
     }
 
-    fn create_listeners(engine_id: &str, run_mode: &RunMode, config: &Config) -> Listeners {
-        let output_file_format = output_file_format(config, run_mode, engine_id.to_string());
+    fn create_listeners(engine_id: &str, run_mode: &RunMode, output_dir_path: &Path) -> Listeners {
+        let output_file_format = output_file_format(output_dir_path, engine_id.to_string());
         let counts_file_name = format!("{output_file_format}.csv");
 
         let csv_listener = CsvListener::new(counts_file_name);
@@ -573,7 +575,8 @@ mod tests {
             None,
         );
         let engine_id = "some_id";
-        let epidemiology: Epidemiology<_> = Epidemiology::new(config, None, engine_id.to_string(), &RunMode::Standalone, disease);
+        let epidemiology: Epidemiology<_> =
+            Epidemiology::new(config, None, engine_id.to_string(), &RunMode::Standalone, disease, Path::new("/tmp"));
         let expected_housing_area = Area::new(&engine_id.to_string(), Point::new(0, 0), Point::new(39, 100));
         assert_eq!(epidemiology.citizen_location_map.grid.housing_area, expected_housing_area);
 

@@ -24,6 +24,7 @@ use opentelemetry::sdk::Resource;
 use opentelemetry::trace::noop::NoopTracerProvider;
 use opentelemetry::trace::{FutureExt, TraceContextExt, Tracer, TracerProvider};
 use opentelemetry::{global, Context, KeyValue};
+use std::path::Path;
 
 use engine::config::configuration::{Configuration, EngineConfig};
 use engine::config::{Config, TravelPlanConfig};
@@ -55,6 +56,10 @@ struct Args {
     #[arg(short, long, default_value_t = 4)]
     #[arg(help = "Number of parallel threads for data parallelization")]
     threads: u32,
+
+    #[arg(short, long, default_value_t = String::from("/tmp"))]
+    #[arg(help = "Number of parallel threads for data parallelization")]
+    output_dir: String,
 }
 
 fn init_tracer(enable: bool) -> Context {
@@ -87,6 +92,7 @@ async fn main() {
     let number_of_threads = args.threads;
     let standalone = args.standalone;
     let tracing = args.tracing;
+    let output_dir = Path::new(&args.output_dir);
 
     let disease_handler: Option<Disease> = None;
 
@@ -102,7 +108,9 @@ async fn main() {
         let run_mode = RunMode::Standalone;
         let engine_id = STANDALONE_ENGINE_ID.to_string();
         FileLogger::init(engine_id.to_string()).unwrap();
-        EngineApp::start(engine_id, engine_config, &run_mode, None, disease_handler, number_of_threads).with_context(cx).await;
+        EngineApp::start(engine_id, engine_config, &run_mode, None, disease_handler, number_of_threads, output_dir)
+            .with_context(cx)
+            .await;
     } else {
         println!("in multi-engine mode");
         let mut universe = mpi::initialize().unwrap();
@@ -131,6 +139,7 @@ async fn main() {
             Some(travel_plan.clone()),
             disease_handler,
             number_of_threads,
+            output_dir,
         )
         .with_context(cx)
         .await;

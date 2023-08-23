@@ -21,6 +21,7 @@ use crate::config::{Config, TravelPlanConfig};
 use crate::epidemiology_simulation::Epidemiology;
 use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
+use std::path::Path;
 
 pub struct EngineApp;
 
@@ -32,13 +33,15 @@ impl EngineApp {
         travel_plan_config: Option<TravelPlanConfig>,
         dsh: Option<T>,
         threads: u32,
+        output_dir_path: &Path,
     ) {
         if dsh.is_none() {
             let disease = config.get_disease();
-            let mut epidemiology = Epidemiology::new(config, travel_plan_config, engine_id, run_mode, disease);
+            let mut epidemiology = Epidemiology::new(config, travel_plan_config, engine_id, run_mode, disease, output_dir_path);
             epidemiology.run(run_mode, threads).await;
         } else {
-            let mut epidemiology = Epidemiology::new(config, travel_plan_config, engine_id, run_mode, dsh.unwrap());
+            let mut epidemiology =
+                Epidemiology::new(config, travel_plan_config, engine_id, run_mode, dsh.unwrap(), output_dir_path);
             epidemiology.run(run_mode, threads).await;
         }
         info!("Done");

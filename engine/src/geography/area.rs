@@ -27,7 +27,7 @@ use std::hash::{Hash, Hasher};
 
 use crate::geography::Point;
 
-#[derive(Clone, Copy, Eq, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Eq, Debug, Serialize, Deserialize, Ord, PartialOrd)]
 pub struct Area {
     pub location_id: s16,
     pub start_offset: Point,

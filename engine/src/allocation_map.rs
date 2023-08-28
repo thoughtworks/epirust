@@ -18,6 +18,8 @@
  */
 
 use std::collections::hash_map::{Iter, IterMut};
+use std::ops::{Deref, DerefMut};
+use std::sync::{Arc, Mutex};
 
 use crate::config::{Config, TravelPlanConfig};
 use crate::models::custom_types::{CoOrdinate, Count, Hour};
@@ -167,6 +169,7 @@ impl CitizenLocationMap {
             return;
         }
         debug!("Removing {} outgoing travellers", outgoing.len());
+
         for (point, migrator) in outgoing {
             CitizenLocationMap::decrement_counts(&migrator.state_machine.state, counts);
             match self.current_locations.remove(point) {
@@ -218,25 +221,25 @@ impl CitizenLocationMap {
             panic!("Not enough housing locations are available for migrators")
         };
 
-        for (migrator, migration_location) in incoming.iter().zip(migration_locations) {
-            let house = self.grid.choose_house_with_free_space(rng);
-            let office = if migrator.working { self.grid.choose_office_with_free_space(rng) } else { house.clone() };
-            let citizen = Citizen::from_migrator(
-                migrator,
-                house.clone(),
-                office.clone(),
-                migration_location,
-                self.grid.housing_area.clone(),
-            );
-            self.grid.add_house_occupant(&house.clone());
+        let mut grid = Arc::new(Mutex::new(&mut self.grid));
+        let counts = Arc::new(Mutex::new(counts));
+        let mut current_locations = Arc::new(Mutex::new(&mut self.current_locations));
+
+        incoming.par_iter().zip(migration_locations).for_each(|(migrator, migration_location)| {
+            let mut grid = grid.lock().unwrap();
+            let house = grid.choose_house_with_free_space();
+            let office = if migrator.working { grid.choose_office_with_free_space() } else { house.clone() };
+            let citizen =
+                Citizen::from_migrator(migrator, house.clone(), office.clone(), migration_location, grid.housing_area.clone());
+            grid.add_house_occupant(&house.clone());
             if migrator.working {
-                self.grid.add_office_occupant(&office.clone())
+                grid.add_office_occupant(&office.clone())
             }
 
-            CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
-            let result = self.current_locations.insert(migration_location, citizen);
+            CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts.lock().unwrap().deref_mut());
+            let result = current_locations.lock().unwrap().insert(migration_location, citizen);
             assert!(result.is_none());
-        }
+        });
     }
 
     pub fn assimilate_commuters(
@@ -256,10 +259,14 @@ impl CitizenLocationMap {
             panic!("Not enough transport location are available for commuters")
         };
 
+        // incoming.par_iter().zip(transport_locations).for_each(|(commuter, transport_location)| {
+        //
+        // })
+
         for (commuter, transport_location) in incoming.iter().zip(transport_locations) {
             let work_area: Option<Area> = if simulation_hour == constants::ROUTINE_TRAVEL_START_TIME {
                 trace!("inside if of simulation hour");
-                let office = self.grid.choose_office_with_free_space(rng);
+                let office = self.grid.choose_office_with_free_space();
                 trace!("got the office space - {:?}", office.clone());
                 self.grid.add_office_occupant(&office.clone());
                 trace!("added the office occupant");

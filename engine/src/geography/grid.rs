@@ -17,18 +17,17 @@
  *
  */
 
+use crate::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
+use crate::models::custom_types::{CoOrdinate, Count, Size};
+use crate::utils::random_wrapper::RandomWrapper;
+use plotters::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
 
-use plotters::prelude::*;
-
 use crate::citizen;
 use crate::citizen::{Citizen, CitizensData, PopulationRecord};
-use crate::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
 use crate::geography::{Area, Point};
 use crate::models::constants;
-use crate::models::custom_types::{CoOrdinate, Count, Size};
-use crate::utils::random_wrapper::RandomWrapper;
 
 #[derive(Serialize, Clone)]
 pub struct Grid {
@@ -246,7 +245,7 @@ impl Grid {
         occupancy
     }
 
-    pub fn choose_house_with_free_space(&self) -> Area {
+    pub fn choose_house_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
         self.houses_occupancy
             .iter()
@@ -256,7 +255,7 @@ impl Grid {
             .clone()
     }
 
-    pub fn choose_office_with_free_space(&self) -> Area {
+    pub fn choose_office_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
         self.offices_occupancy
             .iter()
@@ -285,9 +284,8 @@ impl Grid {
 
 #[cfg(test)]
 mod tests {
-    use crate::geography::define_geography;
-
     use super::*;
+    use crate::geography::define_geography;
 
     #[test]
     fn should_generate_population() {

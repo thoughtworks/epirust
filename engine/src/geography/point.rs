@@ -20,7 +20,7 @@
 use crate::models::custom_types::CoOrdinate;
 use std::ops::Add;
 
-#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize, Deserialize, Ord, PartialOrd)]
+#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Point {
     pub x: CoOrdinate,
     pub y: CoOrdinate,

@@ -17,18 +17,18 @@
  *
  */
 
-use crate::models::constants;
-
-mod area;
-mod grid;
-mod point;
+use std::collections::BinaryHeap;
 
 pub use area::Area;
 pub use grid::Grid;
 pub use point::Point;
 
+use crate::models::constants;
 use crate::models::custom_types::{CoOrdinate, Size};
-use std::collections::{BinaryHeap, HashMap};
+
+mod area;
+mod grid;
+mod point;
 
 pub fn define_geography(grid_size: Size, engine_id: String) -> Grid {
     let home_width = (grid_size as f64 * constants::HOUSE_AREA_RELATIVE_SIZE).ceil() as i32;

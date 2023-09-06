@@ -53,7 +53,7 @@ impl CitizenLocationMap {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
         let mut map: FnvHashMap<Point, Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
         agent_list.iter().enumerate().for_each(|(i, _)| {
-            map.insert(points[i], agent_list[i].clone());
+            map.insert(points[i], agent_list[i]);
         });
 
         let capacity = grid.grid_size as usize;
@@ -179,11 +179,9 @@ impl CitizenLocationMap {
                     )
                 }
                 Some(citizen) => {
-                    home_loc_to_be_removed.push(citizen.home_location.clone());
-                    // self.grid.remove_house_occupant(&citizen.home_location);
+                    home_loc_to_be_removed.push(citizen.home_location);
                     if citizen.is_working() {
                         office_loc_to_be_removed.push(citizen.work_location);
-                        // self.grid.remove_office_occupant(&citizen.work_location);
                     }
                 }
             }
@@ -227,13 +225,7 @@ impl CitizenLocationMap {
         for (migrator, migration_location) in incoming.iter().zip(migration_locations) {
             let house = self.grid.choose_house_with_free_space(rng);
             let office = if migrator.working { self.grid.choose_office_with_free_space(rng) } else { house.clone() };
-            let citizen = Citizen::from_migrator(
-                migrator,
-                house.area.clone(),
-                office.area.clone(),
-                migration_location,
-                self.grid.housing_area.clone(),
-            );
+            let citizen = Citizen::from_migrator(migrator, house.area, office.area, migration_location, self.grid.housing_area);
             self.grid.add_house_occupant(house);
             if migrator.working {
                 self.grid.add_office_occupant(office)
@@ -274,7 +266,7 @@ impl CitizenLocationMap {
                 None
             };
 
-            let citizen = Citizen::from_commuter(commuter, transport_location, self.grid.housing_area.clone(), work_area);
+            let citizen = Citizen::from_commuter(commuter, transport_location, self.grid.housing_area, work_area);
 
             CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
 

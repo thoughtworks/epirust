@@ -36,7 +36,7 @@ use crate::file_logger::FileLogger;
 mod file_logger;
 
 const STANDALONE_ENGINE_ID: &str = "standalone";
-const BUFFER_SIZE: usize = 50 * 1024 * 1024;
+const BUFFER_SIZE: usize = 100 * 1024 * 1024;
 
 #[derive(Parser)]
 #[command(author, version, about)]

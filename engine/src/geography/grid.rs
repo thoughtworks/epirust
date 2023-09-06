@@ -63,7 +63,6 @@ impl Occupancy {
 // instead of a max-heap.
 impl Ord for Occupancy {
     fn cmp(&self, other: &Self) -> Ordering {
-        // Notice that the we flip the ordering on costs.
         // In case of a tie we compare positions - this step is necessary
         // to make implementations of `PartialEq` and `Ord` consistent.
         other.occupants.cmp(&self.occupants).then_with(|| self.area.cmp(&other.area))
@@ -140,16 +139,15 @@ impl Grid {
             }
 
             let mut random_points_within_home = home.random_points(agents.len(), rng);
-            self.houses_occupancy.push(Occupancy::new(home.clone(), agents.len() as u32));
+            self.houses_occupancy.push(Occupancy::new(*home, agents.len() as u32));
 
             for agent in agents {
-                agents_in_order.push(agent.clone());
+                agents_in_order.push(*agent);
             }
             home_loc.append(&mut random_points_within_home);
         }
         debug!("Assigned starting location to agents");
         self.offices_occupancy = self.group_office_locations_by_occupancy(agents_in_order.as_slice(), region_name);
-        // info!("offices occupancy - {:?}", self.offices_occupancy);
         (home_loc, agents_in_order)
     }
 
@@ -169,7 +167,7 @@ impl Grid {
     }
 
     fn draw(&self, home_locations: &Vec<Point>, homes: &Vec<Area>, offices: &Vec<Area>) {
-        let mut draw_backend = BitMapBackend::new("grid.png", (self.grid_size as u32, self.grid_size as u32));
+        let mut draw_backend = BitMapBackend::new("grid.png", (self.grid_size, self.grid_size));
         Grid::draw_rect(&mut draw_backend, &self.housing_area, &YELLOW);
         Grid::draw_rect(&mut draw_backend, &self.transport_area, &RGBColor(121, 121, 121));
         Grid::draw_rect(&mut draw_backend, &self.work_area, &BLUE);
@@ -181,18 +179,12 @@ impl Grid {
             Grid::draw_rect(&mut draw_backend, office, &RGBColor(51, 153, 255));
         }
         for home in home_locations {
-            draw_backend.draw_pixel((home.x as i32, home.y as i32), BLACK.to_backend_color()).unwrap();
+            draw_backend.draw_pixel((home.x, home.y), BLACK.to_backend_color()).unwrap();
         }
     }
 
     fn draw_rect(svg: &mut impl DrawingBackend, area: &Area, style: &RGBColor) {
-        svg.draw_rect(
-            (area.start_offset.x as i32, area.start_offset.y as i32),
-            (area.end_offset.x as i32, area.end_offset.y as i32),
-            style,
-            true,
-        )
-        .unwrap();
+        svg.draw_rect((area.start_offset.x, area.start_offset.y), (area.end_offset.x, area.end_offset.y), style, true).unwrap();
     }
 
     pub fn read_population(
@@ -214,7 +206,7 @@ impl Grid {
             //TODO seems like transport point isn't being used on the routine() function
             let home = homes_iter.next().unwrap();
             let office = offices_iter.next().unwrap();
-            let citizen = Citizen::from_record(record, home.clone(), office.clone(), home.get_random_point(rng), rng);
+            let citizen = Citizen::from_record(record, *home, *office, home.get_random_point(rng), rng);
             citizens.push(citizen);
         }
         let house_capacity = (constants::HOME_SIZE * constants::HOME_SIZE) as usize;
@@ -266,16 +258,16 @@ impl Grid {
     pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen], region_name: &String) -> BinaryHeap<Occupancy> {
         let mut occupancy = HashMap::new();
         self.offices.iter().for_each(|office| {
-            occupancy.insert(office.clone(), 0);
+            occupancy.insert(*office, 0);
         });
         citizens.iter().filter(|citizen| citizen.is_working() && citizen.work_location.location_id == *region_name).for_each(
             |worker| {
-                let office = worker.work_location.clone();
+                let office = worker.work_location;
                 *occupancy.get_mut(&office).expect("Unknown office! Doesn't exist in grid") += 1;
             },
         );
         let mut heap = BinaryHeap::new();
-        occupancy.iter().for_each(|(office, o)| heap.push(Occupancy::new(office.clone(), *o)));
+        occupancy.iter().for_each(|(office, o)| heap.push(Occupancy::new(*office, *o)));
         heap
     }
 
@@ -289,12 +281,6 @@ impl Grid {
         } else {
             option
         }
-        // self.houses_occupancy
-        //     .iter()
-        //     .find(|(_house, occupants)| **occupants < house_capacity)
-        //     .expect("Couldn't find any house with free space!")
-        //     .0
-        //     .clone()
     }
 
     pub fn choose_office_with_free_space(&mut self, _rng: &mut RandomWrapper) -> Occupancy {
@@ -305,24 +291,16 @@ impl Grid {
         } else {
             option
         }
-        // self.offices_occupancy
-        //     .iter()
-        //     .find(|(_office, occupants)| **occupants < office_capacity)
-        //     .expect("Couldn't find any offices with free space!")
-        //     .0
-        //     .clone()
     }
 
     pub fn add_house_occupant(&mut self, mut house: Occupancy) {
         house.occupants += 1;
         self.houses_occupancy.push(house);
-        // *self.houses_occupancy.get_mut(house).expect("Could not find house!") += 1;
     }
 
     pub fn add_office_occupant(&mut self, mut office: Occupancy) {
         office.occupants += 1;
         self.offices_occupancy.push(office);
-        // *self.offices_occupancy.get_mut(office).expect("Could not find office!") += 1;
     }
 
     pub fn remove_house_occupant(&mut self, houses: &[Area]) {
@@ -337,9 +315,8 @@ impl Grid {
         });
 
         let mut heap = BinaryHeap::new();
-        map.iter().for_each(|(area, occupants)| heap.push(Occupancy::new((*area).clone(), *occupants)));
+        map.iter().for_each(|(area, occupants)| heap.push(Occupancy::new(**area, *occupants)));
         self.houses_occupancy = heap
-        // *self.houses_occupancy.get_mut(house).expect("Could not find house!") -= 1;
     }
 
     pub fn remove_office_occupant(&mut self, offices: &[Area]) {
@@ -354,9 +331,8 @@ impl Grid {
         });
 
         let mut heap = BinaryHeap::new();
-        map.iter().for_each(|(area, occupants)| heap.push(Occupancy::new((*area).clone(), *occupants)));
+        map.iter().for_each(|(area, occupants)| heap.push(Occupancy::new(**area, *occupants)));
         self.offices_occupancy = heap
-        // *self.offices_occupancy.get_mut(office).expect("Could not find office!") -= 1;
     }
 }
 
@@ -370,9 +346,9 @@ mod tests {
         let mut rng = RandomWrapper::new();
 
         let mut grid = define_geography(100, "engine1".to_string());
-        let housing_area = grid.housing_area.clone();
-        let transport_area = grid.transport_area.clone();
-        let work_area = grid.work_area.clone();
+        let housing_area = grid.housing_area;
+        let transport_area = grid.transport_area;
+        let work_area = grid.work_area;
 
         let pop = AutoPopulation { number_of_agents: 10, public_transport_percentage: 0.2, working_percentage: 0.2 };
         let start_infections = StartingInfections::new(0, 0, 0, 1);
@@ -406,7 +382,7 @@ mod tests {
     fn grid_should_be_serializable_and_should_not_serialize_skipped_keys() {
         let grid: Grid = define_geography(75, "engine1".to_string());
 
-        let grid_message = serde_json::to_value(&grid).unwrap();
+        let grid_message = serde_json::to_value(grid).unwrap();
 
         let message = grid_message.as_object().unwrap();
         let keys = message.keys();

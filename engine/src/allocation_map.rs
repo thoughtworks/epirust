@@ -167,6 +167,8 @@ impl CitizenLocationMap {
             return;
         }
         debug!("Removing {} outgoing travellers", outgoing.len());
+        let mut home_loc_to_be_removed = Vec::new();
+        let mut office_loc_to_be_removed = Vec::new();
         for (point, migrator) in outgoing {
             CitizenLocationMap::decrement_counts(&migrator.state_machine.state, counts);
             match self.current_locations.remove(point) {
@@ -177,13 +179,17 @@ impl CitizenLocationMap {
                     )
                 }
                 Some(citizen) => {
-                    self.grid.remove_house_occupant(&citizen.home_location);
+                    home_loc_to_be_removed.push(citizen.home_location.clone());
+                    // self.grid.remove_house_occupant(&citizen.home_location);
                     if citizen.is_working() {
-                        self.grid.remove_office_occupant(&citizen.work_location);
+                        office_loc_to_be_removed.push(citizen.work_location);
+                        // self.grid.remove_office_occupant(&citizen.work_location);
                     }
                 }
             }
         }
+        self.grid.remove_house_occupant(&home_loc_to_be_removed);
+        self.grid.remove_office_occupant(&office_loc_to_be_removed);
     }
 
     pub fn remove_commuters(&mut self, outgoing: &Vec<(Point, Commuter)>, counts: &mut Counts) {
@@ -223,14 +229,14 @@ impl CitizenLocationMap {
             let office = if migrator.working { self.grid.choose_office_with_free_space(rng) } else { house.clone() };
             let citizen = Citizen::from_migrator(
                 migrator,
-                house.clone(),
-                office.clone(),
+                house.area.clone(),
+                office.area.clone(),
                 migration_location,
                 self.grid.housing_area.clone(),
             );
-            self.grid.add_house_occupant(&house.clone());
+            self.grid.add_house_occupant(house);
             if migrator.working {
-                self.grid.add_office_occupant(&office.clone())
+                self.grid.add_office_occupant(office)
             }
 
             CitizenLocationMap::increment_counts(&citizen.state_machine.state, counts);
@@ -261,9 +267,9 @@ impl CitizenLocationMap {
                 trace!("inside if of simulation hour");
                 let office = self.grid.choose_office_with_free_space(rng);
                 trace!("got the office space - {:?}", office.clone());
-                self.grid.add_office_occupant(&office.clone());
+                self.grid.add_office_occupant(office.clone());
                 trace!("added the office occupant");
-                Some(office.clone())
+                Some(office.area)
             } else {
                 None
             };

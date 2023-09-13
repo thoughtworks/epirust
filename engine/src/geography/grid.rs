@@ -274,22 +274,22 @@ impl Grid {
     pub fn choose_house_with_free_space(&mut self, _rng: &mut RandomWrapper) -> Occupancy {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
 
-        let option = self.houses_occupancy.pop().unwrap();
+        let occupancy = self.houses_occupancy.pop().unwrap();
 
-        if option.occupants >= house_capacity {
+        if occupancy.occupants >= house_capacity {
             panic!("Couldn't find any house with free space!")
         } else {
-            option
+            occupancy
         }
     }
 
     pub fn choose_office_with_free_space(&mut self, _rng: &mut RandomWrapper) -> Occupancy {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
-        let option = self.offices_occupancy.pop().unwrap();
-        if option.occupants >= office_capacity {
+        let occupancy = self.offices_occupancy.pop().unwrap();
+        if occupancy.occupants >= office_capacity {
             panic!("Couldn't find any offices with free space!")
         } else {
-            option
+            occupancy
         }
     }
 
@@ -314,9 +314,9 @@ impl Grid {
             }
         });
 
-        let mut heap = BinaryHeap::new();
-        map.iter().for_each(|(area, occupants)| heap.push(Occupancy::new(**area, *occupants)));
-        self.houses_occupancy = heap
+        let mut houses_occupancy = BinaryHeap::new();
+        map.iter().for_each(|(area, occupants)| houses_occupancy.push(Occupancy::new(**area, *occupants)));
+        self.houses_occupancy = houses_occupancy
     }
 
     pub fn remove_office_occupant(&mut self, offices: &[Area]) {
@@ -330,9 +330,9 @@ impl Grid {
             }
         });
 
-        let mut heap = BinaryHeap::new();
-        map.iter().for_each(|(area, occupants)| heap.push(Occupancy::new(**area, *occupants)));
-        self.offices_occupancy = heap
+        let mut offices_occupancy = BinaryHeap::new();
+        map.iter().for_each(|(area, occupants)| offices_occupancy.push(Occupancy::new(**area, *occupants)));
+        self.offices_occupancy = offices_occupancy
     }
 }
 

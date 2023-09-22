@@ -29,6 +29,7 @@ use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
 use opentelemetry::{global, Context, KeyValue};
 
 use crate::allocation_map::CitizenLocationMap;
+use crate::geography;
 use crate::geography::Point;
 use crate::interventions::hospital::BuildNewHospital;
 use crate::interventions::lockdown::LockdownIntervention;
@@ -53,7 +54,6 @@ use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
 use crate::utils::util::{counts_at_start, output_file_format};
-use crate::{geography};
 
 pub struct Epidemiology<T: DiseaseHandler + Sync> {
     pub citizen_location_map: CitizenLocationMap,
@@ -121,7 +121,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         let csv_listener = CsvListener::new(counts_file_name);
 
         let hotspot_tracker = Hotspot::new();
-        let intervention_reporter = InterventionReporter::new(format!("{output_file_format}_interventions.json" ));
+        let intervention_reporter = InterventionReporter::new(format!("{output_file_format}_interventions.json"));
         let mut listeners_vec: Vec<Box<dyn Listener>> =
             vec![Box::new(csv_listener), Box::new(hotspot_tracker), Box::new(intervention_reporter)];
 
@@ -156,7 +156,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
         let hospital_intervention = BuildNewHospital::init(config);
         let essential_workers_population = lock_down_details.get_essential_workers_percentage();
 
-        citizen_location_map.iter_mut().for_each(| r| {
+        citizen_location_map.iter_mut().for_each(|r| {
             (*r.1).assign_essential_worker(essential_workers_population, rng);
         });
         Interventions { vaccinate: vaccinations, lockdown: lock_down_details, build_new_hospital: hospital_intervention }
@@ -410,7 +410,7 @@ impl<T: DiseaseHandler + Sync> Epidemiology<T> {
 
             if is_migration_enabled {
                 let migration_start_time = Instant::now();
-                let (mut incoming, ) = join!(received_migrators.unwrap());
+                let (mut incoming,) = join!(received_migrators.unwrap());
                 total_receive_migration_sync_time += migration_start_time.elapsed().as_millis();
                 n_incoming += incoming.len();
                 n_outgoing += outgoing.len();

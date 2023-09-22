@@ -22,7 +22,7 @@ futures = "0.3.4"
 tokio = { version = "1.20.1", features = ["full"] }
 time = { version = "0.3.14", features = ["formatting"] }
 geo-types = "0.7.7"
-geo = "0.23.0"
+geo = "0.26.0"
 geojson = "0.24.0"
 plotters = { version = "0.3.3", default-features = false, features = ["bitmap_backend", "bitmap_encoder"] }
 log = "0.4"

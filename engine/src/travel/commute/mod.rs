@@ -19,10 +19,10 @@
 mod commuter;
 mod commuters_by_region;
 
+use common::models::custom_types::Hour;
 use common::models::travel_plan::TravelPlan;
 use common::models::CommutePlan;
 use rdkafka::consumer::MessageStream;
-use common::models::custom_types::Hour;
 
 use crate::models::constants;
 use crate::models::events::Tick;

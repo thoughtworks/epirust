@@ -24,10 +24,11 @@ def arg_parser():
     parser = argparse.ArgumentParser(description='plot peaks from csv')
     parser.add_argument('--data-path', help='path to data csv file', required=True)
     parser.add_argument('--time-column', help='name of the column representing time', default='hour')
+    parser.add_argument('--save-to', help='name of the output png', required=True)
     return parser.parse_args()
 
 
-def plot(data_frame, time_column):
+def plot(data_frame, time_column, save_to):
     columns = filter(lambda c: c != time_column, data_frame.columns)
     daily_basis = data_frame[data_frame[time_column] % 24 == 1]
 
@@ -38,11 +39,12 @@ def plot(data_frame, time_column):
     plt.xlabel('Days')
     plt.ylabel('No. of individuals')
     plt.grid(True)
-    plt.show()
+    # if len(save_to) > 0:
+    plt.savefig(save_to)
+    # plt.show()
 
 
 if __name__ == '__main__':
     args = arg_parser()
     data_frame = pd.read_csv(args.data_path)
-    plot(data_frame, args.time_column)
-
+    plot(data_frame, args.time_column, args.save_to)

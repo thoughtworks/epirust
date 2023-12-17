@@ -20,3 +20,20 @@
 mod random_wrapper;
 
 pub use random_wrapper::RandomWrapper;
+use serde_json::Value;
+use std::fs::File;
+
+pub fn read_simulation_conf(filename: &str) -> String {
+    let reader = File::open(filename).unwrap();
+    let config: Value = serde_json::from_reader(reader).unwrap();
+    let sim = config.as_object().unwrap();
+    serde_json::to_string(sim).unwrap()
+}
+
+pub fn get_hours(filename: &str) -> i64 {
+    let reader = File::open(filename).unwrap();
+    let config: Value = serde_json::from_reader(reader).unwrap();
+    let sim = config.get("engine_configs").unwrap().as_array().unwrap();
+    let hours = sim[0].get("config").unwrap().get("hours");
+    hours.unwrap().as_i64().unwrap()
+}

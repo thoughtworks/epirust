@@ -26,6 +26,9 @@ pub struct Tick {
 }
 
 impl Tick {
+    pub fn new(hour: Hour, terminate: bool) -> Self {
+        Tick { hour, terminate }
+    }
     pub fn hour(&self) -> Hour {
         self.hour
     }

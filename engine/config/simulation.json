@@ -1,0 +1,99 @@
+{
+  "engine_configs": [
+    {
+      "engine_id": "engine1",
+      "config": {
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "number_of_agents": 1000,
+            "public_transport_percentage": 0.2,
+            "working_percentage": 0.7
+          }
+        },
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 26,
+          "asymptomatic_last_day": 9,
+          "mild_infected_last_day": 12,
+          "regular_transmission_rate": 0.25,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 6,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "geography_parameters": {
+          "grid_size": 250,
+          "hospital_beds_percentage": 0.003
+        },
+        "hours": 1080,
+        "interventions": [
+          {
+            "Lockdown": {
+              "at_number_of_infections": 100,
+              "essential_workers_population": 0.1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "engine_id": "engine2",
+      "config": {
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "number_of_agents": 1000,
+            "public_transport_percentage": 0.2,
+            "working_percentage": 0.7
+          }
+        },
+        "disease": {
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "exposed_duration": 48,
+          "last_day": 26,
+          "asymptomatic_last_day": 9,
+          "mild_infected_last_day": 12,
+          "regular_transmission_rate": 0.25,
+          "pre_symptomatic_duration": 48,
+          "percentage_severe_infected_population": 0.3,
+          "high_transmission_start_day": 6,
+          "high_transmission_rate": 0.25,
+          "regular_transmission_start_day": 5
+        },
+        "geography_parameters": {
+          "grid_size": 250,
+          "hospital_beds_percentage": 0.003
+        },
+        "hours": 1080,
+        "interventions": []
+      }
+    }
+  ],
+  "travel_plan": {
+    "regions": [
+      "engine1",
+      "engine2"
+    ],
+    "migration": {
+      "enabled": true,
+      "matrix": [
+        [0, 10],
+        [10, 0]
+      ],
+      "start_migration_hour": 48,
+      "end_migration_hour": 336
+    },
+    "commute": {
+      "enabled": true,
+      "matrix": [
+        [0, 5],
+        [5, 0]
+      ]
+    }
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "engine_configs": [
+    {
+      "engine_id": "engine1",
+      "config": {
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "number_of_agents": 10000,
+            "public_transport_percentage": 0.2,
+            "working_percentage": 0.7
+          }
+        },
+        "disease": {
+          "regular_transmission_start_day": 5,
+          "high_transmission_start_day": 20,
+          "last_day": 40,
+          "asymptomatic_last_day": 9,
+          "mild_infected_last_day": 12,
+          "regular_transmission_rate": 0.025,
+          "high_transmission_rate": 0.25,
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "percentage_severe_infected_population": 0.3,
+          "exposed_duration": 48,
+          "pre_symptomatic_duration": 48
+        },
+        "geography_parameters": {
+          "grid_size": 250,
+          "hospital_beds_percentage": 0.003
+        },
+        "hours": 10000,
+        "interventions": [
+          {
+            "Vaccinate": {
+              "at_hour": 5000,
+              "percent": 0.2
+            }
+          },
+          {
+            "Lockdown": {
+              "at_number_of_infections": 100,
+              "essential_workers_population": 0.1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "engine_id": "engine2",
+      "config": {
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "number_of_agents": 10000,
+            "public_transport_percentage": 0.2,
+            "working_percentage": 0.7
+          }
+        },
+        "disease": {
+          "regular_transmission_start_day": 5,
+          "high_transmission_start_day": 20,
+          "last_day": 40,
+          "asymptomatic_last_day": 9,
+          "mild_infected_last_day": 12,
+          "regular_transmission_rate": 0.025,
+          "high_transmission_rate": 0.25,
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "percentage_severe_infected_population": 0.3,
+          "exposed_duration": 48,
+          "pre_symptomatic_duration": 48
+        },
+        "geography_parameters": {
+          "grid_size": 250,
+          "hospital_beds_percentage": 0.003
+        },
+        "hours": 10000,
+        "interventions": [
+          {
+            "Vaccinate": {
+              "at_hour": 5000,
+              "percent": 0.2
+            }
+          },
+          {
+            "Lockdown": {
+              "at_number_of_infections": 100,
+              "essential_workers_population": 0.1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "engine_id": "engine3",
+      "config": {
+        "sim_id": "sim-timestamp",
+        "population": {
+          "Auto": {
+            "number_of_agents": 10000,
+            "public_transport_percentage": 0.2,
+            "working_percentage": 0.7
+          }
+        },
+        "disease": {
+          "regular_transmission_start_day": 5,
+          "high_transmission_start_day": 20,
+          "last_day": 40,
+          "asymptomatic_last_day": 9,
+          "mild_infected_last_day": 12,
+          "regular_transmission_rate": 0.025,
+          "high_transmission_rate": 0.25,
+          "death_rate": 0.035,
+          "percentage_asymptomatic_population": 0.3,
+          "percentage_severe_infected_population": 0.3,
+          "exposed_duration": 48,
+          "pre_symptomatic_duration": 48
+        },
+        "geography_parameters": {
+          "grid_size": 250,
+          "hospital_beds_percentage": 0.003
+        },
+        "hours": 10000,
+        "interventions": [
+          {
+            "Vaccinate": {
+              "at_hour": 5000,
+              "percent": 0.2
+            }
+          },
+          {
+            "Lockdown": {
+              "at_number_of_infections": 100,
+              "essential_workers_population": 0.1
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "travel_plan": {
+    "regions": ["engine1", "engine2", "engine3"],
+    "migration": {
+      "enabled": true,
+      "matrix": [
+        [0, 156, 10],
+        [108, 0, 290],
+        [90, 75, 0]
+      ],
+      "start_migration_hour": 48,
+      "end_migration_hour": 336
+    },
+    "commute": {
+      "enabled": true,
+      "matrix": [
+        [0, 15, 2],
+        [10, 0, 29],
+        [9, 7, 0]
+      ]
+    }
+  }
+}

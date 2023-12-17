@@ -51,7 +51,7 @@ impl KafkaProducer {
         self.producer.send(record)
     }
 
-    pub fn send_migrators(&mut self, outgoing: Vec<MigratorsByRegion>) {
+    pub fn send_migrators(&self, outgoing: Vec<MigratorsByRegion>) {
         for out_region in outgoing.iter() {
             let payload = serde_json::to_string(out_region).unwrap();
             trace!("Sending migrators: {} to region: {}", payload, out_region.to_engine_id());
@@ -64,7 +64,7 @@ impl KafkaProducer {
         }
     }
 
-    pub fn send_commuters(&mut self, outgoing: Vec<CommutersByRegion>) {
+    pub fn send_commuters(&self, outgoing: Vec<CommutersByRegion>) {
         for out_region in outgoing.iter() {
             let payload = serde_json::to_string(out_region).unwrap();
             trace!("Sending commuters: {} to region: {}", payload, out_region.to_engine_id());

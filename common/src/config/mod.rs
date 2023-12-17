@@ -22,6 +22,7 @@ mod population;
 mod starting_infections;
 mod travel_plan_config;
 
+mod configuration;
 pub mod intervention_config;
 pub mod request;
 
@@ -34,6 +35,7 @@ use validator::Validate;
 pub use crate::config::geography_parameters::GeographyParameters;
 pub use crate::config::population::*;
 pub use crate::config::starting_infections::StartingInfections;
+pub use configuration::{Configuration, EngineConfig};
 
 use crate::disease::{Disease, DiseaseOverride};
 use crate::models::custom_types::{Hour, Size};

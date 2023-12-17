@@ -17,13 +17,17 @@
  *
  */
 
+#[derive(Clone)]
 pub enum RunMode {
     //run once and exit
     Standalone,
 
-    //daemon mode, with only one engine
-    SingleDaemon,
-
     //daemon mode, with multiple engines and an orchestrator
-    MultiEngine { engine_id: String },
+    MultiEngine { mode: MultiEngineMode },
+}
+
+#[derive(Clone)]
+pub enum MultiEngineMode {
+    Kafka,
+    MPI,
 }

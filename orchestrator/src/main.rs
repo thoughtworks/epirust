@@ -27,21 +27,19 @@ use std::ops::Range;
 use std::string::String;
 
 use clap::Parser;
-use common::config::TravelPlanConfig;
+use common::config::{Configuration, TravelPlanConfig};
+use common::utils;
+use common::utils::get_hours;
 use rdkafka::admin::{AdminClient, AdminOptions, NewTopic, TopicReplication};
 use rdkafka::client::DefaultClientContext;
 use rdkafka::ClientConfig;
 
-use crate::config::Configuration;
 use crate::kafka_producer::KafkaProducer;
-use crate::utils::get_hours;
 
-mod config;
 mod environment;
 mod kafka_consumer;
 mod kafka_producer;
 mod ticks;
-mod utils;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -56,7 +54,7 @@ async fn main() {
 
     let args = Args::parse();
 
-    let default_config_path = "config/simulation.json".to_string();
+    let default_config_path = "orchestrator/config/simulation.json".to_string();
     let config_path = args.config.unwrap_or(default_config_path);
 
     let config = Configuration::read(&config_path).expect("Error while reading config");

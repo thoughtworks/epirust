@@ -40,7 +40,12 @@ mod travel;
 mod utils;
 
 pub mod geography;
+mod transport;
 
 pub use engine_app::EngineApp;
-pub use run_mode::RunMode;
+pub use run_mode::{MultiEngineMode, RunMode};
 pub use state_machine::*;
+pub use transport::engine_handlers::EngineHandlers;
+pub use transport::kafka_transport::KafkaTransport;
+pub use transport::mpi_transport::MpiTransport;
+pub use transport::Transport;

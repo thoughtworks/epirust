@@ -17,13 +17,14 @@
  *
  */
 
+use crate::config::Population::Auto;
+use log::debug;
 use std::error::Error;
 use std::fs::File;
 
-use common::config::Population::Auto;
-use common::config::{Config, TravelPlanConfig};
-use common::models::custom_types::Percentage;
-use common::models::travel_plan::TravelPlan;
+use crate::config::{Config, TravelPlanConfig};
+use crate::models::custom_types::Percentage;
+use crate::models::travel_plan::TravelPlan;
 
 pub const TRANSPORT_AREA_RELATIVE_SIZE: Percentage = 0.2;
 
@@ -40,6 +41,10 @@ impl Configuration {
 
     pub fn get_engine_ids(&self) -> Vec<String> {
         self.engine_configs.iter().map(|s| s.engine_id.clone()).collect()
+    }
+
+    pub fn get_engine_configs(&self) -> &Vec<EngineConfig> {
+        &self.engine_configs
     }
 
     pub fn read(filename: &str) -> Result<Configuration, Box<dyn Error>> {
@@ -114,16 +119,15 @@ impl Configuration {
 
 // just a struct for easier parsing
 #[derive(Deserialize, Serialize)]
-struct EngineConfig {
-    engine_id: String,
-    config: Config,
+pub struct EngineConfig {
+    pub engine_id: String,
+    pub config: Config,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::get_hours;
-    use crate::utils::read_simulation_conf;
+    use crate::utils::{get_hours, read_simulation_conf};
 
     #[test]
     fn should_read_config() {

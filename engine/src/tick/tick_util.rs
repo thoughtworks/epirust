@@ -17,17 +17,18 @@
  *
  */
 
+use futures::StreamExt;
+use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
+use opentelemetry::{global, Context, KeyValue};
+use rdkafka::consumer::MessageStream;
+
+use common::models::custom_types::Hour;
+
 use crate::interventions::lockdown::LockdownIntervention;
 use crate::kafka::kafka_producer::KafkaProducer;
 use crate::kafka::ticks_consumer;
 use crate::models::constants;
 use crate::models::events::{Counts, Tick, TickAck};
-use crate::run_mode::RunMode;
-use common::models::custom_types::Hour;
-use futures::StreamExt;
-use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
-use opentelemetry::{global, Context, KeyValue};
-use rdkafka::consumer::MessageStream;
 
 pub async fn extract_tick(message_stream: &mut MessageStream<'_>) -> Tick {
     debug!("Start receiving tick");
@@ -53,7 +54,6 @@ pub async fn get_tick(message_stream: &mut MessageStream<'_>, simulation_hour: H
 }
 
 pub async fn receive_tick(
-    run_mode: &RunMode,
     message_stream: &mut MessageStream<'_>,
     simulation_hour: Hour,
     is_commute_enabled: bool,
@@ -65,23 +65,21 @@ pub async fn receive_tick(
     let receive_tick_for_commute: bool = is_commute_enabled && is_commute_hour;
     let receive_tick_for_migration: bool = is_migration_enabled && is_migration_hour;
     if receive_tick_for_commute || receive_tick_for_migration {
-        if let RunMode::MultiEngine { engine_id: _e } = run_mode {
-            let tracer = global::tracer("epirust-trace");
-            let mut span = tracer.start("tick_wait_time");
-            span.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
-            let cx = Context::current_with_span(span);
-            let t = get_tick(message_stream, simulation_hour).with_context(cx).await;
-            if t.hour() != simulation_hour {
-                panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
-            }
-            return Some(t);
+        let tracer = global::tracer("epirust-trace");
+        let mut span = tracer.start("tick_wait_time");
+        span.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
+        let cx = Context::current_with_span(span);
+        let t = get_tick(message_stream, simulation_hour).with_context(cx).await;
+        if t.hour() != simulation_hour {
+            panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
         }
+        return Some(t);
     }
     None
 }
 
 pub fn send_ack(
-    run_mode: &RunMode,
+    engine_id: &str,
     producer: &mut KafkaProducer,
     counts: Counts,
     simulation_hour: Hour,
@@ -96,18 +94,14 @@ pub fn send_ack(
     let received_tick_for_migration: bool = is_migration_enabled && is_migration_hour;
 
     if simulation_hour == 1 || received_tick_for_commute || received_tick_for_migration {
-        if let RunMode::MultiEngine { engine_id } = run_mode {
-            let ack = TickAck {
-                engine_id: engine_id.to_string(),
-                hour: simulation_hour,
-                counts,
-                locked_down: lockdown.is_locked_down(),
-            };
-            let tick_string = serde_json::to_string(&ack).unwrap();
-            match producer.send_ack(&tick_string) {
-                Ok(_) => {}
-                Err(e) => panic!("Failed while sending acknowledgement: {:?}", e.0),
-            }
+        // if let RunMode::MultiEngine { engine_id } = run_mode {
+        let ack =
+            TickAck { engine_id: engine_id.to_string(), hour: simulation_hour, counts, locked_down: lockdown.is_locked_down() };
+        let tick_string = serde_json::to_string(&ack).unwrap();
+        match producer.send_ack(&tick_string) {
+            Ok(_) => {}
+            Err(e) => panic!("Failed while sending acknowledgement: {:?}", e.0),
         }
+        // }
     }
 }

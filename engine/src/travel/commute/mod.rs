@@ -58,7 +58,7 @@ pub(crate) async fn receive_commuters(
     }
 }
 
-fn trace_commuters(commuters_by_region: &CommutersByRegion, hour: Hour) {
+pub fn trace_commuters(commuters_by_region: &CommutersByRegion, hour: Hour) {
     if hour == constants::ROUTINE_TRAVEL_START_TIME {
         trace!(
             "Travel_start: Received {} commuters from {:?} region",

@@ -19,7 +19,6 @@
 
 use std::error::Error;
 
-use common::config::request::Request;
 use futures::StreamExt;
 use opentelemetry::trace::{FutureExt, TraceContextExt, Tracer};
 use opentelemetry::{global, Context};
@@ -30,10 +29,16 @@ use rdkafka::message::BorrowedMessage;
 use rdkafka::message::Message;
 use rdkafka::ClientConfig;
 
+use common::config::request::Request;
+
 use crate::epidemiology_simulation::Epidemiology;
+use crate::kafka::kafka_producer::{KafkaProducer, COMMUTE_TOPIC, MIGRATION_TOPIC};
+use crate::kafka::{ticks_consumer, travel_consumer};
 use crate::run_mode::RunMode;
 use crate::state_machine::DiseaseHandler;
+use crate::transport::engine_handlers::{EngineHandlers, KafkaImplEngineHandler};
 use crate::utils::environment;
+use crate::KafkaTransport;
 
 pub struct KafkaConsumer<'a> {
     engine_id: &'a str,
@@ -57,10 +62,12 @@ impl KafkaConsumer<'_> {
         KafkaConsumer { engine_id, consumer }
     }
 
-    pub async fn listen_loop<T: DiseaseHandler + Sync + Clone>(
+    //Todo: Fix this function, it is unnecessary. We can directly take the config from the app rather than kafka
+    pub async fn listen_loop<D: DiseaseHandler + Sync + Clone>(
         &self,
+        engine_id: &str,
         run_mode: &RunMode,
-        disease_handler: Option<T>,
+        disease_handler: Option<D>,
         threads: u32,
     ) {
         let mut message_stream: MessageStream = self.consumer.stream();
@@ -76,8 +83,25 @@ impl KafkaConsumer<'_> {
                     );
                 }
                 Ok(request) => {
-                    self.run_sim(request, run_mode, disease_handler.clone(), threads).await;
-                    if let RunMode::MultiEngine { engine_id: _e } = run_mode {
+                    let migrators_consumer =
+                        travel_consumer::start(engine_id, &[&*format!("{MIGRATION_TOPIC}{engine_id}")], "migrate");
+                    let migration_stream = migrators_consumer.stream();
+
+                    let commute_consumer =
+                        travel_consumer::start(engine_id, &[&*format!("{COMMUTE_TOPIC}{engine_id}")], "commute");
+                    let commute_stream = commute_consumer.stream();
+
+                    let ticks_consumer = ticks_consumer::start(engine_id);
+                    let ticks_stream = ticks_consumer.stream();
+                    let producer = KafkaProducer::new();
+                    let transport =
+                        KafkaTransport::new(engine_id.to_string(), producer, ticks_stream, commute_stream, migration_stream);
+
+                    //Todo: fix it there is already a kafkaProducer in the scope, try to use that (think of merging the engine handlers and transport)
+                    let engine_handlers = KafkaImplEngineHandler::new(KafkaProducer::new());
+
+                    self.run_sim(request, run_mode, disease_handler.clone(), Some(transport), engine_handlers, threads).await;
+                    if let RunMode::MultiEngine { .. } = run_mode {
                         return;
                     }
                 }
@@ -85,22 +109,33 @@ impl KafkaConsumer<'_> {
         }
     }
 
-    async fn run_sim<T: DiseaseHandler + Sync>(
+    async fn run_sim<'a, D: DiseaseHandler + Sync, EH: EngineHandlers>(
         &self,
         request: Request,
         run_mode: &RunMode,
-        disease_handler: Option<T>,
+        disease_handler: Option<D>,
+        transport: Option<KafkaTransport<'a>>,
+        engine_handlers: EH,
         threads: u32,
     ) {
         match request {
             Request::SimulationRequest(req) => {
                 if disease_handler.is_none() {
                     let disease = req.config.get_disease();
-                    let mut epidemiology = Epidemiology::new(req.config, None, req.sim_id, run_mode, disease);
-                    epidemiology.run(run_mode, threads).await;
+                    let mut epidemiology =
+                        Epidemiology::new(req.sim_id, req.config, None, run_mode, disease, transport, engine_handlers);
+                    epidemiology.run(threads).await;
                 } else {
-                    let mut epidemiology = Epidemiology::new(req.config, None, req.sim_id, run_mode, disease_handler.unwrap());
-                    epidemiology.run(run_mode, threads).await;
+                    let mut epidemiology = Epidemiology::new(
+                        req.sim_id,
+                        req.config,
+                        None,
+                        run_mode,
+                        disease_handler.unwrap(),
+                        transport,
+                        engine_handlers,
+                    );
+                    epidemiology.run(threads).await;
                 };
             }
             Request::MultiSimRequest(req) => {
@@ -114,21 +149,30 @@ impl KafkaConsumer<'_> {
                         let config = req.config.config.clone();
                         if disease_handler.is_none() {
                             let disease = config.get_disease();
-                            let mut epidemiology =
-                                Epidemiology::new(config, travel_plan_config, req.engine_id.to_string(), run_mode, disease);
-                            epidemiology.run(run_mode, threads).await;
-                        } else {
                             let mut epidemiology = Epidemiology::new(
+                                req.engine_id.to_string(),
                                 config,
                                 travel_plan_config,
+                                run_mode,
+                                disease,
+                                transport,
+                                engine_handlers,
+                            );
+                            epidemiology.run(threads).await;
+                        } else {
+                            let mut epidemiology = Epidemiology::new(
                                 req.engine_id.to_string(),
+                                config,
+                                travel_plan_config,
                                 run_mode,
                                 disease_handler.unwrap(),
+                                transport,
+                                engine_handlers,
                             );
                             let tracer = global::tracer("epirust-trace");
                             let span = tracer.start("run");
                             let cx = Context::current_with_span(span);
-                            epidemiology.run(run_mode, threads).with_context(cx).await;
+                            epidemiology.run(threads).with_context(cx).await;
                         }
                     }
                 }

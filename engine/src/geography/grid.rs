@@ -21,7 +21,8 @@ use common::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPl
 use common::models::custom_types::{CoOrdinate, Count, Size};
 use common::utils::RandomWrapper;
 use plotters::prelude::*;
-use std::collections::HashMap;
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap};
 use std::fs::File;
 
 use crate::citizen;
@@ -40,9 +41,39 @@ pub struct Grid {
     pub offices: Vec<Area>,
     //Occupancy based on home and work locations - updated when travellers arrive/depart
     #[serde(skip_serializing)]
-    pub houses_occupancy: HashMap<Area, u32>,
+    pub houses_occupancy: BinaryHeap<Occupancy>,
     #[serde(skip_serializing)]
-    pub offices_occupancy: HashMap<Area, u32>,
+    pub offices_occupancy: BinaryHeap<Occupancy>,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct Occupancy {
+    pub area: Area,
+    pub occupants: u32,
+}
+
+impl Occupancy {
+    fn new(area: Area, occupants: u32) -> Self {
+        Occupancy { area, occupants }
+    }
+}
+
+// The priority queue depends on `Ord`.
+// Explicitly implement the trait so the queue becomes a min-heap
+// instead of a max-heap.
+impl Ord for Occupancy {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // In case of a tie we compare positions - this step is necessary
+        // to make implementations of `PartialEq` and `Ord` consistent.
+        other.occupants.cmp(&self.occupants).then_with(|| self.area.cmp(&other.area))
+    }
+}
+
+// `PartialOrd` needs to be implemented as well.
+impl PartialOrd for Occupancy {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl Grid {
@@ -83,7 +114,8 @@ impl Grid {
 
         let (home_loc, agents_in_order) = self.set_start_locations_and_occupancies(rng, &agent_list, &region);
 
-        self.draw(&home_loc, &self.houses, &self.offices);
+        // TODO: Uncomment this (Important)
+        // self.draw(&home_loc, &self.houses, &self.offices);
         (home_loc, agents_in_order)
     }
 
@@ -107,16 +139,15 @@ impl Grid {
             }
 
             let mut random_points_within_home = home.random_points(agents.len(), rng);
-            self.houses_occupancy.insert(home.clone(), agents.len() as u32);
+            self.houses_occupancy.push(Occupancy::new(*home, agents.len() as u32));
 
             for agent in agents {
-                agents_in_order.push(agent.clone());
+                agents_in_order.push(*agent);
             }
             home_loc.append(&mut random_points_within_home);
         }
         debug!("Assigned starting location to agents");
         self.offices_occupancy = self.group_office_locations_by_occupancy(agents_in_order.as_slice(), region_name);
-        // info!("offices occupancy - {:?}", self.offices_occupancy);
         (home_loc, agents_in_order)
     }
 
@@ -136,7 +167,7 @@ impl Grid {
     }
 
     fn draw(&self, home_locations: &Vec<Point>, homes: &Vec<Area>, offices: &Vec<Area>) {
-        let mut draw_backend = BitMapBackend::new("grid.png", (self.grid_size as u32, self.grid_size as u32));
+        let mut draw_backend = BitMapBackend::new("grid.png", (self.grid_size, self.grid_size));
         Grid::draw_rect(&mut draw_backend, &self.housing_area, &YELLOW);
         Grid::draw_rect(&mut draw_backend, &self.transport_area, &RGBColor(121, 121, 121));
         Grid::draw_rect(&mut draw_backend, &self.work_area, &BLUE);
@@ -148,18 +179,12 @@ impl Grid {
             Grid::draw_rect(&mut draw_backend, office, &RGBColor(51, 153, 255));
         }
         for home in home_locations {
-            draw_backend.draw_pixel((home.x as i32, home.y as i32), BLACK.to_backend_color()).unwrap();
+            draw_backend.draw_pixel((home.x, home.y), BLACK.to_backend_color()).unwrap();
         }
     }
 
     fn draw_rect(svg: &mut impl DrawingBackend, area: &Area, style: &RGBColor) {
-        svg.draw_rect(
-            (area.start_offset.x as i32, area.start_offset.y as i32),
-            (area.end_offset.x as i32, area.end_offset.y as i32),
-            style,
-            true,
-        )
-        .unwrap();
+        svg.draw_rect((area.start_offset.x, area.start_offset.y), (area.end_offset.x, area.end_offset.y), style, true).unwrap();
     }
 
     pub fn read_population(
@@ -181,7 +206,7 @@ impl Grid {
             //TODO seems like transport point isn't being used on the routine() function
             let home = homes_iter.next().unwrap();
             let office = offices_iter.next().unwrap();
-            let citizen = Citizen::from_record(record, home.clone(), office.clone(), home.get_random_point(rng), rng);
+            let citizen = Citizen::from_record(record, *home, *office, home.get_random_point(rng), rng);
             citizens.push(citizen);
         }
         let house_capacity = (constants::HOME_SIZE * constants::HOME_SIZE) as usize;
@@ -212,7 +237,7 @@ impl Grid {
         number_of_agents: i32,
         hospital_staff_percentage: f64,
         hospital_beds_percentage: f64,
-        sim_id: String,
+        engine_id: String,
     ) {
         let hospital_bed_count = (number_of_agents as f64 * hospital_beds_percentage
             + number_of_agents as f64 * hospital_staff_percentage)
@@ -221,60 +246,93 @@ impl Grid {
         if hospital_bed_count <= self.hospital_area.get_number_of_cells() {
             let hospital_end_y: CoOrdinate =
                 (hospital_bed_count / (self.hospital_area.end_offset.x - self.hospital_area.start_offset.x) as u32) as CoOrdinate;
-            self.hospital_area =
-                Area::new(&sim_id, self.hospital_area.start_offset, Point::new(self.hospital_area.end_offset.x, hospital_end_y));
+            self.hospital_area = Area::new(
+                &engine_id,
+                self.hospital_area.start_offset,
+                Point::new(self.hospital_area.end_offset.x, hospital_end_y),
+            );
             info!("Hospital capacity {}: ", hospital_bed_count);
         }
     }
 
-    pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen], region_name: &String) -> HashMap<Area, u32> {
+    pub fn group_office_locations_by_occupancy(&self, citizens: &[Citizen], region_name: &String) -> BinaryHeap<Occupancy> {
         let mut occupancy = HashMap::new();
         self.offices.iter().for_each(|office| {
-            occupancy.insert(office.clone(), 0);
+            occupancy.insert(*office, 0);
         });
         citizens.iter().filter(|citizen| citizen.is_working() && citizen.work_location.location_id == *region_name).for_each(
             |worker| {
-                let office = worker.work_location.clone();
+                let office = worker.work_location;
                 *occupancy.get_mut(&office).expect("Unknown office! Doesn't exist in grid") += 1;
             },
         );
-        occupancy
+        let mut heap = BinaryHeap::new();
+        occupancy.iter().for_each(|(office, o)| heap.push(Occupancy::new(*office, *o)));
+        heap
     }
 
-    pub fn choose_house_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
+    pub fn choose_house_with_free_space(&mut self, _rng: &mut RandomWrapper) -> Occupancy {
         let house_capacity = constants::HOME_SIZE * constants::HOME_SIZE;
-        self.houses_occupancy
-            .iter()
-            .find(|(_house, occupants)| **occupants < house_capacity)
-            .expect("Couldn't find any house with free space!")
-            .0
-            .clone()
+
+        let occupancy = self.houses_occupancy.pop().unwrap();
+
+        if occupancy.occupants >= house_capacity {
+            panic!("Couldn't find any house with free space!")
+        } else {
+            occupancy
+        }
     }
 
-    pub fn choose_office_with_free_space(&self, _rng: &mut RandomWrapper) -> Area {
+    pub fn choose_office_with_free_space(&mut self, _rng: &mut RandomWrapper) -> Occupancy {
         let office_capacity = constants::OFFICE_SIZE * constants::OFFICE_SIZE;
-        self.offices_occupancy
-            .iter()
-            .find(|(_office, occupants)| **occupants < office_capacity)
-            .expect("Couldn't find any offices with free space!")
-            .0
-            .clone()
+        let occupancy = self.offices_occupancy.pop().unwrap();
+        if occupancy.occupants >= office_capacity {
+            panic!("Couldn't find any offices with free space!")
+        } else {
+            occupancy
+        }
     }
 
-    pub fn add_house_occupant(&mut self, house: &Area) {
-        *self.houses_occupancy.get_mut(house).expect("Could not find house!") += 1;
+    pub fn add_house_occupant(&mut self, mut house: Occupancy) {
+        house.occupants += 1;
+        self.houses_occupancy.push(house);
     }
 
-    pub fn add_office_occupant(&mut self, office: &Area) {
-        *self.offices_occupancy.get_mut(office).expect("Could not find office!") += 1;
+    pub fn add_office_occupant(&mut self, mut office: Occupancy) {
+        office.occupants += 1;
+        self.offices_occupancy.push(office);
     }
 
-    pub fn remove_house_occupant(&mut self, house: &Area) {
-        *self.houses_occupancy.get_mut(house).expect("Could not find house!") -= 1;
+    pub fn remove_house_occupant(&mut self, houses: &[Area]) {
+        let mut map = self.houses_occupancy.iter().map(|oc| (&oc.area, oc.occupants)).collect::<HashMap<&Area, u32>>();
+
+        houses.iter().for_each(|area| {
+            if let Some(occupants) = map.get_mut(area) {
+                *occupants -= 1
+            } else {
+                panic!("Could not find house")
+            }
+        });
+
+        let mut houses_occupancy = BinaryHeap::new();
+        map.iter().for_each(|(area, occupants)| houses_occupancy.push(Occupancy::new(**area, *occupants)));
+        self.houses_occupancy = houses_occupancy
     }
 
-    pub fn remove_office_occupant(&mut self, office: &Area) {
-        *self.offices_occupancy.get_mut(office).expect("Could not find office!") -= 1;
+    pub fn remove_office_occupant(&mut self, offices: &[Area]) {
+        let mut map = self.offices_occupancy.iter().map(|oc| (&oc.area, oc.occupants)).collect::<HashMap<&Area, u32>>();
+
+        offices.iter().for_each(|area| {
+            if let Some(occupants) = map.get_mut(area) {
+                *occupants -= 1
+            } else {
+                panic!("Could not find office")
+            }
+        });
+
+        let mut offices_occupancy = BinaryHeap::new();
+        map.iter().for_each(|(area, occupants)| offices_occupancy.push(Occupancy::new(**area, *occupants)));
+        self.offices_occupancy = offices_occupancy
     }
 }
 
@@ -288,9 +346,9 @@ mod tests {
         let mut rng = RandomWrapper::new();
 
         let mut grid = define_geography(100, "engine1".to_string());
-        let housing_area = grid.housing_area.clone();
-        let transport_area = grid.transport_area.clone();
-        let work_area = grid.work_area.clone();
+        let housing_area = grid.housing_area;
+        let transport_area = grid.transport_area;
+        let work_area = grid.work_area;
 
         let pop = AutoPopulation { number_of_agents: 10, public_transport_percentage: 0.2, working_percentage: 0.2 };
         let start_infections = StartingInfections::new(0, 0, 0, 1);
@@ -324,7 +382,7 @@ mod tests {
     fn grid_should_be_serializable_and_should_not_serialize_skipped_keys() {
         let grid: Grid = define_geography(75, "engine1".to_string());
 
-        let grid_message = serde_json::to_value(&grid).unwrap();
+        let grid_message = serde_json::to_value(grid).unwrap();
 
         let message = grid_message.as_object().unwrap();
         let keys = message.keys();

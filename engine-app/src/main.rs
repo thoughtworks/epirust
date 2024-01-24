@@ -100,13 +100,6 @@ async fn main() {
         Mode::MPI => RunMode::MultiEngine { mode: MultiEngineMode::MPI },
         Mode::Standalone => RunMode::Standalone,
     };
-    // let run_mode = if daemon && has_named_engine {
-    //     RunMode::MultiEngine { mode: MultiEngineMode::Kafka}
-    // } else if daemon {
-    //     RunMode::SingleDaemon
-    // } else {
-    //     RunMode::Standalone
-    // };
 
     let disease_handler: Option<Disease> = None;
 

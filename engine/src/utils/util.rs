@@ -18,7 +18,6 @@
  */
 
 use crate::models::events::Counts;
-use crate::run_mode::RunMode;
 use common::config::{Config, StartingInfections};
 use common::models::custom_types::Count;
 use time::OffsetDateTime;

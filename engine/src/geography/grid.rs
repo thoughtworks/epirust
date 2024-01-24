@@ -114,8 +114,7 @@ impl Grid {
 
         let (home_loc, agents_in_order) = self.set_start_locations_and_occupancies(rng, &agent_list, &region);
 
-        // TODO: Uncomment this (Important)
-        // self.draw(&home_loc, &self.houses, &self.offices);
+        self.draw(&home_loc, &self.houses, &self.offices);
         (home_loc, agents_in_order)
     }
 

@@ -18,6 +18,7 @@
  */
 
 use std::error::Error;
+use std::path::Path;
 
 use futures::StreamExt;
 use opentelemetry::trace::{FutureExt, TraceContextExt, Tracer};
@@ -69,6 +70,7 @@ impl KafkaConsumer<'_> {
         run_mode: &RunMode,
         disease_handler: Option<D>,
         threads: u32,
+        output_dir_path: &Path,
     ) {
         let mut message_stream: MessageStream = self.consumer.stream();
         debug!("Started the stream. Waiting for simulation request");
@@ -100,7 +102,16 @@ impl KafkaConsumer<'_> {
                     //Todo: fix it there is already a kafkaProducer in the scope, try to use that (think of merging the engine handlers and transport)
                     let engine_handlers = KafkaImplEngineHandler::new(KafkaProducer::new());
 
-                    self.run_sim(request, run_mode, disease_handler.clone(), Some(transport), engine_handlers, threads).await;
+                    self.run_sim(
+                        request,
+                        run_mode,
+                        disease_handler.clone(),
+                        Some(transport),
+                        engine_handlers,
+                        threads,
+                        output_dir_path,
+                    )
+                    .await;
                     if let RunMode::MultiEngine { .. } = run_mode {
                         return;
                     }
@@ -117,13 +128,22 @@ impl KafkaConsumer<'_> {
         transport: Option<KafkaTransport<'a>>,
         engine_handlers: EH,
         threads: u32,
+        output_dir_path: &Path,
     ) {
         match request {
             Request::SimulationRequest(req) => {
                 if disease_handler.is_none() {
                     let disease = req.config.get_disease();
-                    let mut epidemiology =
-                        Epidemiology::new(req.sim_id, req.config, None, run_mode, disease, transport, engine_handlers);
+                    let mut epidemiology = Epidemiology::new(
+                        req.sim_id,
+                        req.config,
+                        None,
+                        run_mode,
+                        disease,
+                        transport,
+                        engine_handlers,
+                        output_dir_path,
+                    );
                     epidemiology.run(threads).await;
                 } else {
                     let mut epidemiology = Epidemiology::new(
@@ -134,6 +154,7 @@ impl KafkaConsumer<'_> {
                         disease_handler.unwrap(),
                         transport,
                         engine_handlers,
+                        output_dir_path,
                     );
                     epidemiology.run(threads).await;
                 };
@@ -157,6 +178,7 @@ impl KafkaConsumer<'_> {
                                 disease,
                                 transport,
                                 engine_handlers,
+                                output_dir_path,
                             );
                             epidemiology.run(threads).await;
                         } else {
@@ -168,6 +190,7 @@ impl KafkaConsumer<'_> {
                                 disease_handler.unwrap(),
                                 transport,
                                 engine_handlers,
+                                output_dir_path,
                             );
                             let tracer = global::tracer("epirust-trace");
                             let span = tracer.start("run");

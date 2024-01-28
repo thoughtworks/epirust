@@ -22,4 +22,4 @@ mod send_record;
 pub(crate) mod util;
 
 pub use send_record::{SendRecord, SendResult};
-pub use util::{counts_at_start, output_file_format};
+pub use util::{counts_at_start, create_out_dir_if_not_present, output_file_format};

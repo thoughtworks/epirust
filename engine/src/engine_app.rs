@@ -18,6 +18,7 @@
  */
 
 use common::config::{Config, TravelPlanConfig};
+use std::path::Path;
 
 use crate::epidemiology_simulation::Epidemiology;
 use crate::kafka::kafka_consumer::KafkaConsumer;
@@ -39,18 +40,34 @@ impl EngineApp {
         dsh: Option<T>,
         transport: Option<MpiTransport>,
         threads: u32,
-        // output_dir_path: &Path,
+        output_dir_path: &Path,
     ) {
         // let transport: Option<MpiTransport> = MpiTransport::new(engine_id.clone(), );
         let engine_handlers = NoOpEngineHandlers::default();
         if dsh.is_none() {
             let disease = config.get_disease();
-            let mut epidemiology =
-                Epidemiology::new(engine_id, config, travel_plan_config, run_mode, disease, transport, engine_handlers);
+            let mut epidemiology = Epidemiology::new(
+                engine_id,
+                config,
+                travel_plan_config,
+                run_mode,
+                disease,
+                transport,
+                engine_handlers,
+                output_dir_path,
+            );
             epidemiology.run(threads).await;
         } else {
-            let mut epidemiology =
-                Epidemiology::new(engine_id, config, travel_plan_config, run_mode, dsh.unwrap(), transport, engine_handlers);
+            let mut epidemiology = Epidemiology::new(
+                engine_id,
+                config,
+                travel_plan_config,
+                run_mode,
+                dsh.unwrap(),
+                transport,
+                engine_handlers,
+                output_dir_path,
+            );
             epidemiology.run(threads).await;
         }
         info!("Done");
@@ -61,20 +78,35 @@ impl EngineApp {
         run_mode: &RunMode,
         dsh: Option<D>,
         threads: u32,
+        output_dir_path: &Path,
     ) {
         info!("Started in daemon mode");
         let consumer = KafkaConsumer::new(engine_id, &["simulation_requests"]);
-        consumer.listen_loop(engine_id, run_mode, dsh, threads).await;
+        consumer.listen_loop(engine_id, run_mode, dsh, threads, output_dir_path).await;
         info!("Done");
     }
 
-    pub async fn start_standalone<D: DiseaseHandler + Sync>(config: Config, run_mode: &RunMode, dsh: Option<D>, threads: u32) {
+    pub async fn start_standalone<D: DiseaseHandler + Sync>(
+        config: Config,
+        run_mode: &RunMode,
+        dsh: Option<D>,
+        threads: u32,
+        output_dir_path: &Path,
+    ) {
         let transport: Option<KafkaTransport> = None;
         let engine_handlers = NoOpEngineHandlers::default();
         if dsh.is_none() {
             let disease = config.get_disease();
-            let mut epidemiology =
-                Epidemiology::new(STANDALONE_SIM_ID.to_string(), config, None, run_mode, disease, transport, engine_handlers);
+            let mut epidemiology = Epidemiology::new(
+                STANDALONE_SIM_ID.to_string(),
+                config,
+                None,
+                run_mode,
+                disease,
+                transport,
+                engine_handlers,
+                output_dir_path,
+            );
             epidemiology.run(threads).await;
         } else {
             let mut epidemiology = Epidemiology::new(
@@ -85,6 +117,7 @@ impl EngineApp {
                 dsh.unwrap(),
                 transport,
                 engine_handlers,
+                output_dir_path,
             );
             epidemiology.run(threads).await;
         }

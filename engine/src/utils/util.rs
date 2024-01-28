@@ -18,16 +18,28 @@
  */
 
 use crate::models::events::Counts;
-use common::config::{Config, StartingInfections};
+use common::config::StartingInfections;
 use common::models::custom_types::Count;
+use std::fs;
+use std::path::{Path, PathBuf};
 use time::OffsetDateTime;
 
-pub fn output_file_format(config: &Config, engine_id: &str) -> String {
+//Todo: Do we need this, user can create a output dir inside the output path(e.g., "/tmp/output")
+pub fn create_out_dir_if_not_present(output_dir_path: &Path) -> PathBuf {
+    let output_dir = output_dir_path.join("output");
+
+    if !output_dir.exists() {
+        let _ = fs::create_dir(output_dir.as_path());
+    }
+    output_dir
+}
+pub fn output_file_format(output_dir_path: &Path, engine_id: String) -> String {
     let format = time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]").unwrap();
     let now = OffsetDateTime::now_utc();
-    let mut output_file_prefix = config.get_output_file().unwrap_or_else(|| "simulation".to_string());
-    output_file_prefix = format!("{}_{}", output_file_prefix, engine_id);
-    format!("{}_{}", output_file_prefix, now.format(&format).unwrap())
+
+    let file = format!("simulation_{}_{}", engine_id, now.format(&format).unwrap());
+
+    output_dir_path.join(file).to_string_lossy().to_string()
 }
 
 pub fn counts_at_start(population: Count, start_infections: &StartingInfections) -> Counts {

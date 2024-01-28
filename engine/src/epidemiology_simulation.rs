@@ -19,6 +19,7 @@
 
 use core::borrow::BorrowMut;
 use std::borrow::Borrow;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
@@ -52,6 +53,7 @@ use crate::transport::Transport;
 use crate::travel::commute::Commuter;
 use crate::travel::commute::CommutersByRegion;
 use crate::travel::migration::{EngineMigrationPlan, Migrator};
+use crate::utils::create_out_dir_if_not_present;
 use crate::utils::util::{counts_at_start, output_file_format};
 
 pub struct Epidemiology<D: DiseaseHandler + Sync, T: Transport, EH: EngineHandlers> {
@@ -78,16 +80,23 @@ impl<D: DiseaseHandler + Sync, T: Transport, EH: EngineHandlers> Epidemiology<D,
         disease_handler: D,
         transport: Option<T>,
         engine_handlers: EH,
+        output_dir_path: &Path,
     ) -> Self {
         let start = Instant::now();
         let start_infections = config.get_starting_infections();
+        let output_path = create_out_dir_if_not_present(output_dir_path);
         let mut grid = geography::define_geography(config.get_grid_size(), engine_id.clone());
         let mut rng = RandomWrapper::new();
         let (start_locations, agent_list) = match config.get_population() {
-            Population::Csv(csv_pop) => grid.read_population(csv_pop, start_infections, &mut rng, &engine_id),
-            Population::Auto(auto_pop) => {
-                grid.generate_population(auto_pop, start_infections, &mut rng, &travel_plan_config, engine_id.clone())
-            }
+            Population::Csv(csv_pop) => grid.read_population(csv_pop, start_infections, &mut rng, &engine_id, &output_path),
+            Population::Auto(auto_pop) => grid.generate_population(
+                auto_pop,
+                start_infections,
+                &mut rng,
+                &travel_plan_config,
+                engine_id.clone(),
+                &output_path,
+            ),
         };
         grid.resize_hospital(
             agent_list.len() as i32,
@@ -100,7 +109,9 @@ impl<D: DiseaseHandler + Sync, T: Transport, EH: EngineHandlers> Epidemiology<D,
 
         info!("Initialization completed in {} seconds", start.elapsed().as_secs_f32());
         let current_population = citizen_location_map.current_population();
-        let listeners = Self::create_listeners(&engine_id, current_population as usize, run_mode, &config);
+
+        //creating a path {output_dir_path}/output if it doesn't exist already
+        let listeners = Self::create_listeners(&engine_id, current_population as usize, run_mode, &config, &output_path);
         let counts_at_hr = counts_at_start(current_population, config.get_starting_infections());
 
         let interventions = Self::init_interventions(&config, &mut citizen_location_map, &mut rng);
@@ -123,8 +134,14 @@ impl<D: DiseaseHandler + Sync, T: Transport, EH: EngineHandlers> Epidemiology<D,
         }
     }
 
-    fn create_listeners(engine_id: &str, current_pop: usize, run_mode: &RunMode, config: &Config) -> Listeners {
-        let output_file_format = output_file_format(config, engine_id);
+    fn create_listeners(
+        engine_id: &str,
+        current_pop: usize,
+        run_mode: &RunMode,
+        config: &Config,
+        output_dir_path: &PathBuf,
+    ) -> Listeners {
+        let output_file_format = output_file_format(output_dir_path, engine_id.to_string());
         let counts_file_name = format!("{output_file_format}.csv");
 
         let csv_listener = CsvListener::new(counts_file_name);

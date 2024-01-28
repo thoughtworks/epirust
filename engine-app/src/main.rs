@@ -17,17 +17,25 @@
  *
  */
 
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+use std::path::Path;
+
 use clap::Parser;
 use mpi::topology::Communicator;
 use opentelemetry::sdk::trace::{config, Span};
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::{FutureExt, TraceContextExt, TraceError, Tracer};
 use opentelemetry::{global, sdk, Context, KeyValue};
-use std::fmt::{Display, Formatter};
 
 use common::config::{Config, Configuration, EngineConfig, TravelPlanConfig};
 use common::disease::Disease;
 use engine::{EngineApp, MpiTransport, MultiEngineMode, RunMode};
+
+use crate::file_logger::FileLogger;
+
+mod file_logger;
+mod log_file;
 
 const BUFFER_SIZE: usize = 100 * 1024 * 1024;
 
@@ -72,6 +80,10 @@ struct Args {
     #[arg(short, long, default_value_t = 4)]
     #[arg(help = "Number of parallel threads for data parallelization")]
     threads: u32,
+
+    #[arg(short, long, default_value_t = String::from("/tmp"))]
+    #[arg(help = "Number of parallel threads for data parallelization")]
+    output_dir: String,
 }
 
 fn init_tracer() -> Result<sdk::trace::Tracer, TraceError> {
@@ -85,15 +97,16 @@ fn init_tracer() -> Result<sdk::trace::Tracer, TraceError> {
 }
 
 #[tokio::main]
-async fn main() {
-    env_logger::init();
+async fn main() -> Result<(), Box<dyn Error>> {
+    // env_logger::init();
     let args = Args::parse();
 
     println!("{:?}", args.mode);
     let mode = args.mode;
-    let has_named_engine = args.id.is_some();
+    let output_dir = Path::new(&args.output_dir);
     let default_engine_id = "default_engine".to_string();
     let engine_id = args.id.unwrap_or(default_engine_id);
+
     let number_of_threads = args.threads;
     let run_mode = match mode {
         Mode::Kafka => RunMode::MultiEngine { mode: MultiEngineMode::Kafka },
@@ -110,7 +123,10 @@ async fn main() {
 
     match mode {
         Mode::Kafka => {
-            EngineApp::start_in_daemon(&engine_id, &run_mode, disease_handler, number_of_threads).with_context(cx).await
+            FileLogger::init(engine_id.to_string(), output_dir).unwrap();
+            EngineApp::start_in_daemon(&engine_id, &run_mode, disease_handler, number_of_threads, output_dir)
+                .with_context(cx)
+                .await
         }
         Mode::MPI => {
             println!("in multi-engine mode");
@@ -127,12 +143,12 @@ async fn main() {
             let config = Configuration::read(&config_path).expect("Error while reading config");
             config.validate();
             let config_per_engine = config.get_engine_configs();
-            let index: usize = (rank) as usize;
+            let index: usize = rank as usize;
             let self_config: &EngineConfig = config_per_engine.get(index).unwrap();
             let travel_plan: &TravelPlanConfig = config.get_travel_plan();
             let engine_config = &self_config.config;
             let engine_id = String::from(&self_config.engine_id);
-            // FileLogger::init(engine_id.to_string()).unwrap();
+            FileLogger::init(engine_id.to_string(), output_dir).unwrap();
 
             let mpi_transport = MpiTransport::new(engine_id.to_string(), &travel_plan.get_regions());
             EngineApp::start_with_mpi(
@@ -143,7 +159,7 @@ async fn main() {
                 disease_handler,
                 Some(mpi_transport),
                 number_of_threads,
-                // output_dir,
+                output_dir,
             )
             .with_context(cx)
             .await;
@@ -152,16 +168,10 @@ async fn main() {
             let default_config_path = "config/default.json".to_string();
             let config_file = args.config.unwrap_or(default_config_path);
             let config = Config::read(&config_file).expect("Failed to read config file");
-            EngineApp::start_standalone(config, &run_mode, disease_handler, number_of_threads).await;
+            FileLogger::init(engine_id.to_string(), output_dir).unwrap();
+            EngineApp::start_standalone(config, &run_mode, disease_handler, number_of_threads, output_dir).await;
         }
     }
 
-    // if daemon {
-    //     EngineApp::start_in_daemon(&engine_id, &run_mode, disease_handler, number_of_threads).with_context(cx).await;
-    // } else {
-    //     let default_config_path = "config/default.json".to_string();
-    //     let config_file = args.config.unwrap_or(default_config_path);
-    //     let config = Config::read(&config_file).expect("Failed to read config file");
-    //     EngineApp::start_standalone(config, &run_mode, disease_handler, number_of_threads).await;
-    // }
+    Ok(())
 }

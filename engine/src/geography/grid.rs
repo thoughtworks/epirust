@@ -17,13 +17,16 @@
  *
  */
 
-use common::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
-use common::models::custom_types::{CoOrdinate, Count, Size};
-use common::utils::RandomWrapper;
-use plotters::prelude::*;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use std::fs::File;
+use std::path::Path;
+
+use plotters::prelude::*;
+
+use common::config::{AutoPopulation, CsvPopulation, StartingInfections, TravelPlanConfig};
+use common::models::custom_types::{CoOrdinate, Count, Size};
+use common::utils::RandomWrapper;
 
 use crate::citizen;
 use crate::citizen::{Citizen, CitizensData, PopulationRecord};
@@ -84,6 +87,7 @@ impl Grid {
         rng: &mut RandomWrapper,
         travel_plan_config: &Option<TravelPlanConfig>,
         region: String,
+        output_path: &Path,
     ) -> (Vec<Point>, Vec<Citizen>) {
         debug!("Generating Population");
         let number_of_agents = auto_pop.number_of_agents;
@@ -114,7 +118,7 @@ impl Grid {
 
         let (home_loc, agents_in_order) = self.set_start_locations_and_occupancies(rng, &agent_list, &region);
 
-        self.draw(&home_loc, &self.houses, &self.offices);
+        self.draw(&region, &home_loc, &self.houses, &self.offices, output_path);
         (home_loc, agents_in_order)
     }
 
@@ -165,8 +169,9 @@ impl Grid {
         agents_by_home_locations
     }
 
-    fn draw(&self, home_locations: &Vec<Point>, homes: &Vec<Area>, offices: &Vec<Area>) {
-        let mut draw_backend = BitMapBackend::new("grid.png", (self.grid_size, self.grid_size));
+    fn draw(&self, engine_id: &str, home_locations: &Vec<Point>, homes: &Vec<Area>, offices: &Vec<Area>, output_path: &Path) {
+        let grid_png_path = output_path.join(format!("{}_grid.png", engine_id));
+        let mut draw_backend = BitMapBackend::new(&grid_png_path, (self.grid_size, self.grid_size));
         Grid::draw_rect(&mut draw_backend, &self.housing_area, &YELLOW);
         Grid::draw_rect(&mut draw_backend, &self.transport_area, &RGBColor(121, 121, 121));
         Grid::draw_rect(&mut draw_backend, &self.work_area, &BLUE);
@@ -192,6 +197,7 @@ impl Grid {
         starting_infections: &StartingInfections,
         rng: &mut RandomWrapper,
         region_name: &String,
+        output_path: &Path,
     ) -> (Vec<Point>, Vec<Citizen>) {
         let file = File::open(&csv_pop.file).expect("Could not read population file");
         let mut rdr = csv::Reader::from_reader(file);
@@ -220,7 +226,7 @@ impl Grid {
         let (home_loc, mut agents_in_order) = self.set_start_locations_and_occupancies(rng, &citizens, region_name);
         citizen::set_starting_infections(&mut agents_in_order, starting_infections, rng);
 
-        self.draw(&home_loc, &self.houses, &self.offices);
+        self.draw(region_name, &home_loc, &self.houses, &self.offices, output_path);
         (home_loc, agents_in_order)
     }
 
@@ -337,8 +343,9 @@ impl Grid {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::geography::define_geography;
+
+    use super::*;
 
     #[test]
     fn should_generate_population() {
@@ -352,7 +359,7 @@ mod tests {
         let pop = AutoPopulation { number_of_agents: 10, public_transport_percentage: 0.2, working_percentage: 0.2 };
         let start_infections = StartingInfections::new(0, 0, 0, 1);
         let (home_locations, agent_list) =
-            grid.generate_population(&pop, &start_infections, &mut rng, &None, "engine1".to_string());
+            grid.generate_population(&pop, &start_infections, &mut rng, &None, "engine1".to_string(), Path::new("/tmp"));
 
         assert_eq!(home_locations.len(), 10);
         assert_eq!(agent_list.len(), 10);

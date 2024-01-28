@@ -1,0 +1,16 @@
+refresh_rate: 5 seconds
+
+appenders:
+  stdout:
+    kind: console
+  file:
+    kind: file
+    path: info.log
+    encoder:
+      pattern: "{l} - {m}\n"
+
+root:
+  level: info
+  appenders:
+    - stdout
+    - file

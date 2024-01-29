@@ -27,7 +27,8 @@ pub type CoOrdinate = i32;
 pub type Percentage = f64;
 
 pub fn validate_percentage(value: &f64) -> Result<(), ValidationError> {
-    if value < &0.0 && value > &1.0 {
+    //Todo: Handle exception
+    if value < &0.0 || value > &1.0 {
         return Err(ValidationError::new("percentage value needs to be between 0 to 1"));
     }
     Ok(())

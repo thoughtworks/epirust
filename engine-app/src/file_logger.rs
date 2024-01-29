@@ -28,7 +28,7 @@ pub struct FileLogger;
 
 impl FileLogger {
     pub fn init(engine_id: String, output_dir_path: &Path) -> Result<(), Box<dyn Error>> {
-        let temp_yaml_path = format!("/tmp/log4rs-{}-epirust.yaml", engine_id);
+        let temp_yaml_path = format!("log4rs-{}-epirust.yaml", engine_id);
         let mut file = File::create(&temp_yaml_path)?;
         log_file::get_log4rs_yaml(
             format!("{}/logs/{}.log", output_dir_path.to_str().unwrap().to_string(), engine_id),

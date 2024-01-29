@@ -17,12 +17,14 @@
  *
  */
 
+use std::env;
 use std::fs::File;
 use std::io::{Read, Write};
+use std::path::PathBuf;
 
 use serde_yaml::{from_str, to_string, Value};
 
-fn read_yaml_file(file_path: &str) -> Result<Value, Box<dyn std::error::Error>> {
+fn read_yaml_file(file_path: PathBuf) -> Result<Value, Box<dyn std::error::Error>> {
     let mut file = File::open(file_path)?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
@@ -41,7 +43,9 @@ fn write_yaml_file(file: &mut File, data: &Value) -> Result<(), Box<dyn std::err
 }
 
 pub fn get_log4rs_yaml(output_dir_path: String, temp_conf_file: &mut File) -> Result<(), Box<dyn std::error::Error>> {
-    let yaml_file_path = "engine-app/config/log4rs.yaml";
+    //Todo: Fix this bcoz it forces you to run epirust from project root folder
+    let path = env::current_dir()?;
+    let yaml_file_path = path.join("engine-app/config/log4rs.yaml");
 
     // Read the YAML file
     let mut yaml_data = read_yaml_file(yaml_file_path).unwrap();

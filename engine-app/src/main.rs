@@ -68,7 +68,7 @@ struct Args {
     //         Specifying this flag will cause the config argument to be ignored")]
     // daemon: bool,
     #[clap(value_enum)]
-    #[arg(short, long, default_value_t = Mode::Kafka)]
+    #[arg(short, long, default_value_t = Mode::Standalone)]
     #[arg(help = "start the engine with a particular implementation- Kafka or MPI")]
     mode: Mode,
 

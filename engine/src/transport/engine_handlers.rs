@@ -38,11 +38,6 @@ pub trait EngineHandlers {
 
 pub struct NoOpEngineHandlers;
 
-impl Default for NoOpEngineHandlers {
-    fn default() -> Self {
-        NoOpEngineHandlers {}
-    }
-}
 impl EngineHandlers for NoOpEngineHandlers {
     fn on_tick_start() {}
 

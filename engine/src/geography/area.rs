@@ -49,7 +49,7 @@ impl Hash for Area {
 }
 
 impl Area {
-    pub fn new(location_id: &String, start_offset: Point, end_offset: Point) -> Area {
+    pub fn new(location_id: &str, start_offset: Point, end_offset: Point) -> Area {
         Area { location_id: string_to_s16(location_id), start_offset, end_offset }
     }
 
@@ -58,13 +58,13 @@ impl Area {
     }
 
     pub fn iter(&self) -> AreaIterator {
-        AreaIterator::new(self.clone())
+        AreaIterator::new(*self)
     }
 
     pub fn random_points(&self, number_of_points: usize, rng: &mut RandomWrapper) -> Vec<Point> {
         let nx = (number_of_points as f32).sqrt().ceil() as usize;
-        let rand_xs = (self.start_offset.x..=self.end_offset.x).into_iter().choose_multiple(rng.get(), nx);
-        let rand_ys = (self.start_offset.y..=self.end_offset.y).into_iter().choose_multiple(rng.get(), nx);
+        let rand_xs = (self.start_offset.x..=self.end_offset.x).choose_multiple(rng.get(), nx);
+        let rand_ys = (self.start_offset.y..=self.end_offset.y).choose_multiple(rng.get(), nx);
 
         rand_xs
             .iter()
@@ -150,7 +150,7 @@ mod tests {
     use super::*;
 
     fn get_area() -> Area {
-        Area::new(&"engine1".to_string(), Point { x: 0, y: 0 }, Point { x: 5, y: 5 })
+        Area::new("engine1", Point { x: 0, y: 0 }, Point { x: 5, y: 5 })
     }
 
     #[test]
@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn should_iterate_over_points_in_area() {
-        let area = Area::new(&"engine1".to_string(), Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1", Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(
             x,
@@ -180,14 +180,14 @@ mod tests {
             ]
         );
 
-        let area = Area::new(&"engine1".to_string(), Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1", Point { x: 1, y: 1 }, Point { x: 2, y: 2 });
         let x: Vec<Point> = area.iter().collect();
         assert_eq!(x, vec![Point::new(1, 1), Point::new(2, 1), Point::new(1, 2), Point::new(2, 2)])
     }
 
     #[test]
     fn iterator_should_work_multiple_times() {
-        let area = Area::new(&"engine1".to_string(), Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
+        let area = Area::new("engine1", Point { x: 0, y: 0 }, Point { x: 2, y: 2 });
         let x: Option<Point> = area.iter().find(|p| *p == Point::new(1, 1));
         assert!(x.is_some());
 

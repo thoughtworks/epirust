@@ -150,7 +150,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let engine_id = String::from(&self_config.engine_id);
             FileLogger::init(engine_id.to_string(), output_dir).unwrap();
 
-            let mpi_transport = MpiTransport::new(engine_id.to_string(), &travel_plan.get_regions());
+            let mpi_transport = MpiTransport::new(&travel_plan.get_regions());
             EngineApp::start_with_mpi(
                 engine_id.clone(),
                 engine_config.clone(),

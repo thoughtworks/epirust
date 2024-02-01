@@ -30,10 +30,7 @@ impl FileLogger {
     pub fn init(engine_id: String, output_dir_path: &Path) -> Result<(), Box<dyn Error>> {
         let temp_yaml_path = format!("log4rs-{}-epirust.yaml", engine_id);
         let mut file = File::create(&temp_yaml_path)?;
-        log_file::get_log4rs_yaml(
-            format!("{}/logs/{}.log", output_dir_path.to_str().unwrap().to_string(), engine_id),
-            &mut file,
-        )?;
+        log_file::get_log4rs_yaml(format!("{}/logs/{}.log", output_dir_path.to_str().unwrap(), engine_id), &mut file)?;
         log4rs::init_file(&temp_yaml_path, Default::default())?;
         fs::remove_file(temp_yaml_path)?;
         Ok(())

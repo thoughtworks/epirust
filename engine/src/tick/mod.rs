@@ -1,6 +1,6 @@
 /*
  * EpiRust
- * Copyright (c) 2022  ThoughtWorks, Inc.
+ * Copyright (c) 2024  ThoughtWorks, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,4 +19,4 @@
 
 pub mod tick_util;
 
-pub use tick_util::{extract_tick, get_tick, receive_tick, send_ack};
+pub use tick_util::send_ack;

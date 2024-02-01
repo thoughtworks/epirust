@@ -37,18 +37,17 @@ use crate::travel::commute::{Commuter, CommutersByRegion};
 use crate::travel::migration::{EngineMigrationPlan, Migrator, MigratorsByRegion};
 
 pub struct MpiTransport {
-    engine_id: String,
     world: SimpleCommunicator,
     engine_ranks: HashMap<String, Rank>,
 }
 
 impl MpiTransport {
-    pub fn new(engine_id: String, regions: &[String]) -> Self {
+    pub fn new(regions: &[String]) -> Self {
         let mut engine_ranks: HashMap<String, Rank> = HashMap::new();
         for (i, engine) in regions.iter().enumerate() {
             engine_ranks.insert(engine.clone(), Rank::from(i as u8));
         }
-        MpiTransport { engine_id, world: SimpleCommunicator::world(), engine_ranks }
+        MpiTransport { world: SimpleCommunicator::world(), engine_ranks }
     }
 }
 

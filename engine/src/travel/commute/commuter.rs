@@ -45,8 +45,8 @@ impl From<&Citizen> for Commuter {
         Commuter {
             id: citizen.id,
             immunity: citizen.get_immunity(),
-            home_location: citizen.home_location.clone(),
-            work_location: citizen.work_location.clone(),
+            home_location: citizen.home_location,
+            work_location: citizen.work_location,
             vaccinated: citizen.is_vaccinated(),
             uses_public_transport: citizen.uses_public_transport,
             working: citizen.is_working(),

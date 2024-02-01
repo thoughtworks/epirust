@@ -1,6 +1,6 @@
 /*
  * EpiRust
- * Copyright (c) 2022  ThoughtWorks, Inc.
+ * Copyright (c) 2024  ThoughtWorks, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,66 +17,12 @@
  *
  */
 
-use futures::StreamExt;
-use opentelemetry::trace::{FutureExt, Span, TraceContextExt, Tracer};
-use opentelemetry::{global, Context, KeyValue};
-use rdkafka::consumer::MessageStream;
-
 use common::models::custom_types::Hour;
 
 use crate::interventions::lockdown::LockdownIntervention;
 use crate::kafka::kafka_producer::KafkaProducer;
-use crate::kafka::ticks_consumer;
 use crate::models::constants;
-use crate::models::events::{Counts, Tick, TickAck};
-
-pub async fn extract_tick(message_stream: &mut MessageStream<'_>) -> Tick {
-    debug!("Start receiving tick");
-    let msg = message_stream.next().await;
-    let mut maybe_tick = ticks_consumer::read(msg);
-    while maybe_tick.is_none() {
-        debug!("Retry for Tick");
-        let next_msg = message_stream.next().await;
-        maybe_tick = ticks_consumer::read(next_msg);
-    }
-    debug!("Received Tick Successfully");
-    maybe_tick.unwrap()
-}
-
-pub async fn get_tick(message_stream: &mut MessageStream<'_>, simulation_hour: Hour) -> Tick {
-    let mut tick = extract_tick(message_stream).await;
-    let mut tick_hour = tick.hour();
-    while tick_hour < simulation_hour {
-        tick = extract_tick(message_stream).await;
-        tick_hour = tick.hour();
-    }
-    tick
-}
-
-pub async fn receive_tick(
-    message_stream: &mut MessageStream<'_>,
-    simulation_hour: Hour,
-    is_commute_enabled: bool,
-    is_migration_enabled: bool,
-) -> Option<Tick> {
-    let day_hour = simulation_hour % 24;
-    let is_commute_hour = day_hour == constants::ROUTINE_TRAVEL_END_TIME || day_hour == constants::ROUTINE_TRAVEL_START_TIME;
-    let is_migration_hour = day_hour == 0;
-    let receive_tick_for_commute: bool = is_commute_enabled && is_commute_hour;
-    let receive_tick_for_migration: bool = is_migration_enabled && is_migration_hour;
-    if receive_tick_for_commute || receive_tick_for_migration {
-        let tracer = global::tracer("epirust-trace");
-        let mut span = tracer.start("tick_wait_time");
-        span.set_attribute(KeyValue::new("hour", simulation_hour.to_string()));
-        let cx = Context::current_with_span(span);
-        let t = get_tick(message_stream, simulation_hour).with_context(cx).await;
-        if t.hour() != simulation_hour {
-            panic!("Local hour is {}, but received tick for {}", simulation_hour, t.hour());
-        }
-        return Some(t);
-    }
-    None
-}
+use crate::models::events::{Counts, TickAck};
 
 pub fn send_ack(
     engine_id: &str,

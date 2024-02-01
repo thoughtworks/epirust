@@ -53,7 +53,7 @@ impl CitizenLocationMap {
         debug!("{} agents and {} starting points", agent_list.len(), points.len());
         let mut map: FnvHashMap<Point, Citizen> = FnvHashMap::with_capacity_and_hasher(agent_list.len(), Default::default());
         agent_list.iter().enumerate().for_each(|(i, _)| {
-            map.insert(points[i], agent_list[i].clone());
+            map.insert(points[i], agent_list[i]);
         });
 
         let capacity = grid.grid_size as usize;

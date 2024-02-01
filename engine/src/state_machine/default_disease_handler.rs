@@ -76,7 +76,7 @@ impl DiseaseHandler for Disease {
                 .filter(|p| map.is_point_in_grid(p))
                 .filter_map(|cell| map.get_agent_for(&cell))
                 .filter(|agent| agent.state_machine.is_infected() && !agent.is_hospitalized())
-                .find(|neighbor| rng.get().gen_bool(neighbor.get_infection_transmission_rate(&self)));
+                .find(|neighbor| rng.get().gen_bool(neighbor.get_infection_transmission_rate(self)));
 
             if neighbor_that_spreads_infection.is_some() {
                 return Some(State::Exposed { at_hour: sim_hr });

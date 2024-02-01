@@ -19,7 +19,7 @@
 
 use core::borrow::BorrowMut;
 use std::borrow::Borrow;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
@@ -139,7 +139,7 @@ impl<D: DiseaseHandler + Sync, T: Transport, EH: EngineHandlers> Epidemiology<D,
         current_pop: usize,
         run_mode: &RunMode,
         config: &Config,
-        output_dir_path: &PathBuf,
+        output_dir_path: &Path,
     ) -> Listeners {
         let output_file_format = output_file_format(output_dir_path, engine_id.to_string());
         let counts_file_name = format!("{output_file_format}.csv");

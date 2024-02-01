@@ -43,7 +43,7 @@ impl EngineApp {
         output_dir_path: &Path,
     ) {
         // let transport: Option<MpiTransport> = MpiTransport::new(engine_id.clone(), );
-        let engine_handlers = NoOpEngineHandlers::default();
+        let engine_handlers = NoOpEngineHandlers;
         if dsh.is_none() {
             let disease = config.get_disease();
             let mut epidemiology = Epidemiology::new(
@@ -94,7 +94,7 @@ impl EngineApp {
         output_dir_path: &Path,
     ) {
         let transport: Option<KafkaTransport> = None;
-        let engine_handlers = NoOpEngineHandlers::default();
+        let engine_handlers = NoOpEngineHandlers;
         if dsh.is_none() {
             let disease = config.get_disease();
             let mut epidemiology = Epidemiology::new(

@@ -44,10 +44,12 @@ Prerequisites:
 - Python 3 (for visualization and charting). We also need the `pandas` and `matplotlib` libraries which can be installed using `pip` or `conda`.
     - `pip install pandas matplotlib`
 
-Running:
-- Go to the `engine-app` directory: `cd engine-app/`
-- Run `RUST_LOG=info cargo run --release`
-- To modify the settings, or run with custom settings, use `cargo run --release -- -c config/[your-config].json`. Refer to `default.json` for the available settings.
+#### Running standalone simulations
+To run in standalone mode, run this:
+
+```bash
+    RUST_LOG=info cargo run --bin engine-app -- -i <engine-id> -c path/to/simulation-config
+```
 
 #### Visualization:
 - After the simulation is run, it will generate a CSV file. We can plot this using a simple script included in the `engine/plot` directory
@@ -67,9 +69,10 @@ Steps for running a multi-region simulation:
     - The simulation configuaration for each engine. (Note that currently there is some repetition needed in the configuration for each engine)
     - The travel plan, which defines a matrix containing the daily travellers from one region to another.
     You can take a look at the `orchestrator/config` directory for examples of the configuration.
-2. Start Kafka. The engines and orchestrator will communicate using Kafka. (The topics should be created automatically when the first messages are sent).
-3. Start the engines. If there are n regions in the config, n engines should be started with the name specified in the config. E.g. `./epirust-engine -d -i [engine-name]`, where `epirust-engine` is the engine-app binary.
-4. Start the orchestrator, pointing to the config file. E.g. `./epirust-orchestrator -c [path_to_config]`. The simulation should now start.
+2. To start with KAFKA on local, follow [this](LOCAL_SETUP_WITH_KAFKA.md)
+3. To start with MPI on local, follow [this](LOCAL_SETUP_WITH_MPI.md) 
+4. To start with MPI on cloud, follow [this](CLOUD_SETUP_WITH_MPI.md) 
+5. To start with KAFKA on cloud, you have to set up KAFKA cluster on cloud. (follow [this](https://github.com/sapanaKale/epirust-cloud-setup/blob/main/epirust_cloud_setup.md))
 
 It will generate output CSV and JSON files which you can use to for analysis and charting.
 
